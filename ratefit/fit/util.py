@@ -31,11 +31,8 @@ def get_valid_tk(temps, rate_constants, bimol,
         if rate_constant == '***':
             continue
         else:
-            #print('bimol:', bimol, 'rate_constant', float(rate_constant))
-            if not bimol and float(rate_constant) > 0.0 and tmin <= temp <= tmax:
-                valid_t.append(temp)
-                valid_k.append(rate_constant)
-            if bimol and float(rate_constant) > 1.e-21 and tmin <= temp <= tmax:
+            kthresh = 0.0 if not bimol else 1.0e-21
+            if float(rate_constant) > kthresh and tmin <= temp <= tmax:
                 valid_t.append(temp)
                 valid_k.append(rate_constant)
 
@@ -44,3 +41,31 @@ def get_valid_tk(temps, rate_constants, bimol,
     valid_k = np.array([valid_k], dtype=np.float64)
 
     return valid_t, valid_k
+
+
+def flip_ktp(ktp_dct):
+    """ Invert the dependence of the std ktp dct from
+        dct[press] = [[t1, k1], ... , [tn, kn]] to
+        dct[temp] = [[p1, k1], ... , [pn, kn]] to
+    """
+
+    inv_ktp_dct = {}
+    for pressure, tk_arr in ktp_dct.items():
+  
+        # Set the temperatures and rate constants
+        temps = tk_arr[0]
+        rate_constants = tk_arr[1]
+    
+        for temp, rate in zip(temps, rate_constants):
+            if temp not in inv_ktp_dct:
+                # Set new temperature lst in dct
+                inv_ktp_dct[temp] = [[pressure], [rate]]
+            else:
+                # Add pressure & rate k to lsts for temp in dct
+                [p_arr, k_arr] = inv_ktp_dct[temp]
+                p_arr.append(pressure)
+                k_arr.append(rate)
+                inv_ktp_dct[temp] = [p_arr, k_arr]
+
+    return inv_ktp_dct
+
