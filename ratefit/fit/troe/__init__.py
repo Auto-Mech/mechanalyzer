@@ -1,11 +1,10 @@
 """
-Functions to fit rate constants to Single or Double Arrhenius Functions
-Performs fits either using SciPy or SJK's dsarrfit code
+Functions to fit rate constants to Lindemann or Troe expressions
 """
 
-from ratefit.fit.troe.fit import single
+from ratefit.fit.troe.fit import std
 
 
 __all__ = [
-    'single',
+    'std',
 ]

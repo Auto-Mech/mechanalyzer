@@ -3,5 +3,6 @@
  1
  ${high_a_guess}, ${high_n_guess}, ${high_ea_guess}
  ${low_a_guess}, ${low_n_guess}, ${low_ea_guess}
- ${num_tk}   ${num_tk} 
+ ${troe1} ${troe2} ${troe3} ${troe4}
+ ${num_t}   ${num_tk} 
 ${tk_lines}
