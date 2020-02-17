@@ -13,18 +13,27 @@ SRC_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 def write_input(temps, rate_constants,
-                a_guess=8.1e-11,
-                n_guess=-0.01,
-                ea_guess=1000.0):
+                highp_a_guess=8.1e-11,
+                highp_n_guess=-0.01,
+                highp_ea_guess=1000.0):
     """ write the troefit input file
     """
 
+    ktp_str = ''
+    for temp, pk_arr in ktp_dct.itemes():
+        pressures = pk_arr[0]
+        rate_constants = pk_arr[1]
+
+        ktp_str += '{0:<8.2f}{1:<4d}\n'.format(temp, len(pressures))  
+        for rate, pressure in zip(rate_constants, pressures):
+            ktp_str += '{0:<14.5E}{1:<14.5f}\n'.format(rate, pressure
+
     # Format the lines with temps and rate constants
-    assert len(temps) == len(rate_constants)
-    num_tk = len(temps)
-    tk_str = ''
-    for i, _ in enumerate(temps):
-        tk_str += '{0:<10.1f}{1:<1.3E}\n'.format(temps[i], rate_constants[i])
+    # assert len(temps) == len(rate_constants)
+    # num_tk = len(temps)
+    # tk_str = ''
+    # for i, _ in enumerate(temps):
+    #     tk_str += '{0:<10.1f}{1:<1.3E}\n'.format(temps[i], rate_constants[i])
 
     # Build the fill value dictionary
     fit_keys = {
