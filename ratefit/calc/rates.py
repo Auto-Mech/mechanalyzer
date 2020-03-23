@@ -77,7 +77,7 @@ def lindemann_rate_constants(highp_ks, lowp_ks, pressure, temps):
 
 
 def troe(highp_ks, lowp_ks, pressures, temps,
-         alpha, ts3, ts1, ts2=None):
+         alpha, ts3, ts1, ts2=None, collid_factor=1.0):
     """ calculate pressure-dependence constants according to Troe
         model; no value for high
     """
@@ -85,13 +85,13 @@ def troe(highp_ks, lowp_ks, pressures, temps,
     for pressure in pressures:
         ktp_dct[pressure] = troe_rate_constants(
             highp_ks, lowp_ks, pressure, temps,
-            alpha, ts3, ts1, ts2)
+            alpha, ts3, ts1, ts2=ts2, collid_factor=collid_factor)
 
     return ktp_dct
 
 
 def troe_rate_constants(highp_ks, lowp_ks, pressure, temp,
-                        alpha, ts3, ts1, ts2=None):
+                        alpha, ts3, ts1, ts2=None, collid_factor=1.0):
     """ calculate pressure-dependence constants according to Troe
         model
     """
@@ -99,7 +99,7 @@ def troe_rate_constants(highp_ks, lowp_ks, pressure, temp,
     pr_term = _pr_term(highp_ks, lowp_ks, pressure, temp)
     f_term = _f_broadening_term(pr_term, alpha, ts3, ts1, ts2, temp)
     # Calculate Troe rate constants
-    ktps = highp_ks * (pr_term / (1.0 + pr_term)) * f_term
+    ktps = highp_ks * (pr_term / (1.0 + pr_term)) * f_term * collid_factor
 
     return ktps
 
@@ -118,7 +118,7 @@ def plog(plog_dct, t_ref, pressures, temps):
 def plog_rate_constants(plog_dct, t_ref, pressure, temps):
     """ calculate the rate constant using a dictionary of plog params
     """
-    plog_pressures = [pressure for pressure in plog_dct]
+    plog_pressures = plog_dct.keys()
 
     # Check if pressure is in plog dct; use plog pressure for numerical stab
     pressure_defined = False
@@ -126,11 +126,6 @@ def plog_rate_constants(plog_dct, t_ref, pressure, temps):
         if np.isclose(pressure, plog_pressure, atol=1.0e-3):
             pressure_defined = True
             plog_params = plog_dct[plog_pressure]
-
-    # print('plog test')
-    # print(plog_dct)
-    # print(pressure)
-    # print(plog_pressures)
 
     # If pressure equals value use, arrhenius expression
     if pressure_defined:
