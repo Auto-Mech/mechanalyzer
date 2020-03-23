@@ -43,7 +43,7 @@ def get_valid_tk(temps, rate_constants, bimol,
     return valid_t, valid_k
 
 
-def flip_ktp(ktp_dct):
+def flip_ktp_dct(ktp_dct):
     """ Invert the dependence of the std ktp dct from
         dct[press] = [[t1, k1], ... , [tn, kn]] to
         dct[temp] = [[p1, k1], ... , [pn, kn]] to
