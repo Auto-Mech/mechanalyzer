@@ -118,7 +118,7 @@ def plog(plog_dct, t_ref, pressures, temps):
 def plog_rate_constants(plog_dct, t_ref, pressure, temps):
     """ calculate the rate constant using a dictionary of plog params
     """
-    plog_pressures = plog_dct.keys()
+    plog_pressures = list(plog_dct.keys())
 
     # Check if pressure is in plog dct; use plog pressure for numerical stab
     pressure_defined = False

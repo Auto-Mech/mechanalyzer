@@ -103,6 +103,7 @@ def read_params(output_string, conv_factor=1.000):
 
     # Grab the fitting parameters
     # Multiple A by given conversion factor and Ea/R term by R to get Ea
+    _ = conv_factor
     if fit_success:
         high_params = [float(param) for param in kinf_str.split()]
         low_params = [float(param) for param in k0_str.split()]
@@ -114,9 +115,3 @@ def read_params(output_string, conv_factor=1.000):
         fit_params = []
 
     return fit_params
-
-
-if __name__ == '__main__':
-    with open('ex/0/arrfit.out', 'r') as f:
-        string = f.read()
-    print(read_params(string, conv_factor=1.000))
