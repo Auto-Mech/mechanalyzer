@@ -10,8 +10,7 @@ setup(name="RateFit",
                 'ratefit.fit',
                 'ratefit.fit.arrhenius',
                 'ratefit.fit.troe',
-                'transformations']),
-      package_dir={'ratefit': 'ratefit'
+                'transformations'],
+      package_dir={'ratefit': 'ratefit',
                    'transformations': 'transformations'},
       package_data={'ratefit': ['tests/data/*.txt', 'tests/data/*.csv']})
-      ])
