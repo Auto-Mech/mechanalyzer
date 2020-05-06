@@ -22,18 +22,18 @@ PHIGH = None
 np.set_printoptions(precision=15)
 
 
-def test__assess_pdependence():
+def test__assess_pressure_dependence():
     """ test ratefit.err.assess_pressure_dependence
     """
-    is_pdependent1 = ratefit.err.assess_pressure_dependence(
-        TK_DCT, TEMP_COMPARE1,
-        tolerance=TOL, plow=PLOW, phigh=PHIGH)
-    is_pdependent2 = ratefit.err.assess_pressure_dependence(
-        TK_DCT, TEMP_COMPARE2,
-        tolerance=TOL, plow=PLOW, phigh=PHIGH)
-    print(is_pdependent1)
-    print(is_pdependent2)
+
+    is_pdependent1 = ratefit.calc.assess_pressure_dependence(
+        TK_DCT, TEMP_COMPARE1, tolerance=TOL, plow=PLOW, phigh=PHIGH)
+    is_pdependent2 = ratefit.calc.assess_pressure_dependence(
+        TK_DCT, TEMP_COMPARE2, tolerance=TOL, plow=PLOW, phigh=PHIGH)
+
+    assert not is_pdependent1
+    assert is_pdependent2
 
 
 if __name__ == '__main__':
-    test__assess_pdependence()
+    test__assess_pressure_dependence()

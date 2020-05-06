@@ -54,8 +54,7 @@ def run_dsarrfit(path):
     os.chdir(path)
 
     # Run the executable
-    exe_cmd = os.path.join(SRC_PATH, 'dsarrfit', 'dsarrfit.x_cfg')
-    # exe_cmd = 'dsarrfit.x_cfg'
+    exe_cmd = 'dsarrfit.x_cfg'
     subprocess.check_call([exe_cmd])
 
     # Return to starting dir
