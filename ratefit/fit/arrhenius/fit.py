@@ -53,46 +53,6 @@ def double(temps, rate_constants, t_ref, method,
     return fit_params
 
 
-#def single(temps, rate_constants, t_ref, method,
-#           a_guess=8.1e-11, n_guess=-0.01, ea_guess=2000.0,
-#           dsarrfit_path=None, a_conv_factor=1.00):
-#    """ call the single arrhenius fitter
-#    """
-#
-#    if method == 'dsarrfit':
-#        assert dsarrfit_path is not None
-#        fit_params = _dsarrfit(
-#            temps, rate_constants, a_guess, n_guess, ea_guess,
-#            'single', dsarrfit_path, a_conv_factor)
-#    elif method == 'python':
-#        fit_params = _single_arrhenius_numpy(
-#            temps, rate_constants, t_ref)
-#    else:
-#        raise NotImplementedError
-#
-#    return fit_params
-#
-#
-#def double(temps, rate_constants, t_ref, method,
-#           a_guess=8.1e-11, n_guess=-0.01, ea_guess=2000.0,
-#           dsarrfit_path=None, a_conv_factor=1.00):
-#    """ call the double arrhenius fitter
-#    """
-#
-#    if method == 'dsarrfit':
-#        assert dsarrfit_path is not None
-#        fit_params = _dsarrfit(
-#            temps, rate_constants, a_guess, n_guess, ea_guess,
-#            'double', dsarrfit_path, a_conv_factor)
-#    elif method == 'python':
-#        fit_params = _double_arrhenius_scipy(
-#            temps, rate_constants, t_ref, a_guess, n_guess, ea_guess)
-#    else:
-#        raise NotImplementedError
-#
-#    return fit_params
-
-
 def _single_arrhenius_numpy(temps, rate_constants, t_ref, a_conv_factor=1.):
     """ this subroutine takes in a vector of rate constants and
         returns the Arrhenius parameters, as well as
@@ -202,11 +162,6 @@ def _dsarrfit(temps, rate_constants,
     dsarrfit_io.run_dsarrfit(dsarrfit_path)
 
     # Read the output of the single and double fit
-    #if fit_type == 'single':
-    #    arrname = 'arrfit.out'
-    #elif fit_type == 'double':
-    #    arrname = 'darrfit.out'
-
     arrname = 'arrfit.out'
     dsarrfit_out_file = os.path.join(dsarrfit_path, arrname)
     with open(dsarrfit_out_file, 'r') as arrfit_outfile:
