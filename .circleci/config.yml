@@ -15,8 +15,8 @@ jobs:
                 name: Build/install dsarrfit
                 command: |
                     cd external/dsarrfit
-                    bash debug/build.sh
-                    . debug/fake-install.sh
+                    bash build.sh
+                    # . debug/fake-install.sh
             - run:
                 name: Build/install ratefit
                 command: |
