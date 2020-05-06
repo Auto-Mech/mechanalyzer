@@ -28,7 +28,8 @@ jobs:
                 command: |
                     source activate ratefit-env
                     cd ratefit
-                    pytest -v --disable-pytest-warnings --cov=ratefit --pyargs ratefit
+                    python run.py
+                    pytest -v --cov=ratefit --pyargs ratefit
                     flake8 --exit-zero ratefit
                     pylint --rcfile=../.pylintrc ratefit
 workflows:
