@@ -74,12 +74,16 @@ def write_input(kpt_dct, troe_param_fit_lst,
 def run_troefit(path):
     """ run arrfit code
     """
+
+    # Go to path
     start_path = os.getcwd()
     os.chdir(path)
-    # Set the full path to the troefit executable
-    exe_path = os.path.join(SRC_PATH, 'troefit', 'troefit.x')
+
     # Run the executable
-    subprocess.check_call([exe_path])
+    exe_cmd = 'troefit.x'
+    subprocess.check_call([exe_cmd])
+
+    # Return to starting dir
     os.chdir(start_path)
 
 

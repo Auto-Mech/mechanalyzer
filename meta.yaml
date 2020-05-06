@@ -1,4 +1,4 @@
-# cmd: conda build . -c auto-mech -c rdkit -c openbabel -c conda-forge
+# cmd: conda build .
 package:
     name: RateFit
     version: "0.1.0"

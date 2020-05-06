@@ -2,25 +2,10 @@
 Test the ratefit rate constant calculators
 """
 
-import numpy as np
+import os
+import numpy
 import pandas
 import ratefit
-
-TEMPS = np.array([300., 600., 900., 1200., 1500.,
-                  1800., 2100., 2400., 2700., 3000.])
-PRESSURES = np.array([0.1, 0.9869, 2.0, 5.0])
-T_REF = 1.0
-
-PLOG_DCT = {
-    0.0296: [2.020E+013, -1.870, 22.755],
-    0.0987: [1.680E+018, -3.050, 24.323],
-    0.2961: [2.500E+024, -4.630, 27.067],
-    0.9869: [4.540E+026, -5.120, 27.572],
-    2.9607: [7.120E+028, -5.600, 28.535],
-    9.8690: [5.480E+029, -5.700, 28.899]
-}
-
-np.set_printoptions(precision=15)
 
 
 def _read_csv(filename):
@@ -32,15 +17,49 @@ def _read_csv(filename):
     return data
 
 
+# Set path to data files
+PATH = os.path.dirname(os.path.realpath(__file__))
+DATA_PATH = os.path.join(PATH, 'data')
+PLOG_FILE_NAME = 'plog.csv'
+
+# Read csv file for data
+PLOG_K_DATA = _read_csv(
+    os.path.join(DATA_PATH, PLOG_FILE_NAME))
+
+# Set data for the calculations
+TEMPS = numpy.array(
+    [300., 600., 900., 1200., 1500.,
+     1800., 2100., 2400., 2700., 3000.])
+PRESSURES = numpy.array([0.1, 0.9869, 2.0, 5.0])
+T_REF = 1.0
+
+PLOG_DCT = {
+    0.0296: [2.020E+013, -1.870, 22.755],
+    0.0987: [1.680E+018, -3.050, 24.323],
+    0.2961: [2.500E+024, -4.630, 27.067],
+    0.9869: [4.540E+026, -5.120, 27.572],
+    2.9607: [7.120E+028, -5.600, 28.535],
+    9.8690: [5.480E+029, -5.700, 28.899]
+}
+
+numpy.set_printoptions(precision=15)
+
+
 def test__plog():
-    """ test ratefit.fxns.plog
+    """ test ratefit.calc.plog
     """
-    plog_ktps = ratefit.fxns.plog(PLOG_DCT, T_REF, PRESSURES, TEMPS)
-    data = _read_csv('./data/plog.csv')
-    assert np.allclose(plog_ktps[0.1], np.array(data.ktp1), atol=0.01)
-    assert np.allclose(plog_ktps[0.9869], np.array(data.ktp2), atol=0.01)
-    assert np.allclose(plog_ktps[2.0], np.array(data.ktp3), atol=0.01)
-    assert np.allclose(plog_ktps[5.0], np.array(data.ktp4), atol=0.01)
+
+    plog_ktps = ratefit.calc.plog(PLOG_DCT, T_REF, PRESSURES, TEMPS)
+
+    plog_ktps1 = plog_ktps[0.1]
+    plog_ktps2 = plog_ktps[0.9869]
+    plog_ktps3 = plog_ktps[2.0]
+    plog_ktps4 = plog_ktps[5.0]
+
+    assert numpy.allclose(plog_ktps1, numpy.array(PLOG_K_DATA.ktp1), atol=0.01)
+    assert numpy.allclose(plog_ktps2, numpy.array(PLOG_K_DATA.ktp2), atol=0.01)
+    assert numpy.allclose(plog_ktps3, numpy.array(PLOG_K_DATA.ktp3), atol=0.01)
+    assert numpy.allclose(plog_ktps4, numpy.array(PLOG_K_DATA.ktp4), atol=0.01)
 
 
 if __name__ == '__main__':
