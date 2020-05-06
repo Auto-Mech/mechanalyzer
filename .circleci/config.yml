@@ -27,6 +27,7 @@ jobs:
                 name: Test ratefit
                 command: |
                     source activate ratefit-env
+                    pwd
                     cd ratefit
                     python run.py
                     pytest -v --cov=ratefit --pyargs ratefit
