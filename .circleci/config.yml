@@ -27,6 +27,7 @@ jobs:
                 name: Test ratefit
                 command: |
                     source activate ratefit-env
+                    python setup.py install
                     pwd
                     ls
                     cd ratefit
