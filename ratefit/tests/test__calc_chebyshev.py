@@ -23,8 +23,8 @@ DATA_PATH = os.path.join(PATH, 'data')
 CHEB_FILE_NAME = 'chebyshev.csv'
 
 # Read csv file for data
-CHEB_K_DATA = _read_csv(
-    os.path.join(DATA_PATH, CHEB_FILE_NAME))
+# CHEB_K_DATA = _read_csv(
+#     os.path.join(DATA_PATH, CHEB_FILE_NAME))
 
 # Set the data for the calculations
 # TEMPS = numpy.array(
