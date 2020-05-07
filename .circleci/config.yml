@@ -17,7 +17,6 @@ jobs:
                     source activate ratefit-env
                     cd external/dsarrfit
                     bash build.sh
-                    # . debug/fake-install.sh
             - run:
                 name: Build/install ratefit
                 command: |
@@ -27,11 +26,8 @@ jobs:
                 name: Test ratefit
                 command: |
                     source activate ratefit-env
-                    python setup.py install
-                    pwd
                     ls
                     cd ratefit
-                    ls
                     ls tests
                     pytest -v --cov=ratefit --pyargs ratefit
                     flake8 --exit-zero ratefit
