@@ -28,6 +28,7 @@ def assess_pressure_dependence(tk_dct, assess_pdep_temps,
     is_pressure_dependent = False
     if plow in tk_dct and phigh in tk_dct:
 
+        # Loop over temps to examine for large % dif in k(T) at low- and high-P
         for temp_compare in assess_pdep_temps:
             # For low- and high-P, find the idx for the temp in temp_compare
             temps_low = tk_dct[plow][0]
