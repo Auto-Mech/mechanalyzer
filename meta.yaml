@@ -13,6 +13,7 @@ requirements:
         - python
         - numpy
         - scipy
+        - pandas
         - mako
         - pytest
         - pytest-cov

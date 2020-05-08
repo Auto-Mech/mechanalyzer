@@ -29,7 +29,7 @@ jobs:
                     ls
                     cd ratefit
                     ls tests
-                    pytest -v --cov=ratefit --pyargs ratefit
+                    pytest -v
                     flake8 --exit-zero ratefit
                     pylint --rcfile=../.pylintrc ratefit
 workflows:

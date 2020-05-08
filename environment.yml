@@ -7,6 +7,7 @@ dependencies:
     - gfortran_linux-64  # [linux]
     - numpy
     - scipy
+    - pandas
     - pyyaml
     - mako
     - pytest
