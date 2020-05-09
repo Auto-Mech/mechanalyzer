@@ -10,5 +10,7 @@ setup(name="RateFit",
                 'ratefit.fit',
                 'ratefit.fit.arrhenius',
                 'ratefit.fit.troe'],
-      package_dir={'ratefit': 'ratefit'},
-      package_data={'ratefit': ['tests/data/*.txt', 'tests/data/*.csv']})
+      package_data={'ratefit': ['tests/data/*.txt',
+                                'tests/data/*.csv',
+                                'fit/arrhenius/dsarrfit.mako']}
+)
