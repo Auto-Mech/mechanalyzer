@@ -36,6 +36,7 @@ def arrhenius(params, t_ref, temp):
         only does single and double fits.
         params must be [a1, n1, ea1] or [a1, n2, ea1, a2, n2, ea2]
     """
+
     assert len(params) in (1, 2)
     for param_set in params:
         assert len(param_set) == 3
