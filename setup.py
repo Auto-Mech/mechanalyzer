@@ -3,7 +3,7 @@
 
 from distutils.core import setup
 
-setup(name="RateFit",
+setup(name="ratefit",
       version="0.1.0",
       packages=['ratefit',
                 'ratefit.calc',
@@ -12,5 +12,4 @@ setup(name="RateFit",
                 'ratefit.fit.troe'],
       package_data={'ratefit': ['tests/data/*.txt',
                                 'tests/data/*.csv',
-                                'fit/arrhenius/dsarrfit.mako']}
-)
+                                'fit/arrhenius/dsarrfit.mako']})
