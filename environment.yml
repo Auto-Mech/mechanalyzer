@@ -1,0 +1,17 @@
+name: ratefit-env
+
+dependencies:
+    - python=3.7
+    - pybind11
+    - cmake
+    - gfortran_linux-64  # [linux]
+    - numpy
+    - scipy
+    - pandas
+    - pyyaml
+    - mako
+    - pytest
+    - pytest-cov
+    - future
+    - flake8
+    - pylint

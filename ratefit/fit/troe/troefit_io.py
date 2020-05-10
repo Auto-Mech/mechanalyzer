@@ -74,12 +74,16 @@ def write_input(kpt_dct, troe_param_fit_lst,
 def run_troefit(path):
     """ run arrfit code
     """
+
+    # Go to path
     start_path = os.getcwd()
     os.chdir(path)
-    # Set the full path to the troefit executable
-    exe_path = os.path.join(SRC_PATH, 'troefit', 'troefit.x')
+
     # Run the executable
-    subprocess.check_call([exe_path])
+    exe_cmd = 'troefit.x'
+    subprocess.check_call([exe_cmd])
+
+    # Return to starting dir
     os.chdir(start_path)
 
 
@@ -103,6 +107,7 @@ def read_params(output_string, conv_factor=1.000):
 
     # Grab the fitting parameters
     # Multiple A by given conversion factor and Ea/R term by R to get Ea
+    _ = conv_factor
     if fit_success:
         high_params = [float(param) for param in kinf_str.split()]
         low_params = [float(param) for param in k0_str.split()]
@@ -114,9 +119,3 @@ def read_params(output_string, conv_factor=1.000):
         fit_params = []
 
     return fit_params
-
-
-if __name__ == '__main__':
-    with open('ex/0/arrfit.out', 'r') as f:
-        string = f.read()
-    print(read_params(string, conv_factor=1.000))

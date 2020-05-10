@@ -9,7 +9,9 @@ def get_valid_tk(temps, rate_constants, bimol,
                  tmin=None, tmax=None):
     """ this subroutine takes in a array of rate constants and
         returns the subset of this array that is positive,
-        along with the corresponding Temperature array """
+        along with the corresponding Temperature array:
+        k > 0 and k != *** and tmin <= T <= tmax
+        """
 
     # Convert temps and rate constants to floats
     temps = [float(temp) for temp in temps]
@@ -30,15 +32,14 @@ def get_valid_tk(temps, rate_constants, bimol,
     for temp, rate_constant in zip(temps, rate_constants):
         if rate_constant == '***':
             continue
-        else:
-            kthresh = 0.0 if not bimol else 1.0e-21
-            if float(rate_constant) > kthresh and tmin <= temp <= tmax:
-                valid_t.append(temp)
-                valid_k.append(rate_constant)
+        kthresh = 0.0 if not bimol else 1.0e-21
+        if float(rate_constant) > kthresh and tmin <= temp <= tmax:
+            valid_t.append(temp)
+            valid_k.append(rate_constant)
 
     # Convert the lists to numpy arrays
-    valid_t = np.array([valid_t], dtype=np.float64)
-    valid_k = np.array([valid_k], dtype=np.float64)
+    valid_t = np.array(valid_t, dtype=np.float64)
+    valid_k = np.array(valid_k, dtype=np.float64)
 
     return valid_t, valid_k
 
@@ -51,11 +52,11 @@ def flip_ktp_dct(ktp_dct):
 
     inv_ktp_dct = {}
     for pressure, tk_arr in ktp_dct.items():
-  
+
         # Set the temperatures and rate constants
         temps = tk_arr[0]
         rate_constants = tk_arr[1]
-    
+
         for temp, rate in zip(temps, rate_constants):
             if temp not in inv_ktp_dct:
                 # Set new temperature lst in dct
@@ -68,4 +69,3 @@ def flip_ktp_dct(ktp_dct):
                 inv_ktp_dct[temp] = [p_arr, k_arr]
 
     return inv_ktp_dct
-

@@ -36,16 +36,19 @@ def arrhenius(params, t_ref, temp):
         only does single and double fits.
         params must be [a1, n1, ea1] or [a1, n2, ea1, a2, n2, ea2]
     """
-    assert len(params) in (3, 6)
 
-    if len(params) == 3:
+    assert len(params) in (1, 2)
+    for param_set in params:
+        assert len(param_set) == 3
+
+    if len(params) == 1:
         kts = single_arrhenius(
-            params[0], params[1], params[2],
+            params[0][0], params[0][1], params[0][2],
             t_ref, temp)
     else:
         kts = double_arrhenius(
-            params[0], params[1], params[2],
-            params[3], params[4], params[5],
+            params[0][0], params[0][1], params[0][2],
+            params[1][0], params[1][1], params[1][2],
             t_ref, temp)
 
     return kts
@@ -118,7 +121,7 @@ def plog(plog_dct, t_ref, pressures, temps):
 def plog_rate_constants(plog_dct, t_ref, pressure, temps):
     """ calculate the rate constant using a dictionary of plog params
     """
-    plog_pressures = plog_dct.keys()
+    plog_pressures = list(plog_dct.keys())
 
     # Check if pressure is in plog dct; use plog pressure for numerical stab
     pressure_defined = False

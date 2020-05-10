@@ -1,0 +1,39 @@
+version: 2
+jobs:
+    build-debian:
+        docker:
+            - image: continuumio/miniconda3
+        steps:
+            - checkout  # checkout the code
+            - run: 
+                name: Create conda environment
+                command: |
+                    apt-get update --yes
+                    apt-get install --yes libxrender-dev build-essential
+                    conda env create -f environment.yml
+            - run:
+                name: Build/install dsarrfit
+                command: |
+                    source activate ratefit-env
+                    cd external/dsarrfit
+                    bash build.sh
+            - run:
+                name: Build/install ratefit
+                command: |
+                    source activate ratefit-env
+                    python setup.py install
+            - run:
+                name: Test ratefit
+                command: |
+                    source activate ratefit-env
+                    ls
+                    cd ratefit
+                    ls tests
+                    pytest -v
+                    flake8 --exit-zero ratefit
+                    pylint --rcfile=../.pylintrc ratefit
+workflows:
+    version: 2
+    build-all:
+        jobs:
+            - build-debian

@@ -2,7 +2,6 @@
 """
 
 import os
-import re
 import subprocess
 from mako.template import Template
 
@@ -49,12 +48,16 @@ def write_input(temps, rate_constants,
 def run_dsarrfit(path):
     """ run arrfit code
     """
+
+    # Go to path
     start_path = os.getcwd()
     os.chdir(path)
-    # Set the full path to the dsarrfit executable
-    exe_path = os.path.join(SRC_PATH, 'dsarrfit', 'dsarrfit.x_cfg')
+
     # Run the executable
-    subprocess.check_call([exe_path])
+    exe_cmd = 'dsarrfit.x_cfg'
+    subprocess.check_call([exe_cmd])
+
+    # Return to starting dir
     os.chdir(start_path)
 
 
@@ -101,11 +104,3 @@ def read_params(output_string, fit, conv_factor=1.000):
         fit_params = []
 
     return fit_params
-
-
-if __name__ == '__main__':
-    with open('ex/0/arrfit.out', 'r') as f:
-        output_string = f.read()
-    fit = 'double'
-    print(read_params(output_string, fit, conv_factor=1.000))
-

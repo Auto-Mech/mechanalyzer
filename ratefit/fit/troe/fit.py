@@ -2,7 +2,6 @@
 """
 
 import os
-import numpy as np
 from ratefit.fit.troe import troefit_io
 
 
