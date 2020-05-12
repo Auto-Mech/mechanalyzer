@@ -1,6 +1,6 @@
 # cmd: conda build .
 package:
-    name: RateFit
+    name: ratefit
     version: "0.1.0"
 
 source:
