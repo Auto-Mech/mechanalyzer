@@ -7,13 +7,17 @@ import numpy as np
 
 
 def fitting_errors(calc_ks, fit_ks):
-    """ (1) get the sum of square error (SSE) useful when determining
-            which double plog routine will be used to initialize
-            the nonlinear solver
-        (2) also get the mean absolute error (MAE), which is written
-            to the plog file
-        Only need to assess error if there are 2 or more rate constants
+    """ Calculates the error associated with fitting a set of 
+        rate constants [k(T,P)s] to a functional form.
+        Error is only assessed if there 
+        :param numpy.ndarray calc_ks: Original k(T,P)s fit to functional form
+        :param numpy.ndarrat fit_ks: k(T,P)s calc'd from a functional form 
+        :return mean_abs_err: Mean absoulte error from fit 
+        :rtype: float
+        :return max_abs_err: Maximum absoulte error from fit 
+        :rtype: float
     """
+    # assert len(calc_ks) == len(fit_ks)
 
     abs_err = []
     if len(calc_ks) > 2:
