@@ -54,9 +54,15 @@ def double(temps, rate_constants, t_ref, method,
 
 
 def _single_arrhenius_numpy(temps, rate_constants, t_ref, a_conv_factor=1.):
-    """ this subroutine takes in a vector of rate constants and
-        returns the Arrhenius parameters, as well as
-        the T-range over which they were fit"""
+    """ Fit a set of T-dependent rate constants to a single Arrhenius
+        functional expression using numpy.
+        :param numpy.ndarray temps: temperatures
+        :param numpy.ndarray rate_constants: rate constants
+        :param float t_ref: reference temperature (K)
+        :param float a_conv_factor: Conversion factor for A parameter
+        :return fit_params: A, n, Ea fitting parameters for function
+        :rtype: list
+    """
 
     # temps = temps[0]
     # rate_constants = rate_constants[0]
