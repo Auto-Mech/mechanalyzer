@@ -13,10 +13,15 @@ SRC_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
 def write_input(temps, rate_constants,
-                a_guess=8.1e-11,
-                n_guess=-0.01,
-                ea_guess=1000.0):
-    """ write the dsarrfit input file
+                a_guess=8.1e-11, n_guess=-0.01, ea_guess=1000.0):
+    """ Write the dsarrfit input file
+        :param list temps: temperatures (K)
+        :param list rate_constants: T-dependent rate constants ()
+        :param float a_guess: Guess value for pre-exponential A parameter
+        :param float n_guess: Guess value for n parameter
+        :param float ea_guess: Guess value for activation energy Ea parameter
+        :return dsarrfit_str: string for the dsarrfit input file
+        :rtype: string
     """
 
     # Format the lines with temps and rate constants
@@ -54,8 +59,9 @@ def run_dsarrfit(path):
     os.chdir(path)
 
     # Run the executable
-    exe_cmd = 'dsarrfit.x_cfg'
-    subprocess.check_call([exe_cmd])
+    exe_cmd = 'dsarrfit.x_cfg >& {}'.format(
+        os.path.join(path, 'dsarrfit.log'))
+    subprocess.check_call(exe_cmd.split())
 
     # Return to starting dir
     os.chdir(start_path)

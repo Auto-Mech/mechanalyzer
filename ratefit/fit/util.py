@@ -7,10 +7,21 @@ import numpy as np
 
 def get_valid_tk(temps, rate_constants, bimol,
                  tmin=None, tmax=None):
-    """ this subroutine takes in a array of rate constants and
-        returns the subset of this array that is positive,
-        along with the corresponding Temperature array:
-        k > 0 and k != *** and tmin <= T <= tmax
+    """ Takes in lists of temperature-rate constant pairs [T,k(T)] 
+        and removes invalid pairs for which
+           (1) k(T) < 0
+           (2) k(T) is undefined from Master Equation (i.e. k(T) == '***')
+           (3) k(T) < 1.0e-21 for a bimolecular reaction, or
+           (4) T is outside the cutoff
+        :param numpy.ndarray temps: temps
+        :param numpy.ndarray rate_constants: rate constants
+        :param bool bimol: Parameter indicating bimolecular reation
+        :param float tmin: minimum temperature cutoff for valid T,k(T) pairs
+        :param float tmax: maximum temperature cutoff for valid T,k(T) pairs
+        :return valid_t: List of vaild temperatures
+        :rtype numpy.ndarray
+        :return valid_k: List of vaild rate constants
+        :rtype numpy.ndarray
         """
 
     # Convert temps and rate constants to floats
@@ -45,9 +56,12 @@ def get_valid_tk(temps, rate_constants, bimol,
 
 
 def flip_ktp_dct(ktp_dct):
-    """ Invert the dependence of the std ktp dct from
-        dct[press] = [[t1, k1], ... , [tn, kn]] to
-        dct[temp] = [[p1, k1], ... , [pn, kn]] to
+    """ Invert the keys and values of a k(T,P) dictionary
+        such that the dct changes it index from pressures to temperatures:
+            ktp[temp] = [[p1, k1], ... , [pn, kn]]
+        :param dct ktp_dct: ktp_dct[press] = [[t1, k1], ... , [tn, kn]]
+        :return inv_ktp_dct: ktp_dct[temp] = [[p1, k1], ... , [pn, kn]]
+        :rtype: dct
     """
 
     inv_ktp_dct = {}
