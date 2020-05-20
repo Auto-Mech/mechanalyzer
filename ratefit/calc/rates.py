@@ -86,6 +86,8 @@ def lindemann(highp_ks, lowp_ks, pressures, temps):
         a Lindemann functional expression:
           k(T,P) = kinf(T) * [ Pr / 1 + Pr ]
           where Pr is the reduced pressure.
+        Function loops over multiple pressures, calling the
+        lindemann_rate_constants function to calculate the k(T,P) values.
         :param list highp_ks: k(T)s determined at high-pressure
         :param list lowp_ks: k(T)s determined at low-pressure
         :param list pressures: Pressures used to calculate k(T,P)s
@@ -102,8 +104,16 @@ def lindemann(highp_ks, lowp_ks, pressures, temps):
 
 
 def lindemann_rate_constants(highp_ks, lowp_ks, pressure, temps):
-    """ calculate pressure-dependence constants according to Lindemann
-        model
+    """ Calculates T,P-dependent rate constants [k(T,P)]s using
+        a Lindemann functional expression, at a given pressure, 
+        across several temperatures. 
+        :param list highp_ks: k(T)s determined at high-pressure
+        :param list lowp_ks: k(T)s determined at low-pressure
+        :param list pressure: Pressure used to calculate k(T,P)s
+        :param numpy.ndarray temps: Temps used to calculate high- and low-k(T)s
+        :return ktps: Set of k(T,P)s at given pressure
+        :rtype numpy.ndarray
+        :rtype: dct {Pressure1: TempsArray1, Pressure2: TempsArray2, ...}
     """
     # Calculate the pr term
     pr_term = _pr_term(highp_ks, lowp_ks, pressure, temps)
@@ -116,8 +126,16 @@ def lindemann_rate_constants(highp_ks, lowp_ks, pressure, temps):
 
 def troe(highp_ks, lowp_ks, pressures, temps,
          alpha, ts3, ts1, ts2=None, collid_factor=1.0):
-    """ calculate pressure-dependence constants according to Troe
-        model; no value for high
+    """ Calculates T,P-dependent rate constants [k(T,P)]s using
+        a Troe functional expression.
+        Function loops over multiple pressures, calling the
+        troe_rate_constants function to calculate the k(T,P) values.
+        :param list highp_ks: k(T)s determined at high-pressure
+        :param list lowp_ks: k(T)s determined at low-pressure
+        :param list pressures: Pressures used to calculate k(T,P)s
+        :param numpy.ndarray temps: Temps used to calculate high- and low-k(T)s
+        :return ktp_dct: T-dependent rate constants
+        :rtype: dct {Pressure1: TempsArray1, Pressure2: TempsArray2, ...}
     """
     ktp_dct = {}
     for pressure in pressures:

@@ -7,11 +7,17 @@ import numpy as np
 
 def assess_pressure_dependence(tk_dct, assess_pdep_temps,
                                tolerance=20.0, plow=None, phigh=None):
-    """ Assess how much the rate constants change from
-        a low-pressure to high-pressure regime
-
-        tk_dct[pressure] = [temps, k(T, P)s]
-        we assume the temps and pressures give all positive, defined rates
+    """ Assess if there are significant differences between k(T,P) values
+        at low-pressure and high-pressure, signaling that a given reaction is
+        pressure dependent. Function assesses these changes across all 
+        temperatures at both pressures.
+        :param dict tk_dct: T,k pairs, dct[pressure] = [temps, k(T, P)s]
+        :param list assess_pdep_temps: Temperatures to assess P-dependence
+        :param float tolerance: %-difference cutoff for changes in k(T,P)
+        :param float plow: Minimum pressure used to assess P-dependence
+        :param float phigh: Maximum pressure used to assess P-dependence
+        :return is_pressure_dependent: variable signaling P-dependence
+        :rtype: bool
     """
     # Get list of the sorted pressures, ignoring the high-pressure limit rates
     pressures = [pressure for pressure in tk_dct
