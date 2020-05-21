@@ -9,13 +9,19 @@ def assess_pressure_dependence(tk_dct, assess_pdep_temps,
                                tolerance=20.0, plow=None, phigh=None):
     """ Assess if there are significant differences between k(T,P) values
         at low-pressure and high-pressure, signaling that a given reaction is
-        pressure dependent. Function assesses these changes across all 
+        pressure dependent. Function assesses these changes across all
         temperatures at both pressures.
-        :param dict tk_dct: T,k pairs, dct[pressure] = [temps, k(T, P)s]
-        :param list assess_pdep_temps: Temperatures to assess P-dependence
-        :param float tolerance: %-difference cutoff for changes in k(T,P)
-        :param float plow: Minimum pressure used to assess P-dependence
-        :param float phigh: Maximum pressure used to assess P-dependence
+
+        :param tk_dct: T,k pairs
+        :type tk_dict: dict[pressure] = [temps, k(T, P)s]
+        :param assess_pdep_temps: Temperatures to assess P-dependence
+        :type assess_pdep_temps: list(float)
+        :param tolerance: %-difference cutoff for changes in k(T,P)
+        :type tolerance: float
+        :param plow: Minimum pressure used to assess P-dependence
+        :type plow: float
+        :param phigh: Maximum pressure used to assess P-dependence
+        :type phigh: float
         :return is_pressure_dependent: variable signaling P-dependence
         :rtype: bool
     """

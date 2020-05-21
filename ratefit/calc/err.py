@@ -7,14 +7,16 @@ import numpy as np
 
 
 def fitting_errors(calc_ks, fit_ks):
-    """ Calculates the error associated with fitting a set of 
+    """ Calculates the error associated with fitting a set of
         rate constants [k(T,P)s] to a functional form.
-        Error is only assessed if there 
-        :param numpy.ndarray calc_ks: Original k(T,P)s fit to functional form
-        :param numpy.ndarrat fit_ks: k(T,P)s calc'd from a functional form 
-        :return mean_abs_err: Mean absoulte error from fit 
+
+        :param calc_ks: Original k(T,P)s fit to functional form
+        :type calc_ks: numpy.ndarray
+        :param fit_ks: k(T,P)s calc'd from a functional form
+        :type fit_ks: numpy.ndarray
+        :return mean_abs_err: Mean absoulte error from fit
         :rtype: float
-        :return max_abs_err: Maximum absoulte error from fit 
+        :return max_abs_err: Maximum absoulte error from fit
         :rtype: float
     """
     # assert len(calc_ks) == len(fit_ks)

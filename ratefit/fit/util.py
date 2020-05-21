@@ -7,7 +7,7 @@ import numpy as np
 
 def get_valid_tk(temps, rate_constants, bimol,
                  tmin=None, tmax=None):
-    """ Takes in lists of temperature-rate constant pairs [T,k(T)] 
+    """ Takes in lists of temperature-rate constant pairs [T,k(T)]
         and removes invalid pairs for which
            (1) k(T) < 0
            (2) k(T) is undefined from Master Equation (i.e. k(T) == '***')
