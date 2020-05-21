@@ -13,7 +13,31 @@ RC = 1.98720425864083e-3  # Gas Constant in kcal/mol.K
 def single(temps, rate_constants, t_ref, method,
            a_guess=8.1e-11, n_guess=-0.01, ea_guess=2000.0,
            dsarrfit_path=None, a_conv_factor=1.00):
-    """ call the single arrhenius fitter
+    """ Fits a set of T-dependent rate constants [k(T)]s to a
+        single Arrhenius functional expression using internal
+        Python fitter or dsarrfit fitting code.
+        :param temps: temperatures
+        :type temps: numpy.ndarray
+        :param rate_constants: rate constants
+        :type rate_constants: numpy.ndarray
+        :param t_ref: reference temperature (K)
+        :type t_ref: float
+        :param method: choice of using Python or dsarrfit fitting code
+        :type method: str
+        :param float a_guess: seed guess value for A parameters
+        :type a_guess: float
+        :param float n_guess: seed guess value for n parameters
+        :type n_guess: float
+        :param float ea_guess: seed guess value for Ea parameters
+        :type ea_guess: float
+        :param fit_type: var signaling for a single or double fit
+        :type fit_type: str
+        :param dsarrfit_path: path to run dsarrfit
+        :type dsarrfit_path: str
+        :param a_conv_factor: Conversion factor for A parameter
+        :type a_conv_factor: float
+        :return fit_params: fitting parameters for function
+        :rtype: list
     """
 
     if method == 'python' or len(rate_constants) <= 3:
@@ -33,7 +57,31 @@ def single(temps, rate_constants, t_ref, method,
 def double(temps, rate_constants, t_ref, method,
            a_guess=8.1e-11, n_guess=-0.01, ea_guess=2000.0,
            dsarrfit_path=None, a_conv_factor=1.00):
-    """ call the double arrhenius fitter
+    """ Fits a set of T-dependent rate constants [k(T)]s to a
+        double Arrhenius functional expression using internal
+        Python fitter or dsarrfit fitting code.
+        :param temps: temperatures
+        :type temps: numpy.ndarray
+        :param rate_constants: rate constants
+        :type rate_constants: numpy.ndarray
+        :param t_ref: reference temperature (K)
+        :type t_ref: float
+        :param method: choice of using Python or dsarrfit fitting code
+        :type method: str
+        :param float a_guess: seed guess value for A parameters
+        :type a_guess: float
+        :param float n_guess: seed guess value for n parameters
+        :type n_guess: float
+        :param float ea_guess: seed guess value for Ea parameters
+        :type ea_guess: float
+        :param fit_type: var signaling for a single or double fit
+        :type fit_type: str
+        :param dsarrfit_path: path to run dsarrfit
+        :type dsarrfit_path: str
+        :param a_conv_factor: Conversion factor for A parameter
+        :type a_conv_factor: float
+        :return fit_params: fitting parameters for function
+        :rtype: list
     """
 
     if len(rate_constants) <= 3:
@@ -56,12 +104,17 @@ def double(temps, rate_constants, t_ref, method,
 def _single_arrhenius_numpy(temps, rate_constants, t_ref, a_conv_factor=1.):
     """ Fit a set of T-dependent rate constants to a single Arrhenius
         functional expression using numpy.
-        :param numpy.ndarray temps: temperatures
-        :param numpy.ndarray rate_constants: rate constants
-        :param float t_ref: reference temperature (K)
-        :param float a_conv_factor: Conversion factor for A parameter
+
+        :param temps: temperatures
+        :type temps: numpy.ndarray
+        :param rate_constants: rate constants
+        :type rate_constants: numpy.ndarray
+        :param t_ref: reference temperature (K)
+        :type t_ref: float
+        :param a_conv_factor: onversion factor for A parameter
+        :type a_conv_factor: float
         :return fit_params: A, n, Ea fitting parameters for function
-        :rtype: list
+        :rtype: list(float)
     """
 
     # temps = temps[0]
@@ -114,14 +167,19 @@ def _double_arrhenius_scipy(temps, rate_constants, t_ref,
                             sgl_a, sgl_n, sgl_ea):
     """ Fit a set of T-dependent rate constants to a double Arrhenius
         functional expression using scipy.
-        :param numpy.ndarray temps: temperatures
-        :param numpy.ndarray rate_constants: rate constants
-        :param float sgl_a: seed guess value for A parameters
-        :param float sgl_n: seed guess value for n parameters
-        :param float sgl_ea: seed guess value for Ea parameters
-        :return fit_params: A1, A2, n1, n2, Ea1 and Ea2
-                            fitting parameters for function
-        :rtype: list
+
+        :param temps: temperatures
+        :type temps: numpy.ndarray
+        :param rate_constants: rate constants
+        :type rate_constants: numpy.ndarray
+        :param sgl_a: seed guess value for A parameters
+        :type sgl_a: float
+        :param sgl_n: seed guess value for n parameters
+        :type sgl_n: float
+        :param sgl_ea: seed guess value for Ea parameters
+        :type sgl_ea: float
+        :return fit_params: fitting parameters for function
+        :rtype: list(float)
     """
 
     # Build a guess vector
@@ -140,15 +198,19 @@ def _double_arrhenius_scipy(temps, rate_constants, t_ref,
 def _mod_arr_residuals(guess_params, rate_constant, temp, t_ref):
     """ Subroutine computes the residual used by the nonlinear solver
         when determing a double Arrhenius fit using scipy.
-        :param numpy.ndarray guess_params: Guess Parameters for function
-        :param float rate_constant: Rate constant value
-        :param float temp: Temperature 
-        :param float t_ref: Reference temperature
+        :param guess_params: Guess Parameters for function
+        :type guess_params: numpy.ndarray
+        :param rate_constant: Rate constant value
+        :type rate_constant: float
+        :param temp: Temperature
+        :type temp: float
+        :param t_ref: Reference temperature
+        :type t_ref: float
         :return err: error in the residual
         :rtype: numpy.ndarray
     """
 
-      # compute the fitted rate constant
+    # compute the fitted rate constant
     k_fit1 = np.exp(
         np.log(guess_params[0]) +
         guess_params[1] * np.log(temp/t_ref) -
@@ -166,23 +228,30 @@ def _mod_arr_residuals(guess_params, rate_constant, temp, t_ref):
 
     return err
 
- 
+
 def _dsarrfit(temps, rate_constants,
               a_guess, n_guess, ea_guess,
               fit_type, dsarrfit_path, a_conv_factor):
     """ Routine calls the dsarrfit code to fit a set of rate constants
         to a single or double Arrhenius functional expression
-        :param numpy.ndarray temps: temperatures
-        :param numpy.ndarray rate_constants: rate constants
+        :param temps: temperatures
+        :type temps: numpy.ndarray
+        :param rate_constants: rate constants
+        :type rate_constants: numpy.ndarray
         :param float a_guess: seed guess value for A parameters
+        :type a_guess: float
         :param float n_guess: seed guess value for n parameters
+        :type n_guess: float
         :param float ea_guess: seed guess value for Ea parameters
-        :param string fit_type: var signaling for a single or double fit
-        :param string dsarrfit_path: path to run dsarrfit
-        :param float a_conv_factor: Conversion factor for A parameter
+        :type ea_guess: float
+        :param fit_type: var signaling for a single or double fit
+        :type fit_type: str
+        :param dsarrfit_path: path to run dsarrfit
+        :type dsarrfit_path: str
+        :param a_conv_factor: Conversion factor for A parameter
+        :type a_conv_factor: float
         :return fit_params: fitting parameters for function
         :rtype: list
-    """
     """
 
     # Write the input file for the ratefit code

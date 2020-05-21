@@ -15,9 +15,36 @@ SRC_PATH = os.path.dirname(os.path.realpath(__file__))
 def write_input(kpt_dct, troe_param_fit_lst,
                 highp_a=8.1e-11, highp_n=-0.01, highp_ea=1000.0,
                 lowp_a=8.1e-11, lowp_n=-0.01, lowp_ea=1000.0,
-                alpha=0.19, ts1=590, ts2=1.e6, ts3=6.e4,
+                alpha=0.19, ts1=590.0, ts2=1.0e6, ts3=6.0e4,
                 fit_tol1=1.0e-8, fit_tol2=1.0e-8):
-    """ write the troefit input file
+    """ Write the troefit input file.
+
+        :param kpt_dct: k(T,P) values
+        :type kpt_dct: dict[pressure:temps]
+        :param troe_param_fit_lst: Troe parameters to include in fitting
+        :param troe_param_fit_lst: list(str)
+        :param float highp_a: seed guess value for A parameters at high-P
+        :type highp_a: float
+        :param float highp_n: seed guess value for n parameters at high-P
+        :type highp_n: float
+        :param float highp_ea: seed guess value for Ea parameters at high-P
+        :type highp_ea: float
+        :param float lowp_a: seed guess value for A parameters at low-P
+        :type lowp_a: float
+        :param float lowp_n: seed guess value for n parameters at low-P
+        :type lowp_n: float
+        :param float lowp_ea: seed guess value for Ea parameters at low-P
+        :type lowp_ea: float
+        :param alpha: Troe alpha parameter
+        :type alpha: float
+        :param ts3: Troe T3 parameter
+        :type ts3: float
+        :param ts1: Troe T1 parameter
+        :type ts1: float
+        :param ts2: Troe T2 parameter
+        :type ts2: float
+        :return troefit_str: string for the troefit input file
+        :rtype: string
     """
 
     # Write the fitting parameters at the top of the file
@@ -72,7 +99,10 @@ def write_input(kpt_dct, troe_param_fit_lst,
 
 
 def run_troefit(path):
-    """ run arrfit code
+    """ Run the troefit executable.
+
+        :param path: Path where the troefit input file exists
+        :type path: str
     """
 
     # Go to path
@@ -88,7 +118,14 @@ def run_troefit(path):
 
 
 def read_params(output_string, conv_factor=1.000):
-    """ obtain information from the arrfit output
+    """ Parse the output of the troefit code for the fitting
+        parameters for a Troe fit.
+        :param output_str: output of troefit code
+        :type output_str: str
+        :param fit_type:
+        :type fit_type: str
+        :param a_conv_factor: Conversion factor for A parameter
+        :type a_conv_factor: float
     """
 
     # Loop over the lines and find the resulting fit params line

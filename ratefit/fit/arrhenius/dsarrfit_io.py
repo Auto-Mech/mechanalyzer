@@ -14,12 +14,18 @@ SRC_PATH = os.path.dirname(os.path.realpath(__file__))
 
 def write_input(temps, rate_constants,
                 a_guess=8.1e-11, n_guess=-0.01, ea_guess=1000.0):
-    """ Write the dsarrfit input file
+    """ Write the dsarrfit input file.
+
         :param list temps: temperatures (K)
-        :param list rate_constants: T-dependent rate constants ()
-        :param float a_guess: Guess value for pre-exponential A parameter
-        :param float n_guess: Guess value for n parameter
-        :param float ea_guess: Guess value for activation energy Ea parameter
+        :type temps: list(float)
+        :param rate_constants: T-dependent rate constants ()
+        :type rate_constants: list(float)
+        :param a_guess: Guess value for pre-exponential A parameter
+        :type a_guess: float
+        :param n_guess: Guess value for n parameter
+        :type n_guess: float
+        :param ea_guess: Guess value for activation energy Ea parameter
+        :type ea_guess: float
         :return dsarrfit_str: string for the dsarrfit input file
         :rtype: string
     """
@@ -51,7 +57,10 @@ def write_input(temps, rate_constants,
 
 
 def run_dsarrfit(path):
-    """ run arrfit code
+    """ Run the dsarrfit executable.
+
+        :param path: Path where the dsarrfit input file exists
+        :type path: str
     """
 
     # Go to path
@@ -69,22 +78,29 @@ def run_dsarrfit(path):
     os.chdir(start_path)
 
 
-def read_params(output_string, fit, conv_factor=1.000):
-    """ obtain information from the arrfit output
+def read_params(output_str, fit_type, a_conv_factor=1.000, ea_conv_factor=RC):
+    """ Parse the output of the dsarrfit code for the fitting
+        parameters for either a single or double Arrhenius fit.
+        :param output_str: output of dsarrfit code
+        :type output_str: str
+        :param fit_type:
+        :type fit_type: str
+        :param a_conv_factor: Conversion factor for A parameter
+        :type a_conv_factor: float
     """
 
-    assert fit in ('single', 'double')
+    assert fit_type in ('single', 'double')
 
     # Loop over the lines and find the resulting fit params line
-    lines = output_string.splitlines()
+    lines = output_str.splitlines()
     lines.reverse()
     params_str = ''
-    if fit == 'single':
+    if fit_type == 'single':
         for line in lines:
             if line.startswith(' results for iteration'):
                 params_str = lines[lines.index(line)-3]
                 break
-    elif fit == 'double':
+    elif fit_type == 'double':
         for line in lines:
             if line.startswith(' results from sum of two modified arrhenius'):
                 params_str = lines[lines.index(line)-3]
@@ -93,22 +109,22 @@ def read_params(output_string, fit, conv_factor=1.000):
     # Assess status of fits (single always assumed True for now)
     single_fit_success = True
     double_fit_success = False
-    if fit == 'double' and params_str:
+    if fit_type == 'double' and params_str:
         double_fit_success = True
 
     # Grab the fitting parameters
     # Multiple A by given conversion factor and Ea/R term by R to get Ea
-    if fit == 'single' and single_fit_success:
+    if fit_type == 'single' and single_fit_success:
         fit_params = [float(param) for param in params_str.split()]
-        fit_params[0] *= conv_factor
-        fit_params[2] *= RC
-    elif fit == 'double' and double_fit_success:
+        fit_params[0] *= a_conv_factor
+        fit_params[2] *= ea_conv_factor
+    elif fit_type == 'double' and double_fit_success:
         fit_params = [float(param) for param in params_str.split()]
-        fit_params[0] *= conv_factor
-        fit_params[2] *= RC
-        fit_params[3] *= conv_factor
-        fit_params[5] *= RC
-    elif fit == 'double' and not double_fit_success:
+        fit_params[0] *= a_conv_factor
+        fit_params[2] *= ea_conv_factor
+        fit_params[3] *= a_conv_factor
+        fit_params[5] *= ea_conv_factor
+    elif fit_type == 'double' and not double_fit_success:
         fit_params = []
 
     return fit_params
