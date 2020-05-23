@@ -60,33 +60,33 @@ def test__lindemann_troe():
     # Calc the rate contants using the Lindemann functional form
     lind_ktps = ratefit.calc.lindemann(
         highp_ks, lowp_ks,
-        PRESSURES, TEMPS)
+        TEMPS, PRESSURES)
 
     lind_ktps1 = lind_ktps[0.1]
     lind_ktps2 = lind_ktps[2.0]
     lind_ktps3 = lind_ktps[5.0]
     lind_ktps4 = lind_ktps[10.0]
 
-    assert numpy.allclose(lind_ktps1, numpy.array(LIND_K_DATA.ktp1), atol=0.01)
-    assert numpy.allclose(lind_ktps2, numpy.array(LIND_K_DATA.ktp2), atol=0.01)
-    assert numpy.allclose(lind_ktps3, numpy.array(LIND_K_DATA.ktp3), atol=0.01)
-    assert numpy.allclose(lind_ktps4, numpy.array(LIND_K_DATA.ktp4), atol=0.01)
+    assert numpy.allclose(lind_ktps1, LIND_K_DATA.ktp1.values, atol=0.01)
+    assert numpy.allclose(lind_ktps2, LIND_K_DATA.ktp2.values, atol=0.01)
+    assert numpy.allclose(lind_ktps3, LIND_K_DATA.ktp3.values, atol=0.01)
+    assert numpy.allclose(lind_ktps4, LIND_K_DATA.ktp4.values, atol=0.01)
 
     # Calc the rate contants using the Lindemann functional form
     troe_ktps = ratefit.calc.troe(
         highp_ks, lowp_ks,
-        PRESSURES, TEMPS,
-        TROE_ALPHA, TROE_T3, TROE_T1, TROE_T2)
+        TEMPS, PRESSURES,
+        TROE_ALPHA, TROE_T3, TROE_T1, ts2=TROE_T2, collid_factor=1.0)
 
     troe_ktps1 = troe_ktps[0.1]
     troe_ktps2 = troe_ktps[2.0]
     troe_ktps3 = troe_ktps[5.0]
     troe_ktps4 = troe_ktps[10.0]
 
-    assert numpy.allclose(troe_ktps1, numpy.array(TROE_K_DATA.ktp1), atol=0.01)
-    assert numpy.allclose(troe_ktps2, numpy.array(TROE_K_DATA.ktp2), atol=0.01)
-    assert numpy.allclose(troe_ktps3, numpy.array(TROE_K_DATA.ktp3), atol=0.01)
-    assert numpy.allclose(troe_ktps4, numpy.array(TROE_K_DATA.ktp4), atol=0.01)
+    assert numpy.allclose(troe_ktps1, TROE_K_DATA.ktp1.values, atol=0.01)
+    assert numpy.allclose(troe_ktps2, TROE_K_DATA.ktp2.values, atol=0.01)
+    assert numpy.allclose(troe_ktps3, TROE_K_DATA.ktp3.values, atol=0.01)
+    assert numpy.allclose(troe_ktps4, TROE_K_DATA.ktp4.values, atol=0.01)
 
 
 if __name__ == '__main__':

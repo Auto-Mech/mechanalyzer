@@ -49,17 +49,17 @@ def test__plog():
     """ test ratefit.calc.plog
     """
 
-    plog_ktps = ratefit.calc.plog(PLOG_DCT, T_REF, PRESSURES, TEMPS)
+    plog_ktps = ratefit.calc.plog(PLOG_DCT, T_REF, TEMPS, PRESSURES)
 
     plog_ktps1 = plog_ktps[0.1]
     plog_ktps2 = plog_ktps[0.9869]
     plog_ktps3 = plog_ktps[2.0]
     plog_ktps4 = plog_ktps[5.0]
 
-    assert numpy.allclose(plog_ktps1, numpy.array(PLOG_K_DATA.ktp1), atol=0.01)
-    assert numpy.allclose(plog_ktps2, numpy.array(PLOG_K_DATA.ktp2), atol=0.01)
-    assert numpy.allclose(plog_ktps3, numpy.array(PLOG_K_DATA.ktp3), atol=0.01)
-    assert numpy.allclose(plog_ktps4, numpy.array(PLOG_K_DATA.ktp4), atol=0.01)
+    assert numpy.allclose(plog_ktps1, PLOG_K_DATA.ktp1.values, atol=0.01)
+    assert numpy.allclose(plog_ktps2, PLOG_K_DATA.ktp2.values, atol=0.01)
+    assert numpy.allclose(plog_ktps3, PLOG_K_DATA.ktp3.values, atol=0.01)
+    assert numpy.allclose(plog_ktps4, PLOG_K_DATA.ktp4.values, atol=0.01)
 
 
 if __name__ == '__main__':

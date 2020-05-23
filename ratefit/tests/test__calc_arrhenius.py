@@ -45,7 +45,7 @@ def test__single_arrhenius():
         A1, N1, EA1,
         T_REF, TEMPS)
 
-    ref_calc_ks = numpy.array(ARR_K_DATA.SingleArr)
+    ref_calc_ks = ARR_K_DATA.SingleArr.values
 
     assert numpy.allclose(calc_ks, ref_calc_ks, atol=0.01)
 
@@ -59,7 +59,7 @@ def test__double_arrhenius():
         A2, N2, EA2,
         T_REF, TEMPS)
 
-    ref_calc_ks = numpy.array(ARR_K_DATA.DoubleArr)
+    ref_calc_ks = ARR_K_DATA.DoubleArr.values
 
     assert numpy.allclose(calc_ks, ref_calc_ks, atol=0.01)
 
