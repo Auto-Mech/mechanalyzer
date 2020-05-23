@@ -30,8 +30,8 @@ RATEK_DATA = _read_csv(
     os.path.join(DATA_PATH, RATEK_FILE_NAME))
 
 # Set the rate constant data
-TEMPS = RATEK_DATA.temps
-RATEKS = RATEK_DATA.rateks
+TEMPS = RATEK_DATA.temps.values
+RATEKS = RATEK_DATA.rateks.values
 
 # Set NA and the T0 value in the (T/T0)^n term in the Arrhenius expr.
 NA = 6.0221409e23

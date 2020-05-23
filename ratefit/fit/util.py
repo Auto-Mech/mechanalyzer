@@ -13,8 +13,10 @@ def get_valid_tk(temps, rate_constants, bimol,
            (2) k(T) is undefined from Master Equation (i.e. k(T) == '***')
            (3) k(T) < 1.0e-21 for a bimolecular reaction, or
            (4) T is outside the cutoff
-        :param numpy.ndarray temps: temps
-        :param numpy.ndarray rate_constants: rate constants
+        :param temps: Temperatures (K)
+        :type temps: list(float)
+        :param rate_constants: rate constants (s-1 or cm^3.s-1)
+        :type rate constants: list(str, float)
         :param bool bimol: Parameter indicating bimolecular reation
         :param float tmin: minimum temperature cutoff for valid T,k(T) pairs
         :param float tmax: maximum temperature cutoff for valid T,k(T) pairs
@@ -24,17 +26,13 @@ def get_valid_tk(temps, rate_constants, bimol,
         :rtype numpy.ndarray
         """
 
-    # Convert temps and rate constants to floats
-    temps = [float(temp) for temp in temps]
-    rate_constants = [float(rate_constant)
-                      if rate_constant != '***' else rate_constant
-                      for rate_constant in rate_constants]
-
-    # Set tmin and tmax
     if tmin is None:
         tmin = min(temps)
     if tmax is None:
         tmax = max(temps)
+    print(tmin)
+    print(tmax)
+    print(temps)
     assert tmin in temps and tmax in temps
 
     # Grab the temperature, rate constant pairs which correspond to
