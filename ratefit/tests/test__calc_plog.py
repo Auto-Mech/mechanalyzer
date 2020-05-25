@@ -56,10 +56,10 @@ def test__plog():
     plog_ktps3 = plog_ktps[2.0]
     plog_ktps4 = plog_ktps[5.0]
 
-    assert numpy.allclose(plog_ktps1, PLOG_K_DATA.ktp1.values, atol=0.01)
-    assert numpy.allclose(plog_ktps2, PLOG_K_DATA.ktp2.values, atol=0.01)
-    assert numpy.allclose(plog_ktps3, PLOG_K_DATA.ktp3.values, atol=0.01)
-    assert numpy.allclose(plog_ktps4, PLOG_K_DATA.ktp4.values, atol=0.01)
+    assert numpy.allclose(plog_ktps1, PLOG_K_DATA.ktp1.values, atol=0.0001)
+    assert numpy.allclose(plog_ktps2, PLOG_K_DATA.ktp2.values, atol=0.0001)
+    assert numpy.allclose(plog_ktps3, PLOG_K_DATA.ktp3.values, atol=0.0001)
+    assert numpy.allclose(plog_ktps4, PLOG_K_DATA.ktp4.values, atol=0.0001)
 
 
 if __name__ == '__main__':
