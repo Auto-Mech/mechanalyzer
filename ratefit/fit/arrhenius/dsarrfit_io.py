@@ -55,7 +55,10 @@ def run_dsarrfit(path):
 
     # Run the executable
     exe_cmd = 'dsarrfit.x_cfg'
-    subprocess.check_call([exe_cmd])
+    try:
+        subprocess.check_call([exe_cmd])
+    except subprocess.CalledProcessError:
+        print('dsarrfit failed for', path)
 
     # Return to starting dir
     os.chdir(start_path)
