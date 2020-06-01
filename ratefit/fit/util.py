@@ -7,24 +7,68 @@ import numpy as np
 
 def get_valid_tk(temps, rate_constants, bimol,
                  tmin=None, tmax=None):
-    """ this subroutine takes in a array of rate constants and
-        returns the subset of this array that is positive,
-        along with the corresponding Temperature array:
-        k > 0 and k != *** and tmin <= T <= tmax
+    """ Takes in lists of temperature-rate constant pairs [T,k(T)]
+        and removes invalid pairs for which
+           (1) k(T) < 0
+           (2) k(T) is undefined from Master Equation (i.e. k(T) == '***')
+           (3) k(T) < 1.0e-21 for a bimolecular reaction, or
+           (4) T is outside the cutoff
+        :param temps: Temperatures (K)
+        :type temps: list(float)
+        :param rate_constants: rate constants (s-1 or cm^3.s-1)
+        :type rate constants: list(str, float)
+        :param bool bimol: Parameter indicating bimolecular reation
+        :param float tmin: minimum temperature cutoff for valid T,k(T) pairs
+        :param float tmax: maximum temperature cutoff for valid T,k(T) pairs
+        :return valid_t: List of vaild temperatures
+        :rtype numpy.ndarray
+        :return valid_k: List of vaild rate constants
+        :rtype numpy.ndarray
         """
 
-    # Convert temps and rate constants to floats
-    temps = [float(temp) for temp in temps]
-    rate_constants = [float(rate_constant)
-                      if rate_constant != '***' else rate_constant
-                      for rate_constant in rate_constants]
-
-    # Set tmin and tmax
-    if tmin is None:
-        tmin = min(temps)
+    # Set max temperature to user input, if none use max of input temperatures
     if tmax is None:
         tmax = max(temps)
+
+    # Set min temperature to user input, if none use either
+    # min of input temperatures or
+    # if negative kts are found, set min temp to be just above highest neg.
+    if tmin is None:
+        max_neg_idx = None
+        for kt_idx, rate_constant in enumerate(rate_constants):
+            # find idx for max temperature for which kt is negative, if any
+            if rate_constant == '***':
+                frate_constant = 1.
+            else:
+                frate_constant = float(rate_constant)
+            if frate_constant < 0.0:
+                max_neg_idx = kt_idx
+        # If a negative kt is found use temp+1
+        if max_neg_idx is not None:
+            tmin = temps[max_neg_idx+1]
+        else:
+            tmin = min(temps)
+
     assert tmin in temps and tmax in temps
+
+    # """ this subroutine takes in a array of rate constants and
+       #  returns the subset of this array that is positive,
+       #  along with the corresponding Temperature array:
+       #  k > 0 and k != *** and tmin <= T <= tmax
+       #  """
+
+    # # Convert temps and rate constants to floats
+    # temps = [float(temp) for temp in temps]
+    # rate_constants = [float(rate_constant)
+                      # if rate_constant != '***' else rate_constant
+                      # for rate_constant in rate_constants]
+
+    # Set tmin and tmax
+    # if tmin is None:
+        # tmin = min(temps)
+    # if tmax is None:
+        # tmax = max(temps)
+    # assert tmin in temps and tmax in temps
 
     # Grab the temperature, rate constant pairs which correspond to
     # temp > 0, temp within tmin and tmax, rate constant defined (not ***)
