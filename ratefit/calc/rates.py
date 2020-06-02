@@ -79,6 +79,7 @@ def arrhenius(params, t_ref, temps):
          :rtype: numpy.ndarray
     """
 
+    # print(params)
     assert len(params) in (1, 2)
     for param_set in params:
         assert len(param_set) == 3
@@ -234,8 +235,9 @@ def plog(plog_dct, t_ref, temps, pressures):
     """
     ktp_dct = {}
     for pressure in pressures:
-        ktp_dct[pressure] = plog_one_pressure(
-            plog_dct, t_ref, temps, pressure)
+        if pressure in plog_dct:
+            ktp_dct[pressure] = plog_one_pressure(
+                plog_dct, t_ref, temps, pressure)
 
     return ktp_dct
 
@@ -266,6 +268,8 @@ def plog_one_pressure(plog_dct, t_ref, temps, pressure):
             plog_params = plog_dct[plog_pressure]
 
     # If pressure equals value use, arrhenius expression
+    # pressure_defined = False
+    # print('def', pressure_defined)
     if pressure_defined:
         ktps = arrhenius(plog_params, t_ref, temps)
     else:

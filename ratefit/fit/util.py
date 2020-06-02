@@ -26,13 +26,25 @@ def get_valid_tk(temps, rate_constants, bimol,
         :rtype numpy.ndarray
         """
 
-    if tmin is None:
-        tmin = min(temps)
+    # Set max temperature to user input, if none use max of input temperatures
     if tmax is None:
         tmax = max(temps)
-    print(tmin)
-    print(tmax)
-    print(temps)
+
+    # Set min temperature to user input, if none use either
+    # min of input temperatures or
+    # if negative kts are found, set min temp to be just above highest neg.
+    if tmin is None:
+        max_neg_idx = None
+        for kt_idx, rate_constant in enumerate(rate_constants):
+            # find idx for max temperature for which kt is negative, if any
+            if float(rate_constant) < 0.0:
+                max_neg_idx = kt_idx
+        # If a negative kt is found use temp+1
+        if max_neg_idx is not None:
+            tmin = temps[max_neg_idx+1]
+        else:
+            tmin = min(temps)
+
     assert tmin in temps and tmax in temps
 
     # Grab the temperature, rate constant pairs which correspond to
@@ -49,6 +61,8 @@ def get_valid_tk(temps, rate_constants, bimol,
     # Convert the lists to numpy arrays
     valid_t = np.array(valid_t, dtype=np.float64)
     valid_k = np.array(valid_k, dtype=np.float64)
+    print(valid_t)
+    print(valid_k)
 
     return valid_t, valid_k
 
@@ -81,3 +95,11 @@ def flip_ktp_dct(ktp_dct):
                 inv_ktp_dct[temp] = [p_arr, k_arr]
 
     return inv_ktp_dct
+
+
+if __name__ == '__main__':
+    temps = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+    rate_constants = [1, -2, 3, 4, 5, -6, 7, 8, 9, 10]
+    bimol = False
+    get_valid_tk(temps, rate_constants, bimol,
+                 tmin=None, tmax=None)

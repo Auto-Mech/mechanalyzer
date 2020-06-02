@@ -51,6 +51,9 @@ def test__plog():
 
     plog_ktps = ratefit.calc.plog(PLOG_DCT, T_REF, TEMPS, PRESSURES)
 
+    # assert numpy.allclose(
+    #     plog_ktps.keys(), numpy.array([0.1, 0.9869, 2.0, 5.0]))
+
     plog_ktps1 = plog_ktps[0.1]
     plog_ktps2 = plog_ktps[0.9869]
     plog_ktps3 = plog_ktps[2.0]
