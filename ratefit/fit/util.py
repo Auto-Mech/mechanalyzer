@@ -67,6 +67,8 @@ def get_valid_tk(temps, rate_constants, bimol,
     # Convert the lists to numpy arrays
     valid_t = np.array(valid_t, dtype=np.float64)
     valid_k = np.array(valid_k, dtype=np.float64)
+    print(valid_t)
+    print(valid_k)
 
     return valid_t, valid_k
 
@@ -99,3 +101,11 @@ def flip_ktp_dct(ktp_dct):
                 inv_ktp_dct[temp] = [p_arr, k_arr]
 
     return inv_ktp_dct
+
+
+if __name__ == '__main__':
+    temps = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+    rate_constants = [1, -2, 3, 4, 5, -6, 7, 8, 9, 10]
+    bimol = False
+    get_valid_tk(temps, rate_constants, bimol,
+                 tmin=None, tmax=None)
