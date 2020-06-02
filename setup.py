@@ -4,7 +4,7 @@
 from distutils.core import setup
 
 setup(name="ratefit",
-      version="0.1.0",
+      version="0.2.0",
       packages=['ratefit',
                 'ratefit.calc',
                 'ratefit.fit',
