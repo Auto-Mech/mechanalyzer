@@ -11,8 +11,6 @@ from ratefit.calc.rates import troe
 from ratefit.calc.rates import plog
 from ratefit.calc.rates import chebyshev
 from ratefit.calc.rates import p_to_m
-from ratefit.calc.pdep import assess_pressure_dependence
-from ratefit.calc.err import fitting_errors
 
 
 __all__ = [
@@ -25,6 +23,4 @@ __all__ = [
     'plog',
     'chebyshev',
     'p_to_m',
-    'assess_pressure_dependence',
-    'fitting_errors',
 ]

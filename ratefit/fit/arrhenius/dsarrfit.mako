@@ -1,6 +1,7 @@
- 1.0e-10 1.0e-10 
- 1 1 1 1 1 1 
- 1 
-   ${a_guess}, ${n_guess}, ${ea_guess}
- ${num_tk}   ${num_tk} 
+1.0e-10 1.0e-10 
+${arr_runs}
+${arr_param_opt_idxs} 
+${num_param_lines} 
+${param_lines} 
+${num_tk}   ${num_tk} 
 ${tk_lines}

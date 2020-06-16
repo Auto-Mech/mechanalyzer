@@ -30,7 +30,7 @@ RATEK_DATA = _read_csv(
     os.path.join(DATA_PATH, RATEK_FILE_NAME))
 
 # Set the rate constant data
-TEMPS = RATEK_DATA.temps.values
+TEMPS = RATEK_DATA.TEMPS.values
 RATEKS = RATEK_DATA.rateks.values
 
 # Set NA and the T0 value in the (T/T0)^n term in the Arrhenius expr.
@@ -50,12 +50,12 @@ print('dsarffit', DSARRFIT_PATH)
 #     """
 #
 #     # Filter the temperatures and rate constants to get valid values
-#     temps, calc_ks = ratefit.fit.util.get_valid_tk(
+#     TEMPS, RATEKS = ratefit.fit.util.get_valid_tk(
 #         TEMPS, RATEKS, tmin=TMIN, tmax=TMAX, bimol=False)
 #
 #     # Run a single Arrhenius fit to build a guess for the double fit
 #     sgl_fit = ratefit.fit.arrhenius.single(
-#         temps, calc_ks, T_REF, 'python')
+#         TEMPS, RATEKS, T_REF, 'python')
 #
 #     ref_sgl_fit = [1.18698937208059e-15,
 #                    1.6600455223689599,
@@ -65,7 +65,7 @@ print('dsarffit', DSARRFIT_PATH)
 #
 #     # Run a double Arrhenius fit
 #     fit_params = ratefit.fit.arrhenius.double(
-#         temps, calc_ks, T_REF, 'python',
+#         TEMPS, RATEKS, T_REF, 'python',
 #         a_guess=sgl_fit[0],
 #         n_guess=sgl_fit[1],
 #         ea_guess=sgl_fit[2])
@@ -81,7 +81,7 @@ print('dsarffit', DSARRFIT_PATH)
 #     fit_ks = ratefit.calc.double_arrhenius(
 #         fit_params[0], fit_params[1], fit_params[2],
 #         fit_params[3], fit_params[4], fit_params[5],
-#         T_REF, temps)
+#         T_REF, TEMPS)
 #
 #     ref_fit_ks = [
 #         3.32484E-15, 2.87796E-14, 1.31244E-13, 4.13627E-13,
@@ -94,7 +94,7 @@ print('dsarffit', DSARRFIT_PATH)
 #
 #     # Calculate the sum-of-square errors and mean-average-errors
 #     mean_avg_err, max_avg_err = ratefit.calc.fitting_errors(
-#         calc_ks, fit_ks)
+#         RATEKS, fit_ks)
 #
 #     ref_mean_avg_err = 0.4741670536354967
 #     ref_max_avg_err = 0.875017109912643
@@ -107,13 +107,9 @@ def test__double_arrhenius_fit_dsarrfit():
     """ test ratefit.fit.arrhenius.double
     """
 
-    # Filter the temperatures and rate constants to get valid values
-    temps, calc_ks = ratefit.fit.util.get_valid_tk(
-        TEMPS, RATEKS, tmin=TMIN, tmax=TMAX, bimol=False)
-
     # Run a double Arrhenius fit
     fit_params = ratefit.fit.arrhenius.double(
-        temps, calc_ks, T_REF, 'dsarrfit', dsarrfit_path=DSARRFIT_PATH,
+        TEMPS, RATEKS, T_REF, 'dsarrfit', dsarrfit_path=DSARRFIT_PATH,
         a_conv_factor=1.0)
 
     ref_fit_params = [
@@ -127,7 +123,7 @@ def test__double_arrhenius_fit_dsarrfit():
     fit_ks = ratefit.calc.double_arrhenius(
         fit_params[0], fit_params[1], fit_params[2],
         fit_params[3], fit_params[4], fit_params[5],
-        T_REF, temps)
+        T_REF, TEMPS)
 
     ref_fit_ks = [
         3.32464E-15, 2.87785E-14, 1.31243E-13, 4.13605E-13,
@@ -140,7 +136,7 @@ def test__double_arrhenius_fit_dsarrfit():
 
     # Calculate the sum-of-square errors and mean-average-errors
     mean_avg_err, max_avg_err = ratefit.calc.fitting_errors(
-        calc_ks, fit_ks)
+        RATEKS, fit_ks)
 
     ref_mean_avg_err = 0.47471982687376374
     ref_max_avg_err = 0.8711794726859022

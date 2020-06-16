@@ -11,7 +11,7 @@ RC = 1.98720425864083e-3  # Gas Constant in kcal/mol.K
 
 
 def single(temps, rate_constants, t_ref, method,
-           a_guess=8.1e-11, n_guess=-0.01, ea_guess=2000.0,
+           arr1_guess=(8.1e-11, -0.01, 2000.0),
            dsarrfit_path=None, a_conv_factor=1.00):
     """ Fits a set of T-dependent rate constants [k(T)]s to a
         single Arrhenius functional expression using internal
@@ -25,11 +25,8 @@ def single(temps, rate_constants, t_ref, method,
         :param method: choice of using Python or dsarrfit fitting code
         :type method: str
         :param float a_guess: seed guess value for A parameters
-        :type a_guess: float
-        :param float n_guess: seed guess value for n parameters
-        :type n_guess: float
-        :param float ea_guess: seed guess value for Ea parameters
-        :type ea_guess: float
+        :param arr1_guess: A, n, Ea forr Arrhenius 1
+        :type arr1_guess: list(float)
         :param fit_type: var signaling for a single or double fit
         :type fit_type: str
         :param dsarrfit_path: path to run dsarrfit
@@ -46,7 +43,7 @@ def single(temps, rate_constants, t_ref, method,
     elif method == 'dsarrfit':
         assert dsarrfit_path is not None
         fit_params = _dsarrfit(
-            temps, rate_constants, a_guess, n_guess, ea_guess,
+            temps, rate_constants, arr1_guess, (),
             'single', dsarrfit_path, a_conv_factor)
     else:
         raise NotImplementedError
@@ -55,7 +52,7 @@ def single(temps, rate_constants, t_ref, method,
 
 
 def double(temps, rate_constants, t_ref, method,
-           a_guess=8.1e-11, n_guess=-0.01, ea_guess=2000.0,
+           arr1_guess=(8.1e-11, -0.01, 2000.0), arr2_guess=(),
            dsarrfit_path=None, a_conv_factor=1.00):
     """ Fits a set of T-dependent rate constants [k(T)]s to a
         double Arrhenius functional expression using internal
@@ -68,14 +65,10 @@ def double(temps, rate_constants, t_ref, method,
         :type t_ref: float
         :param method: choice of using Python or dsarrfit fitting code
         :type method: str
-        :param float a_guess: seed guess value for A parameters
-        :type a_guess: float
-        :param float n_guess: seed guess value for n parameters
-        :type n_guess: float
-        :param float ea_guess: seed guess value for Ea parameters
-        :type ea_guess: float
-        :param fit_type: var signaling for a single or double fit
-        :type fit_type: str
+        :param arr1_guess: A, n, Ea forr Arrhenius 1
+        :type arr1_guess: list(float)
+        :param arr2_guess: A, n, Ea forr Arrhenius 2
+        :type arr2_guess: list(float)
         :param dsarrfit_path: path to run dsarrfit
         :type dsarrfit_path: str
         :param a_conv_factor: Conversion factor for A parameter
@@ -90,11 +83,11 @@ def double(temps, rate_constants, t_ref, method,
     elif method == 'dsarrfit':
         assert dsarrfit_path is not None
         fit_params = _dsarrfit(
-            temps, rate_constants, a_guess, n_guess, ea_guess,
+            temps, rate_constants, arr1_guess, arr2_guess,
             'double', dsarrfit_path, a_conv_factor)
-    elif method == 'python':
-        fit_params = _double_arrhenius_scipy(
-            temps, rate_constants, t_ref, a_guess, n_guess, ea_guess)
+    # elif method == 'python':
+    #     fit_params = _double_arrhenius_scipy(
+    #         temps, rate_constants, t_ref, a_guess, n_guess, ea_guess)
     else:
         raise NotImplementedError
 
@@ -229,8 +222,7 @@ def _mod_arr_residuals(guess_params, rate_constant, temp, t_ref):
     return err
 
 
-def _dsarrfit(temps, rate_constants,
-              a_guess, n_guess, ea_guess,
+def _dsarrfit(temps, rate_constants, arr1_guess, arr2_guess,
               fit_type, dsarrfit_path, a_conv_factor):
     """ Routine calls the dsarrfit code to fit a set of rate constants
         to a single or double Arrhenius functional expression
@@ -238,12 +230,10 @@ def _dsarrfit(temps, rate_constants,
         :type temps: numpy.ndarray
         :param rate_constants: rate constants
         :type rate_constants: numpy.ndarray
-        :param float a_guess: seed guess value for A parameters
-        :type a_guess: float
-        :param float n_guess: seed guess value for n parameters
-        :type n_guess: float
-        :param float ea_guess: seed guess value for Ea parameters
-        :type ea_guess: float
+        :param arr1_guess: A, n, Ea forr Arrhenius 1
+        :type arr1_guess: list(float)
+        :param arr2_guess: A, n, Ea forr Arrhenius 2
+        :type arr2_guess: list(float)
         :param fit_type: var signaling for a single or double fit
         :type fit_type: str
         :param dsarrfit_path: path to run dsarrfit
@@ -251,12 +241,13 @@ def _dsarrfit(temps, rate_constants,
         :param a_conv_factor: Conversion factor for A parameter
         :type a_conv_factor: float
         :return fit_params: fitting parameters for function
-        :rtype: list
+        :rtype: list(float)
     """
 
     # Write the input file for the ratefit code
     ratefit_inp_str = dsarrfit_io.write_input(
-        temps, rate_constants, a_guess, n_guess, ea_guess)
+        temps, rate_constants, fit_type=fit_type,
+        arr1_guess=arr1_guess, arr2_guess=arr2_guess)
     dsarrfit_inp_file = os.path.join(dsarrfit_path, 'arrfit.dat')
     with open(dsarrfit_inp_file, 'w') as arrfit_infile:
         arrfit_infile.write(ratefit_inp_str)
