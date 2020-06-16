@@ -1,0 +1,31 @@
+name: mechanalyzer-env
+
+channels:
+    - kevinmooreiii
+    - auto-mech
+    - psi4
+    - rdkit
+    - openbabel
+    - conda-forge
+
+dependencies:
+    - gfortran_linux-64  # [linux]
+    - python=3.7
+    - numpy
+    - scipy
+    - pyyaml
+    - mako
+    - matplotlib
+    - pytest
+    - pytest-cov
+    - future
+    - flake8
+    - pylint
+    - kevinmooreiii::automol
+    - kevinmooreiii::autoparse
+    - kevinmooreiii::ratefit
+    - auto-mech::x2z
+    - psi4::psi4
+    - rdkit::rdkit
+    - openbabel::openbabel
+    - conda-forge::qcelemental
