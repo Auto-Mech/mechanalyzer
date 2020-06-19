@@ -12,8 +12,8 @@ RC = 1.98720425864083e-3  # Gas Constant in kcal/mol.K
 SRC_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
-def write_input(temps, rate_constants,
-                a_guess=8.1e-11, n_guess=-0.01, ea_guess=1000.0):
+def write_input(temps, rate_constants, fit_type='single',
+                arr1_guess=(8.1e-11, -0.01, 2000.0), arr2_guess=()):
     """ Write the dsarrfit input file.
 
         :param list temps: temperatures (K)
@@ -30,6 +30,26 @@ def write_input(temps, rate_constants,
         :rtype: string
     """
 
+    # Format the string to tell the code what to optimize
+    assert fit_type in ('single, double, single-double')
+    if fit_type == 'single':
+        arr_runs = 's'
+        opt_str = '1 1 1 0 0 0'
+    elif fit_type == 'double':
+        arr_runs = 'd'
+        opt_str = '1 1 1 1 1 1'
+    else:
+        arr_runs = 'sd'
+        opt_str = '1 1 1 1 1 1'
+
+    # Set the param guess lines
+    param_lines = '  {} {} {}'.format(*arr1_guess)
+    if arr2_guess:
+        param_lines += '\n  {} {} {}'.format(*arr2_guess)
+        num_param_lines = 2
+    else:
+        num_param_lines = 1
+
     # Format the lines with temps and rate constants
     assert len(temps) == len(rate_constants)
     num_tk = len(temps)
@@ -39,9 +59,10 @@ def write_input(temps, rate_constants,
 
     # Build the fill value dictionary
     fit_keys = {
-        'a_guess': a_guess,
-        'n_guess': n_guess,
-        'ea_guess': ea_guess,
+        'arr_runs': arr_runs,
+        'arr_param_opt_idxs': opt_str,
+        'num_param_lines': num_param_lines,
+        'param_lines': param_lines,
         'num_tk': num_tk,
         'tk_lines': tk_str
         }

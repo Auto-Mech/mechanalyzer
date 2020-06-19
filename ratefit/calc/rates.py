@@ -7,7 +7,7 @@ from scipy.special import eval_chebyt
 
 
 RC = 1.98720425864083e-3  # Gas Constant in kcal/mol.K
-RC2 = 0.0820573660809596  # Gas Constant in L.atm/mol.K
+RC2 = 0.0820573660809596 * 1000.0  # Gas Constant in cm^3.atm/mol.K
 
 
 def single_arrhenius(a_par, n_par, ea_par,
@@ -79,7 +79,6 @@ def arrhenius(params, t_ref, temps):
          :rtype: numpy.ndarray
     """
 
-    # print(params)
     assert len(params) in (1, 2)
     for param_set in params:
         assert len(param_set) == 3
@@ -97,7 +96,50 @@ def arrhenius(params, t_ref, temps):
     return kts
 
 
-def lindemann(highp_ks, lowp_ks, temps, pressures):
+def lowp_limit(highp_rateks, temps, pressures, collid_factor=1.0, rval=RC2):
+    """ Calculates T,P-dependent rate constants [k(T,P)]s assuming
+        the reaction occurs in the low-pressure regime where the
+        rates are linear with pressure.
+
+        :param highp_ks: k(T)s determined at high-pressure
+        :type highp_ks: numpy.ndarray
+        :param temps: Temps used to calculate high- and low-k(T)s
+        :type temps: numpy.ndarray
+        :param pressures: Pressures used to calculate k(T,P)s
+        :type pressures: list(float)
+        :param collid_factor: Buffer enhancement collision factor
+        :type collid_factor: float
+        :return ktp_dct: k(T,Ps) at all temps and pressures
+        :rtype: dict[pressure: temps]
+    """
+    ktp_dct = {}
+    for pressure in pressures:
+        ktp_dct[pressure] = lowp_limit_one_pressure(
+            highp_rateks, temps, pressure,
+            collid_factor=collid_factor, rval=rval)
+
+    return ktp_dct
+
+
+def lowp_limit_one_pressure(highp_rateks, temps, pressure,
+                            collid_factor=1.0, rval=RC2):
+    """ Calculates the reduced pressure term for a single pressure
+        used for Lindemann and Troe P-dependent functional expressions.
+
+        :param list highp_ks: k(T)s determined at high-pressure
+        :type highp_ks: numpy.ndarray
+        :param temps: Temps used to calculate high- and low-k(T)s
+        :temps: numpy.ndarray
+        :param pressure: Pressure used to calculate reduced pressure
+        :type pressure: float
+        :param collid_factor: Buffer enhancement collision factor
+        :type collid_factor: float
+        :rtype: numpy.ndarray
+    """
+    return highp_rateks * p_to_m(pressure, temps, rval=rval) * collid_factor
+
+
+def lindemann(highp_ks, lowp_ks, temps, pressures, collid_factor=1.0):
     """ Calculates T,P-dependent rate constants [k(T,P)]s using
         a Lindemann functional expression.
 
@@ -109,18 +151,21 @@ def lindemann(highp_ks, lowp_ks, temps, pressures):
         :type temps: numpy.ndarray
         :param pressures: Pressures used to calculate k(T,P)s
         :type pressures: list(float)
+        :param collid_factor: Buffer enhancement collision factor
+        :type collid_factor: float
         :return ktp_dct: k(T,Ps) at all temps and pressures
         :rtype: dict[pressure: temps]
     """
     ktp_dct = {}
     for pressure in pressures:
         ktp_dct[pressure] = lindemann_one_pressure(
-            highp_ks, lowp_ks, temps, pressure)
+            highp_ks, lowp_ks, temps, pressure, collid_factor=collid_factor)
 
     return ktp_dct
 
 
-def lindemann_one_pressure(highp_ks, lowp_ks, temps, pressure):
+def lindemann_one_pressure(highp_ks, lowp_ks, temps, pressure,
+                           collid_factor=1.0):
     """ Calculates T,P-dependent rate constants [k(T,P)]s using
         a Lindemann functional expression, at a given pressure,
         across several temperatures.
@@ -133,11 +178,14 @@ def lindemann_one_pressure(highp_ks, lowp_ks, temps, pressure):
         :type temps: numpy.ndarray
         :param pressure: Pressure used to calculate k(T,P)s
         :type pressure: float
+        :param collid_factor: Buffer enhancement collision factor
+        :type collid_factor: float
         :return ktps: Set of k(T,P)s at given pressure
         :rtype numpy.ndarray
     """
     # Calculate the pr term
-    pr_terms = _pr_term(highp_ks, lowp_ks, temps, pressure)
+    pr_terms = _pr_term(highp_ks, lowp_ks, temps, pressure,
+                        collid_factor=collid_factor)
 
     # Calculate Lindemann rate constants
     ktps = highp_ks * (pr_terms / (1.0 + pr_terms))
@@ -202,6 +250,8 @@ def troe_one_pressure(highp_ks, lowp_ks, temps, pressure,
         :type ts1: float
         :param ts2: Troe T2 parameter
         :type ts2: float
+        :param collid_factor: Buffer enhancement collision factor
+        :type collid_factor: float
         :return ktps: Set of k(T,P)s at given pressure
         :rtype numpy.ndarray
         :return ktps: Set of k(T,P)s at given pressure
@@ -209,11 +259,11 @@ def troe_one_pressure(highp_ks, lowp_ks, temps, pressure,
     """
 
     # Calculate the pr term and broadening factor
-    pr_term = _pr_term(highp_ks, lowp_ks, temps, pressure)
+    pr_term = _pr_term(highp_ks, lowp_ks, temps, pressure, collid_factor)
     f_term = _f_broadening_term(pr_term, alpha, ts3, ts1, ts2, temps)
 
-    # Calculate Troe rate constants
-    ktps = highp_ks * (pr_term / (1.0 + pr_term)) * f_term * collid_factor
+    # Calculate Troe rate constants (collision factor could be wrong)
+    ktps = highp_ks * (pr_term / (1.0 + pr_term)) * f_term
 
     return ktps
 
@@ -233,9 +283,13 @@ def plog(plog_dct, t_ref, temps, pressures):
         :return ktp_dct: k(T,Ps) at all temps and pressures
         :rtype: dict[pressure: temps]
     """
+
+    # Set the plog pressures to see if pressure is in range
+    plog_pressures = list(plog_dct.keys())
+
     ktp_dct = {}
     for pressure in pressures:
-        if pressure in plog_dct:
+        if min(plog_pressures) <= pressure <= max(plog_pressures):
             ktp_dct[pressure] = plog_one_pressure(
                 plog_dct, t_ref, temps, pressure)
 
@@ -258,6 +312,7 @@ def plog_one_pressure(plog_dct, t_ref, temps, pressure):
         :return ktps: Set of k(T,P)s at given pressure
         :rtype numpy.ndarray
     """
+
     plog_pressures = list(plog_dct.keys())
 
     # Check if pressure is in plog dct; use plog pressure for numerical stab
@@ -379,7 +434,8 @@ def chebyshev_one_pressure(alpha, tmin, tmax, pmin, pmax, temps, pressure):
     return ktps
 
 
-def _pr_term(highp_rateks, lowp_rateks, temps, pressure, rval=RC2):
+def _pr_term(highp_rateks, lowp_rateks, temps, pressure,
+             collid_factor=1.0, rval=RC2):
     """ Calculates the reduced pressure term for a single pressure
         used for Lindemann and Troe P-dependent functional expressions.
 
@@ -391,10 +447,15 @@ def _pr_term(highp_rateks, lowp_rateks, temps, pressure, rval=RC2):
         :temps: numpy.ndarray
         :param pressure: Pressure used to calculate reduced pressure
         :type pressure: float
-        :return pr_term: reduced pressure
-        :rtype pr_term: float
+        :rtype: numpy.ndarray
     """
-    pr_term = (lowp_rateks / highp_rateks) * (pressure / (rval * temps))
+
+    pr_term = (
+        (lowp_rateks / highp_rateks) *
+        p_to_m(pressure, temps, rval=rval) *
+        collid_factor
+    )
+
     return pr_term
 
 
@@ -435,3 +496,18 @@ def _f_broadening_term(pr_term, alpha, ts3, ts1, ts2, temp):
     f_term = 10**(logf)
 
     return f_term
+
+
+def p_to_m(pressure, temps, rval=RC2):
+    """ Convert the pressure to the concentration of a gas [M]
+        assuming an ideal gas form where [M] ~ P/RT.
+
+        :param pressure: Pressure of gas (in atm)
+        :type pressure: float
+        :return mconc: Conncentration of Gas (mol/cm^3)
+        :rtype: float
+    """
+    # print(pressure, type(pressure))
+    # print(temps, type(temps))
+    # print(rval, type(rval))
+    return pressure / (rval * temps)

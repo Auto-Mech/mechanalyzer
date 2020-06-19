@@ -414,7 +414,7 @@ C  (C) Copr. 1986-92 Numerical Recipes Software .
                   icol=k
                 endif
               else if (ipiv(k).gt.1) then
-                pause 'singular matrix in gaussj'
+                write(6, *) 'singular matrix in gaussj'
               endif
 12          continue
           endif
@@ -434,7 +434,7 @@ C  (C) Copr. 1986-92 Numerical Recipes Software .
         endif
         indxr(i)=irow
         indxc(i)=icol
-        if (a(icol,icol).eq.0.) pause 'singular matrix in gaussj'
+        if (a(icol,icol).eq.0.) write(6, *) 'singular matrix in gaussj'
         pivinv=1./a(icol,icol)
         a(icol,icol)=1.
         do 16 l=1,n

@@ -7,6 +7,7 @@ from mako.template import Template
 
 
 RC = 1.98720425864083e-3  # Gas Constant in kcal/mol.K
+RC2 = 0.0820573660809596 * 1000.0  # Gas Constant in cm^3.atm/mol.K
 
 # OBTAIN THE PATH TO THE DIRECTORY CONTAINING THE TEMPLATES #
 SRC_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -15,7 +16,7 @@ SRC_PATH = os.path.dirname(os.path.realpath(__file__))
 def write_input(kpt_dct, troe_param_fit_lst,
                 highp_a=8.1e-11, highp_n=-0.01, highp_ea=1000.0,
                 lowp_a=8.1e-11, lowp_n=-0.01, lowp_ea=1000.0,
-                alpha=0.19, ts1=590.0, ts2=1.0e6, ts3=6.0e4,
+                alpha=0.19, ts1=590.0, ts2=1.0e6, ts3=6.0e4, rval=RC2,
                 fit_tol1=1.0e-8, fit_tol2=1.0e-8):
     """ Write the troefit input file.
 
@@ -73,8 +74,9 @@ def write_input(kpt_dct, troe_param_fit_lst,
     for temp, pk_arr in kpt_dct.items():
         [pressures, rate_constants] = pk_arr
         kpt_str += '{0:<8.2f}{1:<4d}\n'.format(temp, len(pressures))
-        for rate, pressure in zip(rate_constants, pressures):
-            kpt_str += '{0:<14.5E}{1:<14.5f}\n'.format(rate, pressure)
+        for pressure, rate in zip(pressures, rate_constants):
+            density = pressure / (rval / temp)
+            kpt_str += '{0:<14.5E}{1:<14.5f}\n'.format(density, rate)
 
     # Build the fill value dictionary
     fit_keys = {
