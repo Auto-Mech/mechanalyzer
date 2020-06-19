@@ -67,8 +67,6 @@ def get_valid_tk(temps, rate_constants, bimol,
     # Convert the lists to numpy arrays
     valid_t = np.array(valid_t, dtype=np.float64)
     valid_k = np.array(valid_k, dtype=np.float64)
-    print(valid_t)
-    print(valid_k)
 
     return valid_t, valid_k
 
