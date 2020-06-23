@@ -3,7 +3,7 @@
 
 import os
 import pandas as pd
-import chemkin_io
+import mechanalyzer
 from _format import read_file
 from _format import format_rxn
 from _format import chk_rxn
@@ -40,10 +40,10 @@ def calc_multimech_rates(temps, pressures, t_ref, ckin_files, path,
             # Build the reactions total and branching dcts
             rxn_block = chemkin_io.parser.mechanism.reaction_block(mech_str)
             rxn_units = chemkin_io.parser.mechanism.reaction_units(mech_str)
-            ratek_dct = chemkin_io.calculator.rates.mechanism(
+            ratek_dct = mechanalyzer.calculator.rates.mechanism(
                 rxn_block, rxn_units, t_ref, temps, pressures=[pressure],
                 ignore_reverse=True, remove_bad_fits=True)
-            branch_dct, _ = chemkin_io.calculator.rates.branching_fractions(
+            branch_dct, _ = mechanalyzer.calculator.rates.branching_fractions(
                 ratek_dct, [pressure])
 
             # Add to the overall dcts
@@ -104,10 +104,10 @@ def calc_multimech_rates2(temps, pressures, t_ref, ckin_files, path,
             # Build the reactions total and branching dcts
             rxn_block = chemkin_io.parser.mechanism.reaction_block(mech_str)
             rxn_units = chemkin_io.parser.mechanism.reaction_units(mech_str)
-            ratek_dct = chemkin_io.calculator.rates.mechanism(
+            ratek_dct = mechanalyzer.calculator.rates.mechanism(
                 rxn_block, rxn_units, t_ref, temps, pressures=[pressure],
                 ignore_reverse=True, remove_bad_fits=True)
-            branch_dct, _ = chemkin_io.calculator.rates.branching_fractions(
+            branch_dct, _ = mechanalyzer.calculator.rates.branching_fractions(
                 ratek_dct, [pressure])
 
             # Add to the overall dcts

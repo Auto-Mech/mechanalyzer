@@ -8,10 +8,10 @@ CHEMKIN-formatted mechanism files.
 import os
 import numpy as np
 from ioformat import remove_whitespace
-from chemkin_io import calculator
-from chemkin_io.parser import mechanism as mech_parser
-from chemkin_io import plotter
+import chemkin_io
 from _format import read_file
+from mechanalyzer import calculator
+from mechanalyzer import plotter
 
 
 def sm_rates(mech_str, t_ref, temps, pressures, dir_prefix='rate_plots',
@@ -21,7 +21,7 @@ def sm_rates(mech_str, t_ref, temps, pressures, dir_prefix='rate_plots',
     # Parse mechanism file and cacluate the rates
     mech1_reaction_block = remove_whitespace(
         mech_parser.reaction_block(mech_str))
-    mech1_units = mech_parser.reaction_units(mech_str)
+    mech1_units = chemkin_io.parser.mechanism.reaction_units(mech_str)
     mech1_ktp_dct = calculator.rates.mechanism(
         mech1_reaction_block, mech1_units, t_ref, temps, pressures,
         ignore_reverse=ignore_reverse, remove_bad_fits=remove_bad_fits)
