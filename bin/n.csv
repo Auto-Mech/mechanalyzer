@@ -1,0 +1,7 @@
+name,smiles,inchi,mult,charge,sens
+H,'[H]','InChI=1S/H',2,0,0.0
+H2,'[H][H]','InChI=1S/H2/h1H',1,0,0.0
+CH3,'[CH3]','InChI=1S/CH3/h1H3',2,0,0.0
+CH4,'C','InChI=1S/CH4/h1H4',1,0,0.0
+CC,'CC=CC','InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3/b4-3+',1,0,0.0
+CC-2,'CC=CC','InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3/b4-3-',1,0,0.0

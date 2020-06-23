@@ -8,9 +8,9 @@ import ratefit
 from ioformat import remove_whitespace
 from ioformat import phycon
 from chemkin_io.parser import mechanism as mech_parser
-from chemkin_io.calculator import thermo
-from chemkin_io.calculator import rates
 from chemkin_io.parser.mechanism import reaction_units
+from mechanalyzer.calculator import thermo
+from mechanalyzer.calculator import rates
 
 
 def mechanism_thermo(mech1_thermo_dct, mech2_thermo_dct):

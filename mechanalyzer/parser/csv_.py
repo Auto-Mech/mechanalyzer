@@ -1,27 +1,33 @@
 """
-Read the mechanism file
+Read the csv file
 """
 
-import automol
-import chemkin_io
-from lib.amech_io.parser import ptt
+
+from io import StringIO
+import pandas
+from automol.smiles import inchi as _inchi
+from automol.inchi import smiles as _smiles
 
 
-ALLOWED_HEADERS = [
+# What columns are allowed in the CSV file
+ALLOWED_HEADERS = (
+    'name', 'smiles', 'inchi', 'inchikey', 'mult', 'charge', 'sens'
+)
+DEFAULT_HEADERS = (
     'smiles', 'inchi', 'inchikey', 'mult', 'charge', 'sens'
-]
+)
 
 
 # Build various dictionaries
-def csv_dct(csv_str, values, key='name'):
+def csv_dct(csv_str, values=DEFAULT_HEADERS, key='name'):
     """ read the species file in a .csv format
 
         :param csv_str: string for species input file
         :type csv_str: str
-        :param values: 
+        :param values: values to build dcts for
         :type values: lst(str)
         :param key: key to index the spc dictionary
-        :type key: 
+        :type key: str
         :return: dict[key] = val
     """
 
@@ -32,90 +38,36 @@ def csv_dct(csv_str, values, key='name'):
         'Unallowed dict key requested.'
     )
 
+    # Read the CSV file
+    data = _read_csv(csv_str)
+
     # Check if the csv file is formatted properly
-    csv_proper = _check_csv_file(csv_str)
+    csv_proper = _check_csv(data)
 
     if csv_proper:
         # Read the names from the file
-        names = _read_csv_names(csv_str)
+        names = _read_csv_names(data)
 
-        # Read in the initial CSV file, 
+        # Read in the initial CSV file,
         value_dcts = []
         for value in values:
-            value_dct.append(
-                chemkin_io.parser.mechanism.spc_name_dct(csv_str, value))
+            value_dcts.append(READERS[value](data, names))
 
         # Build the final dictionary
         spc_dct = {}
         for name in names:
             spc_dct[name] = {}
-            for value_dct in value_dcts:
-                spc_dct[name][value] = value_dct.get(name, None)
+            for value_idx, value_dct in enumerate(value_dcts):
+                spc_dct[name][values[value_idx]] = value_dct.get(name, None)
     else:
         spc_dct = None
 
     return spc_dct
 
 
-# def spc_name_dct(csv_str, entry):
-#     """ Read the species.csv file and generate a dictionary that relates
-#         structural information to the ChemKin mechanism name.
-# 
-#         :param csv_str: string of input csv file with species information
-#         :type csv_str: str
-#         :param entry: structural information that is desired
-#         :type entry: str
-#         :return spc_dct: all species with desired structural information
-#         :rtype: dict[name:entry]
-#     """
-# 
-#     data = _read_csv(csv_str)
-# 
-#     if entry == 'inchi':
-#         spc_dct = _read_name_inchi(data)
-#     elif entry == 'smiles':
-#         spc_dct = _read_name_smiles(data)
-#     elif entry == 'mult':
-#         spc_dct = _read_name_mult(data)
-#     elif entry == 'charge':
-#         spc_dct = _read_name_charge(data)
-#     elif entry == 'sens':
-#         spc_dct = _read_name_sensitivity(data)
-#     else:
-#         raise NotImplementedError
-# 
-#     return spc_dct
-# 
-# 
-# def spc_inchi_dct(csv_str):
-#     """ Read the species.csv file and generate a dictionary that relates
-#         ChemKin mechanism name to InChI string.
-# 
-#         :param csv_str: string of input csv file with species information
-#         :type csv_str: str
-#         :return spc_dct: all species with names and InChI strings
-#         :rtype: dict[InChI: name]
-#     """
-# 
-#     data = _read_csv(csv_str)
-# 
-#     spc_dct = {}
-#     if hasattr(data, 'inchi'):
-#         spc_dct = dict(zip(data.name, data.inchi))
-#     elif hasattr(data, 'smiles'):
-#         ichs = [_inchi(smiles) for smiles in data.smiles]
-#         spc_dct = dict(zip(ichs, data.name))
-#     else:
-#         spc_dct = {}
-# 
-#     return spc_dct
-
-
-def _read_csv_names(csv_str):
-    """ Obtain a list of names from a name 
+def _read_csv_names(data):
+    """ Obtain a list of names from a name
     """
-
-    data = _read_csv(csv_str)
 
     if hasattr(data, 'name'):
         names = list(data.name)
@@ -125,52 +77,68 @@ def _read_csv_names(csv_str):
     return names
 
 
-def _read_name_inchi(data):
+def _read_csv_inchi(data, idxs):
     """ Build the species dictionary relating ChemKin name to InChI string.
         The InChI strings are read directly from the data object if available.
         Otherwise they are generated using the SMILES strings.
 
         :param data: information from input species.csv file
         :type data: pandas
+        :param idxs: index for the dict to be created
+        :type idxs: list(str)
         :return spc_dct: output dictionary for all species
         :rtype spc_dct: dict[name: InChI]
     """
 
     if hasattr(data, 'inchi'):
-        spc_dct = dict(zip(data.name, data.inchi))
+        spc_dct = dict(zip(idxs, data.inchi))
     elif hasattr(data, 'smiles'):
         print('No inchi column in csv file, getting inchi from SMILES')
         ichs = [_inchi(smiles) for smiles in data.smiles]
-        spc_dct = dict(zip(data.name, ichs))
+        spc_dct = dict(zip(idxs, ichs))
     else:
         spc_dct = {}
         print('No "inchi" or "SMILES" column in csv file')
 
     # Fill remaining inchi entries if inchi
-    for i, name in enumerate(data.name):
+    for i, name in enumerate(idxs):
         if str(spc_dct[name]) == 'nan':
             spc_dct[name] = _inchi(data.smiles[i])
 
     return spc_dct
 
 
-def _read_name_smiles(data):
+def _read_csv_inchikey(data, idxs):
+    """ Build the species dictionary relating ChemKin name to InChI key.
+    """
+
+    if hasattr(data, 'inchikey'):
+        spc_dct = dict(zip(idxs, data.inchikey))
+    else:
+        spc_dct = dict(zip(idxs, ['' for _ in range(len(idxs))]))
+
+    return spc_dct
+
+
+def _read_csv_smiles(data, idxs):
     """ Build the species dictionary relating ChemKin name to SMILES string.
         The SMILES strings are read directly from the data object if available.
         Otherwise they are generated using the InChI strings.
 
         :param data: information from input species.csv file
         :type data: pandas
+        :param idxs: index for the dict to be created
+        :type idxs: list(str)
         :return spc_dct: output dictionary for all species
         :rtype spc_dct: dict[name: SMILES]
     """
 
     spc_dct = {}
     if hasattr(data, 'smiles'):
-        spc_dct = dict(zip(data.name, data.smiles))
+        spc_dct = dict(zip(idxs, data.smiles))
     elif hasattr(data, 'inchi'):
         smiles = [_smiles(ich) for ich in data.inchi]
-        spc_dct = dict(zip(data.name, smiles))
+        spc_dct = dict(zip(idxs, smiles))
     else:
         spc_dct = {}
         print('No "SMILES" or "InChI" column in csv file')
@@ -178,17 +146,19 @@ def _read_name_smiles(data):
     return spc_dct
 
 
-def _read_name_mult(data):
+def _read_csv_mult(data, idxs):
     """ Build the species dictionary relating ChemKin name to multiplicity.
 
         :param data: information from input species.csv file
         :type data: pandas
+        :param idxs: index for the dict to be created
+        :type idxs: list(str)
         :return spc_dct: output dictionary for all species
         :rtype spc_dct: dict[name: multiplicity]
     """
 
     if hasattr(data, 'mult'):
-        spc_dct = dict(zip(data.name, data.mult))
+        spc_dct = dict(zip(idxs, data.mult))
     else:
         spc_dct = {}
         print('No "mult" column in csv file')
@@ -196,74 +166,113 @@ def _read_name_mult(data):
     return spc_dct
 
 
-def _read_name_charge(data):
+def _read_csv_charge(data, idxs):
     """ Build the species dictionary relating ChemKin name to charge.
         If the charge is missing for a given species, the dictionary
         element will be set to zero, assuming a neutral species.
 
         :param data: information from input species.csv file
         :type data: pandas
+        :param idxs: index for the dict to be created
+        :type idxs: list(str)
         :return spc_dct: output dictionary for all species
         :rtype spc_dct: dict[name: charge]
     """
 
     fill = 0
     if hasattr(data, 'charge'):
-        spc_dct = dict(zip(data.name, data.charge))
+        spc_dct = dict(zip(idxs, data.charge))
     else:
         if fill is not None:
-            spc_dct = dict(zip(data.name, [fill for name in data.name]))
+            spc_dct = dict(zip(idxs, [fill for name in idxs]))
         else:
             spc_dct = {}
 
     return spc_dct
 
 
-def _read_name_sensitivity(data):
+def _read_csv_sensitivity(data, idxs):
     """ Build the species dictionary relating ChemKin name to sensitivity.
         If the sensitivity is missing for a given species, the dictionary
         element will be set to zero.
 
         :param data: information from input species.csv file
         :type data: pandas
+        :param idxs: index for the dict to be created
+        :type idxs: list(str)
         :return spc_dct: output dictionary for all species
         :rtype spc_dct: dict[name: sensitivity]
     """
 
     fill = 0.
     if hasattr(data, 'sens'):
-        spc_dct = dict(zip(data.name, data.sens))
+        spc_dct = dict(zip(idxs, data.sens))
     else:
         if fill is not None:
-            spc_dct = dict(zip(data.name, [fill for name in data.name]))
+            spc_dct = dict(zip(idxs, [fill for name in idxs]))
         else:
             spc_dct = {}
 
     return spc_dct
 
 
-def spc_inchi_dct(csv_str):
-    """ Read the species.csv file and generate a dictionary that relates
-        ChemKin mechanism name to InChI string.
+def _read_csv_headers(data):
+    """ Get the names of the CSV headers
+    """
+    return list(data.head)
 
-        :param csv_str: string of input csv file with species information
-        :type csv_str: str
-        :return spc_dct: all species with names and InChI strings
-        :rtype: dict[InChI: name]
+
+def _check_csv(data):
+    """ Check if the csv is formatted properly
     """
 
-    data = _read_csv(csv_str)
+    headers = set(list(data.head()))
 
-    spc_dct = {}
-    if hasattr(data, 'inchi'):
-        spc_dct = dict(zip(data.name, data.inchi))
-    elif hasattr(data, 'smiles'):
-        ichs = [_inchi(smiles) for smiles in data.smiles]
-        spc_dct = dict(zip(ichs, data.name))
+    req1 = {'name', 'smiles', 'mult'}
+    req2 = {'name', 'inchi', 'mult'}
+    if req1 <= headers or req2 <= headers:
+        proper = True
     else:
-        spc_dct = {}
+        proper = False
+        print('Required Headers (name, smiles/inchi/mult) missing.')
 
-    return spc_dct
+    if headers <= set(ALLOWED_HEADERS):
+        proper = True
+    else:
+        print('Unallowed Headers in Header file.')
+        proper = False
+
+    # Add check to see for equivalence of columns
+    # if proper:
+    #     num_rows = len(data.name)
+    #     print(num_rows)
+    #     print(data)
+    #     for col in data.columns:
+    #         print(col)
+    #         print(len(col))
+    #         if len(col) != num_rows:
+    #             proper = False
+    # print('proper3', proper)
+
+    return proper
+
+
+# Set dct for above readers
+READERS = {
+    'smiles': _read_csv_smiles,
+    'inchi': _read_csv_inchi,
+    'inchikey': _read_csv_inchikey,
+    'mult': _read_csv_mult,
+    'charge': _read_csv_charge,
+    'sens': _read_csv_sensitivity
+}
+
+
+def read_csv_headers(csv_str):
+    """ Get the names of the CSV headers
+    """
+    data = _read_csv(csv_str)
+    return list(data.head())
 
 
 def _read_csv(csv_str):
@@ -280,21 +289,7 @@ def _read_csv(csv_str):
     data = pandas.read_csv(csv_file, comment='#', quotechar="'")
 
     # Parse CSV string into data columns
-    # data.columns = data.columns.str.strip()
+    data.columns = data.columns.str.strip()
     data.columns = map(str.lower, data.columns)
 
     return data
-
-
-def _check_csv(csv_str):
-    """ Check if the csv is formatted properly
-    """
-
-    data = _read_csv(csv_str)
-    if set(list(data)) <= set(ALLOWED_HEADERS):
-        proper = True
-    else:
-        print('Unallowed Headers in Header file')
-        proper = False
-
-    return proper

@@ -22,7 +22,7 @@ def parse(mech_str, spc_dct, sort_rxns):
     ich_dct = {}
     for key in spc_dct.keys():
         if 'ts' not in key and 'global' not in key:
-            ich_dct[key] = spc_dct[key]['ich']
+            ich_dct[key] = spc_dct[key]['inchi']
 
     # Sort reactant and product name lists by formula to facilitate
     # multichannel, multiwell rate evaluations
