@@ -94,15 +94,15 @@ def write_stereo_csv(spc_str, outname='species_stereo.csv', path='.'):
                 new_dct[sname][header] = init_dct[name][header]
 
     # Writer string
-    spc_str = ','.join(['name'] + headers) + '\n'
+    spc_str = ','.join(['name'] + new_headers) + '\n'
     for name in new_dct:
         spc_str += '{},'.format(name)
-        for idx, header in enumerate(headers):
+        for idx, header in enumerate(new_headers):
             val = new_dct[name][header]
             if isinstance(val, str):
                 val = "'{}'".format(val)
             spc_str += str(val)
-            if idx+1 < len(headers):
+            if idx+1 < len(new_headers):
                 spc_str += ','
         spc_str += '\n'
 
