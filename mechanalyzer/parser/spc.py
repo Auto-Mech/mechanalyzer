@@ -23,27 +23,6 @@ def build_spc_dct(spc_str, spc_type):
     return spc_dct
 
 
-# SPC list from reactions
-def build_queue(rxn_lst):
-    """ Build spc queue from the reaction lst for the drivers
-        :return spc_queue: all the species and corresponding models in rxn
-        :rtype: list[(species, model),...]
-    """
-
-    if 'all' in rxn_lst:
-        # First check if rxn_lst is a bunch of species
-        spc_queue = rxn_lst['all']['species']
-    else:
-        # Build the list from expanding the reacs and prods
-        spc_queue = []
-        for rxn in rxn_lst:
-            model = rxn['model']
-            spc_queue.extend(((reac, model) for reac in rxn['reacs']))
-            spc_queue.extend(((prod, model) for prod in rxn['prods']))
-
-    return spc_queue
-
-
 # Write new files
 def write_stereo_csv(spc_str, outname='species_stereo.csv', path='.'):
     """ read the species file in a .csv format and write a new one
