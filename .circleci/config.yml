@@ -12,60 +12,10 @@ jobs:
                     apt-get install --yes libxrender-dev build-essential
                     conda env create -f environment.yml
             - run:
-                name: Build/install interfaces
+                name: Build/install autoio
                 command: |
-                    source activate interfaces-env
+                    source activate autoio-env
                     python setup.py install
-            - run:
-                name: Test chemkin_io
-                command: |
-                    source activate interfaces-env
-                    ls
-                    cd chemkin_io
-                    pytest -v --disable-pytest-warnings
-                    flake8 --exit-zero chemkin_io
-                    pylint --rcfile=../.pylintrc chemkin_io
-                    ls
-            - run:
-                name: Test mess_io
-                command: |
-                    source activate interfaces-env
-                    ls
-                    cd mess_io
-                    pytest -v --disable-pytest-warnings
-                    flake8 --exit-zero mess_io
-                    pylint --rcfile=../.pylintrc mess_io
-                    ls
-            - run:
-                name: Test projrot_io
-                command: |
-                    source activate interfaces-env
-                    ls
-                    cd projrot_io
-                    pytest -v --disable-pytest-warnings
-                    flake8 --exit-zero projrot_io
-                    pylint --rcfile=../.pylintrc projrot_io
-                    ls
-            - run:
-                name: Test thermp_io
-                command: |
-                    source activate interfaces-env
-                    ls
-                    cd thermp_io
-                    pytest -v --disable-pytest-warnings
-                    flake8 --exit-zero thermp_io
-                    pylint --rcfile=../.pylintrc thermp_io
-                    ls
-            - run:
-                name: Test varecof_io
-                command: |
-                    source activate interfaces-env
-                    ls
-                    cd varecof_io
-                    pytest -v --disable-pytest-warnings
-                    flake8 --exit-zero varecof_io
-                    pylint --rcfile=../.pylintrc varecof_io
-                    ls
 workflows:
     version: 2
     build-all:
