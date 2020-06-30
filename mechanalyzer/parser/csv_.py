@@ -242,6 +242,13 @@ def _check_csv(data):
         print('Unallowed Headers in Header file.')
         proper = False
 
+    # Check for repeat names
+    if len(list(data.name)) > len(set(list(data.name))):
+        proper = False
+
+    # Check validity of inchi and multiplicity combinations (and chg?)
+    # assert _is_valid_inchi_multiplicity(ich, mul)
+
     # Add check to see for equivalence of columns
     # if proper:
     #     num_rows = len(data.name)
