@@ -21,6 +21,7 @@ dependencies:
     - future
     - flake8
     - pylint
+    - kevinmooreiii::autoio
     - kevinmooreiii::automol
     - kevinmooreiii::autoparse
     - kevinmooreiii::ratefit
