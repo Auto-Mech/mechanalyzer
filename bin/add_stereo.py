@@ -10,6 +10,8 @@ import mechanalyzer
 CWD = os.getcwd()
 INNAME = sys.argv[1]
 OUTNAME = sys.argv[2]
+
+# Set default to only grab one stereoisomer
 ALLSTEREO = False
 if len(sys.argv) > 3:
     if sys.argv[3] == 'allstereo':
