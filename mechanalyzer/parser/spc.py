@@ -24,7 +24,8 @@ def build_spc_dct(spc_str, spc_type):
 
 
 # Write new files
-def write_stereo_csv(spc_str, outname='species_stereo.csv', path='.'):
+def write_stereo_csv(spc_str, outname='species_stereo.csv', path='.',
+                     allstereo=False):
     """ read the species file in a .csv format and write a new one
         that has stero information
     """
@@ -49,7 +50,7 @@ def write_stereo_csv(spc_str, outname='species_stereo.csv', path='.'):
         ich = init_dct[name]['inchi']
 
         # Generate ichs with stereo and hashes
-        ichs_wstereo = _generate_stereo(ich)
+        ichs_wstereo = _generate_stereo(ich, allstereo=allstereo)
 
         # Add name and inchi info to string
         for idx, ich_wstereo in enumerate(ichs_wstereo):
@@ -91,13 +92,14 @@ def write_stereo_csv(spc_str, outname='species_stereo.csv', path='.'):
         file_obj.write(spc_str)
 
 
-def _generate_stereo(ich):
+def _generate_stereo(ich, allstereo=False):
     """ stereo
     """
     if not automol.inchi.is_complete(ich):
-        # print('adding stereochemistry for {0}, {1}, {2}'.format(
-        #            name, smi, ich))
-        ichs = automol.inchi.add_stereo(ich)
+        if allstereo:
+            ret_ichs = automol.inchi.add_stereo(ich)
+        else:
+            ret_ichs = [automol.inchi.add_stereo(ich)[0]]
     else:
-        ichs = [ich]
-    return ichs
+        ret_ichs = [ich]
+    return ret_ichs
