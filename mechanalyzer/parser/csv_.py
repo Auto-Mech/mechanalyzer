@@ -51,6 +51,7 @@ def csv_dct(csv_str, values=DEFAULT_HEADERS, key='name'):
         # Read in the initial CSV file,
         value_dcts = []
         for value in values:
+            print(value)
             value_dcts.append(READERS[value](data, names))
 
         # Build the final dictionary
@@ -89,7 +90,6 @@ def _read_csv_inchi(data, idxs):
         :return spc_dct: output dictionary for all species
         :rtype spc_dct: dict[name: InChI]
     """
-
     if hasattr(data, 'inchi'):
         spc_dct = dict(zip(idxs, data.inchi))
     elif hasattr(data, 'smiles'):
