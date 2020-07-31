@@ -51,7 +51,6 @@ def csv_dct(csv_str, values=DEFAULT_HEADERS, key='name'):
         # Read in the initial CSV file,
         value_dcts = []
         for value in values:
-            print(value)
             value_dcts.append(READERS[value](data, names))
 
         # Build the final dictionary
@@ -293,7 +292,7 @@ def _read_csv(csv_str):
 
     # Read in csv file while removing whitespace and make all chars lowercase
     csv_file = StringIO(csv_str)
-    data = pandas.read_csv(csv_file, comment='#', quotechar="'")
+    data = pandas.read_csv(csv_file, comment='!', quotechar="'")
 
     # Parse CSV string into data columns
     data.columns = data.columns.str.strip()

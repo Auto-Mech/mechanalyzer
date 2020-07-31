@@ -13,6 +13,9 @@ def parse(mech_str, spc_dct, sort_rxns):
     # Read the reactions and participaring species from the mech file
     rxn_block_str = chemkin_io.parser.mechanism.reaction_block(mech_str)
     rxn_strs = chemkin_io.parser.reaction.data_strings(rxn_block_str)
+    print('mech_str:', mech_str)
+    print('rxn_block_str:', rxn_block_str)
+    print('rxn_strs:', rxn_strs)
     rct_names_lst = list(
         map(chemkin_io.parser.reaction.reactant_names, rxn_strs))
     prd_names_lst = list(
