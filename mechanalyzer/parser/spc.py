@@ -5,6 +5,10 @@ Read the mechanism file
 import os
 import pandas
 import automol
+import math
+import multiprocessing
+import random
+
 from mechanalyzer.parser.csv_ import csv_dct
 from mechanalyzer.parser.csv_ import read_csv_headers
 from routines.pf.thermo import basis
@@ -98,11 +102,65 @@ def write_stereo_csv(spc_str, outname='species_stereo.csv', path='.',
 
     # Build a new dict
     new_dct = {}
-    for name in init_dct:
+    names_in_order = list(init_dct.keys())
+    randomized_names = list(init_dct.keys())
 
+    nproc_avail =  len(os.sched_getaffinity(0)) - 1
+    num_spc = len(randomized_names)
+    spc_per_proc = math.floor(num_spc / nproc_avail)
+    
+    queue = multiprocessing.Queue()
+    procs = []
+    random.shuffle(randomized_names)
+    for proc_n in range(nproc_avail):
+        spc_start = proc_n*spc_per_proc
+        if proc_n == nproc_avail - 1:
+            spc_end = num_spc
+        else:
+            spc_end = (proc_n+1)*spc_per_proc
+        names = randomized_names[spc_start:spc_end]
+
+        proc = multiprocessing.Process(
+            target=_add_stereo_to_dct,
+            args=(queue, names, init_dct, headers_noich, allstereo,))
+        procs.append(proc)
+        proc.start()
+
+    for _ in procs:
+        new_dct.update(queue.get())
+
+    for proc in procs:
+        proc.join()
+
+    # Writer string
+    spc_str = ','.join(['name'] + new_headers) + '\n'
+    for name in names_in_order:
+        if name in new_dct:
+            spc_str += '{},'.format(name)
+            for idx, header in enumerate(new_headers):
+                val = new_dct[name][header]
+                if isinstance(val, str):
+                    val = "'{}'".format(val)
+                spc_str += str(val)
+                if idx+1 < len(new_headers):
+                    spc_str += ','
+            spc_str += '\n'
+
+    # Write the file
+    stereo_file = os.path.join(path, outname)
+    with open(stereo_file, 'w') as file_obj:
+        file_obj.write(spc_str)
+
+
+def _add_stereo_to_dct(queue, names, init_dct, headers_noich, allstereo):
+ 
+    print('Processor {} will add stereo to species: {}'.format(os.getpid(),
+                                                               ', '.join(names)))
+    new_dct = {}
+    for name in names:
         # Get the inchi key
         ich = init_dct[name]['inchi']
-
+    
         # Generate ichs with stereo and hashes
         ichs_wstereo = _generate_stereo(ich, allstereo=allstereo)
 
@@ -126,24 +184,8 @@ def write_stereo_csv(spc_str, outname='species_stereo.csv', path='.',
 
             for header in headers_noich:
                 new_dct[sname][header] = init_dct[name][header]
+    queue.put(new_dct)
 
-    # Writer string
-    spc_str = ','.join(['name'] + new_headers) + '\n'
-    for name in new_dct:
-        spc_str += '{},'.format(name)
-        for idx, header in enumerate(new_headers):
-            val = new_dct[name][header]
-            if isinstance(val, str):
-                val = "'{}'".format(val)
-            spc_str += str(val)
-            if idx+1 < len(new_headers):
-                spc_str += ','
-        spc_str += '\n'
-
-    # Write the file
-    stereo_file = os.path.join(path, outname)
-    with open(stereo_file, 'w') as file_obj:
-        file_obj.write(spc_str)
 
 
 def _generate_stereo(ich, allstereo=False):
