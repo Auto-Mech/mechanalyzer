@@ -39,7 +39,7 @@ def write_basis_csv(spc_str, outname='species_hof_basis.csv', path='.'):
         headers.append('inchi')
     headers_noich = [header for header in headers
                      if header not in ('inchi', 'inchikey')]
-    new_headers = ['inchi' ] + headers_noich
+    new_headers = ['inchi', 'inchikey' ] + headers_noich
     # Read in the initial CSV information (deal with mult stereo)
     init_dct = csv_dct(spc_str, values=headers, key='name')
     # Build a new dict
@@ -96,7 +96,7 @@ def write_stereo_csv(spc_str, outname='species_stereo.csv', path='.',
     headers_noich = [header for header in headers
                      if header not in ('inchi', 'inchikey')]
     new_headers = ['inchi', 'inchikey'] + headers_noich
-
+    
     # Read in the initial CSV information (deal with mult stereo)
     init_dct = csv_dct(spc_str, values=headers, key='name')
 
@@ -187,10 +187,10 @@ def _add_stereo_to_dct(queue, names, init_dct, headers_noich, allstereo):
     queue.put(new_dct)
 
 
-
 def _generate_stereo(ich, allstereo=False):
     """ stereo
     """
+    print('start ich {}'.format(ich))
     if not automol.inchi.is_complete(ich):
         if allstereo:
             ret_ichs = automol.inchi.add_stereo(ich)
