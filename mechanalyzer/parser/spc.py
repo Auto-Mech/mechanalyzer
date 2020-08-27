@@ -56,12 +56,20 @@ def write_basis_csv(spc_str, outname='species_hof_basis.csv', path='.', parallel
     ref_dct = {}
     spc_str = ','.join(['name'] + new_headers) + '\n'
     for ref_scheme in ref_schemes:
+        formula_dct = {}
         _, uniref_dct = basis.prepare_refs(
             ref_scheme, init_dct, spc_queue, repeats=True, parallel=parallel)
         for name in uniref_dct:
             spc_str += ref_scheme + '_' 
             smiles = automol.inchi.smiles(uniref_dct[name]['inchi'])
             uniref_dct[name]['smiles'] = smiles
+            formula = automol.inchi.formula_string(uniref_dct[name]['inchi'])
+            if formula in formula_dct:
+                formula_dct[formula] += 1
+                formula = formula + '({})'.format(formula_dct[formula])
+            else:
+                formula_dct[formula] = 0
+            spc_str += formula + ','    
             for idx, header in enumerate(new_headers):
                 val = uniref_dct[name][header]
                 if isinstance(val, str):
@@ -92,7 +100,22 @@ def write_basis_csv(spc_str, outname='species_hof_basis.csv', path='.', parallel
     # Writer string
     spc_str = ','.join(['name'] + new_headers) + '\n'
     for name in init_dct:
-        spc_str += '{},'.format(name)
+        formula_dct = {}
+        if 'cbh' in name:
+            namelabel = name.split('_')[0]
+            if not namelabel in formula_dct:
+                formula_dct[namelabel] = {}
+            frmdct = formula_dct[namelabel]
+            spc_str += namelabel + '_' 
+            formula = automol.inchi.formula_string(init_dct[name]['inchi'])
+            if formula in frmdct:
+                frmdct[formula] += 1
+                formula = formula + '({})'.format(frmdct[formula])
+            else:
+                frmdct[formula] = 0
+            spc_str += formula + ','    
+        else:
+            spc_str += '{},'.format(name)
         for idx, header in enumerate(new_headers):
             val = init_dct[name][header]
             if isinstance(val, str):
