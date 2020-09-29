@@ -245,6 +245,7 @@ def _check_csv(data):
     # Check for repeat names
     if len(list(data.name)) > len(set(list(data.name))):
         proper = False
+        print('Repeat names found')
 
     # Check validity of inchi and multiplicity combinations (and chg?)
     # assert _is_valid_inchi_multiplicity(ich, mul)
