@@ -2,14 +2,11 @@
   Handles data objects
 """
 
-from mechanalyzer._obj import par
-
-
 THY_PROPS = [
     par.THY.PROGRAM,
     par.THY.METHOD,
     par.THY.BASIS,
-    par.THY.ORB_RESTRICT
+    par.THY.ORB_LABEL
 ]
 
 
@@ -43,11 +40,8 @@ def modify_orb_label(thy_info, mult):
         using the multiplicity.
     """
 
-    # Grab first three elements of thy_info object
     mod_thy_info = thy_info[:3]
-
-    # Modify the label denoting the orbital restriction
-    orb_label = value(thy_info, par.THY.ORB_RESTRICT)
+    orb_label = value(thy_info, THY.ORB_LABEL)
     mod_thy_info += (_mod_orbital_label(orb_label, mult),)
 
     return mod_thy_info
