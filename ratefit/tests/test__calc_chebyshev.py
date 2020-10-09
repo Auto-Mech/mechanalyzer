@@ -34,14 +34,29 @@ CHEB_FILE_NAME = 'chebyshev.csv'
 # T_REF = 1.0
 #
 # numpy.set_printoptions(precision=15)
+HIGH_PARAMS = [1.00, 0.00, 0.00]
+TMIN, TMAX = (300.000, 2200.000)
+PMIN, PMAX = (0.01, 20.0)
+# PMIN, PMAX = (0.010, 98.702)
+TEMPS = numpy.arange(TMIN, TMAX+100.0, 100.0)
+PRESSURES = (0.1, 1.0, 10.0, 20.0, 40.0, 80, 98.702)
+ALPHA = numpy.array([
+    [8.684e+00, 7.500e-01, -7.486e-02, 1.879e-15],
+    [-2.159e-01, 9.899e-02, 2.292e-02, 2.929e-17],
+    [-1.557e-15, -3.331e-16, 3.324e-17, -8.346e-31],
+    [2.159e-01, -9.899e-02, -2.292e-02, -2.929e-17],
+    [-2.684e+00, -7.500e-01, 7.486e-02, -1.879e-15],
+    [2.159e-01, -9.899e-02, -2.292e-02, -2.929e-17]
+])
 
 
 def test__chebyshev():
     """ test ratefit.fxns.chebyshev
     """
-    pass
-    # cheb_ktps = ratefit.calc.chebyshev(
-    #     ALPHA, TMIN, TMAX, PMIN, PMAX, PRESSURES, TEMPS)
+
+    cheb_ktps = ratefit.calc.chebyshev(
+        ALPHA, TMIN, TMAX, PMIN, PMAX, TEMPS, PRESSURES)
+    print(cheb_ktps)
 
     # cheb_ktps1 = cheb_ktps[0.1]
     # cheb_ktps2 = cheb_ktps[0.9869]
