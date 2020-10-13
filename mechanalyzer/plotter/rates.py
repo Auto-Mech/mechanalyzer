@@ -6,7 +6,6 @@ import subprocess
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-import sys
 
 
 # Set plotting options
@@ -16,10 +15,6 @@ MARKERS = ['.', 'o', 's']
 
 # Set various labels for plotting
 FIG_TITLE = 'Comparison of Rate Data'
-# AXES_DCTS = [
-#     {'title': 'All rate constants'},
-#     {'title': 'Ratio of rate constants'}
-# ]
 AXES_DCTS = [
     {},
     {}
@@ -43,18 +38,6 @@ def build(ktp_dct, temps, dir_prefix='.', names=None, mech_labels=None):
         :param names: names of each reaction that serve as titles of their plot
         :type names: list(str)
     """
-    # print('\n\n\nIN FUNCTION')
-    # build new dct where we only have reactions with both mechs
-    # filt_ktp_dct = {}
-    # for reaction, ktps in ktp_dct.items():
-    #     if list(ktps['mech1'].keys()) == list(ktps['mech2'].keys()):
-    #         filt_ktp_dct[reaction] = ktps
-    #     else:
-    #         print(reaction)
-    #         print(ktps['mech1'].keys())
-    #         print(ktps['mech2'].keys())
-    #         print('no match')
-    # sys.exit()
 
     # Initialize file string to species and file names
     file_name_str = '{0:40s}{1}\n'.format('Name', 'Filename')
@@ -74,14 +57,7 @@ def build(ktp_dct, temps, dir_prefix='.', names=None, mech_labels=None):
 
     # Plot the rate constants for each reaction
     reactions = list(ktp_dct.keys())
-    # reactions = list(filt_ktp_dct.keys())
 
-    print('match', bool(names == reactions))
-    # for x, y in zip(names, reactions):
-    #     print(x, '   ', y, '   ', bool(x==y))
-    # print(names)
-    # print(reactions)
-    # sys.exit()
     for i in range(0, len(reactions), 2):
 
         # Determine if plot will have two reactions in it, or one reaction
@@ -100,14 +76,11 @@ def build(ktp_dct, temps, dir_prefix='.', names=None, mech_labels=None):
             reaction = reactions[i+j]
             reaction_mech_ktp_dcts = [ktp_dct[reaction]['mech1'],
                                       ktp_dct[reaction]['mech2']]
-            # reaction_mech_ktp_dcts = [filt_ktp_dct[reaction]['mech1'],
-            #                           filt_ktp_dct[reaction]['mech2']]
             reaction_names.append(names[i+j])
             # Set variables needed for the plotting
             isbimol = _is_bimolecular(reaction)
             # Build the axes objects containing the plotted rate constants
             axes_col = axes[:, j] if nreactions == 2 else axes
-            # print('reaction', reaction)
             _build_axes(axes_col, reaction_mech_ktp_dcts, isbimol,
                         temps, mech_labels)
 

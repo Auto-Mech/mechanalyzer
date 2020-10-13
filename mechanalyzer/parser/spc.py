@@ -3,7 +3,6 @@ Read the mechanism file
 """
 
 import os
-import pandas
 import automol
 from mechanalyzer.parser.csv_ import csv_dct
 from mechanalyzer.parser.csv_ import read_csv_headers

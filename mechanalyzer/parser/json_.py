@@ -2,10 +2,13 @@
 Read a JSON mechanism file
 """
 
+import os
+import collections
 import automol
 
 
-def parse():
+
+def parse(mech_path, mech_file):
     """ parse a json file mechanism file
     """
 
@@ -17,9 +20,8 @@ def parse():
         if isinstance(reaction, dict):
             mech_data = inp_data
             break
-        else:
-            for entry in inp_data[reaction]:
-                mech_data.append(entry)
+        for entry in inp_data[reaction]:
+            mech_data.append(entry)
 
     # Convert essential pieces of json file to chemkin formatted data so
     # (i) can easily remove species that don't really exist
@@ -213,8 +215,8 @@ def parse():
 
     rxn_info_lst = list(zip(
        formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst, rxn_sens,
-        rxn_unc, rxn_val, rxn_fam, rct_smis_lst, rct_ichs_lst, rct_muls_lst,
-        prd_smis_lst, prd_ichs_lst, prd_muls_lst))
+       rxn_unc, rxn_val, rxn_fam, rct_smis_lst, rct_ichs_lst, rct_muls_lst,
+       prd_smis_lst, prd_ichs_lst, prd_muls_lst))
     rxn_info_lst = sorted(rxn_info_lst, key=lambda x: (x[0]))
     old_formula = rxn_info_lst[0][0]
     sens = rxn_info_lst[0][4]
@@ -283,7 +285,7 @@ def parse():
     mech_str += 'END'
     mech_str += '\n'
 
-  with open(os.path.join(mech_path, 'mech_sort.txt'), 'w') as sort_mech_file:
+    with open(os.path.join(mech_path, 'mech_sort.txt'), 'w') as sort_mech_file:
         sort_mech_file.write(mech_str)
 
     # set up species info
@@ -319,4 +321,4 @@ def parse():
     rxn_info_lst = list(
         zip(formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst))
 
-  return spc_dct, rct_names_lst, prd_names_lst, rxn_name_lst, formula_str_lst
+    return spc_dct, rct_names_lst, prd_names_lst, rxn_name_lst, formula_str_lst
