@@ -89,7 +89,6 @@ def _read_csv_inchi(data, idxs):
         :return spc_dct: output dictionary for all species
         :rtype spc_dct: dict[name: InChI]
     """
-
     if hasattr(data, 'inchi'):
         spc_dct = dict(zip(idxs, data.inchi))
     elif hasattr(data, 'smiles'):
@@ -294,7 +293,7 @@ def _read_csv(csv_str):
 
     # Read in csv file while removing whitespace and make all chars lowercase
     csv_file = StringIO(csv_str)
-    data = pandas.read_csv(csv_file, comment='#', quotechar="'")
+    data = pandas.read_csv(csv_file, comment='!', quotechar="'")
 
     # Parse CSV string into data columns
     data.columns = data.columns.str.strip()
