@@ -103,3 +103,32 @@ def connected_channels_dct(pes_dct):
         conn_chn_dct[formula] = connchnls
 
     return conn_chn_dct
+
+
+# OLD FUNCTION FOR TERMOL RXNS
+def conv_termol_to_bimol(rct_zmas, prd_zmas):
+    """ Convert termolecular reaction to a bimolecular reaction
+    """
+    # Force a trimolecular reaction to behave like a bimolecular.
+    # Termolecular spc often arise from the direct decomp of some init product.
+    # Need to be able to find the TS for channel preceding direct decomp.
+    rct_tors_names = []
+    if len(rct_zmas) > 2:
+        ret = automol.zmatrix.ts.addition(rct_zmas[1:-1], [prd_zmas[-1]])
+        new_zma, dist_name, rct_tors_names = ret
+        new_zma = automol.zmatrix.standard_form(new_zma)
+        babs2 = automol.zmatrix.get_babs2(new_zma, dist_name)
+        new_zma = automol.zmatrix.set_values(
+            new_zma, {dist_name: 2.2, babs2: 180. * phycon.DEG2RAD})
+        rct_zmas = [rct_zmas[0], new_zma]
+    elif len(prd_zmas) > 2:
+        ret = automol.zmatrix.ts.addition(prd_zmas[1:-1], [prd_zmas[-1]])
+        new_zma, dist_name, rct_tors_names = ret
+        new_zma = automol.zmatrix.standard_form(new_zma)
+        babs1 = automol.zmatrix.get_babs1(new_zma, dist_name)
+        aabs1 = babs1.replace('D', 'A')
+        new_zma = automol.zmatrix.set_values(
+            new_zma, {dist_name: 2.2, aabs1: 170. * phycon.DEG2RAD})
+        prd_zmas = [prd_zmas[0], new_zma]
+
+    return rct_zmas, prd_zmas, rct_tors_names
