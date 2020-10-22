@@ -2,13 +2,22 @@
 Read a JSON mechanism file
 """
 
+import os
+import collections
 import automol
 import os
 import json
 import collections
 
+<<<<<<< HEAD
+
+
+def parse(mech_path, mech_file):
+    """ parse a json file mechanism file
+=======
 def load_json(json_file, json_path='.'): 
     """ load json file mechanism file
+>>>>>>> 919042ed85d4e11090f6c624af0898b91372ac94
     """
     with open(os.path.join(json_path, json_file)) as jsonfile:
         inp_data = json.load(jsonfile,
@@ -21,6 +30,10 @@ def _parse_reactions(inp_data):
         if isinstance(reaction, dict):
             mech_data = inp_data
             break
+<<<<<<< HEAD
+        for entry in inp_data[reaction]:
+            mech_data.append(entry)
+=======
         elif isinstance(reaction, str):
             if reaction == 'rxns':
                 mech_data = inp_data['rxns']
@@ -28,6 +41,7 @@ def _parse_reactions(inp_data):
             for entry in inp_data[reaction]:
                 mech_data.append(entry)
     return mech_data            
+>>>>>>> 919042ed85d4e11090f6c624af0898b91372ac94
 
 def parse_json(mech_file, mech_path='.', check_stereo=False):
     """ parse a json file mechanism file
@@ -222,12 +236,18 @@ def parse_json(mech_file, mech_path='.', check_stereo=False):
     with open(sort_smiles_path, 'w') as sorted_csv_file:
         sorted_csv_file.write(csv_str)
     rxn_info_lst = list(zip(
+<<<<<<< HEAD
+       formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst, rxn_sens,
+       rxn_unc, rxn_val, rxn_fam, rct_smis_lst, rct_ichs_lst, rct_muls_lst,
+       prd_smis_lst, prd_ichs_lst, prd_muls_lst))
+=======
        #formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst, rxn_sens,
        # rxn_unc, rxn_val, rxn_fam, rct_smis_lst, rct_ichs_lst, rct_muls_lst,
        # prd_smis_lst, prd_ichs_lst, prd_muls_lst))
        formula_str_lst, rxn_name_lst,
         rct_smis_lst, rct_ichs_lst, rct_muls_lst, 
         prd_smis_lst, prd_ichs_lst, prd_muls_lst))
+>>>>>>> 919042ed85d4e11090f6c624af0898b91372ac94
     rxn_info_lst = sorted(rxn_info_lst, key=lambda x: (x[0]))
     old_formula = rxn_info_lst[0][0]
 #    sens = rxn_info_lst[0][4]
@@ -336,4 +356,41 @@ def parse_json(mech_file, mech_path='.', check_stereo=False):
   #  rxn_info_lst = list(
   #      zip(formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst))
 
+<<<<<<< HEAD
+    # set up species info
+    spc_names = []
+    chg_dct = {}
+    mul_dct = {}
+    spc_dct = {}
+    tot_lst = rct_names_lst + prd_names_lst
+    for i, spc_names_lst in enumerate(tot_lst):
+        for j, spc_name in enumerate(spc_names_lst):
+            chg = 0
+            if spc_name not in spc_names:
+                spc_names.append(spc_name)
+                chg_dct[spc_name] = chg
+                print('rct_muls test1:', spc_name, i, j)
+                print('rct_muls test2:', rct_muls_lst[i])
+                mul_dct[spc_name] = rct_muls_lst[i][j]
+                spc_dct[spc_name] = {}
+                spc_dct[spc_name]['chg'] = chg
+                spc_dct[spc_name]['ich'] = rct_ichs_lst[i][j]
+                spc_dct[spc_name]['mul'] = rct_muls_lst[i][j]
+    for i, spc_names_lst in enumerate(prd_names_lst):
+        for j, spc_name in enumerate(spc_names_lst):
+            chg = 0
+            if spc_name not in spc_names:
+                spc_names.append(spc_name)
+                chg_dct[spc_name] = chg
+                mul_dct[spc_name] = prd_muls_lst[i][j]
+                spc_dct[spc_name] = {}
+                spc_dct[spc_name]['chg'] = chg
+                spc_dct[spc_name]['ich'] = prd_ichs_lst[i][j]
+                spc_dct[spc_name]['mul'] = prd_muls_lst[i][j]
+    rxn_info_lst = list(
+        zip(formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst))
+
+    return spc_dct, rct_names_lst, prd_names_lst, rxn_name_lst, formula_str_lst
+=======
   #  return spc_dct, rct_names_lst, prd_names_lst, rxn_name_lst, formula_str_lst
+>>>>>>> 919042ed85d4e11090f6c624af0898b91372ac94

@@ -2,12 +2,13 @@
 Read the mechanism file
 """
 
-import automol
 from mechanalyzer.parser import ckin_ as ckin
 
 
-# PARSE THE MECHANISM FIle 
-def read_mechanism_file(mech_str, mech_type, spc_dct, sort_rxns=False):
+MECH_INP = 'inp/mechanism.dat'
+
+
+def mechanism_file(mech_str, mech_type, spc_dct, sort_rxns=False):
     """ Get the reactions and species from the mechanism input
     """
 
@@ -102,48 +103,3 @@ def connected_channels_dct(pes_dct):
         conn_chn_dct[formula] = connchnls
 
     return conn_chn_dct
-
-
-# PES MODIFIERS
-def sort_by_rxn(pes_dct, spc_dct, wanted_rxns):
-    """ toy code for sorting by reactions
-    """
-
-    for formula in pes_dct:
-        # Get rct and prd names
-        rct_names = pes_dct[formula]['rct_names_lst']
-        prd_names = pes_dct[formula]['rct_names_lst']
-        for rcts, prds in zip(rct_names, prd_names):
-            # Get the inchis and grabhs
-            rct_ichs = tuple(spc_dct[rct]['inchi'] for rct in rcts)
-            rct_gras = tuple(automol.inchi.graph(ich) for ich in rct_ichs) 
-            prd_ichs = tuple(spc_dct[prd]['inchi'] for prd in prds)
-            prd_gras = tuple(automol.inchi.graph(ich) for ich in rct_ichs) 
-            # ID reaction
-            rclass = automol.graph.reac.classify(rct_gras, prd_gras)
-            # Sort using reaction ID...
-
-# WRITERS
-def write_mechanism_file(pes_dct, path, outname):
-    """ Write the mechanism file from a mech dct
-    """
-
-    mech_str = ''
-
-    for pes_idx, formula in enumerate(pes_dct):
-        print('! PES:', pes_idx+1, formula)
-        pes_rxn_name_lst = pes_dct[formula]['rxn_name_lst']
-        pes_rct_names_lst = pes_dct[formula]['rct_names_lst']
-        pes_prd_names_lst = pes_dct[formula]['prd_names_lst']
-        for chn_idx, _ in enumerate(pes_rxn_name_lst):
-            mech_str += (
-                '  {} = {}   1.0 0.0 0.0'.format(
-                ' + '.join(pes_rct_names_lst[chn_idx]),
-                ' + '.join(pes_prd_names_lst[chn_idx]))
-            )
-
-    # Write the file
-    
-    mech_file = os.path.join(path, outname)
-    with open(mech_file, 'w') as file_obj:
-        file_obj.write(spc_str)

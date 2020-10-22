@@ -29,18 +29,6 @@ def build(ktp_dct, temps, dir_prefix='.'):
         :param names: names of each reaction that serve as titles of their plot
         :type names: list(str)
     """
-    # print('\n\n\nIN FUNCTION')
-    # build new dct where we only have reactions with both mechs
-    # filt_ktp_dct = {}
-    # for reaction, ktps in ktp_dct.items():
-    #     if list(ktps['mech1'].keys()) == list(ktps['mech2'].keys()):
-    #         filt_ktp_dct[reaction] = ktps
-    #     else:
-    #         print(reaction)
-    #         print(ktps['mech1'].keys())
-    #         print(ktps['mech2'].keys())
-    #         print('no match')
-    # sys.exit()
 
     # Initialize file string to species and file names
     file_name_str = '{0:40s}{1}\n'.format('Name', 'Filename')
@@ -65,7 +53,7 @@ def build(ktp_dct, temps, dir_prefix='.'):
         print('nplots', n_plot_reactions)
 
         # Create the figure object
-        fig, axes = _build_figure(n_plot_reactions)
+        fig, axes = _build_figure()
 
         for j in range(n_plot_reactions):
             # Set the axes object containing the plotted data for each reaction
@@ -100,7 +88,7 @@ def build(ktp_dct, temps, dir_prefix='.'):
         plt.close(fig)
 
 
-def _build_figure(nreactions):
+def _build_figure():
     """ Initialize the size and format of the plot figure.
 
         :param nreactions: number of reactions on single page of figure

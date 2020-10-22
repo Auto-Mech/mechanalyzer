@@ -2,6 +2,9 @@
   Handles data objects
 """
 
+from mechanalyzer._obj import par
+
+
 THY_PROPS = [
     par.THY.PROGRAM,
     par.THY.METHOD,
@@ -41,7 +44,7 @@ def modify_orb_label(thy_info, mult):
     """
 
     mod_thy_info = thy_info[:3]
-    orb_label = value(thy_info, THY.ORB_LABEL)
+    orb_label = value(thy_info, par.THY.ORB_LABEL)
     mod_thy_info += (_mod_orbital_label(orb_label, mult),)
 
     return mod_thy_info
