@@ -9,7 +9,7 @@ from ioformat import remove_whitespace
 from ioformat import phycon
 from chemkin_io.parser import mechanism as mech_parser
 from chemkin_io.parser.mechanism import reaction_units
-from chemkin_io.writer import reaction as writer
+from chemkin_io.writer import reaction_new as writer
 from mechanalyzer.calculator import thermo
 from mechanalyzer.calculator import rates
 import copy
@@ -73,6 +73,25 @@ def combine_species(mech1_spc_dct, mech2_spc_dct):
     return combined_spc_dct, rename_spc_dct
 
 
+def combine_mech_ktps(rxn_ktp_dct1, rxn_ktp_dct2, rename_spc_dct):
+    """ Combine together two rxn_ktp_dcts to create a single dct,
+        renaming all species as indicated in the rename_spc_dct.
+
+        This is largely a useless function.
+    """
+    combined_rxn_ktp_dct = copy.copy(rxn_ktp_dct1)
+    renamed_rxn_ktp_dct2 = rename_species(rxn_ktp_dct2, rename_spc_dct)
+
+    for rxn_name2, ktp2 in renamed_rxn_ktp_dct2.items():
+        rxn_name, flip_rxn, p_dep_same = _assess_reaction_match(rxn_name2, rxn_ktp_dct1)    
+        
+        # If rxn is unique to ktp2, add to ktp1        
+        if not rxn_name:
+            combined_rxn_ktp_dct[rxn_name2] = ktp2
+
+    return combined_rxn_ktp_dct
+
+
 def combine_mech_params(rxn_param_dct1, rxn_param_dct2, rename_spc_dct):
     """ Combine together two rxn_param_dcts to create a single dct,
         renaming all species as indicated in the rename_spc_dct.
@@ -92,7 +111,7 @@ def combine_mech_params(rxn_param_dct1, rxn_param_dct2, rename_spc_dct):
     return combined_rxn_param_dct
 
 
-def rename_species_old(rxn_dct, rename_spc_dct):
+def rename_species(rxn_dct, rename_spc_dct):
     """ Rename the species inside a rxn_ktp_dct OR
         a rxn_param_dct according to the instructions
         inside the rename_spc_dct
@@ -117,52 +136,6 @@ def rename_species_old(rxn_dct, rename_spc_dct):
         renamed_rxn_dct[new_rcts, new_prds] = rxn_dct[rcts, prds]
 
     return renamed_rxn_dct
-
-
-def rename_species(target_dct, rename_spc_dct, target_type='rxn'):
-    """ Rename the species inside a rxn_ktp_dct, rxn_param_dct, or
-        thermo_dct according to the instructions inside the 
-        rename_spc_dct.
-
-        :param target_dct: the dct whose species are to be renamed
-        :type target_dct: dct; either a rxn_ktp, rxn_param, or thermo dct
-        :param rename_spc_dct 
-    """
-    assert target_type in ('rxn', 'thermo', 'spc'), (
-        f'The target_type is {target_type}, but should be either "rxn", "thermo", or "spc"'
-        )
-    renamed_dct = {}
-
-    # If a rxn_ktp or rxn_param dct
-    if target_type == 'rxn':
-        for rcts, prds in target_dct.keys():
-            new_rcts = []
-            new_prds = []
-            for spc in rcts:
-                if spc in rename_spc_dct.keys():
-                    new_rcts.append(rename_spc_dct[spc])
-                else:
-                    new_rcts.append(spc)
-            for spc in prds:
-                if spc in rename_spc_dct.keys():
-                    new_prds.append(rename_spc_dct[spc])
-                else:
-                    new_prds.append(spc)
-    
-            new_rcts = tuple(new_rcts)
-            new_prds = tuple(new_prds)
-            renamed_dct[new_rcts, new_prds] = target_dct[rcts, prds]
-
-    # If a thermo or species dct
-    else:
-        for spc, data in target_dct.items():
-            if spc in rename_spc_dct.keys():
-                new_spc_name = rename_spc_dct[spc]
-                renamed_dct[new_spc_name] = data
-            else:
-                renamed_dct[spc] = data
-
-    return renamed_dct
 
 
 def mechanism_thermo(mech1_thermo_dct, mech2_thermo_dct):

@@ -4,7 +4,9 @@ Test the rate plotting functionality for comparing two mechanisms
 
 import tempfile
 import numpy as np
-import chemkin_io
+#import chemkin_io
+import mechanalyzer
+import sys
 
 
 # Set up the thermo data
@@ -45,14 +47,16 @@ KTP_DCT = {
 TEMPS = np.array([500.0, 1000.0, 1500.0])
 
 # Set paths to make the plots
-PLOT_PATH = tempfile.mkdtemp()
-print(PLOT_PATH)
+#PLOT_PATH = tempfile.mkdtemp()
+#print(PLOT_PATH)
+PLOT_PATH = sys.argv[1]
+
 
 
 def test__plot_rates():
     """ test chemkin_io.plotter.rates
     """
-    chemkin_io.plotter.rates.build(KTP_DCT, TEMPS, dir_prefix=PLOT_PATH)
+    mechanalyzer.plotter.rates.build(KTP_DCT, TEMPS, dir_prefix=PLOT_PATH)
 
 
 if __name__ == '__main__':

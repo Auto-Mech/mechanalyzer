@@ -1,18 +1,230 @@
 """
   Take data dictionaries from mechanisms and combine them under a common index
 """
-
+import lib.amech_io.parser as parser
 import itertools
 import numpy as np
 import ratefit
 from ioformat import remove_whitespace
 from ioformat import phycon
-from chemkin_io.parser import mechanism as mech_parser
+from mechanalyzer.parser import spc as parser_spc
+from chemkin_io.parser import mechanism as parser_mech
+from chemkin_io.parser import reaction as parser_rxn
+from mechanalyzer.calculator import thermo as calc_thermo
+from mechanalyzer.calculator import rates as calc_rates
+from mechanalyzer.calculator import combine as calc_combine
 from chemkin_io.parser.mechanism import reaction_units
-from chemkin_io.writer import reaction as writer
-from mechanalyzer.calculator import thermo
-from mechanalyzer.calculator import rates
 import copy
+import os
+
+# Read the job path, which should have been input as the current directory
+JOB_PATH = sys.argv[1]
+
+
+def plot_aligned_mechs(aligned_rxn_ktp_dcts):
+    """ Produces plots of aligned rxn_ktp_dcts
+        
+        :param aligned_rxn_ktp_dcts: a list of aligned rxn_ktp_dcts,
+            all with aligned species names and directions
+        :type aligned_rxn_ktp_dcts: list({dict{dict}}) [{((rcts),(prds)):{pres:(temps_array,rates_array)}, ...}, ...]
+    """
+    
+
+def align_mechs(mech_filenames, spc_csv_filenames, thermo_filenames, temps, pressures):
+    """ Calculates kTP dictionaries for any number of mechanisms and then
+        flips the reactions within the mechanisms to all be in the same direction
+
+
+    """
+    assert len(mech_filenames) == len(spc_csv_filenames) == len(thermo_filenames), (
+        f"""The lengths of the mechanism, spc_csv, and thermo filename inputs should 
+            all be the same, but are instead {len(mech_filenames)}, {len(spc_csv_filenames)}, 
+            and {len(thermo_filenames)}, respectively."""
+        )
+    num_mechs = len(mech_filenames)
+    
+    # Load rxn_ktp_dcts, spc_dcts, and thermo_dcts
+    rxn_ktp_dcts = []
+    rxn_param_dcts = []
+    spc_dcts = []
+    thermo_dcts = []
+    for idx in range(num_mechs):
+        # Get the rxn_ktp_dct and the rxn_param_dct
+        mech_str = parser.ptt.read_inp_str(JOB_PATH,mech_filenames[idx],remove_comments=False)
+        rxn_block_str = parser_mech.reaction_block(mech_str)
+        rxn_param_dct = parser_rxn.param_dct(rxn_block_str)
+        rxn_ktp_dct = calc_rates.eval_rxn_param_dct(rxn_param_dct, pressures, temps)
+        rxn_ktp_dcts.append(rxn_ktp_dct)
+        rxn_param_dcts.append(rxn_param_dct)
+
+        # Get the spc_dct
+        spc_csv_str = parser.ptt.read_inp_str(JOB_PATH, spc_csv_filenames[idx], remove_comments=False)
+        spc_dct = parser_spc.build_spc_dct(spc_csv_str, 'csv')
+        spc_dcts.append(spc_dct)
+
+        # Get the thermo_dct
+        thermo_str = parser.ptt.read_inp_str(JOB_PATH,mech_filenames[idx],remove_comments=False)
+        thermo_block_str = parser_mech.thermo_block(thermo_str)
+        thermo_dct = calc_thermo.mechanism(thermo_block_str, temps)
+        thermo_dcts.append(thermo_dct)
+
+    # Get the renamed dictionaries
+    renamed_rxn_ktp_dcts = []
+    renamed_rxn_param_dcts = []
+    renamed_spc_dcts = []
+    renamed_thermo_dcts = []
+    for mech_idx in range(num_mechs-1):
+        # If on first mech, don't rename, just copy
+        if mech_idx == 0:
+            renamed_rxn_ktp_dcts.append(rxn_ktp_dcts[mech_idx])
+            renamed_rxn_param_dcts.append(rxn_param_dcts[mech_idx])
+            renamed_spc_dcts.append(spc_dcts[mech_idx])            
+            renamed_thermo_dcts.append(thermo_dcts[mech_idx])
+        # Loop through the mechs remaining after the current one
+        for idx2 in range(mech_idx+1, num_mechs):
+            # If on the first time through, do things a bit differently
+            if mech_idx == 0:
+                # Get the instructions on renaming species, aka the rename_spc_dct
+                _, rename_spc_dct = calc_combine.combine_species(spc_dcts[mech_idx], spc_dcts[idx2])
+
+                # Rename the species in the various dictionaries
+                renamed_rxn_ktp_dct = calc_combine.rename_species(rxn_ktp_dcts[idx2], rename_spc_dct, target_type='rxn')  
+                renamed_rxn_param_dct = calc_combine.rename_species(rxn_param_dcts[idx2], rename_spc_dct, target_type='rxn')  
+                renamed_spc_dct = calc_combine.rename_species(spc_dcts[idx2], rename_spc_dct, target_type='spc')  
+                renamed_thermo_dct = calc_combine.rename_species(thermo_dcts[idx2], rename_spc_dct, target_type='thermo')
+                
+                # Store the results
+                renamed_rxn_ktp_dcts.append(renamed_rxn_ktp_dct)
+                renamed_rxn_param_dcts.append(renamed_rxn_param_dct)
+                renamed_spc_dcts.append(renamed_spc_dct)
+                renamed_thermo_dcts.append(renamed_thermo_dct)
+
+            else:
+                # Get the instructions on renaming species, aka the rename_spc_dct
+                _, rename_spc_dct = calc_combine.combine_species(renamed_spc_dcts[mech_idx], renamed_spc_dcts[idx2])
+
+                # Rename the species in the various dictionaries
+                renamed_rxn_ktp_dct = calc_combine.rename_species(renamed_rxn_ktp_dcts[idx2], rename_spc_dct, target_type='rxn')  
+                renamed_rxn_param_dct = calc_combine.rename_species(renamed_rxn_param_dcts[idx2], rename_spc_dct, target_type='rxn')  
+                renamed_spc_dct = calc_combine.rename_species(renamed_spc_dcts[idx2], rename_spc_dct, target_type='spc')  
+                renamed_thermo_dct = calc_combine.rename_species(renamed_thermo_dcts[idx2], rename_spc_dct, target_type='thermo')
+
+                # Store the results                
+                renamed_rxn_ktp_dcts[idx2] = renamed_rxn_ktp_dct
+                renamed_rxn_param_dcts[idx2] = renamed_rxn_param_dct
+                renamed_spc_dcts[idx2] = renamed_spc_dct
+                renamed_thermo_dcts[idx2] = renamed_thermo_dct
+    
+    # Get the em_param_dcts                    
+    renamed_em_param_dcts = []
+    for dct in renamed_rxn_param_dcts:
+        renamed_em_param_dct = get_em_param_dct(dct)
+        renamed_em_param_dcts.append(renamed_em_param_dct)
+
+    # Loop over each reaction and reverse if necessary
+    aligned_rxn_ktp_dcts = []
+    aligned_em_param_dcts = []
+    for mech_idx in range(num_mechs-1):
+        if mech_idx == 0:
+            aligned_rxn_ktp_dcts.append(renamed_rxn_ktp_dcts[mech_idx])
+            aligned_em_param_dcts.append(renamed_em_param_dcts[mech_idx])
+        for idx2 in range(mech_idx+1, num_mechs):    
+            if mech_idx == 0:
+                aligned_rxn_ktp_dct = reverse_ktp_dct(renamed_rxn_ktp_dcts[mech_idx], renamed_rxn_ktp_dcts[idx2],
+                    renamed_rxn_param_dcts[mech_idx], renamed_rxn_param_dcts[idx2], renamed_thermo_dcts[mech_idx], temps)
+                    
+                aligned_rxn_ktp_dcts.append(aligned_rxn_ktp_dct)
+
+            else:
+                aligned_rxn_ktp_dct = reverse_ktp_dct(renamed_rxn_ktp_dcts[mech_idx], renamed_rxn_ktp_dcts[idx2],
+                    renamed_rxn_param_dcts[mech_idx], renamed_rxn_param_dcts[idx2], renamed_thermo_dcts[mech_idx], temps)
+                # Note: the preceding line does not necessarily use the thermo of the first mechanism; it only is sure
+                # to use the thermo of the mechanism currently being used as the reference
+
+                aligned_rxn_ktp_dcts[idx2] = aligned_rxn_ktp_dct
+
+    # Sort the aligned dictionaries into a single output
+    # Loop over each mechanism
+    combined_rxn_ktp_dct = {}
+    for mech_idx, dct in enumerate(aligned_rxn_ktp_dcts):
+
+        # Loop over each rxn in the mechanism
+        for rxn, ktp_dct in dct.items():
+
+            # If the reaction does not yet exist, add it
+            if rxn not in combined_rxn_ktp_dct.keys():
+                ktp_dct_list = [None] * mech_idx
+                combined_rxn_ktp_dct[rxn] = ktp_dct_list.append(ktp_dct)
+
+                # Also, add the em_param
+                
+
+            # If the reaction already exists, append the new ktp_dct
+            else:
+                ktp_dct_list = combined_rxn_ktp_dct[rxn]  # get the current list of ktp_dcts
+
+                # If any of the previous entries were blank, add None entries to fill
+                if len(ktp_dct_list) < mech_idx:
+                     ktp_dct_list.extend([None] * (mech_idx - len(ktp_dct_list)))
+                                
+                ktp_dct_list.append(ktp_dct) 
+            
+    # Clean up the combined dct in two ways: 
+    for rxn, ktp_dct_list in combined_rxn_ktp_dct.items():
+        # 1: Add None entries so that all are the same length
+        if len(ktp_dct_list) < num_mechs:
+            ktp_dct_list.extend([None] * (num_mechs - len(ktp_dct_list))) 
+            combined_rxn_ktp_dct[rxn] = ktp_dct_list
+        # 2: Create the em_param_dct, which denotes whether a reaction has 
+        
+            
+    return combined_rxn_ktp_dct
+
+
+def reverse_rxn_ktp_dct(rxn_ktp_dct1, rxn_ktp_dct2, rxn_param_dct1, rxn_param_dct2, thermo_dct1, temps)
+    """ This takes two rxn_ktp_dcts whose species have already been renamed
+        to be identical and reverses any reactions *in the second dct* that 
+        need to be reversed
+
+        :param rxn_ktp_dct1: rxn_ktp_dct for mech1 
+        :type rxn_ktp_dct1: dict of dicts {((rcts,prds)):({pressure:(temp_array,rate_array)}, ...)}
+        :param rxn_ktp_dct2: rxn_ktp_dct for mech2 
+        :type rxn_ktp_dct2: dict of dicts {((rcts,prds)):({pressure:(temp_array,rate_array)}, ...)}
+        :param rxn_param_dct1: rxn_param_dct for mech1
+        :type rxn_param_dct1: dict{((rcts,prds)):(
+    """
+    rev_rxn_ktp_dct2 = copy.copy(rxn_ktp_dct2)
+    rev_rxn_em_dct2 = {}
+    for rxn1, params1 in rxn_param_dct1.items():
+        rxn2, flip_rxn, p_dep_same = _assess_rxn_match(rxn1, params1, rxn_param_dct2)
+        if flip_rxn and p_dep_same:
+            ktp_dct2 = rxn_ktp_dct2[rxn2]
+            rev_ktp_dct2 = _reverse_ktp_dct(ktp_dct2, thermo_dct1, rxn_name2, temps)
+            rev_rxn_ktp_dct2.pop(rxn2)
+            rev_rxn_ktp_dct2[rxn1] = rev_ktp_dct2            
+            # Update the 
+            if params1[6] == '+M':
+                rev_rxn_em_dct2[rxn1] = True
+            else: 
+                rev_rxn_em_dct2[rxn1] = False
+                
+        else:
+            if params1[6] == '+M':
+                rev_rxn_em_dct2[rxn1] = True
+            else: 
+                rev_rxn_em_dct2[rxn1] = False
+            
+    return rev_rxn_ktp_dct2
+
+
+def reverse_ktp_values(rxn_name2, rxn_ktp_dct2, thermo_dct1):
+    """ Takes the k(T,P) values for a single reaction in 
+        rxn_ktp_dct2 and reverses them according to the thermo values 
+        in thermo
+    """
+    ktps = rxn_ktp_dct2[rxn_name2]
+    
+     
 
 
 def combine_species(mech1_spc_dct, mech2_spc_dct):
@@ -73,6 +285,25 @@ def combine_species(mech1_spc_dct, mech2_spc_dct):
     return combined_spc_dct, rename_spc_dct
 
 
+def combine_mech_ktps(rxn_ktp_dct1, rxn_ktp_dct2, rename_spc_dct):
+    """ Combine together two rxn_ktp_dcts to create a single dct,
+        renaming all species as indicated in the rename_spc_dct.
+
+        This is largely a useless function.
+    """
+    combined_rxn_ktp_dct = copy.copy(rxn_ktp_dct1)
+    renamed_rxn_ktp_dct2 = rename_species(rxn_ktp_dct2, rename_spc_dct)
+
+    for rxn_name2, ktp2 in renamed_rxn_ktp_dct2.items():
+        rxn_name, flip_rxn, p_dep_same = _assess_reaction_match(rxn_name2, rxn_ktp_dct1)    
+        
+        # If rxn is unique to ktp2, add to ktp1        
+        if not rxn_name:
+            combined_rxn_ktp_dct[rxn_name2] = ktp2
+
+    return combined_rxn_ktp_dct
+
+
 def combine_mech_params(rxn_param_dct1, rxn_param_dct2, rename_spc_dct):
     """ Combine together two rxn_param_dcts to create a single dct,
         renaming all species as indicated in the rename_spc_dct.
@@ -92,7 +323,7 @@ def combine_mech_params(rxn_param_dct1, rxn_param_dct2, rename_spc_dct):
     return combined_rxn_param_dct
 
 
-def rename_species_old(rxn_dct, rename_spc_dct):
+def rename_species(rxn_dct, rename_spc_dct):
     """ Rename the species inside a rxn_ktp_dct OR
         a rxn_param_dct according to the instructions
         inside the rename_spc_dct
@@ -117,52 +348,6 @@ def rename_species_old(rxn_dct, rename_spc_dct):
         renamed_rxn_dct[new_rcts, new_prds] = rxn_dct[rcts, prds]
 
     return renamed_rxn_dct
-
-
-def rename_species(target_dct, rename_spc_dct, target_type='rxn'):
-    """ Rename the species inside a rxn_ktp_dct, rxn_param_dct, or
-        thermo_dct according to the instructions inside the 
-        rename_spc_dct.
-
-        :param target_dct: the dct whose species are to be renamed
-        :type target_dct: dct; either a rxn_ktp, rxn_param, or thermo dct
-        :param rename_spc_dct 
-    """
-    assert target_type in ('rxn', 'thermo', 'spc'), (
-        f'The target_type is {target_type}, but should be either "rxn", "thermo", or "spc"'
-        )
-    renamed_dct = {}
-
-    # If a rxn_ktp or rxn_param dct
-    if target_type == 'rxn':
-        for rcts, prds in target_dct.keys():
-            new_rcts = []
-            new_prds = []
-            for spc in rcts:
-                if spc in rename_spc_dct.keys():
-                    new_rcts.append(rename_spc_dct[spc])
-                else:
-                    new_rcts.append(spc)
-            for spc in prds:
-                if spc in rename_spc_dct.keys():
-                    new_prds.append(rename_spc_dct[spc])
-                else:
-                    new_prds.append(spc)
-    
-            new_rcts = tuple(new_rcts)
-            new_prds = tuple(new_prds)
-            renamed_dct[new_rcts, new_prds] = target_dct[rcts, prds]
-
-    # If a thermo or species dct
-    else:
-        for spc, data in target_dct.items():
-            if spc in rename_spc_dct.keys():
-                new_spc_name = rename_spc_dct[spc]
-                renamed_dct[new_spc_name] = data
-            else:
-                renamed_dct[spc] = data
-
-    return renamed_dct
 
 
 def mechanism_thermo(mech1_thermo_dct, mech2_thermo_dct):
@@ -235,6 +420,7 @@ def mechanism_rates(rxn_ktp_dct1, rxn_ktp_dct2,
         print('- M1 RCTS', '+'.join(mech1_name[0]))
         print('- M1 PRDS', '+'.join(mech1_name[1]))
         # Check what (if/any) combination of mech2 matches with mech1
+
         rxn_name2, reverse_rates = _assess_reaction_match(
             rxn_name2, rxn_ktp_dct1)
 
@@ -366,7 +552,6 @@ def spc_name_from_inchi(mech1_csv_str, mech2_csv_str, ich):
 
     mech1_inchi_dct = mech_parser.spc_inchi_dct(mech1_csv_str)
     mech2_inchi_dct = mech_parser.spc_inchi_dct(mech2_csv_str)
-
     mech_name = mech1_inchi_dct.get(ich)
     if mech_name is not None:
         mech_name = mech2_inchi_dct.get(ich)
@@ -375,7 +560,7 @@ def spc_name_from_inchi(mech1_csv_str, mech2_csv_str, ich):
 
 
 # Rate functions
-def _assess_reaction_match(rxn_name1, params1, rxn_ktp_dct2, print_output=False):
+def _assess_reaction_match(rxn_name1, params1, rxn_param_dct2, print_output=False):
     """ assess whether the reaction should be flipped
     """
 
@@ -385,73 +570,72 @@ def _assess_reaction_match(rxn_name1, params1, rxn_ktp_dct2, print_output=False)
     prds1_perm = list(itertools.permutations(prds1, len(prds1)))
     em_param1 = params1[6]  #'+M', '(+M)', or None
 
-    rxn_name2 = ()
+    rxn_name2 = None
     flip_rxn = None
     p_dep_same = None
-    for rxn_name, params in rxn_ktp_dct2.items():
+    for rxn_name, params in rxn_param_dct2.items():
         [rcts2, prds2] = rxn_name
         em_param2 = params[6]
         if rcts2 in rcts1_perm and prds2 in prds1_perm:
             rxn_name2 = rxn_name
             flip_rxn = False
 
-            if em_param == em_param1:
+            if em_param2 == em_param1:
                 p_dep_same = True
             else:
                 p_dep_same = False
-
             break
 
         if mech2_rcts in prds1_perm and mech2_prds in rcts1_perm:
             rxn_name2 = rxn_name
             flip_rxn = True
 
-            if em_param == em_param1:
+            if em_param2 == em_param1:
                 p_dep_same = True
             else:
                 p_dep_same = False
-
             break
 
     if print_output:
-        if mech2_key:
+        if rxn_name2:
             print('\n- M2 RCTS', '+'.join(mech2_key[0]))
             print('- M2 PRDS', '+'.join(mech2_key[1]))
         else:
             print('\n- NO M2 MATCH')
 
-    return mech2_key, flip_rxn, p_dep_same
+    return rxn_name2, flip_rxn, p_dep_same
 
 
-def _reverse_reaction_rates(mech_dct, thermo_dct, rxn, temps):
+def _reverse_ktp_dct(ktp_dct, thermo_dct, rxn, temps):
     """ For a given reaction, use the thermochemistry values of its
         constituent species to calculate the equilibrium constant
         and reverse the rate constants.
 
-        :param mech_dct:
-        :type mech_dct: dict[pressure: rates]
+        :param ktp_dct: k(T,P) dictionary for a single reaction
+        :type ktp_dct: dict[pressure: (temp_array, rates_array)]
         :param thermo_dct: thermochemical values of all species in mechanism
         :type thermo_dct: dict[spc name: [thermo vals]]
         :param rxn: reactant-product pair for the reaction
         :type rxn: tuple(tuple(str), tuple(str))
+        :param temps: list of temperatures 
+        :type temps: list(float)
         :return: rev_ktp_dct: reversed rates of the reaction
-        :rtype: dict[pressure: reversed rates]
+        :rtype: dict[pressure: (temp_array, reversed_rates_array)]
     """
 
-    [rct_idxs, prd_idxs] = rxn
+    [rcts, prds] = rxn
     k_equils = _calculate_equilibrium_constant(
-        thermo_dct, rct_idxs, prd_idxs, temps)
+        thermo_dct, rcts, prds, temps)
 
-    ktp_dct = mech_dct[rxn]
     rev_ktp_dct = {}
-    for pressure, rate_ks in ktp_dct.items():
+    for pressure, (_, rate_ks) in ktp_dct.items():
 
         # Calculate density to handle units, if needed
-        if len(rct_idxs) > 1 and len(prd_idxs) == 1:
+        if len(rcts) > 1 and len(prds) == 1:
             densities = ratefit.calc.p_to_m(1.0, temps)
             rate_ks *= densities
             # print('flip1')
-        elif len(rct_idxs) == 1 and len(prd_idxs) > 1:
+        elif len(rcts) == 1 and len(prds) > 1:
             densities = ratefit.calc.p_to_m(1.0, temps)
             rate_ks /= densities
             # print('flip2')
@@ -462,7 +646,7 @@ def _reverse_reaction_rates(mech_dct, thermo_dct, rxn, temps):
             rev_rates.append(forw_k / k_equil)
 
         # Add reversed rates to dict
-        rev_ktp_dct[pressure] = rev_rates
+        rev_ktp_dct[pressure] = (temps, rev_rates)
 
     return rev_ktp_dct
 
@@ -615,6 +799,20 @@ def conv_ich_to_name_ktp_dct(ktp_ich_dct, csv_str):
         ktp_name_dct[(rct_names, prd_names)] = params
 
     return ktp_name_dct
+
+
+def get_em_param_dct(rxn_param_dct):
+    
+    em_param_dct = {}
+    for rxn, params in rxn_param_dct.items():
+        em_param = False
+        if params[6] == '+M'
+            em_param = True
+        
+        em_param_dct[rxn] = em_param
+ 
+    return em_param_dct
+    
 
 # def spc_name_from_inchi(mech1_csv_str, mech2_csv_str, ich_pair):
 #     """ uses dict[inchi]=name dicts to get
