@@ -1,6 +1,8 @@
 from matplotlib import cm
+import matplotlib.pyplot as plt
 import matplotlib.backends.backend_pdf as plt_pdf
 import copy
+import numpy as np
 
 # Gets rid of the annoying warning about too many figures being open
 plt.rcParams.update({'figure.max_open_warning': 0})
@@ -42,7 +44,6 @@ def plot_comparisons(combined_rxn_ktp_dct, combined_rxn_em_dct, input_pressures,
 
     # Loop over each reaction
     figs = []  # yummy
-    max_rate = []
     for rxn_name, ktp_dcts in combined_rxn_ktp_dct.items():
 
         # Get the units of k
@@ -125,7 +126,7 @@ def plot_comparisons(combined_rxn_ktp_dct, combined_rxn_em_dct, input_pressures,
     # Produce a PDF
     print('Producing PDF...')
     pdf = plt_pdf.PdfPages("output.pdf")
-    for fig in figs:#_reordered:
+    for fig in figs:
         pdf.savefig(fig)
     pdf.close()
 
