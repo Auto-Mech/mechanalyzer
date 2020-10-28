@@ -59,7 +59,7 @@ def get_valid_tk(temps, rate_constants, bimol,
     for temp, rate_constant in zip(temps, rate_constants):
         if rate_constant == '***':
             continue
-        kthresh = 0.0 if not bimol else 1.0e-21
+        kthresh = 0.0 if not bimol else 1.0e-24
         if float(rate_constant) > kthresh and tmin <= temp <= tmax:
             valid_t.append(temp)
             valid_k.append(rate_constant)
