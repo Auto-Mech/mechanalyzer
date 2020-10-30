@@ -57,16 +57,33 @@ def kfit(temps, ktp_dct, tdeg=6, pdeg=4):
     # Create matrices for fits
     A = np.zeros((tnum * pnum, tdeg * pdeg), np.float64)
     b = np.zeros((tnum * pnum), np.float64)
+    nzero = 0
     for t1, T in enumerate(tred):
         for p1, P in enumerate(pred):
             for t2 in range(tdeg):
                 for p2 in range(pdeg):
                     idx1, idx2 = (p1 * tnum + t1), (p2 * tdeg + t2)
                     A[idx1, idx2] = eval_chebyt(t2, T) * eval_chebyt(p2, P)
-            b[idx1] = np.log10(ktps[t1, p1])
+            if ktps[t1, p1] is not None:
+                b[idx1] = np.log10(ktps[t1, p1])
+            else:
+                b[idx1] = None
+                nzero += 1
 
+    nnonzero = tnum * pnum - nzero
+    idxp = -1
+    Ap = np.zeros((nnonzero, tdeg * pdeg), np.float64)
+    bp = np.zeros((nnonzero), np.float64)
+    for idx in range(tnum*pnum):
+        if not np.isnan(b[idx]):
+            idxp += 1
+            bp[idxp] = b[idx]
+            for idx2 in range(tdeg*pdeg):
+                Ap[idxp,idx2] = A[idx,idx2]
+
+        
     # Perform least-squares fit to get alpha coefficients
-    theta = np.linalg.lstsq(A, b, rcond=RCOND)[0]
+    theta = np.linalg.lstsq(Ap, bp, rcond=RCOND)[0]
 
     alpha = np.zeros((tdeg, pdeg), np.float64)
     for t2 in range(tdeg):
@@ -102,7 +119,5 @@ def conv_dct_to_array(ktp_dct, temps):
     # Build array and invert from P,T to T,P
     pt_array = np.array(mat_rows)
     tp_array = np.transpose(pt_array)
-
-    # print('pt array\n', pt_array)
 
     return tp_array
