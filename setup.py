@@ -11,5 +11,5 @@ setup(name="mechanalyzer",
           'plotter': 'plotter',
           'calculator': 'calculator'},
       package_data={
-          'plotter': ['tests/data/*.txt', 'tests/data/*.csv']})
+          'plotter': ['tests/data/*.txt', 'tests/data/*.csv'],
           'chemkin': ['tests/data/*.txt', 'tests/data/*.csv']})

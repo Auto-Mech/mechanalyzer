@@ -17,13 +17,15 @@ def parse(mech_str, spc_dct, sort_rxns):
         map(chemkin_io.parser.reaction.reactant_names, rxn_strs))
     prd_names_lst = list(
         map(chemkin_io.parser.reaction.product_names, rxn_strs))
-
+    
     # Build the inchi dct
     ich_dct = {}
     for key in spc_dct.keys():
         if 'ts' not in key and 'global' not in key:
             ich_dct[key] = spc_dct[key]['inchi']
 
+    # order the reactants/products by the heaviest
+    rct_names_lst,prd_names_lst = order_rct_prd_bystoich(rct_names_lst,prd_names_lst,ich_dct)
     # Sort reactant and product name lists by formula to facilitate
     # multichannel, multiwell rate evaluations
     formula_str = ''
@@ -50,3 +52,33 @@ def parse(mech_str, spc_dct, sort_rxns):
             *rxn_info_lst)
 
     return formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst
+
+
+def order_rct_prd_bystoich(rct_names_lst,prd_names_lst,ich_dct):
+    '''
+    reorder reactants and products based on the higher number of atoms
+    '''
+
+    for key,val in enumerate(rct_names_lst):
+        #print(len(rct_names))
+        rct_names= val
+        rct_ichs = list(map(ich_dct.__getitem__, rct_names))
+        fml_rct = list(map(automol.inchi.formula,rct_ichs))
+        atoms_rct = list(map(automol.formula.atom_count,fml_rct))
+        if len(rct_names)>1:
+            if atoms_rct[1] > atoms_rct[0]:
+                # swap places of reactants 1 and 2
+                rct_names_lst[key] = (rct_names[1],rct_names[0])
+
+    for key,val in enumerate(prd_names_lst):
+        #print(len(rct_names))
+        prd_names= val
+        prd_ichs = list(map(ich_dct.__getitem__, prd_names))
+        fml_prd = list(map(automol.inchi.formula,prd_ichs))
+        atoms_prd = list(map(automol.formula.atom_count,fml_prd))
+        if len(prd_names)>1:
+            if atoms_prd[1] > atoms_prd[0]:
+                # swap places of reactants 1 and 2
+                prd_names_lst[key] = (prd_names[1],prd_names[0])
+
+    return rct_names_lst,prd_names_lst
