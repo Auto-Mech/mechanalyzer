@@ -107,7 +107,7 @@ class SORT_MECH:
 
             ##### write inline comments #########
             for name2,rxndf2 in rxndf.groupby(hierarchy[N:-1]):
-                if isinstance(name,str):
+                if isinstance(name2,str):
                     name2 = [name2]
                 rxnclass = '! '+'_'.join(name2)+'\n' 
                 df_cmts_inline['cmts_inline'][rxndf2.index] = rxnclass
