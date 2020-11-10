@@ -82,6 +82,7 @@ class SORT_MECH:
         first N keywords --> main class --> comments_top (new col in df)
         other keywords --> other subclasses --> comments_inline
         """
+
         # df for comments_top and comments_inline
         ept_df = np.zeros((len(self.mech_df.index),1),dtype=str)
         df_cmts_top = pd.DataFrame(ept_df,index=self.mech_df.index,columns=['cmts_top'])
@@ -105,12 +106,13 @@ class SORT_MECH:
             idx0 = rxndf.index[0]
             df_cmts_top['cmts_top'][idx0] = tophead + rxnclass_type + rxnclass + bottomhead
 
-            ##### write inline comments #########
-            for name2,rxndf2 in rxndf.groupby(hierarchy[N:-1]):
-                if isinstance(name2,str):
-                    name2 = [name2]
-                rxnclass = '! '+'_'.join(name2)+'\n' 
-                df_cmts_inline['cmts_inline'][rxndf2.index] = rxnclass
+            ##### write inline comments if necessary #########
+            if N < len(hierarchy)-1:
+                for name2,rxndf2 in rxndf.groupby(hierarchy[N:-1]):
+                    if isinstance(name2,str):
+                        name2 = [name2]
+                    rxnclass = '! '+'_'.join(name2)
+                    df_cmts_inline['cmts_inline'][rxndf2.index] = rxnclass
 
         # concatenate DFs
         self.mech_df = pd.concat([self.mech_df,df_cmts_top,df_cmts_inline],axis=1)
@@ -171,7 +173,11 @@ class SORT_MECH:
             prd_ichs = tuple(self.spc_dct[prd]['inchi'] for prd in prd_names)
             prd_graph = tuple(automol.inchi.graph(ich) for ich in prd_ichs) 
             # ID reaction
-            rclass = automol.graph.reac.classify(rct_graph, prd_graph)
+            rclass = automol.graph.reac.classify_simple(rct_graph, prd_graph)
+            # for other features instead: you need to have explicit hydrogens in the graph first
+            # rct_graph = list(map(automol.graph.explicit, rct_graph))
+            # prd_graph = list(map(automol.graph.explicit, prd_graph))
+            # rclass = automol.graph.reac.classify(rct_graph, prd_graph)
             print(rclass)
         return rxn_clG_df
 
