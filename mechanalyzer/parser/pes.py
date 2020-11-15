@@ -3,6 +3,7 @@ Read the mechanism file
 """
 
 import automol
+from automol.graph._graph import explicit
 from mechanalyzer.parser import ckin_ as ckin
 import pandas as pd
 import numpy as np
@@ -111,7 +112,8 @@ class SORT_MECH:
                 for name2,rxndf2 in rxndf.groupby(hierarchy[N:-1]):
                     if isinstance(name2,str):
                         name2 = [name2]
-                    rxnclass = '! '+'_'.join(name2)
+                    subclass_type = 'subclass: ' + '_'.join(hierarchy[N:-1]) + ' '
+                    rxnclass = '! '+ subclass_type +'_'.join(name2)
                     df_cmts_inline['cmts_inline'][rxndf2.index] = rxnclass
 
         # concatenate DFs
@@ -133,7 +135,7 @@ class SORT_MECH:
             # write subpes in conn_chn_df
             for key,value in connchnls.items():
                 rxns = peslist.iloc[value].index
-                conn_chn_df['SUBPES'][rxns] = fml + '_' + str(key)
+                conn_chn_df['SUBPES'][rxns] = fml + '-' + str(key)
 
         return conn_chn_df
 
@@ -168,19 +170,36 @@ class SORT_MECH:
             prd_names = self.mech_df['prd_names_lst'][rxn]
             print(rct_names,prd_names)
             # Get the inchis and graphs
-            rct_ichs = tuple(self.spc_dct[rct]['inchi'] for rct in rct_names)
-            rct_graph = tuple(automol.inchi.graph(ich) for ich in rct_ichs) 
-            prd_ichs = tuple(self.spc_dct[prd]['inchi'] for prd in prd_names)
-            prd_graph = tuple(automol.inchi.graph(ich) for ich in prd_ichs) 
+            rct_ichs = list(self.spc_dct[rct]['inchi'] for rct in rct_names)
+            rct_graph = list(map(automol.inchi.graph, rct_ichs))
+            rct_gras = list(map(explicit, rct_graph))
+            rct_gras = join_graph(rct_gras)
+            # join the dictionaries
+            prd_ichs = list(self.spc_dct[prd]['inchi'] for prd in prd_names)
+            prd_gras = list(map(automol.inchi.graph, prd_ichs))
+            prd_gras = list(map(explicit, prd_gras))
+            #print(prd_gras)
+            #print('\n')
+            prd_gras = join_graph(prd_gras)
+
+            #print(prd_gras)
+            print(rxn)
+            print('\n')
             # ID reaction
-            rclass = automol.graph.reac.classify_simple(rct_graph, prd_graph)
-            # for other features instead: you need to have explicit hydrogens in the graph first
-            # rct_graph = list(map(automol.graph.explicit, rct_graph))
-            # prd_graph = list(map(automol.graph.explicit, prd_graph))
-            # rclass = automol.graph.reac.classify(rct_graph, prd_graph)
+            try:
+                _, _, _, rclass = automol.graph.reac.classify(rct_gras, prd_gras)
+                if rclass == None:
+                    rclass = 'unclassified'
+            except AssertionError:
+                rclass = 'unclassified'
+            #rclass = automol.graph.reac.classify_simple(rct_graph, prd_graph)
+            rxn_clG_df['RXN_CLASS_GRAPH'][rxn] = rclass
             print(rclass)
+            print('\n')
+
         return rxn_clG_df
 
+        
     ###################################### output dataframe ##############################
     def return_mech_df(self):
         '''
@@ -197,6 +216,36 @@ class SORT_MECH:
 
         return new_idx,cmts
 
+def join_graph(gras):
+    '''
+    Joins two graphs updating the indices of the atoms and bonds of the second fragment
+    should go in automol?
+    '''
+
+    if len(gras) == 2:
+        # extract dictionaries
+        atoms_reac1 = gras[0][0]
+        bonds_reac1 = gras[0][1]
+        atoms_reac2 = gras[1][0]
+        bonds_reac2 = gras[1][1] 
+        # rescale factor for reac2
+        rescale = list(atoms_reac1.keys())[-1]+1
+        new_idx = np.array(list(atoms_reac2.keys()))+rescale
+        atoms_reac2 = dict(zip(new_idx,atoms_reac2.values()))
+        # update the keys of bonds_reac2
+        new_idx = []
+        for key in bonds_reac2.keys():
+            # rescale key
+            new_idx.append(frozenset(np.array(list(key))+rescale))
+        bonds_reac2 = dict(zip(new_idx,bonds_reac2.values()))
+        # build the new tuple
+        # join dictionaries:
+        gras = [(atoms_reac1,bonds_reac1),(atoms_reac2,bonds_reac2)]
+        #atoms_reac1.update(atoms_reac2)
+        #bonds_reac1.update(bonds_reac2)
+        #gras = ((atoms_reac1,bonds_reac1),)
+
+    return gras
 
 def get_S1S2(SPECIES):
     '''
