@@ -9,7 +9,7 @@ from scipy.special import eval_chebyt
 RCOND = -1 if int(np.__version__.split('.')[1]) < 14 else None
 
 
-def kfit(temps, ktp_dct, tdeg=6, pdeg=4):
+def kfit(temps, ktp_dct, tdeg=6, pdeg=4, a_conv_factor=1):
     """ Fits T,P-dependent rate constants [k(T,P)]s to a
         a Chebyshev functional expression.
 
@@ -52,7 +52,7 @@ def kfit(temps, ktp_dct, tdeg=6, pdeg=4):
         )
 
     # Build a numpy array for the fits
-    ktps = conv_dct_to_array(ktp_dct, temps)
+    ktps = conv_dct_to_array(ktp_dct, temps, a_conv_factor=a_conv_factor)
 
     # Create matrices for fits
     A = np.zeros((tnum * pnum, tdeg * pdeg), np.float64)
@@ -93,7 +93,7 @@ def kfit(temps, ktp_dct, tdeg=6, pdeg=4):
     return alpha, (tmin, tmax), (pmin, pmax)
 
 
-def conv_dct_to_array(ktp_dct, temps):
+def conv_dct_to_array(ktp_dct, temps, a_conv_factor=1):
     """ Convert a numpy
     """
 
@@ -119,5 +119,9 @@ def conv_dct_to_array(ktp_dct, temps):
     # Build array and invert from P,T to T,P
     pt_array = np.array(mat_rows)
     tp_array = np.transpose(pt_array)
+    
+    print('inside ratefit/chebyshev, tp_array\n', tp_array) 
+   
+    tp_array = tp_array * a_conv_factor
 
     return tp_array
