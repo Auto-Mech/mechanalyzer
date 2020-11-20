@@ -1,0 +1,7 @@
+PES #sort by PES
+#RXN_CLASS_BROAD
+#RXN_CLASS_GRAPH
+#MULT_R1 # sort by multiplicity of first reactant
+#SUBPES
+#R1 # sort by first reactant
+1 # criteria to be used for class headers
