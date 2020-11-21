@@ -11,18 +11,18 @@ import os
 import ioformat
 
 # PARSE THE MECHANISM FIle 
-def read_mechanism_file(mech_str, mech_type, spc_dct, sort_rxns=False):
+def read_mechanism_file(mech_str, mech_type, spc_dct):
     """ Get the reactions and species from the mechanism input
     """
 
     # Parse the info from the chemkin file
     if mech_type == 'chemkin':
-        formulas, rct_names, prd_names, rxn_names = ckin.parse(
-            mech_str, spc_dct, sort_rxns)
+        formulas_dct, formulas, rct_names, prd_names, rxn_names = ckin.parse(
+            mech_str, spc_dct)
     else:
         raise NotImplementedError
 
-    return [formulas, rct_names, prd_names, rxn_names]
+    return [formulas_dct, formulas, rct_names, prd_names, rxn_names]
     # list, list of tuples, list of tuples, list
 
 
@@ -31,14 +31,16 @@ class SORT_MECH:
     class of functions to organize the mechanism according to given criteria
     from any step after initialization: call "return_mech_df" to get the current dataframe with mech info
     '''
-    def __init__(self,formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst ,spc_dct):
+    def __init__(self,formulas_dct,formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst,spc_dct):
         # set dataframe
         # index = rxn name
         # cols = reac1, reac2, prod1, prod2, formula
         R1,R2 = get_S1S2(rct_names_lst)
         P1,P2 = get_S1S2(prd_names_lst)
-        data = np.array([rct_names_lst,prd_names_lst,R1,R2,P1,P2,formula_str_lst],dtype=object).T
-        self.mech_df = pd.DataFrame(data,index=rxn_name_lst,columns=['rct_names_lst','prd_names_lst','R1','R2','P1','P2','PES'])
+        num_C,num_N = count_C_N(formulas_dct)
+
+        data = np.array([rct_names_lst,prd_names_lst,R1,R2,P1,P2,formula_str_lst,num_C,num_N],dtype=object).T
+        self.mech_df = pd.DataFrame(data,index=rxn_name_lst,columns=['rct_names_lst','prd_names_lst','R1','R2','P1','P2','PES','num_C','num_N'])
         self.spc_dct = spc_dct # set for later use
 
 
@@ -55,6 +57,7 @@ class SORT_MECH:
             'MULT_R1':self.reac_mult,
             'RXN_CLASS_BROAD':self.rxn_class_broad,
             'RXN_CLASS_GRAPH':self.rxn_class_graph}
+
 
         for optn,fun_name in sort_optns_dct.items():
             # call sorting function 
@@ -83,7 +86,6 @@ class SORT_MECH:
         first N keywords --> main class --> comments_top (new col in df)
         other keywords --> other subclasses --> comments_inline
         """
-
         # df for comments_top and comments_inline
         ept_df = np.zeros((len(self.mech_df.index),1),dtype=str)
         df_cmts_top = pd.DataFrame(ept_df,index=self.mech_df.index,columns=['cmts_top'])
@@ -97,9 +99,8 @@ class SORT_MECH:
             print('Last line of sorting options must be the N of criteria to be used for class headers')
         ####### write topheader comments ######
         for name,rxndf in self.mech_df.groupby(hierarchy[:N]):
-            # name is a tuple; if 1 parameter: it's a string
-            if isinstance(name,str):
-                name = [name]
+        
+            name = np.array(name,dtype=str)
             # assign header
             rxnclass_type = '!       '+'_'.join(hierarchy[:N])+'\n'
             rxnclass = '!       '+'_'.join(name)+'\n'
@@ -127,6 +128,7 @@ class SORT_MECH:
         '''
 
         for fml,peslist in self.mech_df.groupby('PES'):
+            #print(peslist)
             # Set the names lists for the rxns and species needed below
             pes_rct_names_lst = peslist['rct_names_lst'].values
             pes_prd_names_lst = peslist['prd_names_lst'].values
@@ -148,6 +150,8 @@ class SORT_MECH:
         # assign multiplicity values to each reactant
         for rxn in reac_mult_df.index:
             R1 = self.mech_df['R1'][rxn]
+            #print(R1)
+            #print(self.spc_dct[R1])
             reac_mult_df['MULT_R1'][rxn] = str(self.spc_dct[R1]['mult'])
 
         return reac_mult_df
@@ -215,6 +219,21 @@ class SORT_MECH:
         cmts = cmts_df.to_dict('index')
 
         return new_idx,cmts
+
+def count_C_N(fml_list):
+    '''
+    count C and N atoms in formula list
+    should go somewhere else?
+    '''
+    count_C_lst = []
+    count_N_lst = []
+    for fml in fml_list:
+        count_C = automol.formula.element_count(fml,'C')
+        count_N = automol.formula.element_count(fml,'N')
+        count_C_lst.append(count_C)
+        count_N_lst.append(count_N)
+
+    return count_C_lst, count_N_lst
 
 def join_graph(gras):
     '''
