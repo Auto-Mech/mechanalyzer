@@ -1,7 +1,8 @@
-PES #sort by PES
-#RXN_CLASS_BROAD
-#RXN_CLASS_GRAPH
-#MULT_R1 # sort by multiplicity of first reactant
+#PES 
+#SUBPES #SUBPES (connected channels in a PES)
+num_C
+#MULT_R1 # multiplicity of reactant1
+R1 # sort by first reactant
+PES # stoichiometry
 #SUBPES
-#R1 # sort by first reactant
-1 # criteria to be used for class headers
+2 #number of criteria to be used for class headers

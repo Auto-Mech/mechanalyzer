@@ -36,17 +36,20 @@ SORT_STR = list(np.genfromtxt(SORT_NAME,dtype=str,comments='#'))
 spc_dct = mechanalyzer.parser.spc.build_spc_dct(SPC_STR,'csv')
 
 # (1) Build pes dct, rxn block
-[formulas, rct_names, prd_names, rxn_names] = mechanalyzer.parser.pes.read_mechanism_file(MECH_STR,'chemkin',spc_dct)
+[formulas_dct,formulas, rct_names, prd_names, rxn_names] = mechanalyzer.parser.pes.read_mechanism_file(MECH_STR,'chemkin',spc_dct)
+#print(rct_names)
 # extract rxn block and build species dct
 block_str = chemkin_io.parser.mechanism.reaction_block(MECH_STR)
 rxn_param_dct = chemkin_io.parser.reaction.param_dct(block_str)
+#print(block_str)
+#print(rxn_param_dct)
 # the keys are the tuples with the reactants and product names
 # for consistency: replace the keys with rct and prd names re-ordered
 rxn_param_dct = dict(zip(list(zip(rct_names, prd_names)),rxn_param_dct.values()))
 
 # (2) Modify the pes dct
 # call a class in pes.py: store information about the PES
-srt_mch = mechanalyzer.parser.pes.SORT_MECH(formulas,rct_names,prd_names,rxn_names,spc_dct)
+srt_mch = mechanalyzer.parser.pes.SORT_MECH(formulas_dct,formulas,rct_names,prd_names,rxn_names,spc_dct)
 # sort according to the selected criteria
 srt_mch.sort(SORT_STR)
 new_idx,cmts_dct = srt_mch.return_mech_df()
