@@ -7,7 +7,7 @@ import chemkin_io
 import numpy as np
 
 
-def parse(mech_str, spc_dct):
+def parse(mech_str, spc_dct,sort_rxns):
     """ parse a chemkin formatted mechanism file
     """
 
@@ -49,6 +49,14 @@ def parse(mech_str, spc_dct):
         formula_dct_lst.append(formula_dct)
         formula_str_lst.append(formula_str)
 
+    rxn_info_lst = list(	    
+        zip(formula_dct_lst, formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst))	
+
+    # Sort the reactions if desired	
+    if sort_rxns:	
+        rxn_info_lst.sort()	
+        formula_dct_lst,formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst = zip(	
+            *rxn_info_lst)
     return formula_dct_lst, formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst
 
 
