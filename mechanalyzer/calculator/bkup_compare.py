@@ -230,6 +230,14 @@ def reverse_rxn_ktp_dct(rxn_ktp_dct1, rxn_ktp_dct2, rxn_param_dct1, rxn_param_dc
     rev_rxn_ktp_dct2 = copy.copy(rxn_ktp_dct2)
     for rxn1, params1 in rxn_param_dct1.items():
         rxn2, flip_rxn, p_dep_same = assess_rxn_match(rxn1, params1, rxn_param_dct2)
+#        print('inside reverse_rxn_ktp_dct')
+#        print('rxn1')
+#        print(rxn1)
+#        print('rxn2\n', rxn2)
+#        print('flip_rxn')
+#        print(flip_rxn)
+#        print('p_dep_same')
+#        print(p_dep_same)
         # If the user indicated to reverse rates, check if they need to be 
         if rev_rates:
             try:
@@ -257,6 +265,8 @@ def reverse_rxn_ktp_dct(rxn_ktp_dct1, rxn_ktp_dct2, rxn_param_dct1, rxn_param_dc
                     print('KeyError in compare.reverse_rxn_ktp_dct with the following rxns:\n', rxn1, '\n', rxn2)
                     pass
     
+#    print('rev_rxn_ktp_dct2')
+#    print(rev_rxn_ktp_dct2)            
     return rev_rxn_ktp_dct2
 
 
@@ -290,6 +300,7 @@ def reverse_rxn_em_dct(rxn_em_dct2, rxn_param_dct1, rxn_param_dct2, rev_rates):
                 except KeyError:
                     print('KeyError in compare.reverse_rxn_em_dct with the following rxns:\n', rxn1, '\n', rxn2)
                     pass    
+        
 
     return rev_rxn_em_dct2
 
@@ -357,6 +368,7 @@ def combine_species(mech1_spc_dct, mech2_spc_dct):
              
             # If species are identical      
             if i1  == i2 and m1 == m2 and c1 == c2:
+           
                 if spc_name1 == spc_name2: # do nothing
                     break
                 else:
@@ -388,6 +400,7 @@ def combine_species(mech1_spc_dct, mech2_spc_dct):
                 combined_spc_dct[spc_name2 + rename_str] = spc_vals2
             else:
                 combined_spc_dct[spc_name2] = spc_vals2
+    #print('rename_instructions\n', rename_instructions)        
 
     return combined_spc_dct, rename_instructions
 
@@ -509,11 +522,10 @@ def assess_rxn_match(rxn_name1, params1, rxn_param_dct2, print_output=False):
             rxn_name2 = rxn_name
             flip_rxn = False
 
-            # Assess pressure dependence
-            p_dep_same = True
-            if em_param2 == '+M' or em_param1 == '+M':  
-                if em_param2 != em_param1:
-                    p_dep_same = False  # the only case they're different is if one is +M and the other isn't
+            if em_param2 == em_param1:
+                p_dep_same = True
+            else:
+                p_dep_same = False
             break
 
         if rcts2 in prds1_perm and prds2 in rcts1_perm:

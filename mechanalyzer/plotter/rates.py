@@ -97,11 +97,17 @@ def plot_comparisons(combined_rxn_ktp_dct, combined_rxn_em_dct, input_pressures,
                             (temps, ref_vals) = ref_ktp_dct[pressure]
                             ratio_vals = ktps/ref_vals
     
-                            # Check for the odd case of numbers very close to one
+                            # Check for the case of numbers very close to one
                             close_to_one = np.isclose(ratio_vals, np.ones(len(ratio_vals)), atol=5e-3)
                             if close_to_one.all():
                                 ratio_vals = np.ones(len(ratio_vals))
-                            
+
+                            # Check for the case of numbers that are very similar but not close to one
+                            close_to_each_other = np.isclose(ratio_vals / ratio_vals[0], np.ones(len(ratio_vals)),
+                                atol=5e-3)
+                            if close_to_each_other.all():
+                                ratio_vals = np.ones(len(ratio_vals)) * ratio_vals[0] 
+
                             # Plot
                             plot2 = ax2.plot(1000 / temps, ratio_vals, label=_label, color=_color,
                                 linestyle=linestyles[mech_idx])

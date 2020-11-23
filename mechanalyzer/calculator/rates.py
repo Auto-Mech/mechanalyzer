@@ -5,9 +5,10 @@ Calculate rates with various fitting functions
 import numpy as np
 from scipy.special import eval_chebyt
 import ratefit.calc.rates as ratefit
+from ioformat import phycon
 
-RC = 1.98720425864083  # Gas Constant in cal/mol.K
-RC2 = 0.0820573660809596 * 1000.0  # Gas Constant in cm^3.atm/mol.K
+RC = phycon.RC  # universal gas constant in kcal/(mol.K)
+RC2 = phycon.RC2  # universal gas constant in cm^3.atm/(mol.K)
 
 
 ##################### SECTION 1 OF 4: TOP-LEVEL EVALUATION FUNCTIONS #####################
@@ -276,9 +277,9 @@ def arrhenius(params, temps, t_ref=1.0, rval=RC):
         a_par = params[0]  # pre-exponential A factor
         n_par = params[1]  # temperature exponent
         ea_par = params[2]  # activation energy (kcal/mol)
-
+        
         kts = a_par * ((temps / t_ref)**n_par) * np.exp(-ea_par/(rval*temps))
-
+        
     else:
         a_par1 = params[0]
         n_par1 = params[1]
