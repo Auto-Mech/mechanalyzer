@@ -11,14 +11,14 @@ import os
 import ioformat
 
 # PARSE THE MECHANISM FIle 
-def read_mechanism_file(mech_str, mech_type, spc_dct):
+def read_mechanism_file(mech_str, mech_type, spc_dct, sort_rxns=False):
     """ Get the reactions and species from the mechanism input
     """
 
     # Parse the info from the chemkin file
     if mech_type == 'chemkin':
         formulas_dct, formulas, rct_names, prd_names, rxn_names = ckin.parse(
-            mech_str, spc_dct)
+            mech_str, spc_dct,sort_rxns)
     else:
         raise NotImplementedError
 
