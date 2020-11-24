@@ -19,16 +19,13 @@ def mechanism(block_str, temps, rval=phycon.RC):
         :type temps: list(float)
         :return mech_thermo_dct: dct of thermo data [H(T), Cp(T), S(T), G(T)]
         :rtype: dict[spc: [[H(T)], [Cp(T)], [S(T)], [G(T)]]]
-        
-        If rval is left at the default value of phycon.RC, the units are kcal/mol for H
-        and G and are kcal/mol-K for Cp and S.
     """
 
     nasa_dct = thm_parser.data_dct(block_str)
-#    print('inside mechanalyzer.calculator.thermo  thermo dstrs\n', nasa_dct)
-    
+
     mech_thermo_dct = {}
     for name, thermo_dstr in nasa_dct.items():
+        # print('dstr\n', thermo_dstr)
         h_t, cp_t, s_t, g_t, = [], [], [], []
         for temp in temps:
             h_t.append(enthalpy(thermo_dstr, temp, rval=rval))
@@ -37,8 +34,6 @@ def mechanism(block_str, temps, rval=phycon.RC):
             g_t.append(gibbs(thermo_dstr, temp, rval=rval))
 
         mech_thermo_dct[name] = [h_t, cp_t, s_t, g_t]
-
-#    print('inside mechanalyzer.calculator.thermo  evaluated_thermo\n', mech_thermo_dct)
 
     return mech_thermo_dct
 
@@ -86,7 +81,6 @@ def heat_capacity(thm_dstr, temp, rval=phycon.RC):
     """
     cfts = _coefficients_for_specific_temperature(thm_dstr, temp)
 
-#    print('\n inside mechanalyzer.calculator.gibbs','\nthermo datastring\n', thm_dstr, '\ncoefficients\n', cfts)
     if cfts is not None:
         cp_t = (
             cfts[0] +
@@ -149,9 +143,6 @@ def gibbs(thm_dstr, temp, rval=phycon.RC):
     else:
         g_t = None
 
-#    print('\n inside mechanalyzer.calculator.gibbs','\ntemp \n', temp, '\nh \n', h_t, '\ns \n', s_t, '\ng \n', g_t)
-
-
     return g_t
 
 
@@ -168,15 +159,13 @@ def _coefficients_for_specific_temperature(thm_dstr, temp):
         :return cfts: low- or high-temperature coefficients of NASA polynomial
         :rtype: list(float)
     """
-    cutoff_temps = thm_parser.temperatures(thm_dstr)
-    low_temp, high_temp, mid_temp = cutoff_temps  # the order seems odd, but it's the NASA format
 
-    if low_temp <= temp <= mid_temp:
+    temps = thm_parser.temperatures(thm_dstr)
+    if temps[0] <= temp <= temps[1]:
         cfts = thm_parser.low_coefficients(thm_dstr)
-    elif mid_temp < temp <= high_temp:
+    elif temps[1] < temp < temps[2]:
         cfts = thm_parser.high_coefficients(thm_dstr)
     else:
         cfts = None
 
     return cfts
-
