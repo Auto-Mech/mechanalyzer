@@ -3,64 +3,41 @@ Read the mechanism file
 """
 
 import os
-import sys
 import mechanalyzer
-import chemkin_io
-import pandas as pd
-import numpy as np
-import copy
+
 
 CWD = os.getcwd()
 
-# possibly turn this into run.dat file?
+# MODIFY THIS SECTION WITH INPUT NAMES AND SORTING OPTIONS
 
-SPC_NAME = sys.argv[1]
-MECH_NAME = sys.argv[2]
-SORT_NAME = sys.argv[3]
-
+SPC_NAME = 'LLNL_iC8H18_species.csv'
+MECH_NAME = 'mechanism.dat'
+SORTMECH_NAME = 'sorted_mech_IC8.txt'
+ISOLATE_SPECIES = ['IC8','IC8-1R','IC8-3R','IC8-4R','IC8-5R'] # LIST OF SPECIES TO BE INCLUDED IN THE MECH; IF EMPTY: PROCESS THE FULL MECH
+# ISOLATE_SPECIES = [] # leave empty if you want to process the full mechanism
+SORT_STR = ['numC','PES','RXN_CLASS_GRAPH',0] # LIST WITH SORTING CRITERIA IN HIERARCHICAL ORDER
+                # THE LAST ELEMENT IS THE N OF CRITERIA TO BE USED FOR THE HEADERS - ALSO 0 IS AVAILABLE
+# AVAILABLE:
+# RXN_CLASS_GRAPH: FIND REACTION CLASS WITH GRAPH CLASSIFICATION IN AUTOMOL
+# PES: ORDER BY STOICHIOMETRY
+# SUBPES: ORDER BY CONNECTED CHANNELS IN 1 PES
+# R1: ORDER BY FIRST REACTANT (IN BIMOL REACTIONS: ALWAYS ORDERED ACCORDING TO HIGHER N OF ATOMS)
+# MULT_R1: ORDERED BY MULTIPLICITY OF THE FIRST REACTANT
+# numC: ORDERED BY NUMBER OF CARBON ATOMS IN THE MOLECULE/TOT IN THE BIMOL REACTANTS
+# specieslist: ALL REACTIONS INVOLVING THE SPECIES IN THE LIST
 
 ############ input reading ####################
 
-# Read species file
-with open(os.path.join(CWD, SPC_NAME), 'r') as file_obj:
-    SPC_STR = file_obj.read() 
+# READ FILE
+SPC_STR,MECH_STR = mechanalyzer.parser.mech.readfiles(os.path.join(CWD,SPC_NAME),os.path.join(CWD,MECH_NAME))
 
-# Read input mechanism file
-with open(os.path.join(CWD, MECH_NAME), 'r') as file_obj:
-    MECH_STR = file_obj.read() 
+# BUILD DICTIONARIES AND MECH INFORMATION
+spc_dct,mech_info,rxn_param_dct = mechanalyzer.parser.mech.build_dct(SPC_STR,MECH_STR)
 
-# Read sorting options
-SORT_STR = list(np.genfromtxt(SORT_NAME,dtype=str,comments='#'))
+# SORTING: sort the mech and build the sorted rxn param dct
+sorted_idx,cmts_dct = mechanalyzer.parser.mech.sort_mechanism(mech_info,spc_dct,SORT_STR,ISOLATE_SPECIES)
+rxn_param_dct_sorted = mechanalyzer.parser.mech.reordered_mech(rxn_param_dct,sorted_idx,cmts_dct)
 
-# (0) Build spc dct
-spc_dct = mechanalyzer.parser.spc.build_spc_dct(SPC_STR,'csv')
+# WRITE THE NEW MECHANISM
+mechanalyzer.parser.mech.write_reordered_mech(MECH_STR,spc_dct,rxn_param_dct_sorted,cmts_dct,SORTMECH_NAME)
 
-# (1) Build pes dct, rxn block
-[formulas_dct,formulas, rct_names, prd_names, rxn_names] = mechanalyzer.parser.pes.read_mechanism_file(MECH_STR,'chemkin',spc_dct)
-#print(rct_names)
-# extract rxn block and build species dct
-block_str = chemkin_io.parser.mechanism.reaction_block(MECH_STR)
-rxn_param_dct = chemkin_io.parser.reaction.param_dct(block_str)
-#print(block_str)
-#print(rxn_param_dct)
-# the keys are the tuples with the reactants and product names
-# for consistency: replace the keys with rct and prd names re-ordered
-rxn_param_dct = dict(zip(list(zip(rct_names, prd_names)),rxn_param_dct.values()))
-
-# (2) Modify the pes dct
-# call a class in pes.py: store information about the PES
-srt_mch = mechanalyzer.parser.pes.SORT_MECH(formulas_dct,formulas,rct_names,prd_names,rxn_names,spc_dct)
-# sort according to the selected criteria
-srt_mch.sort(SORT_STR)
-new_idx,cmts_dct = srt_mch.return_mech_df()
-
-# (3) Write the pes_dct to a mech str
-# associate the ordered list of tuples the the rxn dictionary
-
-new_val = list(map(rxn_param_dct.get,new_idx))
-rxn_param_dct = dict(zip(new_idx,new_val))
-
-# (4) Write the file
-el_block = chemkin_io.parser.mechanism.element_block(MECH_STR)
-elem_tuple = chemkin_io.parser.species.names(el_block)
-chemkin_io.writer.mechanism.write_mech_file(elem_tuple,spc_dct,rxn_param_dct,filename='sorted_mech.txt',comments=cmts_dct)

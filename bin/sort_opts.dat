@@ -1,8 +1,0 @@
-#PES 
-#SUBPES #SUBPES (connected channels in a PES)
-num_C
-#MULT_R1 # multiplicity of reactant1
-R1 # sort by first reactant
-PES # stoichiometry
-#SUBPES
-2 #number of criteria to be used for class headers

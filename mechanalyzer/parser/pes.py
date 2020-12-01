@@ -31,25 +31,31 @@ class SORT_MECH:
     class of functions to organize the mechanism according to given criteria
     from any step after initialization: call "return_mech_df" to get the current dataframe with mech info
     '''
-    def __init__(self,formulas_dct,formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst,spc_dct):
+    def __init__(self,mech_info,spc_dct):
+        # extract data from mech info
+        [formulas_dct,formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst] = mech_info         
         # set dataframe
         # index = rxn name
         # cols = reac1, reac2, prod1, prod2, formula
-        R1,R2 = get_S1S2(rct_names_lst)
-        P1,P2 = get_S1S2(prd_names_lst)
-        num_C,num_N = count_C_N(formulas_dct)
+        R1,R2 = get_S1S2(rct_names_lst) 
+        numC,numN = count_C_N(formulas_dct)
 
-        data = np.array([rct_names_lst,prd_names_lst,R1,R2,P1,P2,formula_str_lst,num_C,num_N],dtype=object).T
-        self.mech_df = pd.DataFrame(data,index=rxn_name_lst,columns=['rct_names_lst','prd_names_lst','R1','R2','P1','P2','PES','num_C','num_N'])
+        data = np.array([rct_names_lst,prd_names_lst,R1,R2,formula_str_lst,numC,numN],dtype=object).T
+        self.mech_df = pd.DataFrame(data,index=rxn_name_lst,columns=['rct_names_lst','prd_names_lst','R1','R2','PES','numC','numN'])
         self.spc_dct = spc_dct # set for later use
 
 
-    def sort(self,hierarchy):
+    def sort(self,hierarchy,species_list):
         '''
         hierarchy = list of hierarchical criteria for the mech organization
         sorts the mechanism according to the given criteria
+        species_list = list of species you want to isolate (empty if you want to process the full mech)
         '''
         
+        # if species_list is not empty: pre-process the mechanism
+        if len(species_list) > 0:
+            self.filter_byspecies(species_list)
+
         # 0. look for keywords and sort accordingly
         # LIST OF AVAILABLE SORTING OPTIONS (BESIDES R1 AND PES, ALWAYS AVAILABLE)
         sort_optns_dct = {
@@ -76,9 +82,31 @@ class SORT_MECH:
             return None
 
         # 2. assign class headers
-        self.class_headers(hierarchy)
+        # set labels for all the possible criteria
+        criteria_all = ['PES','SUBPES','numC','MULT_R1','RXN_CLASS_BROAD','RXN_CLASS_GRAPH']
+        labels_all = ['PES','SUBPES','N of C atoms','Multiplicity of rct1','rxn type broad','rxn type']
+        labels = pd.Series(labels_all,index=criteria_all)
+        self.class_headers(hierarchy,labels)
 
-    def class_headers(self,hierarchy):
+    def filter_byspecies(self,species_list):
+        """
+        Find all reactions involving species of the species_list given as input
+        """
+        # check that all species selected are in the species dictionary
+        if any(i not in self.spc_dct.keys() for i in species_list):
+            print('Error in ISOLATE_SPECIES: not all species are in the species list ')
+            exit()
+
+        # for all reactions in the dataframe: check if you have the species of the selected list. otherwise remove the reaction
+        for ii in self.mech_df.index:
+            rcts = list(self.mech_df['rct_names_lst'][ii])
+            prds = list(self.mech_df['prd_names_lst'][ii])
+            # check if one of the species in the list is among reactants or products of the reaction considered
+            if (any(rct == species for species in species_list for rct in rcts) == False
+                and any(prd == species for species in species_list for prd in prds) == False):
+                self.mech_df = self.mech_df.drop([ii])
+
+    def class_headers(self,hierarchy,labels):
         """
         Read the hierarchy;
         assign classes based on the selected hierarchy
@@ -90,32 +118,30 @@ class SORT_MECH:
         ept_df = np.zeros((len(self.mech_df.index),1),dtype=str)
         df_cmts_top = pd.DataFrame(ept_df,index=self.mech_df.index,columns=['cmts_top'])
         df_cmts_inline = pd.DataFrame(ept_df,index=self.mech_df.index,columns=['cmts_inline'])
-        # assing top headers:
-        tophead = '\n!!!!!!!!! class type !!!!!!!!!\n'
-        bottomhead = '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
+
         try:
             N = int(hierarchy[-1])
         except ValueError:
             print('Last line of sorting options must be the N of criteria to be used for class headers')
+            exit()
         ####### write topheader comments ######
-        for name,rxndf in self.mech_df.groupby(hierarchy[:N]):
-        
-            name = np.array(name,dtype=str)
-            # assign header
-            rxnclass_type = '!       '+'_'.join(hierarchy[:N])+'\n'
-            rxnclass = '!       '+'_'.join(name)+'\n'
-            # write to rxn class
-            idx0 = rxndf.index[0]
-            df_cmts_top['cmts_top'][idx0] = tophead + rxnclass_type + rxnclass + bottomhead
+        if N > 0:
+            for name,rxndf in self.mech_df.groupby(hierarchy[:N]):
+                # write rxn class as top header comments
+                rxnclass = cmts_string(name,labels[hierarchy[:N]],'class_head')
+                idx0 = rxndf.index[0]
+                df_cmts_top['cmts_top'][idx0] = rxnclass
 
-            ##### write inline comments if necessary #########
-            if N < len(hierarchy)-1:
-                for name2,rxndf2 in rxndf.groupby(hierarchy[N:-1]):
-                    if isinstance(name2,str):
-                        name2 = [name2]
-                    subclass_type = 'subclass: ' + '_'.join(hierarchy[N:-1]) + ' '
-                    rxnclass = '! '+ subclass_type +'_'.join(name2)
-                    df_cmts_inline['cmts_inline'][rxndf2.index] = rxnclass
+                ##### write inline comments if necessary #########
+                if N < len(hierarchy)-1:
+                    for name2,rxndf2 in rxndf.groupby(hierarchy[N:-1]):
+                        rxnclass = cmts_string(name2,labels[hierarchy[N:-1]],'subclass')
+                        df_cmts_inline['cmts_inline'][rxndf2.index] = rxnclass
+        else:
+            # write only inline comments
+            for name,rxndf in self.mech_df.groupby(hierarchy[N:-1]):            
+                rxnclass = cmts_string(name,labels[hierarchy[N:-1]],'class')
+                df_cmts_inline['cmts_inline'][rxndf.index] = rxnclass
 
         # concatenate DFs
         self.mech_df = pd.concat([self.mech_df,df_cmts_top,df_cmts_inline],axis=1)
@@ -150,8 +176,6 @@ class SORT_MECH:
         # assign multiplicity values to each reactant
         for rxn in reac_mult_df.index:
             R1 = self.mech_df['R1'][rxn]
-            #print(R1)
-            #print(self.spc_dct[R1])
             reac_mult_df['MULT_R1'][rxn] = str(self.spc_dct[R1]['mult'])
 
         return reac_mult_df
@@ -173,33 +197,34 @@ class SORT_MECH:
             rct_names = self.mech_df['rct_names_lst'][rxn]
             prd_names = self.mech_df['prd_names_lst'][rxn]
             print(rct_names,prd_names)
-            # Get the inchis and graphs
-            rct_ichs = list(self.spc_dct[rct]['inchi'] for rct in rct_names)
-            rct_graph = list(map(automol.inchi.graph, rct_ichs))
-            rct_gras = list(map(explicit, rct_graph))
-            rct_gras = join_graph(rct_gras)
-            # join the dictionaries
-            prd_ichs = list(self.spc_dct[prd]['inchi'] for prd in prd_names)
-            prd_gras = list(map(automol.inchi.graph, prd_ichs))
-            prd_gras = list(map(explicit, prd_gras))
-            #print(prd_gras)
-            #print('\n')
-            prd_gras = join_graph(prd_gras)
 
-            #print(prd_gras)
-            print(rxn)
-            print('\n')
-            # ID reaction
-            try:
-                _, _, _, rclass = automol.graph.reac.classify(rct_gras, prd_gras)
+            # exclude all reactions with more than 2 reactants or products (not elementary!)
+            if len(rct_names) < 3 and len(prd_names) < 3:
+                # Get the inchis and graphs
+                rct_ichs = list(self.spc_dct[rct]['inchi'] for rct in rct_names)
+                rct_graph = graph_from_ichs(rct_ichs)
+                # delete stereo information before the classification
+                rct_gras = list(map(automol.graph.without_stereo_parities, rct_graph))
+
+                prd_ichs = list(self.spc_dct[prd]['inchi'] for prd in prd_names)
+                prd_graph = graph_from_ichs(prd_ichs)
+                prd_gras = list(map(automol.graph.without_stereo_parities, prd_graph))
+
+                # ID reaction
+                try:
+                    _, _, _, rclass = automol.graph.reac.classify(rct_gras, prd_gras)
+                # check stereo compatibility - I am not sure about this input
+                #   ret = automol.graph.trans.is_stereo_compatible(rclass, rct_graph[0], prd_graph[0])
+                except AssertionError:
+                    rclass = 'unclassified - Assert Error'
+
                 if rclass == None:
                     rclass = 'unclassified'
-            except AssertionError:
-                rclass = 'unclassified'
-            #rclass = automol.graph.reac.classify_simple(rct_graph, prd_graph)
+            else:
+                rclass = 'unclassified - lumped'
+
             rxn_clG_df['RXN_CLASS_GRAPH'][rxn] = rclass
-            print(rclass)
-            print('\n')
+
 
         return rxn_clG_df
 
@@ -220,6 +245,34 @@ class SORT_MECH:
 
         return new_idx,cmts
 
+########################## useful functions run in the class #######################
+def cmts_string(name,label,cltype):
+    '''
+    Return appropriate comment string depending on the type
+    name: rxn class
+    cltype: class types. options: class_head, class, subclass
+    label: class label
+    '''
+    # assing top headers:
+    tophead = '!!!!!!!!! class !!!!!!!!!\n'
+    bottomhead = '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
+    if isinstance(name,str):
+        name = [name]
+    elif isinstance(name,int):
+        name = [str(name)]
+    else:
+        name = np.array(name,dtype=str)
+
+    if cltype == 'class_head':
+        cmtlabel = '!       '+'_'.join(label)+'\n'
+        rxnlabel = '!       '+'_'.join(name)+'\n'
+        rxnclass = tophead + cmtlabel + rxnlabel + bottomhead
+    else:
+        cmtlabel = cltype + ': ' + ' _ '.join(label) + '  '
+        rxnclass = '! '+ cmtlabel +' _ '.join(name)
+
+    return rxnclass
+
 def count_C_N(fml_list):
     '''
     count C and N atoms in formula list
@@ -235,41 +288,24 @@ def count_C_N(fml_list):
 
     return count_C_lst, count_N_lst
 
-def join_graph(gras):
-    '''
-    Joins two graphs updating the indices of the atoms and bonds of the second fragment
-    should go in automol?
-    '''
 
-    if len(gras) == 2:
-        # extract dictionaries
-        atoms_reac1 = gras[0][0]
-        bonds_reac1 = gras[0][1]
-        atoms_reac2 = gras[1][0]
-        bonds_reac2 = gras[1][1] 
-        # rescale factor for reac2
-        rescale = list(atoms_reac1.keys())[-1]+1
-        new_idx = np.array(list(atoms_reac2.keys()))+rescale
-        atoms_reac2 = dict(zip(new_idx,atoms_reac2.values()))
-        # update the keys of bonds_reac2
-        new_idx = []
-        for key in bonds_reac2.keys():
-            # rescale key
-            new_idx.append(frozenset(np.array(list(key))+rescale))
-        bonds_reac2 = dict(zip(new_idx,bonds_reac2.values()))
-        # build the new tuple
-        # join dictionaries:
-        gras = [(atoms_reac1,bonds_reac1),(atoms_reac2,bonds_reac2)]
-        #atoms_reac1.update(atoms_reac2)
-        #bonds_reac1.update(bonds_reac2)
-        #gras = ((atoms_reac1,bonds_reac1),)
+def graph_from_ichs(ichs):
+    '''
+    Generate graphs to be processed by the rxn classifier without stereo parities involved
+    Calls sets of functions of automol
+    '''
+    rxn_graph = list(map(automol.inchi.graph, ichs))
+    rxn_graph = list(map(explicit, rxn_graph))
+    # reorder the keys for multiple reactants
+    if len(rxn_graph) == 2:
+        rxn_graph, _ = automol.graph.standard_keys_for_sequence(rxn_graph)
 
-    return gras
+    return rxn_graph
+
 
 def get_S1S2(SPECIES):
     '''
-    extract species 1 and 2 from tuple
-    returns 2 strings
+    extract species 1 from tuple
     '''
     S1 = []
     S2 = []
