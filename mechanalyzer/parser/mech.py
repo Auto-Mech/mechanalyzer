@@ -36,8 +36,9 @@ def build_dct(SPC_STR,MECH_STR):
     mech_info = mechanalyzer.parser.pes.read_mechanism_file(MECH_STR,'chemkin',spc_dct)
     [formulas_dct,formulas, rct_names, prd_names, rxn_names] = mech_info 
     # extract rxn block and build reaction parameter dictionary
+    units = chemkin_io.parser.mechanism.reaction_units(MECH_STR)
     block_str = chemkin_io.parser.mechanism.reaction_block(MECH_STR)
-    rxn_param_dct = chemkin_io.parser.reaction.param_dct(block_str)
+    rxn_param_dct = chemkin_io.parser.reaction.param_dct(block_str,units[0],units[1])
     # for consistency: replace the keys with rct and prd names re-ordered
     rxn_param_dct = dict(zip(list(zip(rct_names, prd_names)),rxn_param_dct.values()))
 

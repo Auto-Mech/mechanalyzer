@@ -55,10 +55,12 @@ class SORT_MECH:
         # if species_list is not empty: pre-process the mechanism
         if len(species_list) > 0:
             self.filter_byspecies(species_list)
+            self.species_list = species_list
 
         # 0. look for keywords and sort accordingly
         # LIST OF AVAILABLE SORTING OPTIONS (BESIDES R1 AND PES, ALWAYS AVAILABLE)
         sort_optns_dct = {
+            'SPECIES':self.group_species,
             'SUBPES':self.conn_chn,
             'MULT_R1':self.reac_mult,
             'RXN_CLASS_BROAD':self.rxn_class_broad,
@@ -83,8 +85,8 @@ class SORT_MECH:
 
         # 2. assign class headers
         # set labels for all the possible criteria
-        criteria_all = ['PES','SUBPES','numC','MULT_R1','RXN_CLASS_BROAD','RXN_CLASS_GRAPH']
-        labels_all = ['PES','SUBPES','N of C atoms','Multiplicity of rct1','rxn type broad','rxn type']
+        criteria_all = ['SPECIES','PES','SUBPES','numC','MULT_R1','RXN_CLASS_BROAD','RXN_CLASS_GRAPH']
+        labels_all = ['SPECIES','PES','SUBPES','N of C atoms','Multiplicity of rct1','rxn type broad','rxn type']
         labels = pd.Series(labels_all,index=criteria_all)
         self.class_headers(hierarchy,labels)
 
@@ -105,6 +107,7 @@ class SORT_MECH:
             if (any(rct == species for species in species_list for rct in rcts) == False
                 and any(prd == species for species in species_list for prd in prds) == False):
                 self.mech_df = self.mech_df.drop([ii])
+
 
     def class_headers(self,hierarchy,labels):
         """
@@ -146,7 +149,6 @@ class SORT_MECH:
         # concatenate DFs
         self.mech_df = pd.concat([self.mech_df,df_cmts_top,df_cmts_inline],axis=1)
 
-
     def conn_chn(self,conn_chn_df):
         '''
         Identify connected channels
@@ -167,6 +169,24 @@ class SORT_MECH:
 
         return conn_chn_df
 
+    def group_species(self,reac_sp_df):
+        """
+        Creates a new df column "SPECIES" - recognizes the species you set in the list
+        Also in this case the species_list is hierarchical: if the first group contains also a species of the second group,
+        the reaction remains in the first group
+        """
+        # if species list is not found: do nothing - species entry will remain empty
+        if len(self.species_list) > 0:
+            for rxn in reac_sp_df.index:
+                rcts = list(self.mech_df['rct_names_lst'][rxn])
+                prds = list(self.mech_df['prd_names_lst'][rxn])
+                # check species hierarchically             
+                for sp in self.species_list:
+                    if (any(sp==rct for rct in rcts) or any(sp==prd for prd in prds)) and type(reac_sp_df['SPECIES'][rxn])==float:
+                        print(sp)
+                        reac_sp_df['SPECIES'][rxn] = sp 
+
+        return reac_sp_df
 
     def reac_mult(self,reac_mult_df):
         '''
@@ -196,7 +216,6 @@ class SORT_MECH:
         for rxn in rxn_clG_df.index:
             rct_names = self.mech_df['rct_names_lst'][rxn]
             prd_names = self.mech_df['prd_names_lst'][rxn]
-            print(rct_names,prd_names)
 
             # exclude all reactions with more than 2 reactants or products (not elementary!)
             if len(rct_names) < 3 and len(prd_names) < 3:
