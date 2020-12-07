@@ -183,9 +183,7 @@ class SORT_MECH:
                 # check species hierarchically             
                 for sp in self.species_list:
                     if (any(sp==rct for rct in rcts) or any(sp==prd for prd in prds)) and type(reac_sp_df['SPECIES'][rxn])==float:
-                        print(sp)
                         reac_sp_df['SPECIES'][rxn] = sp 
-
         return reac_sp_df
 
     def reac_mult(self,reac_mult_df):
@@ -224,7 +222,7 @@ class SORT_MECH:
                 rct_graph = graph_from_ichs(rct_ichs)
                 # delete stereo information before the classification
                 rct_gras = list(map(automol.graph.without_stereo_parities, rct_graph))
-
+                # print(automol.graph.string(rct_gra)) - 
                 prd_ichs = list(self.spc_dct[prd]['inchi'] for prd in prd_names)
                 prd_graph = graph_from_ichs(prd_ichs)
                 prd_gras = list(map(automol.graph.without_stereo_parities, prd_graph))
@@ -233,7 +231,7 @@ class SORT_MECH:
                 try:
                     _, _, _, rclass = automol.graph.reac.classify(rct_gras, prd_gras)
                 # check stereo compatibility - I am not sure about this input
-                #   ret = automol.graph.trans.is_stereo_compatible(rclass, rct_graph[0], prd_graph[0])
+                # ret = automol.graph.trans.is_stereo_compatible(rclass, rct_graph, prd_graph)
                 except AssertionError:
                     rclass = 'unclassified - Assert Error'
 

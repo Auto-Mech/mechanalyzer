@@ -18,7 +18,7 @@ def parse(mech_str, spc_dct,sort_rxns):
         map(chemkin_io.parser.reaction.reactant_names, rxn_strs))
     prd_names_lst = list(
         map(chemkin_io.parser.reaction.product_names, rxn_strs))
-    
+
     # delete duplicate names
     rct_names_lst,prd_names_lst = deldup(rct_names_lst,prd_names_lst)
 
