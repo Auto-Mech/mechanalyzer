@@ -41,7 +41,6 @@ def build_dct(SPC_STR,MECH_STR):
     rxn_param_dct = chemkin_io.parser.reaction.param_dct(block_str,units[0],units[1])
     # for consistency: replace the keys with rct and prd names re-ordered
     rxn_param_dct = dict(zip(list(zip(rct_names, prd_names)),rxn_param_dct.values()))
-
     return spc_dct, mech_info, rxn_param_dct
 
 
@@ -85,8 +84,9 @@ def write_reordered_mech(MECH_STR,spc_dct,rxn_param_dct_sorted,cmts_dct,sortedme
     cmts_dct: comments dictionary associated with the sorted mechanism
     sortedmech_name: name of the final mech
     '''
+
     # extract element block
     el_block = chemkin_io.parser.mechanism.element_block(MECH_STR)
     elem_tuple = chemkin_io.parser.species.names(el_block)
     # write
-    chemkin_io.writer.mechanism.write_mech_file(elem_tuple,spc_dct,rxn_param_dct_sorted,filename=sortedmech_name,comments=cmts_dct)
+    chemkin_io.writer.mechanism.write_chemkin_file(elem_tuple=elem_tuple,spc_dct=spc_dct,rxn_param_dct=rxn_param_dct_sorted,filename=sortedmech_name,comments=cmts_dct)
