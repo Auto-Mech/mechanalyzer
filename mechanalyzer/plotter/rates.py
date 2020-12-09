@@ -1,13 +1,14 @@
 from matplotlib import cm
 import matplotlib.pyplot as plt
 import matplotlib.backends.backend_pdf as plt_pdf
+from matplotlib.ticker import FormatStrFormatter
 import copy
 import numpy as np
 
 # Gets rid of the annoying warning about too many figures being open
 plt.rcParams.update({'figure.max_open_warning': 0})
 
-def plot_comparisons(combined_rxn_ktp_dct, combined_rxn_em_dct, input_pressures, mech_names=None):
+def plot_comparisons(combined_rxn_ktp_dct, combined_rxn_em_dct, input_pressures, mech_names=None, sort_method=None):
 
     assert isinstance(input_pressures, list), (
         f'input_pressures is a {type(input_pressures)}, but should be a list.'
@@ -18,6 +19,8 @@ def plot_comparisons(combined_rxn_ktp_dct, combined_rxn_em_dct, input_pressures,
     val_iter = iter(vals)
     first_val = next(val_iter)
     num_mechs = len(first_val)
+
+    num_rxns = len(combined_rxn_ktp_dct)    
 
     # Check/fix the mech_names input
     if mech_names is None:
@@ -44,11 +47,12 @@ def plot_comparisons(combined_rxn_ktp_dct, combined_rxn_em_dct, input_pressures,
 
     # Loop over each reaction
     figs = []  # yummy
-    for rxn_name, ktp_dcts in combined_rxn_ktp_dct.items():
-
+    largest_ratios = [0]*num_rxns
+    for rxn_idx, (rxn_name, ktp_dcts) in enumerate(combined_rxn_ktp_dct.items()):
         # Get the units of k
         (rcts, prds) = rxn_name
         em = combined_rxn_em_dct[rxn_name]
+        print(format_rxn_name(rxn_name, em))
         if em:  # if there was '+M' in the reaction name
             em_term = 1
         else:
@@ -66,11 +70,14 @@ def plot_comparisons(combined_rxn_ktp_dct, combined_rxn_em_dct, input_pressures,
         plt.ylabel(k_label, fontsize=14)
         plt.xticks(fontsize=12)
         plt.yticks(fontsize=12)
+        ax1.yaxis.set_major_formatter(FormatStrFormatter('%0.2f'))
         ax2 = fig.add_subplot(212)
         plt.xlabel('1000/$T$ (K$^{-1}$)', fontsize=14)
         plt.xticks(fontsize=12)
         plt.yticks(fontsize=12)
+        ax2.yaxis.set_major_formatter(FormatStrFormatter('%0.2f'))
 
+        # The number of rates that actually exist
         num_rates = len([ktp_dct for ktp_dct in ktp_dcts if ktp_dct is not None])
 
         # Loop over each ktp_dct in this reaction
@@ -109,17 +116,26 @@ def plot_comparisons(combined_rxn_ktp_dct, combined_rxn_em_dct, input_pressures,
                                 ratio_vals = np.ones(len(ratio_vals)) * ratio_vals[0] 
 
                             # Plot
-                            plot2 = ax2.plot(1000 / temps, ratio_vals, label=_label, color=_color,
+                            plot2 = ax2.plot(1000 / temps, np.log10(ratio_vals), label=_label, color=_color,
                                 linestyle=linestyles[mech_idx])
-                            plt.yscale('log')                                 
+
+                            # Get and store the largest ratios 
+                            print('max\n', max(ratio_vals))
+                            print('1/min\n', 1/min(ratio_vals))
+                            if max(ratio_vals) > 1/min(ratio_vals):
+                                largest_ratio = max(ratio_vals)
+                            else:
+                                largest_ratio = 1/min(ratio_vals)
+                            if largest_ratio > largest_ratios[rxn_idx]:
+                                largest_ratios[rxn_idx] = largest_ratio
 
                 # After looping through all pressures, mark that the first ktp_dct
                 # with actual rate values has been looped over
                 first_rates = False
 
         # Do some formatting
-        plt.ylabel(f'$k$ ratio relative to {mech_names[ref_mech_idx]}', fontsize=14)
-    
+        lower_ylabel = 'log$_{10}$ of $k$ ratio relative to' + f' {mech_names[ref_mech_idx]}'
+        plt.ylabel(lower_ylabel, fontsize=14)
         ax1.legend(fontsize=12, loc='upper right')
         if num_rates > 1:
             ax2.legend(fontsize=12, loc='upper right')
@@ -127,12 +143,26 @@ def plot_comparisons(combined_rxn_ktp_dct, combined_rxn_em_dct, input_pressures,
             plt.annotate('For this reaction, there is only one mechanism with $k$ values', (0.05,0.5))
         rxn_name_formatted = format_rxn_name(rxn_name, em)
         fig.suptitle(rxn_name_formatted, x=0.5, y=0.94, fontsize=20)
+
         figs.append(fig)
+
+    # Perform sorting if indicated
+    largest_ratios = [i for i in largest_ratios if i != 0]  # remove the entries that are zero
+    if sort_method == None:
+        sorted_figs = figs
+    else:
+        if sort_method == 'difference':
+            fig_indices = np.argsort(largest_ratios)[::-1]  # the [::-1] flips it to be from largest to smallest
+            sorted_figs = []
+            for idx in fig_indices:
+                sorted_figs.append(figs[idx])
+        elif sort_method == 'value': 
+            pass  # will add this later...
 
     # Produce a PDF
     print('Producing PDF...')
     pdf = plt_pdf.PdfPages("output.pdf")
-    for fig in figs:
+    for fig in sorted_figs:
         pdf.savefig(fig)
     pdf.close()
 
