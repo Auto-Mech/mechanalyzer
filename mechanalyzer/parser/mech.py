@@ -39,8 +39,11 @@ def build_dct(SPC_STR,MECH_STR):
     units = chemkin_io.parser.mechanism.reaction_units(MECH_STR)
     block_str = chemkin_io.parser.mechanism.reaction_block(MECH_STR)
     rxn_param_dct = chemkin_io.parser.reaction.param_dct(block_str,units[0],units[1])
-    # for consistency: replace the keys with rct and prd names re-ordered
-    rxn_param_dct = dict(zip(list(zip(rct_names, prd_names)),rxn_param_dct.values()))
+    # for consistency: replace the keys with rct and prd names re-ordered; works with both sort_rxn=true and sort_rxn=false
+    idx = list(zip(rct_names, prd_names))
+    val = list(map(rxn_param_dct.get,idx))
+    rxn_param_dct = dict(zip(idx,val))
+    #print(rxn_param_dct)
     return spc_dct, mech_info, rxn_param_dct
 
 
