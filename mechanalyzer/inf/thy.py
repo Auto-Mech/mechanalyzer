@@ -2,7 +2,7 @@
   Handles data objects
 """
 
-from mechanalyzer._obj import par
+from mechanalyzer import par
 
 
 THY_PROPS = [
@@ -38,13 +38,16 @@ def from_dct(dct):
     return inf_obj
 
 
-def modify_orb_label(thy_info, mult):
+def modify_orb_label(thy_info, spc_info):
     """ Convert the orbital restriction label to one for a species
         using the multiplicity.
     """
 
     # Grab first three elements of thy_info object
     mod_thy_info = thy_info[:3]
+
+    # Grab mult from spc info
+    mult = spc_info[2]
 
     # Modify the label denoting the orbital restriction
     orb_label = value(thy_info, par.THY.ORB_RESTRICT)
