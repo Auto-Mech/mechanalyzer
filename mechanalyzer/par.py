@@ -2,6 +2,7 @@
   Set various type parameters used in automol
 """
 
+
 class SPC():
     """ Params for species
     """
@@ -10,8 +11,11 @@ class SPC():
     INCHI_KEY = 'inchikey'
     SMILES = 'smiles'
     CHARGE = 'charge'
-    MULT = 'multiplicity'
+    MULT = 'mult'
+    # MULT = 'multiplicity'
     SENS = 'sensitivity'
+    ELECLVLS = 'electronic_levels'
+
 
 class RXN():
     """ Params for reactions
@@ -19,11 +23,13 @@ class RXN():
     REACS = 'reacs'
     PRODS = 'prods'
 
+
 class TS():
     """ Params for TSs
     """
     FRM_BND_KEYS = 'frm_bnd_keys'
     BRK_BND_KEYS = 'brk_bnd_keys'
+
 
 class THY():
     """ Params for thy

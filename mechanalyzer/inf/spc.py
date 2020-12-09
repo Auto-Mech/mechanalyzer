@@ -2,10 +2,13 @@
   Handles data objects
 """
 
+from mechanalyzer import par
+
+
 SPC_PROPS = [
-    mechanalyzer.SPC.INCHI,
-    mechanalyzer.SPC.CHARGE,
-    mechanalyzer.SPC.MULT
+    par.SPC.INCHI,
+    par.SPC.CHARGE,
+    par.SPC.MULT
 ]
 
 
@@ -28,7 +31,7 @@ def from_dct(dct):
 
     inf_obj = tuple()
     for prop in SPC_PROPS:
-        inf_obj += (prop,)
+        inf_obj += (dct[prop],)
 
     return inf_obj
 
@@ -43,3 +46,20 @@ def value(inf_obj, val):
     )
 
     return inf_obj[SPC_PROPS.index(val)]
+
+
+def combine(inf_obj1, inf_obj2, mval='max'):
+    """ Created a spc info for two species where charge and mult
+        have been combined
+    """
+
+    assert mval in ('max', 'min')
+
+    ich = (inf_obj1[0], inf_obj2[0])
+    chg = inf_obj1[1] + inf_obj2[1]
+    if mval == 'max':
+        mult = max([inf_obj1[2], inf_obj2[2]])
+    else:
+        mult = min([inf_obj1[2], inf_obj2[2]])
+
+    return (ich, chg, mult)

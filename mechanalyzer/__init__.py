@@ -6,8 +6,8 @@ from mechanalyzer import builder
 #from mechanalyzer import calculator
 from mechanalyzer import parser
 from mechanalyzer import plotter
-from mechanalyzer._obj import par
-from mechanalyzer._obj import spc
+from mechanalyzer import par
+from mechanalyzer import inf
 
 
 __all__ = [
@@ -16,5 +16,5 @@ __all__ = [
     'parser',
     'plotter',
     'par',
-    'spc'
+    'inf'
 ]
