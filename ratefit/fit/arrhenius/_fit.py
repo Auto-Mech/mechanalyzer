@@ -5,9 +5,10 @@ import os
 import numpy as np
 from scipy.optimize import leastsq
 from ratefit.fit.arrhenius import dsarrfit_io
+from lib.phydat import phycon
 
 
-RC = 1.98720425864083e-3  # Gas Constant in kcal/mol.K
+RC = phycon.RC_cal  # universal gas constant in cal/mol-K
 
 
 def single(temps, rate_constants, t_ref, method,

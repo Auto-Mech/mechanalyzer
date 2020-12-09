@@ -4,10 +4,11 @@ Calculate rates with various fitting functions
 
 import numpy as np
 from scipy.special import eval_chebyt
+from lib.phydat import phycon
 
 
-RC = 1.98720425864083e-3  # Gas Constant in kcal/mol.K
-RC2 = 0.0820573660809596 * 1000.0  # Gas Constant in cm^3.atm/mol.K
+RC = phycon.RC_cal  # gas constant in cal/(mol.K) 
+RC2 = phycon.RC_atm  # gas constant in cm^3.atm/(mol.K) 
 
 
 def single_arrhenius(a_par, n_par, ea_par,
