@@ -5,10 +5,11 @@ Calculate rates with various fitting functions
 import numpy as np
 from scipy.special import eval_chebyt
 import ratefit.calc.rates as ratefit
-from ioformat import phycon
+from lib.phydat import phycon
 
-RC = phycon.RC  # universal gas constant in kcal/(mol.K)
-RC2 = phycon.RC2  # universal gas constant in cm^3.atm/(mol.K)
+
+RC = phycon.RC_cal  # gas constant in cal/(mol.K) 
+RC2 = phycon.RC_atm  # gas constant in cm^3.atm/(mol.K) 
 
 
 ##################### SECTION 1 OF 4: TOP-LEVEL EVALUATION FUNCTIONS #####################

@@ -8,7 +8,7 @@ import numpy as np
 # Gets rid of the annoying warning about too many figures being open
 plt.rcParams.update({'figure.max_open_warning': 0})
 
-def plot_comparisons(combined_rxn_ktp_dct, combined_rxn_em_dct, input_pressures, mech_names=None, sort_method=None):
+def plot_comparisons(combined_rxn_ktp_dct, combined_rxn_em_dct, input_pressures, mech_names=None, sort_method='difference'):
 
     assert isinstance(input_pressures, list), (
         f'input_pressures is a {type(input_pressures)}, but should be a list.'
@@ -153,6 +153,7 @@ def plot_comparisons(combined_rxn_ktp_dct, combined_rxn_em_dct, input_pressures,
     else:
         if sort_method == 'difference':
             fig_indices = np.argsort(largest_ratios)[::-1]  # the [::-1] flips it to be from largest to smallest
+            print('fig_indices\n', fig_indices)
             sorted_figs = []
             for idx in fig_indices:
                 sorted_figs.append(figs[idx])
@@ -165,24 +166,8 @@ def plot_comparisons(combined_rxn_ktp_dct, combined_rxn_em_dct, input_pressures,
     for fig in sorted_figs:
         pdf.savefig(fig)
     pdf.close()
-
-
-#def plot_one_rxn_ktp_dct(rxn_ktp_dct, rxn_param_dct):
-#    """ Plots a rxn_ktp_dct
-#
-#    """
-#    # Loop over each reaction in the dictionary    
-#    for rxn, ktp_dct in rxn_ktp_dct:
-#        
-#        # Loop over each pressure in the dictionary
-#        for pressure, (temps, ktps) in ktp_dct.items():
-#        # Plot
-# comment
-        
- 
-
-
-#def sort_figures
+    
+    print('largest_ratios\n', largest_ratios)
 
 
 def format_rxn_name(rxn_key, em):

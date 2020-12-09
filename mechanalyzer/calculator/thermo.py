@@ -3,11 +3,14 @@
 
 
 import numpy as np
-from ioformat import phycon
 from chemkin_io.parser import thermo as thm_parser
+from lib.phydat import phycon
 
 
-def create_spc_thermo_dct(spc_nasa7_dct, temps, rval=phycon.RC_kcal):
+RC = phycon.RC_cal  # gas constant in cal/(mol.K) 
+
+
+def create_spc_thermo_dct(spc_nasa7_dct, temps, rval=RC):
     """ Create a spc_thermo_dct. If left with the default input rval=phycon.RC_kcal, the 
         thermo quantities will have units of kcal/mol for h(T) and g(T) and units of kcal/mol-K
         for cp(T) and s(T). 
@@ -38,7 +41,7 @@ def create_spc_thermo_dct(spc_nasa7_dct, temps, rval=phycon.RC_kcal):
     return spc_thermo_dct
 
     
-def enthalpy(nasa7_params, temp, rval=phycon.RC_kcal):
+def enthalpy(nasa7_params, temp, rval=RC):
     """ Calculate the enthalpy of a species using the
         coefficients of its NASA-7 polynomial.
 
@@ -68,7 +71,7 @@ def enthalpy(nasa7_params, temp, rval=phycon.RC_kcal):
     return h_t
 
 
-def heat_capacity(nasa7_params, temp, rval=phycon.RC_kcal):
+def heat_capacity(nasa7_params, temp, rval=RC):
     """ Calculate the heat capacity of a species using the
         coefficients of its NASA-7 polynomial.
 
@@ -97,7 +100,7 @@ def heat_capacity(nasa7_params, temp, rval=phycon.RC_kcal):
     return cp_t
 
 
-def entropy(nasa7_params, temp, rval=phycon.RC_kcal):
+def entropy(nasa7_params, temp, rval=RC):
     """ Calculate the entropy of a species using the
         coefficients of its NASA-7 polynomial.
 
@@ -127,7 +130,7 @@ def entropy(nasa7_params, temp, rval=phycon.RC_kcal):
     return s_t
 
 
-def gibbs(nasa7_params, temp, rval=phycon.RC_kcal):
+def gibbs(nasa7_params, temp, rval=RC):
     """ Calculate the Gibbs free energy of a species using the
         coefficients of its NASA-7 polynomial.
 
