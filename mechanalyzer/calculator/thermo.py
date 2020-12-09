@@ -3,61 +3,59 @@
 
 
 import numpy as np
-from ioformat import phycon
 from chemkin_io.parser import thermo as thm_parser
+from lib.phydat import phycon
 
 
-# functions which calculate quantiies using data from the thermo section #
-def mechanism(block_str, temps, rval=phycon.RC):
-    """ Parses the all the reactions data string in the thermo block
-        in a mechanism file for their NASA polynomials and
-        uses them to calculate thermochemical values: H(T), Cp(T), S(T), G(T).
+RC = phycon.RC_cal  # gas constant in cal/(mol.K) 
 
-        :param block_str: string of Reaction block of ChemKin input
-        :type block_str: str
-        :param temps: temperatures to calculate Thermo quantities (K)
-        :type temps: list(float)
-        :return mech_thermo_dct: dct of thermo data [H(T), Cp(T), S(T), G(T)]
-        :rtype: dict[spc: [[H(T)], [Cp(T)], [S(T)], [G(T)]]]
+
+def create_spc_thermo_dct(spc_nasa7_dct, temps, rval=RC):
+    """ Create a spc_thermo_dct. If left with the default input rval=phycon.RC_kcal, the 
+        thermo quantities will have units of kcal/mol for h(T) and g(T) and units of kcal/mol-K
+        for cp(T) and s(T). 
         
-        If rval is left at the default value of phycon.RC, the units are kcal/mol for H
-        and G and are kcal/mol-K for Cp and S.
+        :param spc_nasa7_dct: dictionary describing the NASA-7 polynomials
+        :type spc_nasa7_dct: dct {spc:[list of NASA-7 params]) 
+        :param temps: list of temperatures at which thermo is to be evaluated
+        :type temps: list
+        :param rval: universal gas constant (units decided by the user)
+        :type rval: float
+        :return spc_thermo_dct: dictionary indexed by species containing arrays of T, h(T), cp(T), s(T), and g(T)
+        :rtype: dct of lists {spc:[temps, h_t, cp_t, s_t, g_t]} 
     """
-
-    nasa_dct = thm_parser.data_dct(block_str)
-#    print('inside mechanalyzer.calculator.thermo  thermo dstrs\n', nasa_dct)
-    
-    mech_thermo_dct = {}
-    for name, thermo_dstr in nasa_dct.items():
-        h_t, cp_t, s_t, g_t, = [], [], [], []
+    spc_thermo_dct = {}
+    for spc, nasa7_params in spc_nasa7_dct.items():
+        h_t, cp_t, s_t, g_t, = [], [], [], [] 
         for temp in temps:
-            h_t.append(enthalpy(thermo_dstr, temp, rval=rval))
-            cp_t.append(heat_capacity(thermo_dstr, temp, rval=rval))
-            s_t.append(entropy(thermo_dstr, temp, rval=rval))
-            g_t.append(gibbs(thermo_dstr, temp, rval=rval))
+            h_t.append(enthalpy(nasa7_params, temp, rval=rval))
+            cp_t.append(heat_capacity(nasa7_params, temp, rval=rval)) 
+            s_t.append(entropy(nasa7_params, temp, rval=rval)) 
+            g_t.append(gibbs(nasa7_params, temp, rval=rval)) 
 
-        mech_thermo_dct[name] = [h_t, cp_t, s_t, g_t]
+            if h_t[-1] is None or cp_t[-1] is None or s_t[-1] is None or g_t[-1] is None:
+                print(f'Failure to calculate thermo at {temp} K for the species {spc}, likely due to an invalid temp.')
+            
+        spc_thermo_dct[spc] = [temps, h_t, cp_t, s_t, g_t]
 
-#    print('inside mechanalyzer.calculator.thermo  evaluated_thermo\n', mech_thermo_dct)
+    return spc_thermo_dct
 
-    return mech_thermo_dct
+    
+def enthalpy(nasa7_params, temp, rval=RC):
+    """ Calculate the enthalpy of a species using the
+        coefficients of its NASA-7 polynomial.
 
-
-def enthalpy(thm_dstr, temp, rval=phycon.RC):
-    """ Calculate the Enthalpy [H(T)] of a species using the
-        coefficients of its NASA polynomial.
-
-        :param thm_dstr: string containing NASA polynomial of species
-        :type thm_dstr: str
-        :param temp: temperature to calculate Enthalpy (K)
+        :param nasa7_params: values describing a NASA-7 polynomial
+        :type nasa7_params: list
+        :param temp: temperature to calculate the enthalpy (K)
         :type temp: float
-        :return h_t: value for the Enthalpy (???)
+        :param rval: universal gas constant (units decided by the user)
+        :type rval: float
+        :return h_t: value for the enthalpy (units same as the input rval)
         :rtype: float
     """
-
-    cfts = _coefficients_for_specific_temperature(thm_dstr, temp)
-
-    if cfts is not None:
+    cfts = coeffs_for_specific_temp(nasa7_params, temp)
+    if cfts:
         h_t = (
             cfts[0] +
             ((cfts[1] * temp) / 2.0) +
@@ -73,21 +71,21 @@ def enthalpy(thm_dstr, temp, rval=phycon.RC):
     return h_t
 
 
-def heat_capacity(thm_dstr, temp, rval=phycon.RC):
-    """ Calculate the Heat Capacity [Cp(T)] of a species using the
-        coefficients of its NASA polynomial.
+def heat_capacity(nasa7_params, temp, rval=RC):
+    """ Calculate the heat capacity of a species using the
+        coefficients of its NASA-7 polynomial.
 
-        :param thm_dstr: string containing NASA polynomial of species
-        :type thm_dstr: str
+        :param nasa7_params: values describing a NASA-7 polynomial
+        :type nasa7_params: list
         :param temp: temperature to calculate heat capacity (K)
         :type temp: float
-        :return cp_t: value for the Heat Capacity
+        :param rval: universal gas constant (units decided by the user)
+        :type rval: float
+        :return cp_t: value for the heat capacity (units same as the input rval) 
         :rtype: float
     """
-    cfts = _coefficients_for_specific_temperature(thm_dstr, temp)
-
-#    print('\n inside mechanalyzer.calculator.gibbs','\nthermo datastring\n', thm_dstr, '\ncoefficients\n', cfts)
-    if cfts is not None:
+    cfts = coeffs_for_specific_temp(nasa7_params, temp)
+    if cfts:
         cp_t = (
             cfts[0] +
             (cfts[1] * temp) +
@@ -102,18 +100,20 @@ def heat_capacity(thm_dstr, temp, rval=phycon.RC):
     return cp_t
 
 
-def entropy(thm_dstr, temp, rval=phycon.RC):
-    """ Calculate the Entropy [S(T)] of a species using the
-        coefficients of its NASA polynomial.
+def entropy(nasa7_params, temp, rval=RC):
+    """ Calculate the entropy of a species using the
+        coefficients of its NASA-7 polynomial.
 
-        :param thm_dstr: string containing NASA polynomial of species
-        :type thm_dstr: str
-        :param float temp: temperature to calculate Entropy
-        :return s_t: value for the Entropy
+        :param nasa7_params: values describing a NASA-7 polynomial
+        :type nasa7_params: list
+        :param float temp: temperature to calculate the entropy (K)
+        :type temp: float
+        :param rval: universal gas constant (units decided by the user)
+        :type rval: float
+        :return s_t: value for the entropy (units same as the input rval)
         :rtype: float
     """
-    cfts = _coefficients_for_specific_temperature(thm_dstr, temp)
-
+    cfts = coeffs_for_specific_temp(nasa7_params, temp)
     if cfts is not None:
         s_t = (
             (cfts[0] * np.log(temp)) +
@@ -130,53 +130,44 @@ def entropy(thm_dstr, temp, rval=phycon.RC):
     return s_t
 
 
-def gibbs(thm_dstr, temp, rval=phycon.RC):
-    """ Calculate the Gibbs Free Energy [G(T)] of a species using the
-        coefficients of its NASA polynomial.
+def gibbs(nasa7_params, temp, rval=RC):
+    """ Calculate the Gibbs free energy of a species using the
+        coefficients of its NASA-7 polynomial.
 
-        :param thm_dstr: string containing NASA polynomial of species
-        :type thm_dstr: str
-        :param temp: temperature to calculate Gibbs Free Energy
+        :param nasa7_params: values describing a NASA-7 polynomial
+        :type nasa7_params: list
+        :param temp: temperature to calculate the Gibbs free energy
         :type temp: float
-        :return g_t: value for the Gibbs Free Energy
+        :param rval: universal gas constant (units decided by the user)
+        :type rval: float
+        :return g_t: value for the Gibbs free energy (units same as the input rval)
         :rtype: float
     """
-
-    h_t = enthalpy(thm_dstr, temp, rval=rval)
-    s_t = entropy(thm_dstr, temp, rval=rval)
+    h_t = enthalpy(nasa7_params, temp, rval=rval)
+    s_t = entropy(nasa7_params, temp, rval=rval)
     if h_t is not None and s_t is not None:
         g_t = h_t - (s_t * temp)
     else:
         g_t = None
 
-#    print('\n inside mechanalyzer.calculator.gibbs','\ntemp \n', temp, '\nh \n', h_t, '\ns \n', s_t, '\ng \n', g_t)
-
-
     return g_t
 
 
-def _coefficients_for_specific_temperature(thm_dstr, temp):
-    """ Parse out the coefficients of a NASA polynomial from
-        a ChemKin-formatted string. The input temperature value
-        determines whether the low- or high-temperature coefficients
-        are read from the string.
+def coeffs_for_specific_temp(nasa7_params, temp):
+    """ Gets either the low-T or high-T NASA-7 polynomial coefficients 
+        depending on the temperature
 
-        :param thm_dstr: String containing NASA polynomial of species
-        :type thm_dstr: str
-        :param temp: Temperature used to read the coefficients
-        :type temp: float
-        :return cfts: low- or high-temperature coefficients of NASA polynomial
-        :rtype: list(float)
     """
-    cutoff_temps = thm_parser.temperatures(thm_dstr)
+    cutoff_temps = nasa7_params[3]
     low_temp, high_temp, mid_temp = cutoff_temps  # the order seems odd, but it's the NASA format
 
-    if low_temp <= temp <= mid_temp:
-        cfts = thm_parser.low_coefficients(thm_dstr)
+    if low_temp <= temp <= mid_temp:  
+        cfts = nasa7_params[4][1]
     elif mid_temp < temp <= high_temp:
-        cfts = thm_parser.high_coefficients(thm_dstr)
+        cfts = nasa7_params[4][0]
     else:
         cfts = None
+        print(f'The desired temp, {temp}, is outside the indicated temperature limits')
 
     return cfts
 
