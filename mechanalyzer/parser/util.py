@@ -9,3 +9,6 @@ def write_file(path, outname):
     basis_file = os.path.join(path, outname)
     with open(basis_file, 'w') as file_obj:
         file_obj.write(spc_str)
+
+
+    

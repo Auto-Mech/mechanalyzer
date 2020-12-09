@@ -37,7 +37,9 @@ class SORT_MECH:
         # set dataframe
         # index = rxn name
         # cols = reac1, reac2, prod1, prod2, formula
-        R1,R2 = get_S1S2(rct_names_lst) 
+
+        rct_names_lst_ordered = order_rct_bystoich(rct_names_lst,spc_dct) # put heavier reactant first
+        R1,R2 = get_S1S2(rct_names_lst_ordered) 
         numC,numN = count_C_N(formulas_dct)
 
         data = np.array([rct_names_lst,prd_names_lst,R1,R2,formula_str_lst,numC,numN],dtype=object).T
@@ -85,8 +87,8 @@ class SORT_MECH:
 
         # 2. assign class headers
         # set labels for all the possible criteria
-        criteria_all = ['SPECIES','PES','SUBPES','numC','MULT_R1','RXN_CLASS_BROAD','RXN_CLASS_GRAPH']
-        labels_all = ['SPECIES','PES','SUBPES','N of C atoms','Multiplicity of rct1','rxn type broad','rxn type']
+        criteria_all = ['SPECIES','PES','SUBPES','numC','R1','MULT_R1','RXN_CLASS_BROAD','RXN_CLASS_GRAPH']
+        labels_all = ['SPECIES','PES','SUBPES','N of C atoms','Heavier rct','Multiplicity of rct1','rxn type broad','rxn type']
         labels = pd.Series(labels_all,index=criteria_all)
         self.class_headers(hierarchy,labels)
 
@@ -263,6 +265,27 @@ class SORT_MECH:
         return new_idx,cmts
 
 ########################## useful functions run in the class #######################
+def order_rct_bystoich(rct_names_lst,spc_dct):
+    '''
+    reorder reactants and products based on the higher number of atoms
+    '''
+    ich_dct = {}
+    for key in spc_dct.keys():
+        if 'ts' not in key and 'global' not in key:
+            ich_dct[key] = spc_dct[key]['inchi']
+
+    for key,val in enumerate(rct_names_lst):
+        rct_names= val
+        rct_ichs = list(map(ich_dct.__getitem__, rct_names))
+        fml_rct = list(map(automol.inchi.formula,rct_ichs))
+        atoms_rct = list(map(automol.formula.atom_count,fml_rct))
+        if len(rct_names)>1:
+            if atoms_rct[1] > atoms_rct[0]:
+                # swap places of reactants 1 and 2
+                rct_names_lst[key] = (rct_names[1],rct_names[0])
+
+    return rct_names_lst
+    
 def cmts_string(name,label,cltype):
     '''
     Return appropriate comment string depending on the type
