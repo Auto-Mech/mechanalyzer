@@ -7,6 +7,7 @@ from automol.graph._graph import explicit
 from mechanalyzer.parser import ckin_ as ckin
 import pandas as pd
 import numpy as np
+import copy
 import os
 import ioformat
 
@@ -37,15 +38,15 @@ class SORT_MECH:
         # set dataframe
         # index = rxn name
         # cols = reac1, reac2, prod1, prod2, formula
-
+        print(rct_names_lst)
         rct_names_lst_ordered = order_rct_bystoich(rct_names_lst,spc_dct) # put heavier reactant first
         R1,R2 = get_S1S2(rct_names_lst_ordered) 
         numC,numN = count_C_N(formulas_dct)
-
+        print(rct_names_lst)
         data = np.array([rct_names_lst,prd_names_lst,R1,R2,formula_str_lst,numC,numN],dtype=object).T
         self.mech_df = pd.DataFrame(data,index=rxn_name_lst,columns=['rct_names_lst','prd_names_lst','R1','R2','PES','numC','numN'])
         self.spc_dct = spc_dct # set for later use
-
+        
 
     def sort(self,hierarchy,species_list):
         '''
@@ -261,7 +262,7 @@ class SORT_MECH:
         # store comments in dct
         cmts_df = pd.DataFrame(self.mech_df[['cmts_top','cmts_inline']].values,index=new_idx,columns=['cmts_top','cmts_inline'])
         cmts = cmts_df.to_dict('index')
-
+        
         return new_idx,cmts
 
 ########################## useful functions run in the class #######################
@@ -269,12 +270,13 @@ def order_rct_bystoich(rct_names_lst,spc_dct):
     '''
     reorder reactants and products based on the higher number of atoms
     '''
+    rct_names_lst_ordered = copy.deepcopy(rct_names_lst)
     ich_dct = {}
     for key in spc_dct.keys():
         if 'ts' not in key and 'global' not in key:
             ich_dct[key] = spc_dct[key]['inchi']
 
-    for key,val in enumerate(rct_names_lst):
+    for key,val in enumerate(rct_names_lst_ordered):
         rct_names= val
         rct_ichs = list(map(ich_dct.__getitem__, rct_names))
         fml_rct = list(map(automol.inchi.formula,rct_ichs))
@@ -282,9 +284,9 @@ def order_rct_bystoich(rct_names_lst,spc_dct):
         if len(rct_names)>1:
             if atoms_rct[1] > atoms_rct[0]:
                 # swap places of reactants 1 and 2
-                rct_names_lst[key] = (rct_names[1],rct_names[0])
+                rct_names_lst_ordered[key] = (rct_names[1],rct_names[0])
 
-    return rct_names_lst
+    return rct_names_lst_ordered
     
 def cmts_string(name,label,cltype):
     '''

@@ -40,10 +40,7 @@ def build_dct(SPC_STR,MECH_STR):
     block_str = chemkin_io.parser.mechanism.reaction_block(MECH_STR)
     rxn_param_dct = chemkin_io.parser.reaction.param_dct(block_str,units[0],units[1])
     # for consistency: replace the keys with rct and prd names re-ordered; works with both sort_rxn=true and sort_rxn=false
-    idx = list(zip(rct_names, prd_names))
-    val = list(map(rxn_param_dct.get,idx))
-    rxn_param_dct = dict(zip(idx,val))
-    #print(rxn_param_dct)
+    rxn_param_dct = dict(zip(list(zip(rct_names, prd_names)),rxn_param_dct.values()))
     return spc_dct, mech_info, rxn_param_dct
 
 
@@ -63,7 +60,6 @@ def sort_mechanism(mech_info,spc_dct,SORT_STR,ISOLATE_SPECIES):
     srt_mch.sort(SORT_STR,ISOLATE_SPECIES)
     # returns the sorted indices and the corresponding comments
     sorted_idx,cmts_dct = srt_mch.return_mech_df()
-
     return sorted_idx,cmts_dct
 
 
