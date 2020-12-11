@@ -23,12 +23,41 @@ def parse(mech_str, spc_dct,sort_rxns):
     rct_names_lst,prd_names_lst = deldup(rct_names_lst,prd_names_lst)
 
     # Build the inchi dct
+    ich_dct = get_ich_dct(spc_dct)
+
+    # extract mech info
+    formula_dct_lst, formula_str_lst, rxn_name_lst = mech_info(rct_names_lst,prd_names_lst,ich_dct)
+
+    # Sort the reactions if desired	
+
+    if sort_rxns:	
+        rxn_info_lst = list(	    
+            zip(formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst))	
+        fml_dct = dict(zip(formula_str_lst,formula_dct_lst))
+        rxn_info_lst.sort()	
+        formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst = zip(	
+            *rxn_info_lst)
+        formula_dct_lst = list(map(fml_dct.get,formula_str_lst))
+
+
+    return formula_dct_lst, formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst
+
+
+# functions called in parse; may be called separately by other scripts
+def get_ich_dct(spc_dct):
+    """Generates inchis dictionary from species dictionary
+    """
     ich_dct = {}
     for key in spc_dct.keys():
         if 'ts' not in key and 'global' not in key:
             ich_dct[key] = spc_dct[key]['inchi']
 
+    return ich_dct
 
+def mech_info(rct_names_lst, prd_names_lst,ich_dct):
+    """
+    Derives reactants and products formulas and reaction names
+    """
     # Sort reactant and product name lists by formula to facilitate
     # multichannel, multiwell rate evaluations
     formula_str = ''
@@ -47,28 +76,15 @@ def parse(mech_str, spc_dct,sort_rxns):
         formula_str = automol.formula.string2(formula_dct)
         formula_dct_lst.append(formula_dct)
         formula_str_lst.append(formula_str)
-
    
-    rxn_info_lst = list(	    
-        zip(formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst))	
-
-    # Sort the reactions if desired	
-
-    if sort_rxns:	
-        fml_dct = dict(zip(formula_str_lst,formula_dct_lst))
-        rxn_info_lst.sort()	
-        formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst = zip(	
-            *rxn_info_lst)
-        formula_dct_lst = list(map(fml_dct.get,formula_str_lst))
-
-    return formula_dct_lst, formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst
+    return formula_dct_lst, formula_str_lst, rxn_name_lst
 
 
 
 
 def deldup(rct_names_lst,prd_names_lst):
     '''
-    delete duplicate entries 
+    delete duplicate name 
     '''
 
     rct_names_new = []
