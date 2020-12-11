@@ -29,16 +29,16 @@ SORT_STR = ['RXN_CLASS_GRAPH','SPECIES',1] # LIST WITH SORTING CRITERIA IN HIERA
 
 ############ input reading ####################
 
-# READ FILE
-SPC_STR,MECH_STR = mechanalyzer.parser.mech.readfiles(os.path.join(CWD,SPC_NAME),os.path.join(CWD,MECH_NAME))
+# READ FILE AND BUILD DICTIONARIES
+spc_dct,rxn_param_dct,elem_tuple = mechanalyzer.parser.mech.readfiles(os.path.join(CWD,SPC_NAME),os.path.join(CWD,MECH_NAME))
 
-# BUILD DICTIONARIES AND MECH INFORMATION
-spc_dct,mech_info,rxn_param_dct = mechanalyzer.parser.mech.build_dct(SPC_STR,MECH_STR)
+# BUILD  MECH INFORMATION
+mech_info = mechanalyzer.parser.mech.build_dct(spc_dct,rxn_param_dct)
 
 # SORTING: sort the mech and build the sorted rxn param dct
 sorted_idx,cmts_dct = mechanalyzer.parser.mech.sort_mechanism(mech_info,spc_dct,SORT_STR,ISOLATE_SPECIES)
 rxn_param_dct_sorted = mechanalyzer.parser.mech.reordered_mech(rxn_param_dct,sorted_idx,cmts_dct)
 
 # WRITE THE NEW MECHANISM
-mechanalyzer.parser.mech.write_reordered_mech(MECH_STR,spc_dct,rxn_param_dct_sorted,cmts_dct,SORTMECH_NAME)
+mechanalyzer.parser.mech.write_reordered_mech(elem_tuple,spc_dct,rxn_param_dct_sorted,cmts_dct,SORTMECH_NAME)
 

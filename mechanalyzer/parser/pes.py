@@ -7,6 +7,7 @@ from automol.graph._graph import explicit
 from mechanalyzer.parser import ckin_ as ckin
 import pandas as pd
 import numpy as np
+import copy
 import os
 import ioformat
 
@@ -37,15 +38,13 @@ class SORT_MECH:
         # set dataframe
         # index = rxn name
         # cols = reac1, reac2, prod1, prod2, formula
-
-        rct_names_lst_ordered = order_rct_bystoich(rct_names_lst,spc_dct) # put heavier reactant first
+        rct_names_lst_ordered = order_rct_bystoich(rct_names_lst,spc_dct=spc_dct) # put heavier reactant first
         R1,R2 = get_S1S2(rct_names_lst_ordered) 
         numC,numN = count_C_N(formulas_dct)
-
         data = np.array([rct_names_lst,prd_names_lst,R1,R2,formula_str_lst,numC,numN],dtype=object).T
         self.mech_df = pd.DataFrame(data,index=rxn_name_lst,columns=['rct_names_lst','prd_names_lst','R1','R2','PES','numC','numN'])
         self.spc_dct = spc_dct # set for later use
-
+        
 
     def sort(self,hierarchy,species_list):
         '''
@@ -254,37 +253,57 @@ class SORT_MECH:
         Returns the dataframe in the current status
         Indexes become the reactant and product tuples --> adapt to rxn_param_dct
         '''
-        # print(self.mech_df)
         rct_names = self.mech_df['rct_names_lst'].values
         prd_names = self.mech_df['prd_names_lst'].values
         new_idx = list(zip(rct_names, prd_names))
         # store comments in dct
         cmts_df = pd.DataFrame(self.mech_df[['cmts_top','cmts_inline']].values,index=new_idx,columns=['cmts_top','cmts_inline'])
         cmts = cmts_df.to_dict('index')
-
+        
         return new_idx,cmts
 
 ########################## useful functions run in the class #######################
-def order_rct_bystoich(rct_names_lst,spc_dct):
+def order_rct_bystoich(rct_names_lst,spc_dct=None):
     '''
     reorder reactants and products based on the higher number of atoms
+    If no species dictionary is given as input: reorder just according to name length, 
+    if length or stoichiometry is the same, by alphabetical order
     '''
+    rct_names_lst_ordered = copy.deepcopy(rct_names_lst)
     ich_dct = {}
-    for key in spc_dct.keys():
-        if 'ts' not in key and 'global' not in key:
-            ich_dct[key] = spc_dct[key]['inchi']
+    if spc_dct:
+        for key in spc_dct.keys():
+            if 'ts' not in key and 'global' not in key:
+                ich_dct[key] = spc_dct[key]['inchi']
 
-    for key,val in enumerate(rct_names_lst):
-        rct_names= val
-        rct_ichs = list(map(ich_dct.__getitem__, rct_names))
-        fml_rct = list(map(automol.inchi.formula,rct_ichs))
-        atoms_rct = list(map(automol.formula.atom_count,fml_rct))
-        if len(rct_names)>1:
-            if atoms_rct[1] > atoms_rct[0]:
-                # swap places of reactants 1 and 2
-                rct_names_lst[key] = (rct_names[1],rct_names[0])
+        for key,val in enumerate(rct_names_lst_ordered):
+            rct_names= val
+            rct_ichs = list(map(ich_dct.__getitem__, rct_names))
+            fml_rct = list(map(automol.inchi.formula,rct_ichs))
+            atoms_rct = list(map(automol.formula.atom_count,fml_rct))
+            if len(rct_names)==2:
+                if atoms_rct[1] > atoms_rct[0]:
+                    # swap places of reactants 1 and 2
+                    rct_names_lst_ordered[key] = (rct_names[1],rct_names[0])
+                elif atoms_rct[1] == atoms_rct[0]:
+                    rct_names = list(rct_names)
+                    rct_names.sort()
+                    rct_names_lst_ordered[key] = tuple(rct_names)
+                
+    else:
+        for key,val in enumerate(rct_names_lst_ordered):
+            rct_names= val
+            if len(rct_names)==2:
+                if len(rct_names[1]) > len(rct_names[0]):
+                    # swap places of reactants 1 and 2
+                    rct_names_lst_ordered[key] = (rct_names[1],rct_names[0])  
+                elif len(rct_names[1]) == len(rct_names[0]):
+                    rct_names = list(rct_names)
+                    rct_names.sort()
+                    rct_names_lst_ordered[key] = tuple(rct_names)
+    
 
-    return rct_names_lst
+    return rct_names_lst_ordered
     
 def cmts_string(name,label,cltype):
     '''
@@ -365,26 +384,46 @@ def find_conn_chnls(pes_rct_names_lst,pes_prd_names_lst,pes_rxn_name_lst):
     '''
     Given rxn names, reactants, products belonging to 1 PES:
     generate SUB PESs dictionaries
-    {0: [0,1,2] , 1:[3,4,5]}...
+    conndct = {0: [['S1','S2'],['S3','S4'],[S5']], 1:[['S6','S7'],['S8','S9']]}
+    connchnls = {0: [0,1,2] , 1:[3,4,5]}...
     corresponding to each subpes
     '''
+    # preprocessing:
+    # order (bimol) reactants and products in the same fashion
+    # example if you have A+B and B+A they will be ordered in the same way
+    pes_rct_names_lst = order_rct_bystoich(pes_rct_names_lst)
+    pes_prd_names_lst = order_rct_bystoich(pes_prd_names_lst)
+    # put everything in a dataframe. indices are the numbers given by enumerate
+    len_rct_prd = np.array(list(map(len,pes_rct_names_lst)))+np.array(list(map(len,pes_prd_names_lst)))
+    pes_df = pd.DataFrame(np.array([pes_rct_names_lst,pes_prd_names_lst,len_rct_prd],dtype=object).T,index=np.arange(0,len(pes_rxn_name_lst)),columns=['rcts','prds','N_rcts_prds'])
+    # order according to the total number of species (N of reactants + N of products)
+    pes_df = pes_df.sort_values(by='N_rcts_prds')
     # Split up channels into a connected sub-pes within a formula
     subpes_idx = 0
     conndct = {}
     connchnls = {}
-    for chnl_idx, _ in enumerate(pes_rxn_name_lst):
+
+    for chnl_idx in pes_df.index:
         connected_to = []
-        chnl_species = [list(pes_rct_names_lst[chnl_idx]),
-                        list(pes_prd_names_lst[chnl_idx])]
+        chnl_species = [list(pes_df['rcts'][chnl_idx]),
+                        list(pes_df['prds'][chnl_idx])]
+
         for conn_chnls_idx in conndct:
             for spc_pair in chnl_species:
                 if len(spc_pair) == 1:
+                    # this works for unimol species; need also to verify bimol wellskipping channels
                     if spc_pair in conndct[conn_chnls_idx]:
                         if conn_chnls_idx not in connected_to:
                             connected_to.append(conn_chnls_idx)
                     elif spc_pair[::-1] in conndct[conn_chnls_idx]:
                         if conn_chnls_idx not in connected_to:
                             connected_to.append(conn_chnls_idx)
+
+            if len(chnl_species[0]) == 2 and len(chnl_species[1]) == 2:
+                # bimol bimol reactions
+                if (chnl_species[0] in conndct[conn_chnls_idx]) and (chnl_species[1] in conndct[conn_chnls_idx]):
+                    if conn_chnls_idx not in connected_to:
+                        connected_to.append(conn_chnls_idx)
         if not connected_to:
             conndct[subpes_idx] = chnl_species
             connchnls[subpes_idx] = [chnl_idx]
