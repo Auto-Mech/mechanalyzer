@@ -16,6 +16,27 @@ jobs:
                 command: |
                     source activate autoio-env
                     python setup.py install
+            - run:
+                name: Build/install dsarrfit
+                command: |
+                    source activate ratefit-env
+                    cd external/dsarrfit
+                    bash build.sh
+            - run:
+                name: Build/install ratefit
+                command: |
+                    source activate ratefit-env
+                    python setup.py install
+            - run:
+                name: Test ratefit
+                command: |
+                    source activate ratefit-env
+                    ls
+                    cd ratefit
+                    ls tests
+                    pytest -v
+                    flake8 --exit-zero ratefit
+                    pylint --rcfile=../.pylintrc ratefit
 workflows:
     version: 2
     build-all:

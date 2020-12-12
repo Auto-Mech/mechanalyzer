@@ -1,0 +1,25 @@
+# cmd: conda build .
+package:
+    name: ratefit
+    version: "0.2.0"
+
+source:
+    path: .
+
+requirements:
+    host:
+        - python
+    build:
+        - {{ compiler('fortran') }}
+        - cmake
+    run:
+        - python
+        - numpy
+        - scipy
+        - pandas
+        - mako
+        - pytest
+        - pytest-cov
+        - future
+        - flake8
+        - pylint

@@ -14,4 +14,14 @@ disable=
     assignment-from-no-return,
     duplicate-code,
     cyclic-import,
-    arguments-out-of-order
+    arguments-out-of-order,
+    too-many-locals,
+    too-many-arguments,
+    too-many-branches,
+    too-many-nested-blocks,
+    too-few-public-methods,
+    redefined-builtin,
+    duplicate-code,
+    consider-iterating-dictionary,
+    superfluous-parens,
+    deprecated-method
