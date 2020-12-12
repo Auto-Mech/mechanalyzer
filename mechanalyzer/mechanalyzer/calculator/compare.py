@@ -6,7 +6,7 @@ import itertools
 import numpy as np
 import ratefit
 from ioformat import remove_whitespace
-from ioformat import phycon
+from phydat import phycon
 from mechanalyzer.parser import spc as parser_spc
 from chemkin_io.parser import mechanism as parser_mech
 from chemkin_io.parser import thermo as parser_thermo
