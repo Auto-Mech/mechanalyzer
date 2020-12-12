@@ -1,0 +1,17 @@
+[MASTER]
+extension-pkg-whitelist=
+    rdkit,
+    pyx2z
+disable=
+    too-few-public-methods,
+    no-init,
+    old-style-class,
+    too-many-arguments,
+    too-many-statements,
+    too-many-locals,
+    too-many-branches,
+    too-many-nested-blocks,
+    assignment-from-no-return,
+    duplicate-code,
+    cyclic-import,
+    arguments-out-of-order

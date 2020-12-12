@@ -1,0 +1,33 @@
+# cmd: conda build . -c kevinmooreiii -c auto-mech -c psi4 -c rdkit -c openbabel -c conda-forge
+package:
+    name: mechanalyzer
+    version: "0.1.0"
+
+source:
+    path: .
+
+requirements:
+    host:
+        - python
+    run:
+        - python
+        - {{ compiler('fortran') }}
+        - numpy
+        - scipy
+        - pyyaml
+        - mako
+        - matplotlib
+        - pytest
+        - pytest-cov
+        - future
+        - flake8
+        - pylint
+        - rdkit::rdkit
+        - openbabel::openbabel
+        - conda-forge::qcelemental
+        - psi4::psi4
+        - kevinmooreiii::autoio
+        - kevinmooreiii::automol
+        - kevinmooreiii::autoparse
+        - kevinmooreiii:ratefit
+        - auto-mech::x2z

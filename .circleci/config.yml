@@ -1,0 +1,23 @@
+version: 2
+jobs:
+    build-debian:
+        docker:
+            - image: continuumio/miniconda3
+        steps:
+            - checkout  # checkout the code
+            - run: 
+                name: Create conda environment
+                command: |
+                    apt-get update --yes
+                    apt-get install --yes libxrender-dev build-essential
+                    conda env create -f environment.yml
+            - run:
+                name: Build/install autoio
+                command: |
+                    source activate autoio-env
+                    python setup.py install
+workflows:
+    version: 2
+    build-all:
+        jobs:
+            - build-debian
