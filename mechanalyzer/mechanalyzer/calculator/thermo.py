@@ -4,7 +4,7 @@
 
 import numpy as np
 from chemkin_io.parser import thermo as thm_parser
-from lib.phydat import phycon
+from phydat import phycon
 
 
 RC = phycon.RC_cal  # gas constant in cal/(mol.K) 

@@ -4,7 +4,7 @@ Calculate rates with various fitting functions
 
 import numpy as np
 from scipy.special import eval_chebyt
-from lib.phydat import phycon
+from phydat import phycon
 
 
 RC = phycon.RC_cal  # gas constant in cal/(mol.K) 

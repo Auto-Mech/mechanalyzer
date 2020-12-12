@@ -5,7 +5,7 @@ import os
 import numpy as np
 from scipy.optimize import leastsq
 from ratefit.fit.arrhenius import dsarrfit_io
-from lib.phydat import phycon
+from phydat import phycon
 
 
 RC = phycon.RC_cal  # universal gas constant in cal/mol-K
