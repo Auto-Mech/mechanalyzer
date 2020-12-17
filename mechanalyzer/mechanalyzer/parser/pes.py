@@ -220,17 +220,21 @@ class SORT_MECH:
             if len(rct_names) < 3 and len(prd_names) < 3:
                 # Get the inchis and graphs
                 rct_ichs = list(self.spc_dct[rct]['inchi'] for rct in rct_names)
-                rct_graph = graph_from_ichs(rct_ichs)
+                rct_graph = list(map(automol.inchi.graph, rct_ichs))
+                # rct_graph = graph_from_ichs(rct_ichs)
                 # delete stereo information before the classification
                 rct_gras = list(map(automol.graph.without_stereo_parities, rct_graph))
                 # print(automol.graph.string(rct_gra)) - 
                 prd_ichs = list(self.spc_dct[prd]['inchi'] for prd in prd_names)
-                prd_graph = graph_from_ichs(prd_ichs)
+                prd_graph = list(map(automol.inchi.graph, prd_ichs))
+                # prd_graph = graph_from_ichs(prd_ichs)
                 prd_gras = list(map(automol.graph.without_stereo_parities, prd_graph))
-
                 # ID reaction
                 try:
-                    _, _, _, rclass = automol.graph.reac.classify(rct_gras, prd_gras)
+                    if automol.graph.reac.is_valid_reaction(rct_gras, prd_gras):
+                        rclass = automol.graph.reac.classify_simple(rct_gras, prd_gras)
+                    else:
+                        rclass = 'unclassified - Wrong Stoichiometry'
                 # check stereo compatibility - I am not sure about this input
                 # ret = automol.graph.trans.is_stereo_compatible(rclass, rct_graph, prd_graph)
                 except AssertionError:
@@ -240,7 +244,7 @@ class SORT_MECH:
                     rclass = 'unclassified'
             else:
                 rclass = 'unclassified - lumped'
-
+            print(rxn),print(rclass)
             rxn_clG_df['RXN_CLASS_GRAPH'][rxn] = rclass
 
 
@@ -347,19 +351,6 @@ def count_C_N(fml_list):
 
     return count_C_lst, count_N_lst
 
-
-def graph_from_ichs(ichs):
-    '''
-    Generate graphs to be processed by the rxn classifier without stereo parities involved
-    Calls sets of functions of automol
-    '''
-    rxn_graph = list(map(automol.inchi.graph, ichs))
-    rxn_graph = list(map(explicit, rxn_graph))
-    # reorder the keys for multiple reactants
-    if len(rxn_graph) == 2:
-        rxn_graph, _ = automol.graph.standard_keys_for_sequence(rxn_graph)
-
-    return rxn_graph
 
 
 def get_S1S2(SPECIES):
