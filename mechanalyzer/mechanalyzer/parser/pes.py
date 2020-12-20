@@ -35,14 +35,15 @@ class SORT_MECH:
     def __init__(self,mech_info,spc_dct):
         # extract data from mech info
         [formulas_dct,formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst] = mech_info         
-        # set dataframe
-        # index = rxn name
-        # cols = reac1, reac2, prod1, prod2, formula
+        # set dataframe: extract useful info
+        molecularity = list(map(len,rct_names_lst))
+        N_of_prods = list(map(len,prd_names_lst))
         rct_names_lst_ordered = order_rct_bystoich(rct_names_lst,spc_dct=spc_dct) # put heavier reactant first
+        prd_names_lst_ordered = order_rct_bystoich(prd_names_lst,spc_dct=spc_dct) # put heavier product first
         R1,R2 = get_S1S2(rct_names_lst_ordered) 
         numC,numN = count_C_N(formulas_dct)
-        data = np.array([rct_names_lst,prd_names_lst,R1,R2,formula_str_lst,numC,numN],dtype=object).T
-        self.mech_df = pd.DataFrame(data,index=rxn_name_lst,columns=['rct_names_lst','prd_names_lst','R1','R2','PES','numC','numN'])
+        data = np.array([rct_names_lst,prd_names_lst,rct_names_lst_ordered,prd_names_lst_ordered,R1,R2,molecularity,N_of_prods,formula_str_lst,numC,numN],dtype=object).T
+        self.mech_df = pd.DataFrame(data,index=rxn_name_lst,columns=['rct_names_lst','prd_names_lst','rct_names_lst_ord','prd_names_lst_ord','R1','R2','molecularity','N_of_prods','PES','numC','numN'])
         self.spc_dct = spc_dct # set for later use
         
 
@@ -86,8 +87,8 @@ class SORT_MECH:
 
         # 2. assign class headers
         # set labels for all the possible criteria
-        criteria_all = ['SPECIES','PES','SUBPES','numC','R1','MULT_R1','RXN_CLASS_BROAD','RXN_CLASS_GRAPH']
-        labels_all = ['SPECIES','PES','SUBPES','N of C atoms','Heavier rct','Multiplicity of rct1','rxn type broad','rxn type']
+        criteria_all = ['molecularity','N_of_prods','SPECIES','PES','SUBPES','numC','R1','MULT_R1','RXN_CLASS_BROAD','RXN_CLASS_GRAPH']
+        labels_all = ['molecularity','N_of_prods','SPECIES','PES','SUBPES','N of C atoms','Heavier rct','Multiplicity of rct1','rxn type broad','rxn type']
         labels = pd.Series(labels_all,index=criteria_all)
         self.class_headers(hierarchy,labels)
 
@@ -211,42 +212,92 @@ class SORT_MECH:
     def rxn_class_graph(self,rxn_clG_df):
         '''
         Identify the reaction class by the graph approach
+        1. group by subpes
+        2. identify rxn in each subpes
+        3. classify well skipping channels
         '''
-        for rxn in rxn_clG_df.index:
-            rct_names = self.mech_df['rct_names_lst'][rxn]
-            prd_names = self.mech_df['prd_names_lst'][rxn]
+        # 1. group by subpes
+        # check that SUBPES is present in indexes, otherwise generate corresponding dataframe
+        if 'SUBPES' not in self.mech_df.columns:
+                df_optn = pd.DataFrame(index=self.mech_df.index,columns=['SUBPES'])
+                df_optn = self.conn_chn(df_optn)
+                # concatenate the new portion of dataframe
+                self.mech_df = pd.concat([self.mech_df,df_optn],axis=1)
 
-            # exclude all reactions with more than 2 reactants or products (not elementary!)
-            if len(rct_names) < 3 and len(prd_names) < 3:
-                # Get the inchis and graphs
-                rct_ichs = list(self.spc_dct[rct]['inchi'] for rct in rct_names)
-                rct_graph = list(map(automol.inchi.graph, rct_ichs))
-                # rct_graph = graph_from_ichs(rct_ichs)
-                # delete stereo information before the classification
-                rct_gras = list(map(automol.graph.without_stereo_parities, rct_graph))
-                # print(automol.graph.string(rct_gra)) - 
-                prd_ichs = list(self.spc_dct[prd]['inchi'] for prd in prd_names)
-                prd_graph = list(map(automol.inchi.graph, prd_ichs))
-                # prd_graph = graph_from_ichs(prd_ichs)
-                prd_gras = list(map(automol.graph.without_stereo_parities, prd_graph))
-                # ID reaction
-                try:
+        # 2. graph classification or each subpes
+        for subpes_name,subpes_df in self.mech_df.groupby('SUBPES'):
+            # sort by molecularity: analyze first unimolecular isomerizations, unimo decompositions, and then bimolecular reactions
+            subpes_df = subpes_df.sort_values(by=['molecularity','N_of_prods'])
+            # REFER TO REORDERED SPECIES NAMES, OTHERWISE YOU MAY HAVE INCONSISTENT SPECIES NAMING
+            # subpes species list
+            rcts = list(subpes_df['rct_names_lst_ord'].values)
+            prds = list(subpes_df['prd_names_lst_ord'].values)
+            species_subpes = list(set(rcts+prds))
+
+            #build dataframe: elementary reactivity matrix
+            elem_reac_df = pd.DataFrame(np.zeros((len(species_subpes),len(species_subpes)),dtype='<U32'),index=species_subpes,columns=species_subpes)
+            mult_species_subpes = pd.Series(list(map(len,species_subpes)),index=species_subpes)
+            unimol_species = mult_species_subpes[mult_species_subpes==1].index
+            # graph classification
+            for rxn in subpes_df.index:
+                rct_names = subpes_df['rct_names_lst_ord'][rxn]
+                prd_names = subpes_df['prd_names_lst_ord'][rxn]
+
+                # exclude all reactions with more than 2 reactants or products (not elementary!)
+                if len(rct_names) < 3 and len(prd_names) < 3:
+                    # Get the inchis and graphs
+                    rct_ichs = list(self.spc_dct[rct]['inchi'] for rct in rct_names)
+                    rct_graph = list(map(automol.inchi.graph, rct_ichs))
+                    rct_gras = list(map(automol.graph.without_stereo_parities, rct_graph))
+                    # print(automol.graph.string(rct_gra)) - 
+                    prd_ichs = list(self.spc_dct[prd]['inchi'] for prd in prd_names)
+                    prd_graph = list(map(automol.inchi.graph, prd_ichs))
+                    prd_gras = list(map(automol.graph.without_stereo_parities, prd_graph))
+                    # ID reaction
                     if automol.graph.reac.is_valid_reaction(rct_gras, prd_gras):
                         rclass = automol.graph.reac.classify_simple(rct_gras, prd_gras)
                     else:
                         rclass = 'unclassified - Wrong Stoichiometry'
-                # check stereo compatibility - I am not sure about this input
-                # ret = automol.graph.trans.is_stereo_compatible(rclass, rct_graph, prd_graph)
-                except AssertionError:
-                    rclass = 'unclassified - Assert Error'
+                    # check stereo compatibility - I am not sure about this input
+                    # ret = automol.graph.trans.is_stereo_compatible(rclass, rct_graph, prd_graph)
+                    if rclass == None:
+                        if subpes_df['molecularity'][rxn] == 1 and subpes_df['N_of_prods'][rxn] == 1:
+                            rclass = 'isomerization' # TEMPORARY - BEFORE ALL ISOMERIZATION TYPES ARE ANALYZED
+                        else:
+                            rclass = 'unclassified'
+                else:
+                    rclass = 'unclassified - lumped'
 
-                if rclass == None:
-                    rclass = 'unclassified'
-            else:
-                rclass = 'unclassified - lumped'
-            print(rxn),print(rclass)
-            rxn_clG_df['RXN_CLASS_GRAPH'][rxn] = rclass
+                rxn_clG_df['RXN_CLASS_GRAPH'][rxn] = rclass
 
+                # store values in the elementary reactivity matrix (for now contaminated with isomerizations)
+                elem_reac_df[rct_names][prd_names] = rclass
+                elem_reac_df[prd_names][rct_names] = rclass
+
+            # 3. classify well skipping channels
+            # reclassify the unclassified reactions A->B+C, B+C->D, B+C->E+F
+            for rxn in subpes_df.index:
+                if rxn_clG_df['RXN_CLASS_GRAPH'][rxn] == 'unclassified':
+
+                    rct_names = subpes_df['rct_names_lst_ord'][rxn]
+                    prd_names = subpes_df['prd_names_lst_ord'][rxn]   
+                    # reactants: if bimolecular, find the label of the elementary reaction going to unimolecular species; if unimol, label is 'isom'
+                    # isolate A+B->C and C->A+B connections
+                    rxn_types = elem_reac_df[rct_names][unimol_species]
+                    rxn_types = rxn_types[rxn_types != 'unclassified']
+                    rxn_types_1 = rxn_types[rxn_types != '']
+
+                    rxn_types = elem_reac_df[prd_names][unimol_species]
+                    rxn_types = rxn_types[rxn_types != 'unclassified']
+                    rxn_types_2 = rxn_types[rxn_types != '']
+
+                    try:
+                        rxn_type_1 = rxn_types_1[0] # TEMPORARY: SHOULD RECONSTRUCT THE FULL PATH FROM REACTANTS TO PRODUCTS
+                        rxn_type_2 = rxn_types_2[0] # TEMPORARY: SHOULD RECONSTRUCT THE FULL PATH FROM REACTANTS TO PRODUCTS
+                        rxn_clG_df['RXN_CLASS_GRAPH'][rxn] = rxn_type_1 + '-' + rxn_type_2 + ' (WS)'
+                    except IndexError:
+                        continue # do not change the reaction type
+                        
 
         return rxn_clG_df
 
@@ -331,8 +382,8 @@ def cmts_string(name,label,cltype):
         rxnlabel = '!       '+'_'.join(name)+'\n'
         rxnclass = tophead + cmtlabel + rxnlabel + bottomhead
     else:
-        cmtlabel = cltype + ': ' + ' _ '.join(label) + '  '
-        rxnclass = '! '+ cmtlabel +' _ '.join(name)
+        cmtlabel = cltype + ': ' + '_'.join(label) + '  '
+        rxnclass = '! '+ cmtlabel +'_'.join(name)
 
     return rxnclass
 
