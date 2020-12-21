@@ -72,8 +72,8 @@ def sort_mechanism(mech_info,spc_dct,SORT_STR,ISOLATE_SPECIES):
     # sort according to the desired criteria
     srt_mch.sort(SORT_STR,ISOLATE_SPECIES)
     # returns the sorted indices and the corresponding comments
-    sorted_idx,cmts_dct = srt_mch.return_mech_df()
-    return sorted_idx,cmts_dct
+    sorted_idx,cmts_dct,spc_dct = srt_mch.return_mech_df()
+    return sorted_idx,cmts_dct,spc_dct
 
 
 def reordered_mech(rxn_param_dct,sorted_idx,cmts_dct):
