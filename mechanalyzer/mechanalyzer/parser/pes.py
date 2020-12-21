@@ -95,12 +95,14 @@ class SORT_MECH:
     def filter_byspecies(self,species_list):
         """
         Find all reactions involving species of the species_list given as input
+        make another spc_dct containing only the species appearing in the reactions of interest
         """
         # check that all species selected are in the species dictionary
         if any(i not in self.spc_dct.keys() for i in species_list):
             print('Error in ISOLATE_SPECIES: not all species are in the species list ')
             exit()
 
+        spc_list = []
         # for all reactions in the dataframe: check if you have the species of the selected list. otherwise remove the reaction
         for ii in self.mech_df.index:
             rcts = list(self.mech_df['rct_names_lst'][ii])
@@ -109,6 +111,16 @@ class SORT_MECH:
             if (any(rct == species for species in species_list for rct in rcts) == False
                 and any(prd == species for species in species_list for prd in prds) == False):
                 self.mech_df = self.mech_df.drop([ii])
+            else:
+                # append all species to the list
+                spc_list.extend(rcts)
+                spc_list.extend(prds)
+        
+        # filter spc_list: unique elements
+        spc_list = list(set(spc_list))
+        # new spc_dct
+        spc_dct_val = list(map(self.spc_dct.get,spc_list))
+        self.spc_dct = dict(zip(spc_list,spc_dct_val))
 
 
     def class_headers(self,hierarchy,labels):
@@ -240,16 +252,17 @@ class SORT_MECH:
             unimol_species = mult_species_subpes[mult_species_subpes==1].index
             # graph classification
             for rxn in subpes_df.index:
-                rct_names = subpes_df['rct_names_lst_ord'][rxn]
-                prd_names = subpes_df['prd_names_lst_ord'][rxn]
-
+                rct_names = subpes_df['rct_names_lst'][rxn]
+                prd_names = subpes_df['prd_names_lst'][rxn]
+                rct_names_ord = subpes_df['rct_names_lst_ord'][rxn]
+                prd_names_ord = subpes_df['prd_names_lst_ord'][rxn]
                 # exclude all reactions with more than 2 reactants or products (not elementary!)
                 if len(rct_names) < 3 and len(prd_names) < 3:
                     # Get the inchis and graphs
                     rct_ichs = list(self.spc_dct[rct]['inchi'] for rct in rct_names)
                     rct_graph = list(map(automol.inchi.graph, rct_ichs))
                     rct_gras = list(map(automol.graph.without_stereo_parities, rct_graph))
-                    # print(automol.graph.string(rct_gra)) - 
+                    # print(automol.graph.string(rct_gra))  
                     prd_ichs = list(self.spc_dct[prd]['inchi'] for prd in prd_names)
                     prd_graph = list(map(automol.inchi.graph, prd_ichs))
                     prd_gras = list(map(automol.graph.without_stereo_parities, prd_graph))
@@ -271,8 +284,9 @@ class SORT_MECH:
                 rxn_clG_df['RXN_CLASS_GRAPH'][rxn] = rclass
 
                 # store values in the elementary reactivity matrix (for now contaminated with isomerizations)
-                elem_reac_df[rct_names][prd_names] = rclass
-                elem_reac_df[prd_names][rct_names] = rclass
+
+                elem_reac_df[rct_names_ord][prd_names_ord] = rclass
+                elem_reac_df[prd_names_ord][rct_names_ord] = rclass
 
             # 3. classify well skipping channels
             # reclassify the unclassified reactions A->B+C, B+C->D, B+C->E+F
@@ -305,8 +319,10 @@ class SORT_MECH:
     ###################################### output dataframe ##############################
     def return_mech_df(self):
         '''
-        Returns the dataframe in the current status
-        Indexes become the reactant and product tuples --> adapt to rxn_param_dct
+        Returns:
+        - new_idx: reactants and products indices as tuples
+        - cmts: dictionary containing comments of the corresponding reactions; indices are new_idx
+        - self.spc_dct: species dictionary; may be different from the input if a subset of reactions is selected; useful for mech writing
         '''
         rct_names = self.mech_df['rct_names_lst'].values
         prd_names = self.mech_df['prd_names_lst'].values
@@ -315,7 +331,7 @@ class SORT_MECH:
         cmts_df = pd.DataFrame(self.mech_df[['cmts_top','cmts_inline']].values,index=new_idx,columns=['cmts_top','cmts_inline'])
         cmts = cmts_df.to_dict('index')
         
-        return new_idx,cmts
+        return new_idx,cmts,self.spc_dct
 
 ########################## useful functions run in the class #######################
 def order_rct_bystoich(rct_names_lst,spc_dct=None):

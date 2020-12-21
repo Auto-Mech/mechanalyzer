@@ -36,7 +36,7 @@ spc_dct,rxn_param_dct,elem_tuple = mechanalyzer.parser.mech.readfiles(os.path.jo
 mech_info = mechanalyzer.parser.mech.build_dct(spc_dct,rxn_param_dct)
 
 # SORTING: sort the mech and build the sorted rxn param dct
-sorted_idx,cmts_dct = mechanalyzer.parser.mech.sort_mechanism(mech_info,spc_dct,SORT_STR,ISOLATE_SPECIES)
+sorted_idx,cmts_dct,spc_dct = mechanalyzer.parser.mech.sort_mechanism(mech_info,spc_dct,SORT_STR,ISOLATE_SPECIES)
 rxn_param_dct_sorted = mechanalyzer.parser.mech.reordered_mech(rxn_param_dct,sorted_idx,cmts_dct)
 
 # WRITE THE NEW MECHANISM
