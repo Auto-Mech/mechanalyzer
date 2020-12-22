@@ -64,7 +64,7 @@ class SORT_MECH:
         sort_optns_dct = {
             'SPECIES':self.group_species,
             'SUBPES':self.conn_chn,
-            'MULT_R1':self.reac_mult,
+            'MULT':self.reac_mult,
             'RXN_CLASS_BROAD':self.rxn_class_broad,
             'RXN_CLASS_GRAPH':self.rxn_class_graph}
 
@@ -87,8 +87,8 @@ class SORT_MECH:
 
         # 2. assign class headers
         # set labels for all the possible criteria
-        criteria_all = ['molecularity','N_of_prods','SPECIES','PES','SUBPES','numC','R1','MULT_R1','RXN_CLASS_BROAD','RXN_CLASS_GRAPH']
-        labels_all = ['molecularity','N_of_prods','SPECIES','PES','SUBPES','N of C atoms','Heavier rct','Multiplicity of rct1','rxn type broad','rxn type']
+        criteria_all = ['molecularity','N_of_prods','SPECIES','PES','SUBPES','numC','R1','MULT','RXN_CLASS_BROAD','RXN_CLASS_GRAPH']
+        labels_all = ['molecularity','N_of_prods','SPECIES','PES','SUBPES','N of C atoms','Heavier rct','Total multiplicity','rxn type broad','rxn type']
         labels = pd.Series(labels_all,index=criteria_all)
         self.class_headers(hierarchy,labels)
 
@@ -202,13 +202,15 @@ class SORT_MECH:
 
     def reac_mult(self,reac_mult_df):
         '''
-        Identify reactant multiplicity from spc_dct
-        update column 'MULT_R1' in reac_mult_df
+        Identify reaction multiplicity from spc_dct
+        update column 'MULT' in reac_mult_df
         '''
         # assign multiplicity values to each reactant
         for rxn in reac_mult_df.index:
-            R1 = self.mech_df['R1'][rxn]
-            reac_mult_df['MULT_R1'][rxn] = str(self.spc_dct[R1]['mult'])
+            mult = 1
+            for Ri in self.mech_df['rct_names_lst'][rxn]:
+                mult *= self.spc_dct[Ri]['mult']
+            reac_mult_df['MULT'][rxn] = str(mult)
 
         return reac_mult_df
 
