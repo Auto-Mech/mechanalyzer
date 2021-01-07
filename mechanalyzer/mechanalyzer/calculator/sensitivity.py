@@ -2,10 +2,10 @@
 """
 
 import numpy as np
-import cantera as ct
+# import cantera as ct
 import matplotlib.pyplot as plt
 from matplotlib import cm
-from PyPDF2 import PdfFileMerger
+# from PyPDF2 import PdfFileMerger
 import os
 import multiprocessing
 import math

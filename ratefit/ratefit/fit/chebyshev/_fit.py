@@ -119,8 +119,8 @@ def conv_dct_to_array(ktp_dct, temps, a_conv_factor=1):
     # Build array and invert from P,T to T,P
     pt_array = np.array(mat_rows)
     tp_array = np.transpose(pt_array)
-   
-    # Convert units 
+
+    # Convert units
     tp_array = tp_array * a_conv_factor
 
     return tp_array
