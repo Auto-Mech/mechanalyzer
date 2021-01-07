@@ -15,7 +15,7 @@ RXN_PROPS = [
 ]
 
 
-def from_dct(reacs, prods, spc_dct, rxn_mul='low', sort=False):
+def from_dct(reacs, prods, spc_dct, rxn_mul='low', sort_info=False):
     """ prepare rxn info and reverse the reactants and products
         if reaction is endothermic
     """
@@ -38,7 +38,7 @@ def from_dct(reacs, prods, spc_dct, rxn_mul='low', sort=False):
     ts_mul = ts_mul_low if rxn_mul == 'low' else ts_mul_high
 
     rxn_info = (rxn_ichs, rxn_chgs, rxn_muls, ts_mul)
-    if sort:
+    if sort_info:
         rxn_info = sort(rxn_info)
 
     return rxn_info
