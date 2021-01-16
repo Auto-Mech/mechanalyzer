@@ -3,6 +3,7 @@ Read the mechanism file
 """
 
 import os
+import pandas as pd
 import errno
 from functools import wraps
 import pandas
@@ -48,7 +49,26 @@ def modify_csv(spc_dct, mod_lst=()):
 
     # Add species
 
+def order_species_by_atomcount(spc_dct):
+    """
+    Returns a species dictionary ordered by increasing N of atoms in the species
+    Useful for nicer mechanism writing
+    """
+    spc_atom_N = pd.Series(index=list(spc_dct.keys()))
+    for key in spc_dct.keys():
+        if 'ts' not in key and 'global' not in key:
+            ich = spc_dct[key]['inchi']
+            fml_dct = automol.inchi.formula(ich)
+            N_atoms = automol.formula.atom_count(fml_dct)
+            spc_atom_N[key] = N_atoms
 
+    spc_atom_N = spc_atom_N.sort_values(ascending=True)
+    # rewrite spc_dct
+    sorted_idx = list(spc_atom_N.index)
+    sorted_val = list(map(spc_dct.get,sorted_idx))
+    spc_dct_ordered = dict(zip(sorted_idx,sorted_val))
+
+    return spc_dct_ordered
 
 
 def write_basis_csv(spc_str, outname='species_hof_basis.csv', path='.', parallel=False):

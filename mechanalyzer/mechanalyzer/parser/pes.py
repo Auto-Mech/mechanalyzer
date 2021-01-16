@@ -3,8 +3,10 @@ Read the mechanism file
 """
 
 import automol
+
 from automol.graph._graph import explicit
 from mechanalyzer.parser import ckin_ as ckin
+from mechanalyzer.parser import submech as submech
 import pandas as pd
 import numpy as np
 import copy
@@ -41,9 +43,9 @@ class SORT_MECH:
         rct_names_lst_ordered = order_rct_bystoich(rct_names_lst,spc_dct=spc_dct) # put heavier reactant first
         prd_names_lst_ordered = order_rct_bystoich(prd_names_lst,spc_dct=spc_dct) # put heavier product first
         R1,R2 = get_S1S2(rct_names_lst_ordered) 
-        numC,numN = count_C_N(formulas_dct)
-        data = np.array([rct_names_lst,prd_names_lst,rct_names_lst_ordered,prd_names_lst_ordered,R1,R2,molecularity,N_of_prods,formula_str_lst,numC,numN],dtype=object).T
-        self.mech_df = pd.DataFrame(data,index=rxn_name_lst,columns=['rct_names_lst','prd_names_lst','rct_names_lst_ord','prd_names_lst_ord','R1','R2','molecularity','N_of_prods','PES','numC','numN'])
+        numC,numN = count_atoms(formulas_dct)
+        data = np.array([rct_names_lst,prd_names_lst,rct_names_lst_ordered,prd_names_lst_ordered,R1,R2,molecularity,N_of_prods,formula_str_lst],dtype=object).T
+        self.mech_df = pd.DataFrame(data,index=rxn_name_lst,columns=['rct_names_lst','prd_names_lst','rct_names_lst_ord','prd_names_lst_ord','R1','R2','molecularity','N_of_prods','PES'])
         self.spc_dct = spc_dct # set for later use
         
 
@@ -51,12 +53,19 @@ class SORT_MECH:
         '''
         hierarchy = list of hierarchical criteria for the mech organization
         sorts the mechanism according to the given criteria
-        species_list = list of species you want to isolate (empty if you want to process the full mech)
+        species_list = list of species you want to isolate (empty if you want to process the full mech). if you want to extract a fuel submech:  ['speciesname','SUBMECH']
         '''
         
         # if species_list is not empty: pre-process the mechanism
         if len(species_list) > 0:
-            self.filter_byspecies(species_list)
+            if species_list[-1] == 'SUBMECH':
+                #select a subset of species appropriately according to the stoichiometries specified in submech.py
+                species_list, species_subset_df = submech.species_subset(species_list[0],self.spc_dct)
+                # check compatibility with selected hierarchy: cannot have headers
+                if hierarchy[-1] != 0:
+                    print('error: submech extraction already provides headers. incompatible with other headers. please select 0')
+                
+            self.mech_df,self.spc_dct = self.filter_byspecies(species_list)
             self.species_list = species_list
 
         # 0. look for keywords and sort accordingly
@@ -87,8 +96,8 @@ class SORT_MECH:
 
         # 2. assign class headers
         # set labels for all the possible criteria
-        criteria_all = ['molecularity','N_of_prods','SPECIES','PES','SUBPES','numC','R1','MULT','RXN_CLASS_BROAD','RXN_CLASS_GRAPH']
-        labels_all = ['molecularity','N_of_prods','SPECIES','PES','SUBPES','N of C atoms','Heavier rct','Total multiplicity','rxn type broad','rxn type']
+        criteria_all = ['molecularity','N_of_prods','SPECIES','PES','SUBPES','R1','MULT','RXN_CLASS_BROAD','RXN_CLASS_GRAPH']
+        labels_all = ['molecularity','N_of_prods','SPECIES','PES','SUBPES','Heavier rct','Total multiplicity','rxn type broad','rxn type']
         labels = pd.Series(labels_all,index=criteria_all)
         self.class_headers(hierarchy,labels)
 
@@ -97,6 +106,7 @@ class SORT_MECH:
         Find all reactions involving species of the species_list given as input
         make another spc_dct containing only the species appearing in the reactions of interest
         """
+        mech_df = copy.deepcopy(self.mech_df)
         # check that all species selected are in the species dictionary
         if any(i not in self.spc_dct.keys() for i in species_list):
             print('Error in ISOLATE_SPECIES: not all species are in the species list ')
@@ -104,13 +114,13 @@ class SORT_MECH:
 
         spc_list = []
         # for all reactions in the dataframe: check if you have the species of the selected list. otherwise remove the reaction
-        for ii in self.mech_df.index:
-            rcts = list(self.mech_df['rct_names_lst'][ii])
-            prds = list(self.mech_df['prd_names_lst'][ii])
+        for ii in mech_df.index:
+            rcts = list(mech_df['rct_names_lst'][ii])
+            prds = list(mech_df['prd_names_lst'][ii])
             # check if one of the species in the list is among reactants or products of the reaction considered
             if (any(rct == species for species in species_list for rct in rcts) == False
                 and any(prd == species for species in species_list for prd in prds) == False):
-                self.mech_df = self.mech_df.drop([ii])
+                mech_df = mech_df.drop([ii])
             else:
                 # append all species to the list
                 spc_list.extend(rcts)
@@ -120,7 +130,9 @@ class SORT_MECH:
         spc_list = list(set(spc_list))
         # new spc_dct
         spc_dct_val = list(map(self.spc_dct.get,spc_list))
-        self.spc_dct = dict(zip(spc_list,spc_dct_val))
+        spc_dct = dict(zip(spc_list,spc_dct_val))
+
+        return mech_df,spc_dct
 
 
     def class_headers(self,hierarchy,labels):
@@ -218,8 +230,16 @@ class SORT_MECH:
         '''
         Identify the reaction class by the graph approach
         '''
-        print('classification by broad reaction classes is not available yet')
-        exit()
+        for rxn in rxn_clB_df.index:
+            rcts = self.mech_df['rct_names_lst_ord'][rxn]
+            prds = self.mech_df['prd_names_lst_ord'][rxn]
+            if len(rcts) > 1:
+                # bimolecular reaction classification
+                rxn_class_broad = submech.classify_bimol(rcts,prds,self.spc_dct)
+            else:
+                # unimolecular reaction classification
+                rxn_class_broad = submech.classify_unimol(rcts,prds,self.spc_dct)
+            rxn_clB_df['RXN_CLASS_BROAD'][rxn] = rxn_class_broad
 
         return rxn_clB_df
 
@@ -405,7 +425,7 @@ def cmts_string(name,label,cltype):
 
     return rxnclass
 
-def count_C_N(fml_list):
+def count_atoms(fml_list):
     '''
     count C and N atoms in formula list
     should go somewhere else?

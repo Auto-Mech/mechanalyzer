@@ -96,6 +96,7 @@ def write_reordered_mech(elem_tuple,spc_dct,rxn_param_dct_sorted,cmts_dct,sorted
     cmts_dct: comments dictionary associated with the sorted mechanism
     sortedmech_name: name of the final mech
     '''
-
+    # reorder spc_dct before writing to make it nicer
+    spc_dct = mechanalyzer.parser.spc.order_species_by_atomcount(spc_dct)
     # write
     chemkin_io.writer.mechanism.write_chemkin_file(elem_tuple=elem_tuple,spc_dct=spc_dct,rxn_param_dct=rxn_param_dct_sorted,filename=sortedmech_name,comments=cmts_dct)
