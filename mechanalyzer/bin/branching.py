@@ -4,6 +4,7 @@
 import os
 import pandas as pd
 import mechanalyzer
+import chemkin_io
 from _format import read_file
 from _format import format_rxn
 from _format import chk_rxn

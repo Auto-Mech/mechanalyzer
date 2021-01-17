@@ -14,7 +14,7 @@ import pandas as pd
 import numpy as np
 
 
-def species_subset(fuel,spc_dct):
+def species_subset(fuel, spc_dct):
     """
     fuel: name of the fuel (one of the possible isomers)
     given the name of a fuel in a spc_dct, it finds all species involved in its combustion mech by stoichiometry:
@@ -32,53 +32,55 @@ def species_subset(fuel,spc_dct):
     # extract formulas
     fml_df = extract_fml_df(spc_dct)
 
-
     # generate a list of stoichiometries to extract and the corresponding labels
-    stoich_fuel = fml_df.loc[fuel][['nC','nH','nO']].values
+    stoich_fuel = fml_df.loc[fuel][['nC', 'nH', 'nO']].values
 
     stoich_dct = {
-        'fuel':stoich_fuel,
-        'fuel_rad':stoich_fuel+[0,-1,0],
-        'fuel_add_H':stoich_fuel+[0,1,0],
-        'fuel_add_O':stoich_fuel+[0,0,1],
-        'fuel_add_OH':stoich_fuel+[0,1,1],
-        'fuel_add_O2':stoich_fuel+[0,0,2],
-        'R_O':stoich_fuel+[0,-1,1],
-        'R_O2':stoich_fuel+[0,-1,2],
-        'R_O4':stoich_fuel+[0,-1,4],
-        'R_O3-H':stoich_fuel+[0,-2,3]}
+        'fuel': stoich_fuel,
+        'fuel_rad': stoich_fuel+[0, -1, 0],
+        'fuel_add_H': stoich_fuel+[0, 1, 0],
+        'fuel_add_O': stoich_fuel+[0, 0, 1],
+        'fuel_add_OH': stoich_fuel+[0, 1, 1],
+        'fuel_add_O2': stoich_fuel+[0, 0, 2],
+        'R_O': stoich_fuel+[0, -1, 1],
+        'R_O2': stoich_fuel+[0, -1, 2],
+        'R_O4': stoich_fuel+[0, -1, 4],
+        'R_O3-H': stoich_fuel+[0, -2, 3]}
 
     # extract desired species and assign labels
 
-    for stoich_type,stoich in stoich_dct.items():
-        species = extract_species(stoich,fml_df)
-        series = pd.Series(stoich_type,index=species)
+    for stoich_type, stoich in stoich_dct.items():
+        species = extract_species(stoich, fml_df)
+        series = pd.Series(stoich_type, index=species)
         species_subset_df = species_subset_df.append(series)
         species_list = species_list + species
-    
+
     print(species_subset_df)
     print(species_list)
-    
-    return species_list,species_subset_df
+
+    return species_list, species_subset_df
+
 
 def extract_fml_df(spc_dct):
     """
     given species dictionary, returns
     fml_df: dataframe with index = species names; columns 'fml' (stoichiometry), 'nC','nH','nO' (number of C/H/O atmoms in the formula)
     """
-    fml_df = pd.DataFrame(index=list(spc_dct.keys()),columns=['fml','nC','nH','nO'])
+    fml_df = pd.DataFrame(index=list(spc_dct.keys()),
+                          columns=['fml', 'nC', 'nH', 'nO'])
     for key in spc_dct.keys():
         if 'ts' not in key and 'global' not in key:
             ich = spc_dct[key]['inchi']
             fml_dct = automol.inchi.formula(ich)
             fml_df['fml'][key] = automol.formula.string2(fml_dct)
-            fml_df['nC'][key] = automol.formula.element_count(fml_dct,'C')
-            fml_df['nH'][key] = automol.formula.element_count(fml_dct,'H')
-            fml_df['nO'][key] = automol.formula.element_count(fml_dct,'O')
+            fml_df['nC'][key] = automol.formula.element_count(fml_dct, 'C')
+            fml_df['nH'][key] = automol.formula.element_count(fml_dct, 'H')
+            fml_df['nO'][key] = automol.formula.element_count(fml_dct, 'O')
 
     return fml_df
 
-def extract_species(n_CHO,fml_df):
+
+def extract_species(n_CHO, fml_df):
     """
     extracts species corresponding to a given stoichiometry n_CHO from the formulas dataframe
     n_CHO: numpy array [x,y,z] where x = n of C atoms, y = n of H atoms, z = number of O atoms
@@ -88,12 +90,13 @@ def extract_species(n_CHO,fml_df):
     nC = n_CHO[0]
     nH = n_CHO[1]
     nO = n_CHO[2]
-    species_subset = list(fml_df[(fml_df['nC']==nC)&(fml_df['nH']==nH)&(fml_df['nO']==nO)].index)
+    species_subset = list(fml_df[(fml_df['nC'] == nC) & (
+        fml_df['nH'] == nH) & (fml_df['nO'] == nO)].index)
 
     return species_subset
 
 
-def classify_unimol(rct_names,prd_names,spc_dct):
+def classify_unimol(rct_names, prd_names, spc_dct):
     """
     Classifies unimolecular reaction from reactants and products names (tuples)
     - A=B: isomerization
@@ -111,7 +114,8 @@ def classify_unimol(rct_names,prd_names,spc_dct):
 
     return rxn_class_broad
 
-def classify_bimol(rct_names,prd_names,spc_dct):
+
+def classify_bimol(rct_names, prd_names, spc_dct):
     """
     Classifies bimolecular reactions from reactants and products names (tuples)
       with 1 product
