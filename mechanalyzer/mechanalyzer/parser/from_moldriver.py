@@ -214,4 +214,3 @@ def conv_termol_to_bimol(rct_zmas, prd_zmas):
         prd_zmas = [prd_zmas[0], new_zma]
 
     return rct_zmas, prd_zmas, rct_tors_names
-

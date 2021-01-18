@@ -5,7 +5,11 @@
 import os
 
 # Format strings
+
+
 def format_rxn(rxn):
+    """ format reaction into a string
+    """
     return '{} = {}'.format('+'.join(rxn[0]), '+'.join(rxn[1]))
 
 

@@ -90,14 +90,15 @@ def rates(mech1_str, mech2_str, t_ref, temps, pressures,
         mech1_ktp_dct, mech2_ktp_dct, temps,
         mech2_thermo_dct=mech2_thermo_dct,
         ignore_reverse=ignore_reverse
-        )
+    )
 
     # import sys
     # sys.exit()
 
     # Build list of CHEMKIN mechanism names for plotting
     if dct_idx != 'name':
-        ktp_dct = calculator.combine.conv_ich_to_name_ktp_dct(ktp_dct, mech1_csv_str)
+        ktp_dct = calculator.combine.conv_ich_to_name_ktp_dct(
+            ktp_dct, mech1_csv_str)
     names = list(ktp_dct.keys())
 
     print('mech dcts')

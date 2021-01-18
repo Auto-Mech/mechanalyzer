@@ -1,30 +1,32 @@
-import chemkin_io.parser as parser
+"""
+reads mechanism file in chemkin format
+"""
+
 import sys
+import chemkin_io.parser as parser
 
 MECH_FILENAME = sys.argv[1]
-
 
 
 def read_mech_file(mech_filename):
     """ Takes a mechanism file in chemkin format and produces a rxn_param_dct,
         an elements tuple, and a spc_nasa7_dct (this last item only if the thermo
         is included).
-
     """
     # Get the string for the entire file
-    with open(mech_filename) as f:
-        mech_str = f.read()
-    f.close()
+    with open(mech_filename) as mech_file:
+        mech_str = mech_file.read()
+    mech_file.close()
 
     # Get the strings for each block (skipping species for now...)
     elem_block_str = parser.mechanism.element_block(mech_str)
     rxn_block_str = parser.mechanism.reaction_block(mech_str)
     thermo_block_str = parser.mechanism.thermo_block(mech_str)
-
+    units = parser.mechanism.reaction_units(mech_str)
     # Process the reaction block
     if rxn_block_str:
-        rxn_param_dct = parser.reaction.param_dct(rxn_block_str)
-    else: 
+        rxn_param_dct = parser.reaction.param_dct(rxn_block_str,units[0],units[1])
+    else:
         print(f'No reaction block detected in the file {mech_filename}')
         rxn_param_dct = None
 

@@ -4,10 +4,9 @@ Read the a CHEMKIN mechanism file
 
 import automol
 import chemkin_io
-import numpy as np
 
 
-def parse(mech_str, spc_dct,sort_rxns):
+def parse(mech_str, spc_dct, sort_rxns):
     """ parse a chemkin formatted mechanism file
     """
 
@@ -20,25 +19,25 @@ def parse(mech_str, spc_dct,sort_rxns):
         map(chemkin_io.parser.reaction.product_names, rxn_strs))
 
     # delete duplicate names
-    rct_names_lst,prd_names_lst = deldup(rct_names_lst,prd_names_lst)
+    rct_names_lst, prd_names_lst = deldup(rct_names_lst, prd_names_lst)
 
     # Build the inchi dct
     ich_dct = get_ich_dct(spc_dct)
 
     # extract mech info
-    formula_dct_lst, formula_str_lst, rxn_name_lst = mech_info(rct_names_lst,prd_names_lst,ich_dct)
+    formula_dct_lst, formula_str_lst, rxn_name_lst = mech_info(
+        rct_names_lst, prd_names_lst, ich_dct)
 
-    # Sort the reactions if desired	
+    # Sort the reactions if desired
 
-    if sort_rxns:	
-        rxn_info_lst = list(	    
-            zip(formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst))	
-        fml_dct = dict(zip(formula_str_lst,formula_dct_lst))
-        rxn_info_lst.sort()	
-        formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst = zip(	
+    if sort_rxns:
+        rxn_info_lst = list(
+            zip(formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst))
+        fml_dct = dict(zip(formula_str_lst, formula_dct_lst))
+        rxn_info_lst.sort()
+        formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst = zip(
             *rxn_info_lst)
-        formula_dct_lst = list(map(fml_dct.get,formula_str_lst))
-
+        formula_dct_lst = list(map(fml_dct.get, formula_str_lst))
 
     return formula_dct_lst, formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst
 
@@ -54,7 +53,8 @@ def get_ich_dct(spc_dct):
 
     return ich_dct
 
-def mech_info(rct_names_lst, prd_names_lst,ich_dct):
+
+def mech_info(rct_names_lst, prd_names_lst, ich_dct):
     """
     Derives reactants and products formulas and reaction names
     """
@@ -76,15 +76,13 @@ def mech_info(rct_names_lst, prd_names_lst,ich_dct):
         formula_str = automol.formula.string2(formula_dct)
         formula_dct_lst.append(formula_dct)
         formula_str_lst.append(formula_str)
-   
+
     return formula_dct_lst, formula_str_lst, rxn_name_lst
 
 
-
-
-def deldup(rct_names_lst,prd_names_lst):
+def deldup(rct_names_lst, prd_names_lst):
     '''
-    delete duplicate name 
+    delete duplicate name
     '''
 
     rct_names_new = []
@@ -103,7 +101,4 @@ def deldup(rct_names_lst,prd_names_lst):
             rct_names_new.append(rct_names)
             prd_names_new.append(prd_names)
 
-    return rct_names_new,prd_names_new
-        
-
-
+    return rct_names_new, prd_names_new

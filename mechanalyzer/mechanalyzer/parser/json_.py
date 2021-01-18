@@ -10,13 +10,14 @@ import json
 import collections
 
 
-def load_json(json_file, json_path='.'): 
+def load_json(json_file, json_path='.'):
     """ load json file mechanism file
     """
     with open(os.path.join(json_path, json_file)) as jsonfile:
         inp_data = json.load(jsonfile,
-            object_pairs_hook=collections.OrderedDict)
+                             object_pairs_hook=collections.OrderedDict)
     return inp_data
+
 
 def _parse_reactions(inp_data):
     mech_data = []
@@ -30,7 +31,8 @@ def _parse_reactions(inp_data):
         else:
             for entry in inp_data[reaction]:
                 mech_data.append(entry)
-    return mech_data            
+    return mech_data
+
 
 def parse_json(mech_file, mech_path='.', check_stereo=False):
     """ parse a json file mechanism file
@@ -61,7 +63,7 @@ def parse_json(mech_file, mech_path='.', check_stereo=False):
     unq_rxn_lst = []
     fll_rxn_lst = []
     # idxp = 0
-    #for idx, reaction in enumerate(mech_data):
+    # for idx, reaction in enumerate(mech_data):
     #    if 'reactants' in reaction and 'products' in reaction:
     #        if reaction['name'] in fll_rxn_lst:
     #            print('duplicate reaction found:', reaction['name'], idx)
@@ -93,9 +95,9 @@ def parse_json(mech_file, mech_path='.', check_stereo=False):
                 rct_ichs.append(ich)
                 rct_muls.append(rct['multiplicity'])
             #rad_rad_reac = True
-            #if len(rct_ichs) == 1:
+            # if len(rct_ichs) == 1:
             #    rad_rad_reac = False
-            #else:
+            # else:
             #    if min(rct_muls) == 1:
             #        rad_rad_reac = False
             for prd in reaction['products']:
@@ -109,14 +111,14 @@ def parse_json(mech_file, mech_path='.', check_stereo=False):
                 prd_ichs.append(ich)
                 prd_muls.append(prd['multiplicity'])
             rad_rad_prod = True
-            #if len(prd_ichs) == 1:
+            # if len(prd_ichs) == 1:
             #    rad_rad_prod = False
-            #else:
+            # else:
             #    if min(prd_muls) == 1:
             #        rad_rad_prod = False
 
             #print('rad_rad_sort test:', rad_rad_sort)
-            #if rad_rad_sort and not rad_rad_reac and not rad_rad_prod:
+            # if rad_rad_sort and not rad_rad_reac and not rad_rad_prod:
             #    continue
            # rct_names_lst.append(rct_names)
             rct_smis_lst.append(rct_smis)
@@ -127,21 +129,21 @@ def parse_json(mech_file, mech_path='.', check_stereo=False):
             prd_ichs_lst.append(prd_ichs)
             prd_muls_lst.append(prd_muls)
         rxn_name_lst.append(reaction['family'])
-        #if 'Sensitivity' in reaction:
+        # if 'Sensitivity' in reaction:
         #    rxn_sens.append(reaction['sensitivity'])
-        #else:
+        # else:
         #    rxn_sens.append('')
-        #if 'Uncertainty' in reaction:
+        # if 'Uncertainty' in reaction:
         #    rxn_unc.append(reaction['uncertainty'])
-        #else:
+        # else:
         #    rxn_unc.append('')
-        #if 'value' in reaction:
+        # if 'value' in reaction:
         #    rxn_val.append(reaction['value'])
-        #else:
+        # else:
         #    rxn_val.append('')
-        #if 'family' in reaction:
+        # if 'family' in reaction:
         #    rxn_fam.append(reaction['family'])
-        #else:
+        # else:
         #    rxn_fam.append('')
 
         formula_dct = ''
@@ -220,16 +222,16 @@ def parse_json(mech_file, mech_path='.', check_stereo=False):
     spc_str += 'END'
     spc_str += '\n'
     spc_str += '\n'
- 
+
     sort_smiles_path = os.path.join(mech_path, 'smiles_sort.csv')
     with open(sort_smiles_path, 'w') as sorted_csv_file:
         sorted_csv_file.write(csv_str)
     rxn_info_lst = list(zip(
-       #formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst, rxn_sens,
-       # rxn_unc, rxn_val, rxn_fam, rct_smis_lst, rct_ichs_lst, rct_muls_lst,
-       # prd_smis_lst, prd_ichs_lst, prd_muls_lst))
-       formula_str_lst, rxn_name_lst,
-        rct_smis_lst, rct_ichs_lst, rct_muls_lst, 
+        #formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst, rxn_sens,
+        # rxn_unc, rxn_val, rxn_fam, rct_smis_lst, rct_ichs_lst, rct_muls_lst,
+        # prd_smis_lst, prd_ichs_lst, prd_muls_lst))
+        formula_str_lst, rxn_name_lst,
+        rct_smis_lst, rct_ichs_lst, rct_muls_lst,
         prd_smis_lst, prd_ichs_lst, prd_muls_lst))
     rxn_info_lst = sorted(rxn_info_lst, key=lambda x: (x[0]))
     old_formula = rxn_info_lst[0][0]
@@ -256,22 +258,25 @@ def parse_json(mech_file, mech_path='.', check_stereo=False):
 #    formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst, rxn_sens,
 #    rxn_unc, rxn_val, rxn_fam, rct_smis_lst, rct_ichs_lst, rct_muls_lst,
 #    prd_smis_lst, prd_ichs_lst, prd_muls_lst = zip(*rxn_info_lst)
-    formula_str_lst, rxn_name_lst, rct_smis_lst, rct_ichs_lst, rct_muls_lst, prd_smis_lst, prd_ichs_lst, prd_muls_lst = zip(*rxn_info_lst)
+    formula_str_lst, rxn_name_lst, rct_smis_lst, rct_ichs_lst, rct_muls_lst, prd_smis_lst, prd_ichs_lst, prd_muls_lst = zip(
+        *rxn_info_lst)
     #formula_str_lst, rxn_name_lst, rct_names_lst, rct_smis_lst, rct_ichs_lst, rct_muls_lst, prd_names_lst, prd_smis_lst, prd_ichs_lst, prd_muls_lst = zip(*rxn_info_lst)
 
     rxn_namep_lst = []
     rxn_namep_str = 'REACTIONS   KCAL/MOLE   MOLES'
     rxn_namep_str += '\n'
-    spc_dat = zip(unq_smi_lst, unq_ich_lst, unq_mul_lst, unq_lab_lst, unq_lab_idx_lst)
+    spc_dat = zip(unq_smi_lst, unq_ich_lst, unq_mul_lst,
+                  unq_lab_lst, unq_lab_idx_lst)
     for i, _ in enumerate(rxn_name_lst):
         rxn_namep = []
         rct_labs = []
         rct_dat = zip(rct_smis_lst[i], rct_ichs_lst[i], rct_muls_lst[i])
         for smis, rct_ich, rct_mul in rct_dat:
             j = 0
-            spc_dat = zip(unq_smi_lst, unq_ich_lst, unq_mul_lst, unq_lab_lst, unq_lab_idx_lst)
+            spc_dat = zip(unq_smi_lst, unq_ich_lst, unq_mul_lst,
+                          unq_lab_lst, unq_lab_idx_lst)
             for smi, ich, mul, lab, lab_idx in spc_dat:
-                j+=1
+                j += 1
                 if rct_ich == ich and rct_mul == mul:
                     if lab_idx == 0:
                         rct_labs.append(lab)
@@ -282,7 +287,8 @@ def parse_json(mech_file, mech_path='.', check_stereo=False):
         prd_labs = []
         prd_dat = zip(prd_smis_lst[i], prd_ichs_lst[i], prd_muls_lst[i])
         for smis, prd_ich, prd_mul in prd_dat:
-            spc_dat = zip(unq_smi_lst, unq_ich_lst, unq_mul_lst, unq_lab_lst, unq_lab_idx_lst)
+            spc_dat = zip(unq_smi_lst, unq_ich_lst, unq_mul_lst,
+                          unq_lab_lst, unq_lab_idx_lst)
             for smi, ich, mul, lab, lab_idx in spc_dat:
                 if prd_ich == ich and prd_mul == mul:
                     if lab_idx == 0:
@@ -293,7 +299,7 @@ def parse_json(mech_file, mech_path='.', check_stereo=False):
         prd_label = '+'.join(prd_labs)
         rate_str = str('  1.e10   1.0   10000.  ! Sens = ')
         rxn_namep = (
-            #rct_label + ' <=> ' + prd_label + rate_str + str(rxn_sens[i]))
+            # rct_label + ' <=> ' + prd_label + rate_str + str(rxn_sens[i]))
             rct_label + ' <=> ' + prd_label + rate_str)
         rxn_namep_str += rxn_namep
         rxn_namep_str += '\n'
