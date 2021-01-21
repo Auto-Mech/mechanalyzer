@@ -20,7 +20,7 @@ def build_pes_dct(job_path, mech_type,
     # Build the total PES dct
     mech_info = mechanalyzer.parser.pes.read_mechanism_file(
         mech_str, mech_type, spc_dct, sort_rxns=sort_rxns)
-    pes_dct = mechanalyzer.parser.pes.build_pes_dct(*mech_info)
+    pes_dct = mechanalyzer.parser.pes.build_pes_dct(*mech_info[1:])
 
     # Build an index dct relating idx to formula
     idx_dct, form_dct = build_pes_idx_dct(pes_dct)
@@ -139,6 +139,7 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct,
                     prd_names_lst.append(pes_prd_names_lst[chn_idx-1])
                     rxn_name_lst.append(pes_rxn_name_lst[chn_idx-1])
                     rxn_model_lst.append(run_obj_dct[(pes_idx, chn_idx)])
+                    print('chn_idx', chn_idx)
                     rxn_chn_idxs.append(chn_idx)
 
             # Form reaction list (is empty if no chnls requested on sub pes)
@@ -185,32 +186,3 @@ def format_run_rxn_lst(rct_names_lst, prd_names_lst,
         )
 
     return run_lst
-
-
-# OLD FUNCTION FOR TERMOL RXNS TAKEN FROM MOLDRIVER
-def conv_termol_to_bimol(rct_zmas, prd_zmas):
-    """ Convert termolecular reaction to a bimolecular reaction
-    """
-    # Force a trimolecular reaction to behave like a bimolecular.
-    # Termolecular spc often arise from the direct decomp of some init product.
-    # Need to be able to find the TS for channel preceding direct decomp.
-    rct_tors_names = []
-    if len(rct_zmas) > 2:
-        ret = automol.zmatrix.ts.addition(rct_zmas[1:-1], [prd_zmas[-1]])
-        new_zma, dist_name, rct_tors_names = ret
-        new_zma = automol.zmatrix.standard_form(new_zma)
-        babs2 = automol.zmatrix.get_babs2(new_zma, dist_name)
-        new_zma = automol.zmatrix.set_values(
-            new_zma, {dist_name: 2.2, babs2: 180. * phycon.DEG2RAD})
-        rct_zmas = [rct_zmas[0], new_zma]
-    elif len(prd_zmas) > 2:
-        ret = automol.zmatrix.ts.addition(prd_zmas[1:-1], [prd_zmas[-1]])
-        new_zma, dist_name, rct_tors_names = ret
-        new_zma = automol.zmatrix.standard_form(new_zma)
-        babs1 = automol.zmatrix.get_babs1(new_zma, dist_name)
-        aabs1 = babs1.replace('D', 'A')
-        new_zma = automol.zmatrix.set_values(
-            new_zma, {dist_name: 2.2, aabs1: 170. * phycon.DEG2RAD})
-        prd_zmas = [prd_zmas[0], new_zma]
-
-    return rct_zmas, prd_zmas, rct_tors_names

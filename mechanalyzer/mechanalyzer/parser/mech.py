@@ -65,22 +65,23 @@ def sort_mechanism(mech_info, spc_dct, sort_str, isolate_species):
     '''
     mech_info: formulas, reaction names
     spc_dct: species dictionary
-    SORT_STR: list with sorting criteria
-    ISOLATE_SPECIES: list of species you want to isolate in the final mechanism
+    sort_str: list with sorting criteria
+    isolate_species: list of species you want to isolate in the final mechanism
 
     calls sorting functions in mechanalyzer/pes
     returns the rxn indices associated with the comments about sorting
     '''
     # call the sorting class
-    srt_mch = mechanalyzer.parser.pes.SORT_MECH(mech_info, spc_dct)
+    srt_mch = mechanalyzer.parser.sort.SortMech(mech_info, spc_dct)
     # sort according to the desired criteria
     srt_mch.sort(sort_str, isolate_species)
     # returns the sorted indices and the corresponding comments
     sorted_idx, cmts_dct, spc_dct = srt_mch.return_mech_df()
+
     return sorted_idx, cmts_dct, spc_dct
 
 
-def reordered_mech(rxn_param_dct, sorted_idx, cmts_dct):
+def reordered_mech(rxn_param_dct, sorted_idx):
     '''
     rxn_param_dct: non-sorted reactions
     sorted_idx: indices of the rxn_param_dct in the desired order
@@ -92,9 +93,9 @@ def reordered_mech(rxn_param_dct, sorted_idx, cmts_dct):
     return rxn_param_dct_sorted
 
 
-def write_reordered_mech(elem_tuple, spc_dct, rxn_param_dct_sorted, cmts_dct, sortedmech_name):
+def write_mech(elem_tuple, spc_dct, rxn_param_dct_sorted, sortedmech_name, comments=None):
     '''
-    MECH_STR: full mech to extract elements name
+    elem_tuple: tuple with elements
     spc_dct: species dictionary
     rxn_param_dct_sorted: reaction parameters dictionary in the desired order
     cmts_dct: comments dictionary associated with the sorted mechanism
@@ -105,4 +106,7 @@ def write_reordered_mech(elem_tuple, spc_dct, rxn_param_dct_sorted, cmts_dct, so
     # write
     chemkin_io.writer.mechanism.write_chemkin_file(
         elem_tuple=elem_tuple, spc_dct=spc_dct, rxn_param_dct=rxn_param_dct_sorted,
-        filename=sortedmech_name, comments=cmts_dct)
+        filename=sortedmech_name, comments=comments)
+
+
+
