@@ -145,13 +145,13 @@ def _unimol_to_unimol(func, rct_gra):
 
 RXN_DCT = {
     'hydrogen_abstractions': functools.partial(
-        _bimol, automol.graph.reac.prod_hydrogen_abstraction),
+        _bimol, automol.reac.prod_hydrogen_abstraction),
     'homolytic_scissions': functools.partial(
-        _unimol, automol.graph.reac.prod_homolytic_scission),
+        _unimol, automol.reac.prod_homolytic_scission),
     'beta_scissions': functools.partial(
-        _unimol, automol.graph.reac.prod_beta_scission),
+        _unimol, automol.reac.prod_beta_scission),
     'hydrogen_migrations': functools.partial(
-        _unimol_to_unimol, automol.graph.reac.prod_hydrogen_migration)
+        _unimol_to_unimol, automol.reac.prod_hydrogen_migration)
 }
 
 

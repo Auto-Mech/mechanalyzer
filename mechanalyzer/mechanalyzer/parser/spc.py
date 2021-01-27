@@ -15,7 +15,7 @@ import signal
 
 from mechanalyzer.parser.csv_ import csv_dct
 from mechanalyzer.parser.csv_ import read_csv_headers
-from routines.pf.thermo import basis
+from mechroutines.pf.thermo import basis
 
 
 # HACK FOR A MECHANISM
