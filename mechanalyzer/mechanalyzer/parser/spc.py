@@ -7,12 +7,11 @@ import pandas as pd
 import errno
 from functools import wraps
 import pandas
-import automol
 import math
 import multiprocessing
 import random
 import signal
-
+import automol
 from mechanalyzer.parser.csv_ import csv_dct
 from mechanalyzer.parser.csv_ import read_csv_headers
 from mechroutines.pf.thermo import basis

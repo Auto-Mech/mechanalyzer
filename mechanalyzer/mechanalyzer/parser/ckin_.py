@@ -69,15 +69,25 @@ def mech_info(rct_names_lst, prd_names_lst, ich_dct):
         rxn_name = '='.join(['+'.join(rct_names), '+'.join(prd_names)])
         rxn_name_lst.append(rxn_name)
         rct_ichs = list(map(ich_dct.__getitem__, rct_names))
-        formula_dct = ''
-        for rct_ich in rct_ichs:
-            formula_i_dct = automol.inchi.formula(rct_ich)
-            formula_dct = automol.formula.join(formula_dct, formula_i_dct)
-        formula_str = automol.formula.string2(formula_dct)
+        formula_dct, formula_str = get_fml(rct_ichs)
         formula_dct_lst.append(formula_dct)
         formula_str_lst.append(formula_str)
 
     return formula_dct_lst, formula_str_lst, rxn_name_lst
+
+
+def get_fml(rxn_ichs):
+    '''
+    rxn_icn: inchis of the species of one side of a reaction (ich1, ich2, ..)
+    returns: formula dictionary, formula string
+    '''
+    formula_dct = ''
+    for rct_ich in rxn_ichs:
+        formula_i_dct = automol.inchi.formula(rct_ich)
+        formula_dct = automol.formula.join(formula_dct, formula_i_dct)
+    formula_str = automol.formula.string2(formula_dct)
+
+    return formula_dct, formula_str
 
 
 def deldup(rct_names_lst, prd_names_lst):

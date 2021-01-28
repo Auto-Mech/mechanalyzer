@@ -107,6 +107,3 @@ def write_mech(elem_tuple, spc_dct, rxn_param_dct_sorted, sortedmech_name, comme
     chemkin_io.writer.mechanism.write_chemkin_file(
         elem_tuple=elem_tuple, spc_dct=spc_dct, rxn_param_dct=rxn_param_dct_sorted,
         filename=sortedmech_name, comments=comments)
-
-
-
