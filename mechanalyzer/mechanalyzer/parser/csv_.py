@@ -7,14 +7,16 @@ from io import StringIO
 import pandas
 from automol.smiles import inchi as _inchi
 from automol.inchi import smiles as _smiles
+from automol.inchi import formula as _fml_inchi
+from automol.formula import string2 as _fml_str2
 
 
 # What columns are allowed in the CSV file
 ALLOWED_HEADERS = (
-    'name', 'smiles', 'inchi', 'inchikey', 'mult', 'charge', 'sens'
+    'name', 'smiles', 'inchi', 'inchikey', 'mult', 'charge', 'sens', 'fml'
 )
 DEFAULT_HEADERS = (
-    'smiles', 'inchi', 'inchikey', 'mult', 'charge', 'sens'
+    'smiles', 'inchi', 'inchikey', 'mult', 'charge', 'sens', 'fml'
 )
 
 
@@ -215,6 +217,29 @@ def _read_csv_sensitivity(data, idxs):
     return spc_dct
 
 
+def _read_csv_fml(data, idxs):
+    """ Build the species dictionary relating inchis to formula.
+
+        :param data: information from input species.csv file
+        :type data: pandas
+        :param idxs: index for the dict to be created
+        :type idxs: list(str)
+        :return spc_dct: output dictionary for all species
+        :rtype spc_dct: dict[name: formula string]
+    """
+    # get inchis first
+    spc_dct_inchis = _read_csv_inchi(data, idxs)
+
+    if hasattr(data, 'fml'):
+        spc_dct = dict(zip(idxs, data.fml))
+    else:
+        ichs_lst = list(spc_dct_inchis.values())
+        fml = [_fml_inchi(ichs) for ichs in ichs_lst]
+        spc_dct = dict(zip(idxs, fml))
+
+    return spc_dct
+
+
 def _read_csv_headers(data):
     """ Get the names of the CSV headers
     """
@@ -271,7 +296,8 @@ READERS = {
     'inchikey': _read_csv_inchikey,
     'mult': _read_csv_mult,
     'charge': _read_csv_charge,
-    'sens': _read_csv_sensitivity
+    'sens': _read_csv_sensitivity,
+    'fml': _read_csv_fml
 }
 
 

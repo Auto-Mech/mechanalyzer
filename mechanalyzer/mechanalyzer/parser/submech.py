@@ -57,9 +57,6 @@ def species_subset(fuel, spc_dct):
         species_subset_df = species_subset_df.append(series)
         species_list = species_list + species
 
-    print(species_subset_df)
-    print(species_list)
-
     return species_list, species_subset_df
 
 

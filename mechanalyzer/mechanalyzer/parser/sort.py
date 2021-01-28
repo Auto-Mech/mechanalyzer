@@ -12,6 +12,7 @@ import copy
 import pandas as pd
 import numpy as np
 import automol
+from mechanalyzer.parser import ckin_ as ckin
 from mechanalyzer.parser import submech
 from mechanalyzer.parser import util
 from mechanalyzer.parser import pes
@@ -41,7 +42,8 @@ class SortMech:
         self.mech_df = pd.DataFrame(data, index=rxn_name_lst, columns=[
                                     'rct_names_lst', 'prd_names_lst', 'rct_names_lst_ord',
                                     'prd_names_lst_ord', 'R1', 'R2', 'molecularity',
-                                    'N_of_prods', 'PES'])
+                                    'N_of_prods', 'pes'])
+
         self.spc_dct = spc_dct  # set for later use
         # empty list for initialization (otherwise pylint warning)
         self.species_list = []
@@ -56,29 +58,32 @@ class SortMech:
 
         # if species_list is not empty: pre-process the mechanism
         if len(species_list) > 0:
-            if species_list[-1] == 'SUBMECH':
+            if len(species_list) == 2 and species_list[-1] == 'submech':
                 # select a subset of species appropriately according to the stoichiometries
                 # specified in submech.py
                 species_list, species_subset_df = submech.species_subset(
                     species_list[0], self.spc_dct)
-                # check compatibility with selected hierarchy: cannot have headers
-                # if hierarchy[-1] != 0:
-                #     print(
-                #         'error: submech extraction already provides headers. please select 0')
+                self.species_subset_df = species_subset_df
+            elif len(species_list) > 2 and species_list[-1] == 'submech':
+                print('Error: pyr/ox submech extraction available for only 1 species')
+                sys.exit()
 
             self.mech_df, self.spc_dct = self.filter_byspecies(species_list)
             self.species_list = species_list
-            self.species_subset_df = species_subset_df
+
+        elif len(species_list) == 0 and 'species' in hierarchy:
+            print('*ERROR: sorting by species incompatible with empty isolate_species')
+            sys.exit()
 
         # 0. look for keywords and sort accordingly
         # LIST OF AVAILABLE SORTING OPTIONS (BESIDES R1 AND PES, ALWAYS AVAILABLE)
         sort_optns_dct = {
-            'SPECIES': self.group_species,
-            'SUBPES': self.conn_chn,
-            'MULT': self.reac_mult,
-            'RXN_CLASS_BROAD': self.rxnclass_broad,
-            'RXN_CLASS_GRAPH': self.rxnclass_graph,
-            'SUBMECH': self.group_submech,
+            'species': self.group_species,
+            'subpes': self.conn_chn,
+            'mult': self.reac_mult,
+            'rxn_class_broad': self.rxnclass_broad,
+            'rxn_class_graph': self.rxnclass_graph,
+            'submech': self.group_submech,
         }
 
         for optn, fun_name in sort_optns_dct.items():
@@ -101,8 +106,8 @@ class SortMech:
 
         # 2. assign class headers
         # set labels for all the possible criteria
-        criteria_all = ['molecularity', 'N_of_prods', 'SPECIES', 'PES', 'SUBPES',
-                        'SUBMECH', 'R1', 'MULT', 'RXN_CLASS_BROAD', 'RXN_CLASS_GRAPH']
+        criteria_all = ['molecularity', 'N_of_prods', 'species', 'pes', 'subpes',
+                        'submech', 'r1', 'mult', 'rxn_class_broad', 'rxn_class_graph']
         labels_all = ['NR', 'N_of_prods', 'SPECIES', 'PES', 'SUBPES', 'SUBMECH',
                       'Heavier rct', 'Total multiplicity', 'rxn type', 'rxn class']
         labels = pd.Series(labels_all, index=criteria_all)
@@ -146,10 +151,10 @@ class SortMech:
     def conn_chn(self, conn_chn_df):
         '''
         Identify connected channels
-        Generate column 'SUBPES' in conn_chn_df
+        Generate column 'subpes' in conn_chn_df
         '''
 
-        for fml, peslist in self.mech_df.groupby('PES'):
+        for fml, peslist in self.mech_df.groupby('pes'):
             # print(peslist)
             # Set the names lists for the rxns and species needed below
             pes_rct_names_lst = peslist['rct_names_lst'].values
@@ -160,13 +165,13 @@ class SortMech:
             # write subpes in conn_chn_df
             for key, value in connchnls.items():
                 rxns = peslist.iloc[value].index
-                conn_chn_df['SUBPES'][rxns] = fml + '-' + str(key)
+                conn_chn_df['subpes'][rxns] = fml + '-' + str(key)
 
         return conn_chn_df
 
     def group_species(self, reac_sp_df):
         """
-        Creates a new df column "SPECIES" - recognizes the species you set in the list
+        Creates a new df column "species" - recognizes the species you set in the list
         Also in this case the species_list is hierarchical:
         if the first group contains also a species of the second group,
         the reaction remains in the first group
@@ -179,13 +184,13 @@ class SortMech:
                 # check species hierarchically
                 for sp_i in self.species_list:
                     if ((any(sp_i == rct for rct in rcts) or any(sp_i == prd for prd in prds))
-                            and isinstance(reac_sp_df['SPECIES'][rxn], float)):
-                        reac_sp_df['SPECIES'][rxn] = sp_i
+                            and isinstance(reac_sp_df['species'][rxn], float)):
+                        reac_sp_df['species'][rxn] = sp_i
         return reac_sp_df
 
     def group_submech(self, submech_df):
         """
-        Creates a new df column "SUBMECH":
+        Creates a new df column "submech":
         Assigns a submechanism (fuel, fuel radical, fuel add ..) to the reaction
         according to the species taking part to it.
         The species classification is done according to self.species_subset_df
@@ -197,21 +202,21 @@ class SortMech:
             # check species hierarchically (hierarchy fixed in species list)
             for sp_i in self.species_list:
                 if ((any(sp_i == rct for rct in rcts) or any(sp_i == prd for prd in prds))
-                        and isinstance(submech_df['SUBMECH'][rxn], float)):
-                    submech_df['SUBMECH'][rxn] = self.species_subset_df[sp_i]
+                        and isinstance(submech_df['submech'][rxn], float)):
+                    submech_df['submech'][rxn] = self.species_subset_df[sp_i]
         return submech_df
 
     def reac_mult(self, reac_mult_df):
         '''
         Identify reaction multiplicity from spc_dct
-        update column 'MULT' in reac_mult_df
+        update column 'mult' in reac_mult_df
         '''
         # assign multiplicity values to each reactant
         for rxn in reac_mult_df.index:
             mult = 1
             rcts = self.mech_df['rct_names_lst'][rxn]
             mult = util.get_mult(rcts, self.spc_dct)
-            reac_mult_df['MULT'][rxn] = str(mult)
+            reac_mult_df['mult'][rxn] = str(mult)
 
         return reac_mult_df
 
@@ -231,7 +236,7 @@ class SortMech:
                 # unimolecular reaction classification
                 rxn_class_broad = submech.classify_unimol(
                     rcts, prds, self.spc_dct)
-            rxncl_broad_df['RXN_CLASS_BROAD'][rxn] = rxn_class_broad
+            rxncl_broad_df['rxn_class_broad'][rxn] = rxn_class_broad
 
         return rxncl_broad_df
 
@@ -244,15 +249,15 @@ class SortMech:
         '''
         # 1. group by subpes
         # check that SUBPES is present in indexes, otherwise generate corresponding dataframe
-        if 'SUBPES' not in self.mech_df.columns:
+        if 'subpes' not in self.mech_df.columns:
             df_optn = pd.DataFrame(
-                index=self.mech_df.index, columns=['SUBPES'])
+                index=self.mech_df.index, columns=['subpes'])
             df_optn = self.conn_chn(df_optn)
             # concatenate the new portion of dataframe
             self.mech_df = pd.concat([self.mech_df, df_optn], axis=1)
 
         # 2. graph classification or each subpes
-        for _, subpes_df in self.mech_df.groupby('SUBPES'):
+        for _, subpes_df in self.mech_df.groupby('subpes'):
             # sort by molecularity: analyze first unimolecular isomerizations,
             # unimolecular decompositions, and then bimolecular reactions
             subpes_df = subpes_df.sort_values(
@@ -287,7 +292,7 @@ class SortMech:
                 else:
                     rclass = 'unclassified - lumped'
 
-                rxncl_graph_df['RXN_CLASS_GRAPH'][rxn] = rclass
+                rxncl_graph_df['rxn_class_graph'][rxn] = rclass
 
                 # store values in the elementary reactivity matrix
                 # (for now contaminated with isomerizations)
@@ -298,14 +303,14 @@ class SortMech:
             # 3. classify well skipping channels
             # reclassify the unclassified reactions A->B+C, B+C->D, B+C->E+F
             for rxn in subpes_df.index:
-                if rxncl_graph_df['RXN_CLASS_GRAPH'][rxn] == 'unclassified':
+                if rxncl_graph_df['rxn_class_graph'][rxn] == 'unclassified':
 
                     # call external function for WS channel classification
 
                     rxn_type_ws = classify_ws(
                         subpes_df, elem_reac_df, species_subpes, rxn)
                     if rxn_type_ws is not None:
-                        rxncl_graph_df['RXN_CLASS_GRAPH'][rxn] = rxn_type_ws
+                        rxncl_graph_df['rxn_class_graph'][rxn] = rxn_type_ws
 
         return rxncl_graph_df
 
@@ -330,7 +335,7 @@ class SortMech:
             n_headers = int(hierarchy[-1])
         except ValueError:
             print(
-                'Last line of sorting options is the N of criteria to use for class headers')
+                '*ERROR: Last line of sorting options is the N of criteria to use for class headers')
             sys.exit()
         ####### write topheader comments ######
         if n_headers > 0:
@@ -386,30 +391,40 @@ def classify_graph(spc_dct, rct_names, prd_names):
     Classification of reactions from reactants and products names
     Requires species dictionary for inchis derivation
     '''
-    if len(rct_names) < 3 and len(prd_names) < 3:
-        print('lumped reaction - graph classification unavailable')
-        sys.exit()
-
-    # Get the inchis and graphs
-    rct_ichs = list(spc_dct[rct]['inchi']
-                    for rct in rct_names)
-    rct_graph = list(map(automol.inchi.graph, rct_ichs))
-    rct_gras = list(
-        map(automol.graph.without_stereo_parities, rct_graph))
-    # print(automol.graph.string(rct_gra))
-    prd_ichs = list(spc_dct[prd]['inchi']
-                    for prd in prd_names)
-    prd_graph = list(map(automol.inchi.graph, prd_ichs))
-    prd_gras = list(
-        map(automol.graph.without_stereo_parities, prd_graph))
-    # ID reaction
-    if automol.graph.reac.is_valid_reaction(rct_gras, prd_gras):
-        rclass = automol.graph.reac.classify_simple(
-            rct_gras, prd_gras)
+    if len(prd_names) >= 3:
+        rclass = 'unclassified - lumped'
     else:
-        rclass = 'unclassified - Wrong Stoichiometry'
-    # check stereo compatibility - I am not sure about this input
-    # ret = automol.graph.trans.is_stereo_compatible(rclass, rct_graph, prd_graph)
+        # Get the inchis and graphs
+        rct_ichs = list(spc_dct[rct]['inchi']
+                        for rct in rct_names)
+        rct_graph = list(map(automol.inchi.graph, rct_ichs))
+        #rct_gras = list(
+        #    map(automol.graph.without_stereo_parities, rct_graph))
+        rct_gras = list(
+            map(automol.graph._graph.explicit, rct_graph))
+        # print(automol.graph.string(rct_gra))
+        prd_ichs = list(spc_dct[prd]['inchi']
+                        for prd in prd_names)
+        prd_graph = list(map(automol.inchi.graph, prd_ichs))
+        #prd_gras = list(
+        #    map(automol.graph.without_stereo_parities, prd_graph))
+        prd_gras = list(
+            map(automol.graph._graph.explicit, prd_graph))
+        # ID reaction
+        rct_fmls = list(spc_dct[rct]['fml']
+                        for rct in rct_names)
+        prd_fmls = list(spc_dct[prd]['fml']
+                        for prd in prd_names)
+        print(rct_gras, prd_gras)
+        print(rct_fmls,prd_fmls)
+        if automol.formula.reac.is_valid_reaction(rct_fmls, prd_fmls):
+            rclass = automol.reac._find.find(
+                rct_gras, prd_gras)
+            print(rclass)
+        else:
+            rclass = 'unclassified - Wrong Stoichiometry'
+        # check stereo compatibility - I am not sure about this input
+        # ret = automol.graph.trans.is_stereo_compatible(rclass, rct_graph, prd_graph)
     return rclass
 
 
