@@ -8,6 +8,7 @@ import sys
 import copy
 import numpy as np
 import automol
+from automol.formula._formula import element_count as n_el
 from mechanalyzer.parser import ckin_ as ckin
 
 
@@ -89,19 +90,18 @@ def order_rct_bystoich(rct_names_lst, spc_dct=None):
 
 
 def count_atoms(fml_list):
-    '''
-    count C and N atoms in formula list
-    should go somewhere else?
-    '''
-    count_C_lst = []
-    count_N_lst = []
-    for fml in fml_list:
-        count_C = automol.formula.element_count(fml, 'C')
-        count_N = automol.formula.element_count(fml, 'N')
-        count_C_lst.append(count_C)
-        count_N_lst.append(count_N)
+    """ Count C, O, H atoms in formula list
 
-    return count_C_lst, count_N_lst
+        :param fml_list: stoich chemical formula
+        :type fml_list: list of dictionaries [dict[str:int], ]
+        :rtype: list [int, ], int = nCnOnH
+    """
+    fml_num_list = []
+    for fml in fml_list:
+        fml_num = (1000*n_el(fml, 'C')+100*n_el(fml, 'O')+n_el(fml, 'H'))
+        fml_num_list.append(fml_num)
+
+    return fml_num_list
 
 
 def get_S1S2(SPECIES):
