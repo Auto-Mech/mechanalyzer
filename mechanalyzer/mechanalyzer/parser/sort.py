@@ -27,9 +27,10 @@ class SortMech:
 
     def __init__(self, mech_info, spc_dct):
         # extract data from mech info
-        [_, formula_str_lst, rct_names_lst,
+        [formula_dct_lst, formula_str_lst, rct_names_lst,
             prd_names_lst, rxn_name_lst] = mech_info
         # set dataframe: extract useful info
+        pes_lst = util.count_atoms(formula_dct_lst)
         molecularity = list(map(len, rct_names_lst))
         n_of_prods = list(map(len, prd_names_lst))
         rct_names_lst_ordered = util.order_rct_bystoich(
@@ -38,7 +39,7 @@ class SortMech:
             prd_names_lst, spc_dct=spc_dct)  # put heavier product first
         rct_1, rct_2 = util.get_S1S2(rct_names_lst_ordered)
         data = np.array([rct_names_lst, prd_names_lst, rct_names_lst_ordered, prd_names_lst_ordered,
-                         rct_1, rct_2, molecularity, n_of_prods, formula_str_lst], dtype=object).T
+                         rct_1, rct_2, molecularity, n_of_prods, pes_lst], dtype=object).T
         self.mech_df = pd.DataFrame(data, index=rxn_name_lst, columns=[
                                     'rct_names_lst', 'prd_names_lst', 'rct_names_lst_ord',
                                     'prd_names_lst_ord', 'R1', 'R2', 'molecularity',
@@ -70,10 +71,6 @@ class SortMech:
 
             self.mech_df, self.spc_dct = self.filter_byspecies(species_list)
             self.species_list = species_list
-
-        elif len(species_list) == 0 and 'species' in hierarchy:
-            print('*ERROR: sorting by species incompatible with empty isolate_species')
-            sys.exit()
 
         # 0. look for keywords and sort accordingly
         # LIST OF AVAILABLE SORTING OPTIONS (BESIDES R1 AND PES, ALWAYS AVAILABLE)
@@ -108,7 +105,7 @@ class SortMech:
         # set labels for all the possible criteria
         criteria_all = ['molecularity', 'N_of_prods', 'species', 'pes', 'subpes',
                         'submech', 'r1', 'mult', 'rxn_class_broad', 'rxn_class_graph']
-        labels_all = ['NR', 'N_of_prods', 'SPECIES', 'PES', 'SUBPES', 'SUBMECH',
+        labels_all = ['NR', 'N_of_prods', 'SPECIES', 'N_COH_PES', 'N_COH.subpes', 'SUBMECH',
                       'Heavier rct', 'Total multiplicity', 'rxn type', 'rxn class']
         labels = pd.Series(labels_all, index=criteria_all)
         self.class_headers(hierarchy, labels)
@@ -165,7 +162,8 @@ class SortMech:
             # write subpes in conn_chn_df
             for key, value in connchnls.items():
                 rxns = peslist.iloc[value].index
-                conn_chn_df['subpes'][rxns] = fml + '-' + str(key)
+                fml_num = fml + key/100
+                conn_chn_df['subpes'][rxns] = fml_num
 
         return conn_chn_df
 
@@ -394,38 +392,69 @@ def classify_graph(spc_dct, rct_names, prd_names):
     if len(prd_names) >= 3:
         rclass = 'unclassified - lumped'
     else:
-        # Get the inchis and graphs
-        rct_ichs = list(spc_dct[rct]['inchi']
-                        for rct in rct_names)
-        rct_graph = list(map(automol.inchi.graph, rct_ichs))
-        #rct_gras = list(
-        #    map(automol.graph.without_stereo_parities, rct_graph))
-        rct_gras = list(
-            map(automol.graph._graph.explicit, rct_graph))
-        # print(automol.graph.string(rct_gra))
-        prd_ichs = list(spc_dct[prd]['inchi']
-                        for prd in prd_names)
-        prd_graph = list(map(automol.inchi.graph, prd_ichs))
-        #prd_gras = list(
-        #    map(automol.graph.without_stereo_parities, prd_graph))
-        prd_gras = list(
-            map(automol.graph._graph.explicit, prd_graph))
+        rct_graph = get_graph(spc_dct, rct_names)
+        rct_gras = format_graph(rct_graph)
+
+        prd_graph = get_graph(spc_dct, prd_names)
+        prd_gras = format_graph(prd_graph)
+
         # ID reaction
         rct_fmls = list(spc_dct[rct]['fml']
                         for rct in rct_names)
         prd_fmls = list(spc_dct[prd]['fml']
                         for prd in prd_names)
-        print(rct_gras, prd_gras)
-        print(rct_fmls,prd_fmls)
+
         if automol.formula.reac.is_valid_reaction(rct_fmls, prd_fmls):
-            rclass = automol.reac._find.find(
-                rct_gras, prd_gras)
-            print(rclass)
+            try:
+                rxn_info = automol.reac._find.find(
+                    rct_gras, prd_gras)
+
+                if rxn_info:
+                    # save only the first possible reaction type
+                    rclass = rxn_info[0].class_
+                else:
+                    rclass = 'unclassified'
+            except AttributeError:
+                print('[', list(spc_dct[rct]['inchi'] for rct in rct_names), ',', list(
+                    spc_dct[prd]['inchi'] for prd in prd_names), ']')
+                print('\n')
+                rclass = 'unclassified'
+
         else:
             rclass = 'unclassified - Wrong Stoichiometry'
         # check stereo compatibility - I am not sure about this input
         # ret = automol.graph.trans.is_stereo_compatible(rclass, rct_graph, prd_graph)
     return rclass
+
+
+def get_graph(spc_dct, names):
+    '''
+    returns a list of graphs from a list of names from a species list
+    '''
+    # Get the inchis and graphs
+    spc_ichs = list(spc_dct[spc]['inchi']
+                    for spc in names)
+    graph_list = list(map(automol.inchi.graph, spc_ichs))
+
+    return graph_list
+
+
+def format_graph(gra):
+    '''
+    gra: sequence of graphs
+    returns: gra = sequence of graphs with appropriate format for the classifier
+    - explicit hydrogens
+    - no stereo parities
+    - unique keys    
+    '''
+    gra_explicit = list(
+        map(automol.graph._graph.explicit, gra))
+    gra_nostereo = list(
+        map(automol.graph._graph.without_stereo_parities, gra_explicit))
+    gra_std_keys, _ = automol.graph._graph.standard_keys_for_sequence(
+        gra_nostereo)
+
+    return gra_std_keys
 
 
 def classify_ws(subpes_df, elem_reac_df, species_subpes, rxn):
@@ -482,6 +511,8 @@ def cmts_string(name, label, cltype):
         name = [name]
     elif isinstance(name, int):
         name = [str(name)]
+    elif isinstance(name, float):
+        name = ['{:.2f}'.format(name)]
     else:
         name = np.array(name, dtype=str)
 

@@ -8,6 +8,7 @@ import pandas
 from automol.smiles import inchi as _inchi
 from automol.inchi import smiles as _smiles
 from automol.inchi import formula as _fml_inchi
+from automol.inchi import low_spin_multiplicity as _low_spin_mult
 from automol.formula import string2 as _fml_str2
 
 
@@ -18,6 +19,15 @@ ALLOWED_HEADERS = (
 DEFAULT_HEADERS = (
     'smiles', 'inchi', 'inchikey', 'mult', 'charge', 'sens', 'fml'
 )
+
+# Common triplet species
+TRIP_DCT = {
+    'O': 'InChI=1S/O',
+    'O2': 'InChI=1S/O2/c1-2',
+    'CH2': 'InChI=1S/CH2/h1H2',
+    'C3H2': 'InChI=1S/C3H2/c1-3-2/h1-2H',
+    'C6H6O-B1': 'InChI=1S/C6H6O/c7-6-4-2-1-3-5-6/h1-2,4-5H,3H2'
+}
 
 
 # Build various dictionaries
@@ -161,9 +171,25 @@ def _read_csv_mult(data, idxs):
     if hasattr(data, 'mult'):
         spc_dct = dict(zip(idxs, data.mult))
     else:
-        spc_dct = {}
-        print('No "mult" column in csv file')
-
+        print('No "mult" column in csv file: guess from lowest multiplicity')
+        # get inchis and smiles first
+        ichs_lst = list(_read_csv_inchi(data, idxs).values())
+        smiles_lst = list(_read_csv_smiles(data, idxs).values())
+        smiles_dct = dict(zip(ichs_lst, smiles_lst))
+        mult = []
+        for ichs in ichs_lst:
+            mult_ich = _low_spin_mult(ichs)
+            # if multiplicity is 1:
+            # check if the inchis of singlet species is a common triplet
+            if (mult_ich == 1 and ichs in TRIP_DCT.values()):
+                # if inchis appears twice in the list:
+                # look for (S) in the species name or in the smiles
+                # otherwise set as triplet
+                if (ichs_lst.count(ichs) == 1 and (
+                        '(S)' not in ichs and 'singlet' not in smiles_dct[ichs])):
+                    mult_ich = 3
+            mult.append(mult_ich)
+        spc_dct = dict(zip(idxs, mult))
     return spc_dct
 
 
@@ -252,13 +278,16 @@ def _check_csv(data):
 
     headers = set(list(data.head()))
 
-    req1 = {'name', 'smiles', 'mult'}
-    req2 = {'name', 'inchi', 'mult'}
+    req1 = {'name', 'smiles'}
+    req2 = {'name', 'inchi'}
     if req1 <= headers or req2 <= headers:
         proper = True
     else:
         proper = False
-        print('Required Headers (name, smiles/inchi/mult) missing.')
+        print('Required Headers (name, smiles/inchi) missing.')
+
+    if not hasattr(data, 'mult'):
+        print('Warning: missing mult in species; mult will be guessed')
 
     if headers <= set(ALLOWED_HEADERS):
         proper = True
