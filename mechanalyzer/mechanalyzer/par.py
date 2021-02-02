@@ -12,6 +12,7 @@ class SPC():
     SMILES = 'smiles'
     CHARGE = 'charge'
     MULT = 'mult'
+    TSMULT = 'tsmult'
     # MULT = 'multiplicity'
     SENS = 'sensitivity'
     ELECLVLS = 'electronic_levels'
