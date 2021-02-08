@@ -196,6 +196,135 @@ def align_mechs(mech_filenames, thermo_filenames, spc_csv_filenames, temps, pres
     return aligned_rxn_ktp_dct, aligned_rxn_em_dct
 
 
+def align_spc_thermo_dcts(thermo_filenames, spc_csv_filenames, temps):
+    """ Takes any number of thermodynamic files (written in the Chemkin format, i.e., NASA-7
+        polynomials) and calculates the thermo properties (h, c_p, s, and g) at the specified
+        temperatures. Then, outputs an aligned spc_thermo_dct that contains the values for each
+        species.
+
+        :param thermo_filenames: names of the Chemkin-formatted thermo text files; if the thermo
+            info is contained in the mechanism.txt, just put the same filename here
+        :type thermo_filenames: list
+        :param spc_csv_filenames: names of the spc_csv filenames, which should have the following info:
+            names, SMILES, inchi, multiplicity, charge, sensitivity (sensitivity not required)
+        :type spc_csv_filenames: list
+        :param temps: array of temperatures in Kelvin
+        :type temps: Numpy 1-D array
+        :return aligned_spc_thermo_dcts: dictionary of T and thermo values for each filename,
+            all under the same species name index
+        :rtype: dict {spc1: [thermo_array1, thermo_array2, ...], spc2:, [], ...}
+    """
+    assert len(spc_csv_filenames) == len(thermo_filenames), (
+            f"""The lengths of the spc_csv and thermo filename inputs should 
+                all be the same, but are instead {len(spc_csv_filenames)}
+                and {len(thermo_filenames)}, respectively."""
+            )
+    num_mechs = len(thermo_filenames)
+    
+    # Load rxn_ktp_dcts, spc_ident_dcts, and spc_thermo_dcts
+    spc_ident_dcts = []
+    spc_thermo_dcts = []
+    for idx in range(num_mechs):
+
+        # Get the spc_dct
+        spc_csv_str = parser.ptt.read_inp_str(JOB_PATH, spc_csv_filenames[idx], remove_comments=False)
+        spc_dct = parser_spc.build_spc_dct(spc_csv_str, 'csv')
+        spc_ident_dcts.append(spc_dct)
+
+        # Get the thermo_dct
+        thermo_str = parser.ptt.read_inp_str(JOB_PATH,thermo_filenames[idx],remove_comments=False)
+        thermo_block_str = parser_mech.thermo_block(thermo_str)
+        spc_nasa7_dct = parser_thermo.create_spc_nasa7_dct(thermo_block_str) 
+        spc_thermo_dct = calc_thermo.create_spc_thermo_dct(spc_nasa7_dct, temps)
+        spc_thermo_dcts.append(spc_thermo_dct)
+
+    # Get the renamed dictionaries
+    renamed_spc_thermo_dcts, _ = rename_dcts(spc_thermo_dcts, 'spc', spc_ident_dcts)
+   
+    # Sort the renamed dictionaries into a single output
+    # Loop over each mechanism
+    aligned_spc_thermo_dct = {}
+    for mech_idx, dct in enumerate(renamed_spc_thermo_dcts):
+        for spc, thermo_array in dct.items():
+
+            # If the species does not yet exist, add it
+            if spc not in aligned_spc_thermo_dct.keys():
+                thermo_array_list = [None] * mech_idx  # add empty entries to account for previous mechs that are missing
+                thermo_array_list.append(thermo_array)
+                aligned_spc_thermo_dct[rxn] = thermo_array_list
+
+            # If the species already exists, append the new thermo_array
+            else:
+                thermo_array_list = aligned_spc_thermo_dct[spc]  # get the current list of thermo_arrays
+                # If any of the previous entries were blank, add None entries to fill
+                if len(thermo_array_list) < mech_idx:
+                     thermo_array_list.extend([None] * (mech_idx - len(thermo_array_list)))
+                thermo_array_list.append(thermo_array) 
+            
+    # Clean up the aligned dct
+    for spc, thermo_array_list in aligned_spc_thermo_dct.items():
+        # Add None entries so that all are the same length
+        if len(thermo_array_list) < num_mechs:
+            thermo_array_list.extend([None] * (num_mechs - len(thermo_array_list))) 
+            aligned_spc_thermo_dct[spc] = thermo_array_list
+
+#    if print_output:
+#        print('renamed_rxn_param_dcts', renamed_rxn_param_dcts)
+#        print('renamed_rxn_em_dcts', renamed_rxn_em_dcts)
+#        print('reversed_rxn_ktp_dcts', reversed_rxn_ktp_dcts)
+#        print('reversed_rxn_em_dcts', reversed_rxn_em_dcts)
+#        print('aligned_rxn_ktp_dct', aligned_rxn_ktp_dct)
+#        print('aligned_rxn_em_dct', aligned_rxn_em_dct)
+#
+#    if write_file:
+#        with open("align_mechs_output.txt", "w") as f:
+#            for mech_idx, rename_instructions in enumerate(rename_instructions_lst):
+#                f.write(f"Rename instructions for converting mech {mech_idx+2} to mech {mech_idx+1}:\n")
+#                f.write(f"First column: mech {mech_idx+2} name, Second column: mech {mech_idx+1} name\n")
+#                for spc_name2, spc_name1 in rename_instructions.items():
+#                    f.write(('{0:<1s}, {1:<5s}\n').format(spc_name2, spc_name1))
+#                f.write("\n\n")
+#
+#            # Write the aligned_rxn_ktp_dct
+#            f.write(f"Combined_rxn_ktp_dct\n\n")
+#            f.write(('{0:<64s}{1:<15s}{2:<15s}').format('Rxn name', 'In mech 1?', 'In mech 2?'))
+#            for rxn, ktp_dct_lst in aligned_rxn_ktp_dct.items():
+#                rxn_name = format_rxn_name(rxn, aligned_rxn_em_dct[rxn])
+#                present = []
+#                for entry in ktp_dct_lst:
+#                    if entry:
+#                        present.append('Yes')
+#                    else: 
+#                        present.append('No')
+#
+#                f.write(('\n{0:<64s}{1:<15s}{2:<15s}').format(rxn_name, present[0], present[1]))
+#
+#            f.close()
+
+    if remove_loners:
+        aligned_spc_thermo_dct = remove_lone_spcs(aligned_spc_thermo_dct)
+
+    return aligned_spc_thermo_dct
+
+
+def remove_lone_spcs(aligned_spc_thermo_dct):
+    """ Takes an aligned spc_thermo_dct and removes any species that don't have thermo values from
+        all the mechs
+
+    """
+    filtered_spc_thermo_dct = {}
+    for spc, thermo_array_list in aligned_spc_thermo_dct.items():
+        num_mechs = len(thermo_array_list)
+        num_thermo_arrays = len(
+            [thermo_array for thermo_array in thermo_array_list if thermo_array is not None])
+
+        # Only add the spc if all mechanisms have an entry for the spc
+        if num_thermo_arrays == num_mechs: 
+            filtered_spc_thermo_dct[spc] = thermo_array_list
+
+    return filtered_spc_thermo_dct
+
+
 def remove_lone_reactions(aligned_rxn_ktp_dct, aligned_rxn_em_dct):
     """ Removes any reactions that don't have rates from all the involved mechs
 
@@ -611,10 +740,10 @@ def _calculate_equilibrium_constant(thermo_dct, rct_idxs, prd_idxs, temps):
     return k_equils
 
 
-def _grab_gibbs(thermo_vals, temp_idx):
+def _grab_gibbs(thermo_array, temp_idx):
     """ calculate the Gibbs Free energy value
     """
-    gibbs = thermo_vals[4][temp_idx]
+    gibbs = thermo_array[4][temp_idx]
 
     return gibbs
 
