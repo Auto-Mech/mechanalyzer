@@ -38,4 +38,4 @@ class THY():
     PROGRAM = 'program'
     METHOD = 'method'
     BASIS = 'basis'
-    ORB_RESTRICT = 'orb_restrict'  # fix
+    ORB_RESTRICT = 'orb_res'  # fix
