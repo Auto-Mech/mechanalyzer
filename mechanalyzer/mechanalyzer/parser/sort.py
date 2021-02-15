@@ -4,7 +4,7 @@ Sorter module - sorting of the mechanism according to various options
 - pes/subpes
 - multiplicity
 - species subsets
-- submechanism (calling submech module)
+- submechanism
 """
 
 import sys
@@ -19,13 +19,20 @@ from mechanalyzer.parser import pes
 
 
 class SortMech:
-    '''
-    class of functions to organize the mechanism according to given criteria
-    from any step after initialization: call "return_mech_df"
-    to get the current dataframe with mech info
-    '''
+    """ class of methods to organize the mechanism according to given criteria
+    """
 
     def __init__(self, mech_info, spc_dct):
+        """ Initializes the mechanism dataframe and the species dictionary
+
+        :param mech_info: list of mechanism info [formula dct, formulas,
+                            rct_names, prd_names, rxn_names]
+        :param spc_dct: species dictionary
+
+        :returns: None, updates self.
+                    self.mech_df: dataframe with mech info
+                    self.spc_dct: species dictionary
+        """
         # extract data from mech info
         [formula_dct_lst, formula_str_lst, rct_names_lst,
             prd_names_lst, rxn_name_lst] = mech_info
@@ -50,12 +57,19 @@ class SortMech:
         self.species_list = []
 
     def sort(self, hierarchy, species_list):
-        '''
-        hierarchy = list of hierarchical criteria for the mech organization
-        sorts the mechanism according to the given criteria
-        species_list = list of species you want to isolate (empty to process the full mech).
-        For extraction of a fuel submech:  ['speciesname','SUBMECH']
-        '''
+        """ Main flow of the sorter: takes a set of reactions and classifies
+            them as indicated in hierarchy; possibly filters the species
+            according to the species list
+
+        :param self.mech_df: dataframe with mech info (contains all reactions)
+        :param self.spc_dct: species dictionary
+        :param hierarchy: list of hierarchical criteria for mech organization
+                            ['..','..','N']: N is the N of criteria to use for headers
+                            all the other criteria are written as inline comments
+        :param species_list: list of species subset; may be empty
+                            if ['onename','submech']: extracts fuel submechanism
+        :returns: None. updates self
+        """
 
         # if species_list is not empty: pre-process the mechanism
         if len(species_list) > 0:
@@ -111,10 +125,18 @@ class SortMech:
         self.class_headers(hierarchy, labels)
 
     def filter_byspecies(self, species_list):
+        """ Find all reactions involving species of the species_list given as input
+            Provides a new mechanism of the reactions of the selected subset
+            and a reduced list of species
+
+        :param self.mech_df: dataframe with mech info (contains all reactions)
+        :param self.spc_dct: species dictionary
+        :param species_list: list of species subsets
+
+        :returns: mech_df, spc_dct
+        :rtype: dataframe, dict
         """
-        Find all reactions involving species of the species_list given as input
-        make another spc_dct containing only the species appearing in the reactions of interest
-        """
+
         mech_df = copy.deepcopy(self.mech_df)
         # check that all species selected are in the species dictionary
         if any(i not in self.spc_dct.keys() for i in species_list):
@@ -146,10 +168,14 @@ class SortMech:
         return mech_df, spc_dct
 
     def conn_chn(self, conn_chn_df):
-        '''
-        Identify connected channels
-        Generate column 'subpes' in conn_chn_df
-        '''
+        """ Identifies connected channels and assigns them to the same subpes
+
+        :param self.mech_df: dataframe with mech info (contains all reactions)
+        :param conn_chn_df: empty dataframe df[subpes][rxn]
+
+        :returns: conn_chn_df dataframe[subpes][rxn]
+        :rtype: dataframe[int][tuple]
+        """
 
         for fml, peslist in self.mech_df.groupby('pes'):
             # print(peslist)
@@ -168,12 +194,20 @@ class SortMech:
         return conn_chn_df
 
     def group_species(self, reac_sp_df):
+        """ Checks if the reactions in self.mech_df contain any species 
+            of self.species_list and if so it marks the species.
+            Assignment is hierarchical: the first species of species_list
+            found determines the label of the reaction being checked
+            WARNING FUNCTION STILL IN PROGRESS
+
+        :param self.mech_df: dataframe with mech info (contains all reactions)
+        :param self.species_list: list of subset of species considered
+        :param reac_sp_df: empty dataframe index=rxns, column: 'species'
+
+        :returns: reac_sp_df dataframe[species][rxn]
+        :rtype: dataframe[str][tuple]
         """
-        Creates a new df column "species" - recognizes the species you set in the list
-        Also in this case the species_list is hierarchical:
-        if the first group contains also a species of the second group,
-        the reaction remains in the first group
-        """
+
         # if species list is not found: do nothing - species entry will remain empty
         if len(self.species_list) > 0:
             for rxn in reac_sp_df.index:
@@ -187,13 +221,20 @@ class SortMech:
         return reac_sp_df
 
     def group_submech(self, submech_df):
+        """ Assigns a submechanism (fuel, fuel radical, fuel add ..) to the reaction
+            according to the species taking part to it.
+            WARNING FUNCTION STILL IN PROGRESS
+
+        :param self.mech_df: dataframe with mech info (contains all reactions)
+        :param self.species_list: list of subset of species considered
+        :param self.species_subset_df: dataframe with species assigned to a 
+                                        certain type (fuel, fuel radical..)
+        :param submech_df: empty dataframe index=rxns, column: 'submech'
+
+        :returns: submech_df dataframe with reactants mult dataframe[submech][rxn]
+        :rtype: dataframe[str][tuple]
         """
-        Creates a new df column "submech":
-        Assigns a submechanism (fuel, fuel radical, fuel add ..) to the reaction
-        according to the species taking part to it.
-        The species classification is done according to self.species_subset_df
-        THIS IS JUST A FIRST DRAFT
-        """
+
         for rxn in submech_df.index:
             rcts = list(self.mech_df['rct_names_lst'][rxn])
             prds = list(self.mech_df['prd_names_lst'][rxn])
@@ -205,10 +246,16 @@ class SortMech:
         return submech_df
 
     def reac_mult(self, reac_mult_df):
-        '''
-        Identify reaction multiplicity from spc_dct
-        update column 'mult' in reac_mult_df
-        '''
+        """ determines the multiplicity of the reactants of the reactions
+            considered
+
+        :param self.mech_df: dataframe with mech info (contains all reactions)
+        :param self.spc_dct: species dictionary
+        :param rxncl_mult_df: empty dataframe index=rxns, column: 'mult'
+
+        :returns: reac_mult_df dataframe with reactants mult dataframe[mult][rxn]
+        :rtype: dataframe[str][tuple]
+        """
         # assign multiplicity values to each reactant
         for rxn in reac_mult_df.index:
             mult = 1
@@ -219,10 +266,15 @@ class SortMech:
         return reac_mult_df
 
     def rxnclass_broad(self, rxncl_broad_df):
-        '''
-        Identify the reaction class by broad classification
-        No use of the graph approach
-        '''
+        """ assigns reaction classes based on stoichiometry and molecularity
+
+        :param self.mech_df: dataframe with mech info (contains all reactions)
+        :param self.spc_dct: species dictionary
+        :param rxncl_broad_df: empty dataframe index=rxns, column: 'rxn_class_broad'
+
+        :returns: rxncl_broad_df dataframe with reaction classes dataframe[class][rxn]
+        :rtype: dataframe[str][tuple]
+        """
         for rxn in rxncl_broad_df.index:
             rcts = self.mech_df['rct_names_lst_ord'][rxn]
             prds = self.mech_df['prd_names_lst_ord'][rxn]
@@ -239,12 +291,16 @@ class SortMech:
         return rxncl_broad_df
 
     def rxnclass_graph(self, rxncl_graph_df):
-        '''
-        Identify the reaction class by the graph approach
-        1. group by subpes
-        2. identify rxn in each subpes
-        3. classify well skipping channels
-        '''
+        """ assigns reaction classes using graph approach to all reactions 
+            first subdivides the mech into subpeses; then classifies all rxn
+            within the subpes, including wellskipping channels
+
+        :param self.mech_df: dataframe with mech info (contains all reactions)
+        :param rxncl_graph_df: empty dataframe index=rxns, column: 'rxn_class_graph'
+
+        :returns: rxncl_graph_df dataframe with reaction classes dataframe[class][rxn]
+        :rtype: dataframe[str][tuple]
+        """
         # 1. group by subpes
         # check that SUBPES is present in indexes, otherwise generate corresponding dataframe
         if 'subpes' not in self.mech_df.columns:
@@ -278,7 +334,12 @@ class SortMech:
                 # exclude all reactions with more than 2 reactants or products (not elementary!)
                 if len(rct_names) < 3 and len(prd_names) < 3:
 
-                    rclass = classify_graph(self.spc_dct, rct_names, prd_names)
+                    try:
+                        rclass = classify_graph(
+                            self.spc_dct, rct_names, prd_names)
+                    except IndexError:
+                        rclass = classify_graph_old(
+                            self.spc_dct, rct_names, prd_names)
 
                     if rclass is None:
                         if (subpes_df['molecularity'][rxn] == 1
@@ -315,13 +376,21 @@ class SortMech:
     ################## ASSIGN HEADERS ###################################################
 
     def class_headers(self, hierarchy, labels):
+        """ assigns class headers based on the hierarchy provided in the input
+
+
+        :param self.mech_df: dataframe with mech info
+        :param hierarchy: list of strings with hierarchical order of sorting criteria
+                            ['..','..','N']: N is the N of criteria to use for headers
+                            all the other criteria are written as inline comments
+        :param labels: labels corresponding to all possible sorting criteria
+                        labels are then written as comments
+
+        :returns: None. updates self.mech_df['cmts_top','cmts_inline']
+                    'cmts_top': comments to write as header for a reaction
+                    'cmts_inline': comments to write on the same line of the reaction
         """
-        Read the hierarchy;
-        assign classes based on the selected hierarchy
-        adds columns in the df with appropriate comments/headers
-        first N keywords --> main class --> comments_top (new col in df)
-        other keywords --> other subclasses --> comments_inline
-        """
+
         # df for comments_top and comments_inline
         ept_df = np.zeros((len(self.mech_df.index), 1), dtype=str)
         df_cmts_top = pd.DataFrame(
@@ -363,13 +432,15 @@ class SortMech:
     ###################################### output dataframe ##############################
 
     def return_mech_df(self):
-        '''
-        Returns:
-        - new_idx: reactants and products indices as tuples
-        - cmts: dictionary containing comments of the corresponding reactions; indices are new_idx
-        - self.spc_dct: species dictionary; may be different from the input
-            if a subset of reactions is selected; useful for mech writing
-        '''
+        """ provides sorted rxn indices and associated comments, sorted species dictionary
+
+        :param self.mech_df: dataframe with mech info
+        :param self.spc_dct: species dictionary for the reactions of the sorted mech
+
+        :returns: sorted reaction names, comments, sorted species dictionary
+        :rtype: list[tuple], dict{tuple(r1, r2, ): {cmts_top: str, cmts_inline: str}, ...}, dict
+        """
+
         rct_names = self.mech_df['rct_names_lst'].values
         prd_names = self.mech_df['prd_names_lst'].values
         new_idx = list(zip(rct_names, prd_names))
@@ -384,40 +455,38 @@ class SortMech:
 ######### functions specific for the sorter - non specific functions are in util ###########
 
 ########## functions for rxn graph classification ####################
+
 def classify_graph(spc_dct, rct_names, prd_names):
-    '''
-    Classification of reactions from reactants and products names
-    Requires species dictionary for inchis derivation
-    '''
+    """ calls the graph classifier for a given reaction
+
+    :param spc_dct: species dictionary
+    :param rct_names: reactant names (r1, r2, )
+    :param prd_names: product names (p1, p2, )
+
+    :returns: reaction class (first of the possible identified classes)
+    :rtype: str
+    """
+
     if len(prd_names) >= 3:
         rclass = 'unclassified - lumped'
     else:
-        rct_graph = get_graph(spc_dct, rct_names)
-        rct_gras = format_graph(rct_graph)
-
-        prd_graph = get_graph(spc_dct, prd_names)
-        prd_gras = format_graph(prd_graph)
 
         # ID reaction
-        rct_fmls = list(spc_dct[rct]['fml']
-                        for rct in rct_names)
-        prd_fmls = list(spc_dct[prd]['fml']
-                        for prd in prd_names)
+        rct_fmls = tuple(spc_dct[rct]['fml'] for rct in rct_names)
+        prd_fmls = tuple(spc_dct[prd]['fml'] for prd in prd_names)
+
+        rct_ichs = tuple(spc_dct[spc]['inchi'] for spc in rct_names)
+        prd_ichs = tuple(spc_dct[spc]['inchi'] for spc in prd_names)
 
         if automol.formula.reac.is_valid_reaction(rct_fmls, prd_fmls):
-            try:
-                rxn_info = automol.reac._find.find(
-                    rct_gras, prd_gras)
 
-                if rxn_info:
-                    # save only the first possible reaction type
-                    rclass = rxn_info[0].class_
-                else:
-                    rclass = 'unclassified'
-            except AttributeError:
-                print('[', list(spc_dct[rct]['inchi'] for rct in rct_names), ',', list(
-                    spc_dct[prd]['inchi'] for prd in prd_names), ']')
-                print('\n')
+            rxn_classes = automol.reac._find.find_from_inchis(
+                rct_ichs, prd_ichs)
+
+            if rxn_classes:
+                # save only the first possible reaction type
+                rclass = rxn_classes[0]
+            else:
                 rclass = 'unclassified'
 
         else:
@@ -427,42 +496,18 @@ def classify_graph(spc_dct, rct_names, prd_names):
     return rclass
 
 
-def get_graph(spc_dct, names):
-    '''
-    returns a list of graphs from a list of names from a species list
-    '''
-    # Get the inchis and graphs
-    spc_ichs = list(spc_dct[spc]['inchi']
-                    for spc in names)
-    graph_list = list(map(automol.inchi.graph, spc_ichs))
-
-    return graph_list
-
-
-def format_graph(gra):
-    '''
-    gra: sequence of graphs
-    returns: gra = sequence of graphs with appropriate format for the classifier
-    - explicit hydrogens
-    - no stereo parities
-    - unique keys    
-    '''
-    gra_explicit = list(
-        map(automol.graph._graph.explicit, gra))
-    gra_nostereo = list(
-        map(automol.graph._graph.without_stereo_parities, gra_explicit))
-    gra_std_keys, _ = automol.graph._graph.standard_keys_for_sequence(
-        gra_nostereo)
-
-    return gra_std_keys
-
-
 def classify_ws(subpes_df, elem_reac_df, species_subpes, rxn):
-    '''
-    Classification of well skipping reaction channels of a given subpes
-    Returns the wellskipping reaction type
-    WARNING: STILL UNDER CONSTRUCTION - SOME TEMPORARY FEATURES
-    '''
+    """ classifies well skipping channels of a given subpes
+        WARNING: STILL UNDER CONSTRUCTION - SOME TEMPORARY FEATURES
+
+    :param subpes_df: dataframe with subpes info
+    :param elem_reac_df: dataframe with elementary reaction channels of the subpes
+    :param species_subpes: list of subpes species
+    :param rxn: string with rxn belonging to the subpes
+
+    :returns: reaction class of the WS channel considered
+    :rtype: str
+    """
     # derive unimolecular species list
     mult_species_subpes = pd.Series(
         list(map(len, species_subpes)), index=species_subpes)
@@ -498,12 +543,15 @@ def classify_ws(subpes_df, elem_reac_df, species_subpes, rxn):
 
 
 def cmts_string(name, label, cltype):
-    '''
-    Return appropriate comment string depending on the type
-    name: rxn class
-    cltype: class types. options: class_head, class, subclass
-    label: class label
-    '''
+    """ assign comment strings based on reaction class
+
+    :param name: reaction class (list, string, int, float)
+    :param label: labels corresponding to reaction class (list)
+    :param cltype: format type. options: class_head, class, subclass (string)
+
+    :returns: comments string for writing in the mechanism
+    :rtype: str
+    """
     # assing top headers:
     tophead = '!!!!!!!!! class !!!!!!!!!\n'
     bottomhead = '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
@@ -525,3 +573,88 @@ def cmts_string(name, label, cltype):
         rxnclass = '! ' + cmtlabel + ' _'.join(name)
 
     return rxnclass
+
+######################## Archived Functions ######################
+
+
+def classify_graph_old(spc_dct, rct_names, prd_names):
+    """ graph classification based on the first possible reaction class identified
+    :param spc_dct: species dictionary
+    :param rct_names: names of reactants (r1, r2, )
+    :param prd_names: names of products (p1, p2, )
+
+    :returns: reaction class
+    :rtype: str
+    """
+    if len(prd_names) >= 3:
+        rclass = 'unclassified - lumped'
+    else:
+        rct_graph = get_graph(spc_dct, rct_names)
+        rct_gras = format_graph(rct_graph)
+
+        prd_graph = get_graph(spc_dct, prd_names)
+        prd_gras = format_graph(prd_graph)
+        print('rct:', rct_gras, '\nprd:', prd_gras, '\n')
+        # ID reaction
+        rct_fmls = list(spc_dct[rct]['fml']
+                        for rct in rct_names)
+        prd_fmls = list(spc_dct[prd]['fml']
+                        for prd in prd_names)
+
+        if automol.formula.reac.is_valid_reaction(rct_fmls, prd_fmls):
+
+            rxn_info = automol.reac._find.find(
+                rct_gras, prd_gras)
+
+            if rxn_info:
+                # save only the first possible reaction type
+                rclass = rxn_info[0].class_
+            else:
+                rclass = 'unclassified'
+
+        else:
+            rclass = 'unclassified - Wrong Stoichiometry'
+        # check stereo compatibility - I am not sure about this input
+        # ret = automol.graph.trans.is_stereo_compatible(rclass, rct_graph, prd_graph)
+    return rclass
+
+
+def get_graph(spc_dct, names):
+    """ converst a list of species to a list of graphs
+    :param spc_dct: species dictionary
+    :param names: species names list [s1, s2, ]
+
+    :returns: list of graphs
+    :rtype: list[graph]
+    """
+    # Get the inchis and graphs
+    spc_ichs = list(spc_dct[spc]['inchi']
+                    for spc in names)
+    graph_list = list(map(automol.inchi.graph, spc_ichs))
+
+    return graph_list
+
+
+def format_graph(gra):
+    """ formats a list of graphs appropriately for rxn classification processing
+        : no explicit hydrogens, no stereo, unique keys
+    :param gra: list of graphs
+
+    :returns: list of graphs suitable for classifier processing
+    :rtype: list[graph]
+    """
+    '''
+    gra: sequence of graphs
+    returns: gra = sequence of graphs with appropriate format for the classifier
+    - explicit hydrogens
+    - no stereo parities
+    - unique keys    
+    '''
+    gra_explicit = list(
+        map(automol.graph._graph.explicit, gra))
+    gra_nostereo = list(
+        map(automol.graph._graph.without_stereo_parities, gra_explicit))
+    gra_std_keys, _ = automol.graph._graph.standard_keys_for_sequence(
+        gra_nostereo)
+
+    return gra_std_keys
