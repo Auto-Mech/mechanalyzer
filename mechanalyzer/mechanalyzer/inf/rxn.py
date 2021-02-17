@@ -61,9 +61,6 @@ def ts_info(inf_obj):
     _chg = ts_chg(inf_obj)
     _mul = value(inf_obj, par.SPC.TSMULT)  # wrong
 
-    print('ts_info test:', inf_obj)
-    print('ts_info test:', _mul)
-
     return ('', _chg, _mul)
 
 
