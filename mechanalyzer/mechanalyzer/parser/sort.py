@@ -36,6 +36,7 @@ class SortMech:
         # extract data from mech info
         [formula_dct_lst, formula_str_lst, rct_names_lst,
             prd_names_lst, thrdbdy_lst, rxn_name_lst] = mech_info
+        rxn_index = list(zip(rxn_name_lst, thrdbdy_lst))
         # set dataframe: extract useful info
         pes_lst = util.count_atoms(formula_dct_lst)
         molecularity = list(map(len, rct_names_lst))
@@ -47,9 +48,9 @@ class SortMech:
         rct_1, rct_2 = util.get_S1S2(rct_names_lst_ordered)
         data = np.array([rct_names_lst, prd_names_lst, rct_names_lst_ordered, prd_names_lst_ordered,
                          rct_1, rct_2, molecularity, n_of_prods, pes_lst, thrdbdy_lst], dtype=object).T
-        self.mech_df = pd.DataFrame(data, index=rxn_name_lst, columns=[
+        self.mech_df = pd.DataFrame(data, index=rxn_index, columns=[
                                     'rct_names_lst', 'prd_names_lst', 'rct_names_lst_ord',
-                                    'prd_names_lst_ord', 'R1', 'R2', 'molecularity',
+                                    'prd_names_lst_ord', 'r1', 'r2', 'molecularity',
                                     'N_of_prods', 'pes', 'thrdbdy'])
 
         self.spc_dct = spc_dct  # set for later use
@@ -153,7 +154,8 @@ class SortMech:
             # of the reaction considered
             if (not any(rct == species for species in species_list for rct in rcts)
                     and not any(prd == species for species in species_list for prd in prds)):
-                mech_df = mech_df.drop([rxn])
+                print(rxn)
+                mech_df = mech_df.drop(index=[rxn])
             else:
                 # append all species to the list
                 spc_list.extend(rcts)
