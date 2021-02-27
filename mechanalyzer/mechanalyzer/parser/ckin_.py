@@ -10,16 +10,20 @@ def parse(mech_str, spc_dct, sort_rxns):
     """ parse a chemkin formatted mechanism file
     """
 
-    # Read the reactions and participaring species from the mech file
+    # Read the reactions
     rxn_block_str = chemkin_io.parser.mechanism.reaction_block(mech_str)
     rxn_strs = chemkin_io.parser.reaction.data_strings(rxn_block_str)
-    rct_names_lst = list(
-        map(chemkin_io.parser.reaction.reactant_names, rxn_strs))
-    prd_names_lst = list(
-        map(chemkin_io.parser.reaction.product_names, rxn_strs))
+
+    # read reactants and products
+    reac_and_prods = list(zip(
+        map(chemkin_io.parser.reaction.reactant_names, rxn_strs),
+        map(chemkin_io.parser.reaction.product_names, rxn_strs)))
 
     # delete duplicate names
-    rct_names_lst, prd_names_lst = deldup(rct_names_lst, prd_names_lst)
+    reac_and_prods = list(set(reac_and_prods))
+    rct_names, prd_names = zip(*reac_and_prods)
+    rct_names_lst = list(rct_names)
+    prd_names_lst = list(prd_names)
 
     # Build the inchi dct
     ich_dct = get_ich_dct(spc_dct)
@@ -88,27 +92,3 @@ def get_fml(rxn_ichs):
     formula_str = automol.formula.string2(formula_dct)
 
     return formula_dct, formula_str
-
-
-def deldup(rct_names_lst, prd_names_lst):
-    '''
-    delete duplicate name
-    '''
-
-    rct_names_new = []
-    prd_names_new = []
-    rxn_name_new = []
-
-    for rct_names, prd_names in zip(rct_names_lst, prd_names_lst):
-        rxn_name = '='.join(['+'.join(rct_names), '+'.join(prd_names)])
-        flagdup = 0
-        for rxn in rxn_name_new:
-            if rxn == rxn_name:
-                flagdup = 1
-
-        if flagdup == 0:
-            rxn_name_new.append(rxn_name)
-            rct_names_new.append(rct_names)
-            prd_names_new.append(prd_names)
-
-    return rct_names_new, prd_names_new

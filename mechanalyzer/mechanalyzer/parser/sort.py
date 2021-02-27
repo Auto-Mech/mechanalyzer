@@ -35,7 +35,7 @@ class SortMech:
         """
         # extract data from mech info
         [formula_dct_lst, formula_str_lst, rct_names_lst,
-            prd_names_lst, rxn_name_lst] = mech_info
+            prd_names_lst, thrdbdy_lst, rxn_name_lst] = mech_info
         # set dataframe: extract useful info
         pes_lst = util.count_atoms(formula_dct_lst)
         molecularity = list(map(len, rct_names_lst))
@@ -46,11 +46,11 @@ class SortMech:
             prd_names_lst, spc_dct=spc_dct)  # put heavier product first
         rct_1, rct_2 = util.get_S1S2(rct_names_lst_ordered)
         data = np.array([rct_names_lst, prd_names_lst, rct_names_lst_ordered, prd_names_lst_ordered,
-                         rct_1, rct_2, molecularity, n_of_prods, pes_lst], dtype=object).T
+                         rct_1, rct_2, molecularity, n_of_prods, pes_lst, thrdbdy_lst], dtype=object).T
         self.mech_df = pd.DataFrame(data, index=rxn_name_lst, columns=[
                                     'rct_names_lst', 'prd_names_lst', 'rct_names_lst_ord',
                                     'prd_names_lst_ord', 'R1', 'R2', 'molecularity',
-                                    'N_of_prods', 'pes'])
+                                    'N_of_prods', 'pes', 'thrdbdy'])
 
         self.spc_dct = spc_dct  # set for later use
         # empty list for initialization (otherwise pylint warning)
@@ -443,7 +443,8 @@ class SortMech:
 
         rct_names = self.mech_df['rct_names_lst'].values
         prd_names = self.mech_df['prd_names_lst'].values
-        new_idx = list(zip(rct_names, prd_names))
+        thrdbdy = self.mech_df['thrdbdy'].values
+        new_idx = list(zip(rct_names, prd_names, thrdbdy))
         # store comments in dct
         cmts_df = pd.DataFrame(self.mech_df[['cmts_top', 'cmts_inline']].values, index=new_idx,
                                columns=['cmts_top', 'cmts_inline'])
