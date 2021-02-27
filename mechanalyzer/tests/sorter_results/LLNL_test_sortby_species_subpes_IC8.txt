@@ -1,0 +1,213 @@
+ELEMENTS 
+
+C
+H
+N
+O
+AR
+HE
+
+END 
+
+
+SPECIES 
+
+O            ! SMILES: [O]                        InChi: InChI=1S/O
+H            ! SMILES: [H]                        InChi: InChI=1S/H
+H2           ! SMILES: [H][H]                     InChi: InChI=1S/H2/h1H
+OH           ! SMILES: [OH]                       InChi: InChI=1S/HO/h1H
+O2           ! SMILES: [O][O]                     InChi: InChI=1S/O2/c1-2
+HO2          ! SMILES: [O]O                       InChi: InChI=1S/HO2/c1-2/h1H
+H2O          ! SMILES: O                          InChi: InChI=1S/H2O/h1H2
+CH3          ! SMILES: [CH3]                      InChi: InChI=1S/CH3/h1H3
+H2O2         ! SMILES: OO                         InChi: InChI=1S/H2O2/c1-2/h1-2H
+O2CHO        ! SMILES: [O]OC=O                    InChi: InChI=1S/CHO3/c2-1-4-3/h1H
+C2H3         ! SMILES: [CH]=C                     InChi: InChI=1S/C2H3/c1-2/h1H,2H2
+CH4          ! SMILES: C                          InChi: InChI=1S/CH4/h1H4
+CH3O         ! SMILES: C[O]                       InChi: InChI=1S/CH3O/c1-2/h1H3
+CH3O2        ! SMILES: CO[O]                      InChi: InChI=1S/CH3O2/c1-3-2/h1H3
+HO2CHO       ! SMILES: O=COO                      InChi: InChI=1S/CH2O3/c2-1-4-3/h1,3H
+C2H4         ! SMILES: C=C                        InChi: InChI=1S/C2H4/c1-2/h1-2H2
+CH3OH        ! SMILES: CO                         InChi: InChI=1S/CH4O/c1-2/h2H,1H3
+C2H5         ! SMILES: [CH2]C                     InChi: InChI=1S/C2H5/c1-2/h1H2,2H3
+CH3O2H       ! SMILES: COO                        InChi: InChI=1S/CH4O2/c1-3-2/h2H,1H3
+C2H6         ! SMILES: CC                         InChi: InChI=1S/C2H6/c1-2/h1-2H3
+C3H6         ! SMILES: C=CC                       InChi: InChI=1S/C3H6/c1-3-2/h3H,1H2,2H3
+IC3H7        ! SMILES: C[CH]C                     InChi: InChI=1S/C3H7/c1-3-2/h3H,1-2H3
+IC4H8        ! SMILES: C=C(C)C                    InChi: InChI=1S/C4H8/c1-4(2)3/h1H2,2-3H3
+TC4H9        ! SMILES: C[C](C)C                   InChi: InChI=1S/C4H9/c1-4(2)3/h1-3H3
+IC4H9        ! SMILES: [CH2]C(C)C                 InChi: InChI=1S/C4H9/c1-4(2)3/h4H,1H2,2-3H3
+NEOC5H11     ! SMILES: [CH2]C(C)(C)C              InChi: InChI=1S/C5H11/c1-5(2,3)4/h1H2,2-4H3
+NEC7D4       ! SMILES: CC(C)(C)CC=C               InChi: InChI=1S/C7H14/c1-5-6-7(2,3)4/h5H,1,6H2,2-4H3
+NEC7D3       ! SMILES: CC(C)(C)C=CC               InChi: InChI=1S/C7H14/c1-5-6-7(2,3)4/h5-6H,1-4H3
+I24C7D1      ! SMILES: C=C(C)CC(C)C               InChi: InChI=1S/C7H14/c1-6(2)5-7(3)4/h7H,1,5H2,2-4H3
+I24C7D2      ! SMILES: CC(C)=CC(C)C               InChi: InChI=1S/C7H14/c1-6(2)5-7(3)4/h5-6H,1-4H3
+I24C7-2R     ! SMILES: C[C](C)CC(C)C              InChi: InChI=1S/C7H15/c1-6(2)5-7(3)4/h6H,5H2,1-4H3
+NEC7-4R      ! SMILES: CC(C)(C)C[CH]C             InChi: InChI=1S/C7H15/c1-5-6-7(2,3)4/h5H,6H2,1-4H3
+IC8D4        ! SMILES: CC(C)(C)CC(C)=C            InChi: InChI=1S/C8H16/c1-7(2)6-8(3,4)5/h1,6H2,2-5H3
+IC8D3        ! SMILES: CC(C)(C)C=C(C)C            InChi: InChI=1S/C8H16/c1-7(2)6-8(3,4)5/h6H,1-5H3
+IC8-3R       ! SMILES: CC(C)(C)[CH]C(C)C          InChi: InChI=1S/C8H17/c1-7(2)6-8(3,4)5/h6-7H,1-5H3
+IC8-5R       ! SMILES: CC(C)(C)CC(C)[CH2]         InChi: InChI=1S/C8H17/c1-7(2)6-8(3,4)5/h7H,1,6H2,2-5H3
+IC8-1R       ! SMILES: [CH2]C(C)(C)CC(C)C         InChi: InChI=1S/C8H17/c1-7(2)6-8(3,4)5/h7H,3,6H2,1-2,4-5H3
+IC8-4R       ! SMILES: CC(C)(C)C[C](C)C           InChi: InChI=1S/C8H17/c1-7(2)6-8(3,4)5/h6H2,1-5H3
+IC8-5OR      ! SMILES: CC(C)(C)CC(C)C[O]          InChi: InChI=1S/C8H17O/c1-7(6-9)5-8(2,3)4/h7H,5-6H2,1-4H3
+IC8-1OR      ! SMILES: C([O])C(C)(C)CC(C)C        InChi: InChI=1S/C8H17O/c1-7(2)5-8(3,4)6-9/h7H,5-6H2,1-4H3
+IC8          ! SMILES: CC(C)(C)CC(C)C             InChi: InChI=1S/C8H18/c1-7(2)6-8(3,4)5/h7H,6H2,1-5H3
+IC8-3OR      ! SMILES: CC(C)(C)C([O])C(C)C        InChi: InChI=1S/C8H17O/c1-6(2)7(9)8(3,4)5/h6-7H,1-5H3
+IC8-4OR      ! SMILES: CC(C)(C)CC([O])(C)C        InChi: InChI=1S/C8H17O/c1-7(2,3)6-8(4,5)9/h6H2,1-5H3
+IC8-4O2R     ! SMILES: CC(C)(C)CC(O[O])(C)C       InChi: InChI=1S/C8H17O2/c1-7(2,3)6-8(4,5)10-9/h6H2,1-5H3
+IC8-1O2R     ! SMILES: C(O[O])C(C)(C)CC(C)C       InChi: InChI=1S/C8H17O2/c1-7(2)5-8(3,4)6-10-9/h7H,5-6H2,1-4H3
+IC8-5O2R     ! SMILES: CC(C)(C)CC(C)CO[O]         InChi: InChI=1S/C8H17O2/c1-7(6-10-9)5-8(2,3)4/h7H,5-6H2,1-4H3
+IC8-3O2R     ! SMILES: CC(C)(C)C(O[O])C(C)C       InChi: InChI=1S/C8H17O2/c1-6(2)7(10-9)8(3,4)5/h6-7H,1-5H3
+IC8OOH3      ! SMILES: CC(C)(C)C(OO)C(C)C         InChi: InChI=1S/C8H18O2/c1-6(2)7(10-9)8(3,4)5/h6-7,9H,1-5H3
+IC8OOH5      ! SMILES: CC(C)(C)CC(C)COO           InChi: InChI=1S/C8H18O2/c1-7(6-10-9)5-8(2,3)4/h7,9H,5-6H2,1-4H3
+IC8OOH4      ! SMILES: CC(C)(C)CC(OO)(C)C         InChi: InChI=1S/C8H18O2/c1-7(2,3)6-8(4,5)10-9/h9H,6H2,1-5H3
+IC8OOH1      ! SMILES: C(OO)C(C)(C)CC(C)C         InChi: InChI=1S/C8H18O2/c1-7(2)5-8(3,4)6-10-9/h7,9H,5-6H2,1-4H3
+
+END 
+
+
+REACTIONS     CAL/MOLE     MOLES
+
+!!!!!!!!! class !!!!!!!!!
+!       SPECIES!       IC8
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+IC8=I24C7-2R+CH3                    1.640E+27    -2.790    83930 ! subclass: N_COH.subpes  8018.00
+IC8=NEC7-4R+CH3                     1.380E+26    -2.590    85860 ! subclass: N_COH.subpes  8018.00
+IC8=IC8-1R+H                        5.750E+17    -0.360   101200 ! subclass: N_COH.subpes  8018.00
+IC8=IC8-5R+H                        1.920E+17    -0.360   100400 ! subclass: N_COH.subpes  8018.00
+IC8=TC4H9+IC4H9                     7.830E+29    -3.930    84150 ! subclass: N_COH.subpes  8018.00
+IC8=NEOC5H11+IC3H7                  2.450E+23    -2.010    83400 ! subclass: N_COH.subpes  8018.00
+IC8=IC8-4R+H                        1.150E+19    -0.940    95430 ! subclass: N_COH.subpes  8018.00
+IC8=IC8-3R+H                        3.300E+18    -0.720    98730 ! subclass: N_COH.subpes  8018.00
+IC8+H=IC8-5R+H2                     3.490E+05     2.700     6450 ! subclass: N_COH.subpes  8019.00
+IC8+H=IC8-3R+H2                     1.300E+06     2.400     4471 ! subclass: N_COH.subpes  8019.01
+IC8+H=IC8-4R+H2                     6.020E+05     2.400     2583 ! subclass: N_COH.subpes  8019.02
+IC8+H=IC8-1R+H2                     5.220E+05     2.700     6450 ! subclass: N_COH.subpes  8019.03
+IC8+O=IC8-1R+OH                     3.150E+06     2.400     4766 ! subclass: N_COH.subpes  8118.00
+IC8+O=IC8-4R+OH                     3.970E+05     2.400     1150 ! subclass: N_COH.subpes  8118.01
+IC8+O=IC8-5R+OH                     1.130E+14     0.000     7850 ! subclass: N_COH.subpes  8118.02
+IC8+O=IC8-3R+OH                     5.950E+05     2.400     2846 ! subclass: N_COH.subpes  8118.03
+IC8+OH=IC8-1R+H2O                   4.920E+07     1.760      743 ! subclass: N_COH.subpes  8119.00
+IC8+OH=IC8-3R+H2O                   5.620E+11     0.320      847 ! subclass: N_COH.subpes  8119.01
+IC8+OH=IC8-4R+H2O                   4.720E+10     0.576      -70 ! subclass: N_COH.subpes  8119.02
+IC8+OH=IC8-5R+H2O                   3.350E+06     2.080      376 ! subclass: N_COH.subpes  8119.03
+IC8+O2=IC8-4R+HO2                   7.000E+12     0.000    48000 ! subclass: N_COH.subpes  8218.00
+IC8+O2=IC8-1R+HO2                   6.300E+13     0.000    52800 ! subclass: N_COH.subpes  8218.01
+IC8+O2=IC8-3R+HO2                   1.400E+13     0.000    50160 ! subclass: N_COH.subpes  8218.04
+IC8+O2=IC8-5R+HO2                   4.200E+13     0.000    52800 ! subclass: N_COH.subpes  8218.05
+IC8+HO2=IC8-4R+H2O2                 6.500E+02     3.000    12090 ! subclass: N_COH.subpes  8219.00
+IC8+HO2=IC8-5R+H2O2                 4.080E+01     3.600    17160 ! subclass: N_COH.subpes  8219.01
+IC8+HO2=IC8-3R+H2O2                 6.320E+01     3.400    13720 ! subclass: N_COH.subpes  8219.02
+IC8+HO2=IC8-1R+H2O2                 6.120E+01     3.600    17160 ! subclass: N_COH.subpes  8219.03
+IC8+CH3=IC8-3R+CH4                  8.400E+04     2.100     7574 ! subclass: N_COH.subpes  9021.00
+IC8+CH3=IC8-1R+CH4                  1.360E+00     3.600     7154 ! subclass: N_COH.subpes  9021.01
+IC8+CH3=IC8-5R+CH4                  9.040E-01     3.600     7154 ! subclass: N_COH.subpes  9021.02
+IC8+CH3=IC8-4R+CH4                  6.010E-10     6.400      893 ! subclass: N_COH.subpes  9021.03
+IC8+CH3O=IC8-5R+CH3OH               3.000E+11     0.000     7000 ! subclass: N_COH.subpes  9121.00
+IC8+CH3O=IC8-1R+CH3OH               4.500E+11     0.000     7000 ! subclass: N_COH.subpes  9121.01
+IC8+CH3O=IC8-3R+CH3OH               1.100E+11     0.000     5000 ! subclass: N_COH.subpes  9121.02
+IC8+CH3O=IC8-4R+CH3OH               1.900E+10     0.000     2800 ! subclass: N_COH.subpes  9121.03
+IC8+CH3O2=IC8-5R+CH3O2H             1.390E+00     4.000    18280 ! subclass: N_COH.subpes  9221.00
+IC8+CH3O2=IC8-1R+CH3O2H             2.080E+00     4.000    18280 ! subclass: N_COH.subpes  9221.01
+IC8+CH3O2=IC8-4R+CH3O2H             2.620E+02     3.100    11100 ! subclass: N_COH.subpes  9221.02
+IC8+CH3O2=IC8-3R+CH3O2H             1.020E+01     3.600    14810 ! subclass: N_COH.subpes  9221.03
+IC8+O2CHO=IC8-1R+HO2CHO             2.520E+13     0.000    20440 ! subclass: N_COH.subpes  9319.00
+IC8+O2CHO=IC8-3R+HO2CHO             5.600E+12     0.000    17690 ! subclass: N_COH.subpes  9319.01
+IC8+O2CHO=IC8-5R+HO2CHO             1.680E+13     0.000    20440 ! subclass: N_COH.subpes  9319.02
+IC8+O2CHO=IC8-4R+HO2CHO             1.500E+04     2.500    12260 ! subclass: N_COH.subpes  9319.03
+IC8+C2H3=IC8-1R+C2H4                1.500E+12     0.000    18000 ! subclass: N_COH.subpes  10021.00
+IC8+C2H3=IC8-5R+C2H4                1.000E+12     0.000    18000 ! subclass: N_COH.subpes  10021.01
+IC8+C2H3=IC8-3R+C2H4                4.000E+11     0.000    16800 ! subclass: N_COH.subpes  10021.02
+IC8+C2H3=IC8-4R+C2H4                2.000E+11     0.000    14300 ! subclass: N_COH.subpes  10021.03
+IC8+C2H5=IC8-1R+C2H6                1.500E+11     0.000    13400 ! subclass: N_COH.subpes  10023.00
+IC8+C2H5=IC8-5R+C2H6                1.000E+11     0.000    13400 ! subclass: N_COH.subpes  10023.01
+IC8+C2H5=IC8-3R+C2H6                5.000E+10     0.000    10400 ! subclass: N_COH.subpes  10023.02
+IC8+C2H5=IC8-4R+C2H6                1.000E+11     0.000     7900 ! subclass: N_COH.subpes  10023.03
+IC8-1O2R+IC8=IC8OOH1+IC8-5R         1.210E+13     0.000    20430 ! subclass: N_COH.subpes  16235.00
+IC8-5O2R+IC8=IC8OOH5+IC8-5R         1.210E+13     0.000    20430 ! subclass: N_COH.subpes  16235.01
+IC8-3O2R+IC8=IC8OOH3+IC8-1R         1.820E+13     0.000    20430 ! subclass: N_COH.subpes  16235.02
+IC8-5O2R+IC8=IC8OOH5+IC8-1R         1.820E+13     0.000    20430 ! subclass: N_COH.subpes  16235.03
+IC8-4O2R+IC8=IC8OOH4+IC8-4R         2.020E+12     0.000    16000 ! subclass: N_COH.subpes  16235.04
+IC8-4O2R+IC8=IC8OOH4+IC8-3R         4.030E+12     0.000    17700 ! subclass: N_COH.subpes  16235.05
+IC8-5O2R+IC8=IC8OOH5+IC8-3R         4.030E+12     0.000    17700 ! subclass: N_COH.subpes  16235.06
+IC8-4O2R+IC8=IC8OOH4+IC8-5R         1.210E+13     0.000    20430 ! subclass: N_COH.subpes  16235.07
+IC8-1O2R+IC8=IC8OOH1+IC8-4R         2.020E+12     0.000    16000 ! subclass: N_COH.subpes  16235.08
+IC8-1O2R+IC8=IC8OOH1+IC8-3R         4.030E+12     0.000    17700 ! subclass: N_COH.subpes  16235.09
+IC8-1O2R+IC8=IC8OOH1+IC8-1R         1.820E+13     0.000    20430 ! subclass: N_COH.subpes  16235.10
+IC8-3O2R+IC8=IC8OOH3+IC8-5R         1.210E+13     0.000    20430 ! subclass: N_COH.subpes  16235.11
+IC8-5O2R+IC8=IC8OOH5+IC8-4R         2.020E+12     0.000    16000 ! subclass: N_COH.subpes  16235.12
+IC8-3O2R+IC8=IC8OOH3+IC8-3R         4.030E+12     0.000    17700 ! subclass: N_COH.subpes  16235.13
+IC8-3O2R+IC8=IC8OOH3+IC8-4R         2.020E+12     0.000    16000 ! subclass: N_COH.subpes  16235.14
+IC8-4O2R+IC8=IC8OOH4+IC8-1R         1.820E+13     0.000    20430 ! subclass: N_COH.subpes  16235.15
+!!!!!!!!! class !!!!!!!!!
+!       SPECIES!       IC8-1R
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+I24C7D1+CH3=IC8-1R                  1.300E+03     2.480     8520 ! subclass: N_COH.subpes  8017.00
+IC8-1R=IC8-5R                       1.390E+11     0.000    15400 ! subclass: N_COH.subpes  8017.00
+IC8-1R=IC8-4R                       3.710E+11     0.000    20400 ! subclass: N_COH.subpes  8017.00
+IC4H8+IC4H9=IC8-1R                  6.090E+02     2.480     8520 ! subclass: N_COH.subpes  8017.00
+IC8-1R+O2=IC8-1O2R                  6.860E+16    -1.627      199 ! subclass: N_COH.subpes  8217.02
+IC8-1R+HO2=IC8-1OR+OH               9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  8218.07
+IC8-1R+CH3O2=IC8-1OR+CH3O           9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  9220.00
+IC8-1R+IC8-1O2R=IC8-1OR+IC8-1OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.00
+IC8-1R+IC8-4O2R=IC8-1OR+IC8-4OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.02
+IC8-1R+IC8-3O2R=IC8-1OR+IC8-3OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.12
+IC8-1R+IC8-5O2R=IC8-1OR+IC8-5OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.14
+!!!!!!!!! class !!!!!!!!!
+!       SPECIES!       IC8-3R
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+NEC7D3+CH3=IC8-3R                   1.300E+03     2.480     8520 ! subclass: N_COH.subpes  8017.01
+IC8D3+H=IC8-3R                      2.500E+11     0.500     2620 ! subclass: N_COH.subpes  8017.01
+I24C7D2+CH3=IC8-3R                  1.300E+03     2.480     8520 ! subclass: N_COH.subpes  8017.01
+IC8-3R+O2=IC8-3O2R                  3.490E+14    -0.816     -536 ! subclass: N_COH.subpes  8217.03
+IC8-3R+O2=IC8D3+HO2                 6.550E-10     5.660     1050 ! subclass: N_COH.subpes  8217.04
+DUP 
+IC8-3R+O2=IC8D3+HO2                 4.030E+00     3.320     4470
+DUP 
+IC8-3R+HO2=IC8-3OR+OH               9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  8218.03
+IC8-3R+CH3O2=IC8-3OR+CH3O           9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  9220.03
+IC8-3R+IC8-5O2R=IC8-3OR+IC8-5OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.03
+IC8-3R+IC8-4O2R=IC8-3OR+IC8-4OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.05
+IC8-3R+IC8-3O2R=IC8-3OR+IC8-3OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.06
+IC8-3R+IC8-1O2R=IC8-3OR+IC8-1OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.13
+!!!!!!!!! class !!!!!!!!!
+!       SPECIES!       IC8-4R
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+TC4H9+IC4H8=IC8-4R                  6.090E+02     2.480     6130 ! subclass: N_COH.subpes  8017.00
+IC8D4+H=IC8-4R                      1.060E+12     0.500     1230 ! subclass: N_COH.subpes  8017.00
+IC8D3+H=IC8-4R                      6.250E+11     0.500     2620 ! subclass: N_COH.subpes  8017.00
+IC8-4R+O2=IC8-4O2R                  9.750E+11     0.325     -417 ! subclass: N_COH.subpes  8217.00
+IC8-4R+O2=IC8D3+HO2                 1.310E-09     5.660     3050 ! subclass: N_COH.subpes  8217.06
+DUP 
+IC8-4R+O2=IC8D3+HO2                 8.050E+00     3.320     6470
+DUP 
+IC8-4R+O2=IC8D4+HO2                 1.600E-05     4.630     2480 ! subclass: N_COH.subpes  8217.07
+DUP 
+IC8-4R+O2=IC8D4+HO2                 5.290E+01     3.230     5330
+DUP 
+IC8-4R+HO2=IC8-4OR+OH               9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  8218.06
+IC8-4R+CH3O2=IC8-4OR+CH3O           9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  9220.01
+IC8-4R+IC8-3O2R=IC8-4OR+IC8-3OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.01
+IC8-4R+IC8-5O2R=IC8-4OR+IC8-5OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.07
+IC8-4R+IC8-4O2R=IC8-4OR+IC8-4OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.08
+IC8-4R+IC8-1O2R=IC8-4OR+IC8-1OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.09
+!!!!!!!!! class !!!!!!!!!
+!       SPECIES!       IC8-5R
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+NEC7D4+CH3=IC8-5R                   1.300E+03     2.480     8520 ! subclass: N_COH.subpes  8017.00
+NEOC5H11+C3H6=IC8-5R                4.000E+02     2.480     8520 ! subclass: N_COH.subpes  8017.00
+IC8D4+H=IC8-5R                      6.250E+11     0.500     2620 ! subclass: N_COH.subpes  8017.00
+IC8-5R+O2=IC8-5O2R                  6.860E+16    -1.627      199 ! subclass: N_COH.subpes  8217.01
+IC8-5R+O2=IC8D4+HO2                 6.550E-10     5.660     1050 ! subclass: N_COH.subpes  8217.05
+DUP 
+IC8-5R+O2=IC8D4+HO2                 4.030E+00     3.320     4470
+DUP 
+IC8-5R+HO2=IC8-5OR+OH               9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  8218.02
+IC8-5R+CH3O2=IC8-5OR+CH3O           9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  9220.02
+IC8-5R+IC8-5O2R=IC8-5OR+IC8-5OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.04
+IC8-5R+IC8-1O2R=IC8-5OR+IC8-1OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.10
+IC8-5R+IC8-4O2R=IC8-5OR+IC8-4OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.11
+IC8-5R+IC8-3O2R=IC8-5OR+IC8-3OR     9.000E+12     0.000    -1000 ! subclass: N_COH.subpes  16234.15
+
+END 
