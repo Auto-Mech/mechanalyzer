@@ -154,7 +154,6 @@ class SortMech:
             # of the reaction considered
             if (not any(rct == species for species in species_list for rct in rcts)
                     and not any(prd == species for species in species_list for prd in prds)):
-                print(rxn)
                 mech_df = mech_df.drop(index=[rxn])
             else:
                 # append all species to the list
@@ -336,12 +335,8 @@ class SortMech:
                 # exclude all reactions with more than 2 reactants or products (not elementary!)
                 if len(rct_names) < 3 and len(prd_names) < 3:
 
-                    try:
-                        rclass = classify_graph(
-                            self.spc_dct, rct_names, prd_names)
-                    except IndexError:
-                        rclass = classify_graph_old(
-                            self.spc_dct, rct_names, prd_names)
+                    rclass = classify_graph(
+                        self.spc_dct, rct_names, prd_names)
 
                     if rclass is None:
                         if (subpes_df['molecularity'][rxn] == 1
@@ -482,9 +477,12 @@ def classify_graph(spc_dct, rct_names, prd_names):
         prd_ichs = tuple(spc_dct[spc]['inchi'] for spc in prd_names)
 
         if automol.formula.reac.is_valid_reaction(rct_fmls, prd_fmls):
-
-            rxn_classes = automol.reac._find.find_from_inchis(
-                rct_ichs, prd_ichs)
+            #print(rct_names,prd_names,rct_ichs,prd_ichs)
+            try:
+                rxn_classes = automol.reac._find.find_from_inchis(
+                    rct_ichs, prd_ichs)
+            except AssertionError:
+                rxn_classes = ['AssertionError','2']
 
             if rxn_classes:
                 # save only the first possible reaction type

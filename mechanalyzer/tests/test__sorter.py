@@ -121,10 +121,11 @@ def test__sortby_submech():
               MECH_REST_NAME, ISOLATE_SPECIES, SORT_STR)
     # NOW ORDER JUST BY SUBPES
     SORTMECH_NAME = os.path.join(
-        CWD_RESULTS, 'LLNL_test_sortby_submech_subpes_IC8.txt')
-    SORT_STR = ['submech', 'subpes', 1]  # NO HEADER
+        CWD_RESULTS, 'LLNL_test_sortby_submech_subpes_broadclass_IC8.txt')
+    SORT_STR = ['submech', 'subpes','rxn_class_broad', 1]  # NO HEADER
     sort_main(CWD, SPC_NAME, MECH_NAME, SORTMECH_NAME,
               MECH_REST_NAME, ISOLATE_SPECIES, SORT_STR)
+
 
 
 def sort_main(CWD, SPC_NAME, MECH_NAME, SORTMECH_NAME, MECH_REST_NAME, ISOLATE_SPECIES, SORT_STR):
@@ -154,8 +155,8 @@ def sort_main(CWD, SPC_NAME, MECH_NAME, SORTMECH_NAME, MECH_REST_NAME, ISOLATE_S
 
 if __name__ == '__main__':
  #   test__readwrite_thirdbody()
-    test__sortby_species_subpes()
-    test__sortby_submech()
+ #   test__sortby_species_subpes()
+ #   test__sortby_submech()
  #   test__sortby_mult()
  #   test__sortby_molec_R1()
-#    test__sortby_rxnclass()
+    test__sortby_rxnclass()
