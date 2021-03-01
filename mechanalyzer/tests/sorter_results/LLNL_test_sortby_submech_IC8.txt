@@ -1,0 +1,572 @@
+ELEMENTS 
+
+C
+H
+N
+O
+AR
+HE
+
+END 
+
+
+SPECIES 
+
+H                 ! SMILES: [H]                              InChi: InChI=1S/H
+O                 ! SMILES: [O]                              InChi: InChI=1S/O
+O2                ! SMILES: [O][O]                           InChi: InChI=1S/O2/c1-2
+OH                ! SMILES: [OH]                             InChi: InChI=1S/HO/h1H
+H2                ! SMILES: [H][H]                           InChi: InChI=1S/H2/h1H
+HO2               ! SMILES: [O]O                             InChi: InChI=1S/HO2/c1-2/h1H
+H2O               ! SMILES: O                                InChi: InChI=1S/H2O/h1H2
+CH2O              ! SMILES: C=O                              InChi: InChI=1S/CH2O/c1-2/h1H2
+CH3               ! SMILES: [CH3]                            InChi: InChI=1S/CH3/h1H3
+H2O2              ! SMILES: OO                               InChi: InChI=1S/H2O2/c1-2/h1-2H
+O2CHO             ! SMILES: [O]OC=O                          InChi: InChI=1S/CHO3/c2-1-4-3/h1H
+CH3O              ! SMILES: C[O]                             InChi: InChI=1S/CH3O/c1-2/h1H3
+CH4               ! SMILES: C                                InChi: InChI=1S/CH4/h1H4
+C2H3              ! SMILES: [CH]=C                           InChi: InChI=1S/C2H3/c1-2/h1H,2H2
+CH2CO             ! SMILES: C=C=O                            InChi: InChI=1S/C2H2O/c1-2-3/h1H2
+CH3OH             ! SMILES: CO                               InChi: InChI=1S/CH4O/c1-2/h2H,1H3
+HO2CHO            ! SMILES: O=COO                            InChi: InChI=1S/CH2O3/c2-1-4-3/h1,3H
+CH3O2             ! SMILES: CO[O]                            InChi: InChI=1S/CH3O2/c1-3-2/h1H3
+CH2O2H            ! SMILES: [CH2]OO                          InChi: InChI=1S/CH3O2/c1-3-2/h2H,1H2
+C2H4              ! SMILES: C=C                              InChi: InChI=1S/C2H4/c1-2/h1-2H2
+CH3O2H            ! SMILES: COO                              InChi: InChI=1S/CH4O2/c1-3-2/h2H,1H3
+C3H4-A            ! SMILES: C=C=C                            InChi: InChI=1S/C3H4/c1-3-2/h1-2H2
+C2H5              ! SMILES: [CH2]C                           InChi: InChI=1S/C2H5/c1-2/h1H2,2H3
+C2H6              ! SMILES: CC                               InChi: InChI=1S/C2H6/c1-2/h1-2H3
+C2H3CHO           ! SMILES: C=CC=O                           InChi: InChI=1S/C3H4O/c1-2-3-4/h2-3H,1H2
+CH3COCH2          ! SMILES: [CH2]C(C)=O                      InChi: InChI=1S/C3H5O/c1-3(2)4/h1H2,2H3
+C3H6              ! SMILES: C=CC                             InChi: InChI=1S/C3H6/c1-3-2/h3H,1H2,2H3
+C3H5O             ! SMILES: C=CC[O]                          InChi: InChI=1S/C3H5O/c1-2-3-4/h2H,1,3H2
+CH3COCH3          ! SMILES: CC(C)=O                          InChi: InChI=1S/C3H6O/c1-3(2)4/h1-2H3
+IC3H7             ! SMILES: C[CH]C                           InChi: InChI=1S/C3H7/c1-3-2/h3H,1-2H3
+AC3H5OOH          ! SMILES: C=CCOO                           InChi: InChI=1S/C3H6O2/c1-2-3-5-4/h2,4H,1,3H2
+IC4H7             ! SMILES: [CH2]C(=C)C                      InChi: InChI=1S/C4H7/c1-4(2)3/h1-2H2,3H3
+IC3H5CHO          ! SMILES: C=C(C)C=O                        InChi: InChI=1S/C4H6O/c1-4(2)3-5/h3H,1H2,2H3
+IC4H7O            ! SMILES: C=C(C)C[O]                       InChi: InChI=1S/C4H7O/c1-4(2)3-5/h1,3H2,2H3
+IC4H8             ! SMILES: C=C(C)C                          InChi: InChI=1S/C4H8/c1-4(2)3/h1H2,2-3H3
+CHOIC3H6O         ! SMILES: CC(C=O)C[O]                      InChi: InChI=1S/C4H7O2/c1-4(2-5)3-6/h2,4H,3H2,1H3
+TC4H9             ! SMILES: C[C](C)C                         InChi: InChI=1S/C4H9/c1-4(2)3/h1-3H3
+IC4H9             ! SMILES: [CH2]C(C)C                       InChi: InChI=1S/C4H9/c1-4(2)3/h4H,1H2,2-3H3
+IC3H7CHO          ! SMILES: CC(C)C=O                         InChi: InChI=1S/C4H8O/c1-4(2)3-5/h3-4H,1-2H3
+IC4H7OOH          ! SMILES: C=C(C)COO                        InChi: InChI=1S/C4H8O2/c1-4(2)3-6-5/h5H,1,3H2,2H3
+IC4KETII          ! SMILES: CC(C=O)COO                       InChi: InChI=1S/C4H8O3/c1-4(2-5)3-7-6/h2,4,6H,3H2,1H3
+TC4H8O2H-I        ! SMILES: [CH2]C(C)(C)OO                   InChi: InChI=1S/C4H9O2/c1-4(2,3)6-5/h5H,1H2,2-3H3
+IC4H8O2H-I        ! SMILES: [CH2]C(C)COO                     InChi: InChI=1S/C4H9O2/c1-4(2)3-6-5/h4-5H,1,3H2,2H3
+TC4H8CHO          ! SMILES: [CH2]C(C)(C)C=O                  InChi: InChI=1S/C5H9O/c1-5(2,3)4-6/h4H,1H2,2-3H3
+NEO-PC5H9O        ! SMILES: C(O1)C(C1)(C)[CH2]               InChi: InChI=1S/C5H9O/c1-5(2)3-6-4-5/h1,3-4H2,2H3
+IC4H8O2H-T        ! SMILES: C[C](C)COO                       InChi: InChI=1S/C4H9O2/c1-4(2)3-6-5/h5H,3H2,1-2H3
+TC4H9CHO          ! SMILES: CC(C)(C)C=O                      InChi: InChI=1S/C5H10O/c1-5(2,3)4-6/h4H,1-3H3
+NEOC5KETOX        ! SMILES: CC(C)(C=O)C[O]                   InChi: InChI=1S/C5H9O2/c1-5(2,3-6)4-7/h3H,4H2,1-2H3
+NEOC5H11          ! SMILES: [CH2]C(C)(C)C                    InChi: InChI=1S/C5H11/c1-5(2,3)4/h1H2,2-4H3
+IC6D4-2R          ! SMILES: C[C](C)CC=C                      InChi: InChI=1S/C6H11/c1-4-5-6(2)3/h4H,1,5H2,2-3H3
+IIC4H7Q2-T        ! SMILES: C[C](COO)COO                     InChi: InChI=1S/C4H9O4/c1-4(2-7-5)3-8-6/h5-6H,2-3H2,1H3
+IC6D3-2R          ! SMILES: C[C](C)C=CC                      InChi: InChI=1S/C6H11/c1-4-5-6(2)3/h4-5H,1-3H3
+IC6D1-4R          ! SMILES: C=C(C)C[CH]C                     InChi: InChI=1S/C6H11/c1-4-5-6(2)3/h4H,2,5H2,1,3H3
+NEOC5H10OOH       ! SMILES: [CH2]C(C)(C)COO                  InChi: InChI=1S/C5H11O2/c1-5(2,3)4-7-6/h6H,1,4H2,2-3H3
+NEOC5KET          ! SMILES: CC(C)(C=O)COO                    InChi: InChI=1S/C5H10O3/c1-5(2,3-6)4-8-7/h3,7H,4H2,1-2H3
+I24C7D2           ! SMILES: CC(C)=CC(C)C                     InChi: InChI=1S/C7H14/c1-6(2)5-7(3)4/h5-6H,1-4H3
+NEC7D3            ! SMILES: CC(C)(C)C=CC                     InChi: InChI=1S/C7H14/c1-5-6-7(2,3)4/h5-6H,1-4H3
+I24C7D2-4OR       ! SMILES: CC(C)=CC([O])(C)C                InChi: InChI=1S/C7H13O/c1-6(2)5-7(3,4)8/h5H,1-4H3
+NEC7Y4-3R         ! SMILES: CC(C)(C)[CH]C(=O)C               InChi: InChI=1S/C7H13O/c1-6(8)5-7(2,3)4/h5H,1-4H3
+NEC7D4            ! SMILES: CC(C)(C)CC=C                     InChi: InChI=1S/C7H14/c1-5-6-7(2,3)4/h5H,1,6H2,2-4H3
+I24C7D1           ! SMILES: C=C(C)CC(C)C                     InChi: InChI=1S/C7H14/c1-6(2)5-7(3)4/h7H,1,5H2,2-4H3
+NEC7-4R           ! SMILES: CC(C)(C)C[CH]C                   InChi: InChI=1S/C7H15/c1-5-6-7(2,3)4/h5H,6H2,1-4H3
+NEC7Y4            ! SMILES: CC(C)(C)CC(=O)C                  InChi: InChI=1S/C7H14O/c1-6(8)5-7(2,3)4/h5H2,1-4H3
+I24C7-2R          ! SMILES: C[C](C)CC(C)C                    InChi: InChI=1S/C7H15/c1-6(2)5-7(3)4/h6H,5H2,1-4H3
+I24C7D1-3OOH      ! SMILES: C=C(C)C(OO)C(C)C                 InChi: InChI=1S/C7H14O2/c1-5(2)7(9-8)6(3)4/h6-8H,1H2,2-4H3
+I24C7D2-5OOH      ! SMILES: CC(C)=CC(C)COO                   InChi: InChI=1S/C7H14O2/c1-6(2)4-7(3)5-9-8/h4,7-8H,5H2,1-3H3
+IC8D4             ! SMILES: CC(C)(C)CC(C)=C                  InChi: InChI=1S/C8H16/c1-7(2)6-8(3,4)5/h1,6H2,2-5H3
+IC8D3             ! SMILES: CC(C)(C)C=C(C)C                  InChi: InChI=1S/C8H16/c1-7(2)6-8(3,4)5/h6H,1-5H3
+IC8O4-5           ! SMILES: CC(C)(C)CC(O1)(C)C1              InChi: InChI=1S/C8H16O/c1-7(2,3)5-8(4)6-9-8/h5-6H2,1-4H3
+IC8-1R            ! SMILES: [CH2]C(C)(C)CC(C)C               InChi: InChI=1S/C8H17/c1-7(2)6-8(3,4)5/h7H,3,6H2,1-2,4-5H3
+IC8KET3-5O        ! SMILES: CC(C)(C)C(=O)C(C)C[O]            InChi: InChI=1S/C8H15O2/c1-6(5-9)7(10)8(2,3)4/h6H,5H2,1-4H3
+IC8O3-4           ! SMILES: CC(C)(C)C(O1)C1(C)C              InChi: InChI=1S/C8H16O/c1-7(2,3)6-8(4,5)9-6/h6H,1-5H3
+IC8O3-5           ! SMILES: CC(C)(C)C(O1)C(C)C1              InChi: InChI=1S/C8H16O/c1-6-5-9-7(6)8(2,3)4/h6-7H,5H2,1-4H3
+IC8-4R            ! SMILES: CC(C)(C)C[C](C)C                 InChi: InChI=1S/C8H17/c1-7(2)6-8(3,4)5/h6H2,1-5H3
+IC8KET1-1AO       ! SMILES: O=CC(C[O])(C)CC(C)C              InChi: InChI=1S/C8H15O2/c1-7(2)4-8(3,5-9)6-10/h5,7H,4,6H2,1-3H3
+IC8O1-3           ! SMILES: C(O1)C(C)(C)C1C(C)C              InChi: InChI=1S/C8H16O/c1-6(2)7-8(3,4)5-9-7/h6-7H,5H2,1-4H3
+IC8-3R            ! SMILES: CC(C)(C)[CH]C(C)C                InChi: InChI=1S/C8H17/c1-7(2)6-8(3,4)5/h6-7H,1-5H3
+IC8KET5-3O        ! SMILES: CC(C)(C)C([O])C(C)C=O            InChi: InChI=1S/C8H15O2/c1-6(5-9)7(10)8(2,3)4/h5-7H,1-4H3
+IC8O1-1A          ! SMILES: C(O1)C(C1)(C)CC(C)C              InChi: InChI=1S/C8H16O/c1-7(2)4-8(3)5-9-6-8/h7H,4-6H2,1-3H3
+IC8KET5-5AO       ! SMILES: CC(C)(C)CC(C[O])C=O              InChi: InChI=1S/C8H15O2/c1-8(2,3)4-7(5-9)6-10/h5,7H,4,6H2,1-3H3
+IC8KET1-4O        ! SMILES: O=CC(C)(C)CC([O])(C)C            InChi: InChI=1S/C8H15O2/c1-7(2,6-9)5-8(3,4)10/h6H,5H2,1-4H3
+IC8KET1-3O        ! SMILES: O=CC(C)(C)C([O])C(C)C            InChi: InChI=1S/C8H15O2/c1-6(2)7(10)8(3,4)5-9/h5-7H,1-4H3
+IC8O5-5A          ! SMILES: CC(C)(C)CC(CO1)C1                InChi: InChI=1S/C8H16O/c1-8(2,3)4-7-5-9-6-7/h7H,4-6H2,1-3H3
+IC8-5R            ! SMILES: CC(C)(C)CC(C)[CH2]               InChi: InChI=1S/C8H17/c1-7(2)6-8(3,4)5/h7H,1,6H2,2-5H3
+IC8KET3-1O        ! SMILES: C([O])C(C)(C)C(=O)C(C)C          InChi: InChI=1S/C8H15O2/c1-6(2)7(10)8(3,4)5-9/h6H,5H2,1-4H3
+IC8O1-5           ! SMILES: C(O1)C(C)(C)CC(C)C1              InChi: InChI=1S/C8H16O/c1-7-4-8(2,3)6-9-5-7/h7H,4-6H2,1-3H3
+IC8O1-4           ! SMILES: C(O1)C(C)(C)CC1(C)C              InChi: InChI=1S/C8H16O/c1-7(2)5-8(3,4)9-6-7/h5-6H2,1-4H3
+IC8D4-5OOH        ! SMILES: CC(C)(C)CC(COO)=C                InChi: InChI=1S/C8H16O2/c1-7(6-10-9)5-8(2,3)4/h9H,1,5-6H2,2-4H3
+IC8D3-5OOH        ! SMILES: CC(C)(C)C=C(C)COO                InChi: InChI=1S/C8H16O2/c1-7(6-10-9)5-8(2,3)4/h5,9H,6H2,1-4H3
+IC8OH4-3R         ! SMILES: CC(C)(C)[CH]C(O)(C)C             InChi: InChI=1S/C8H17O/c1-7(2,3)6-8(4,5)9/h6,9H,1-5H3
+IC8D4-3OOH        ! SMILES: CC(C)(C)C(OO)C(C)=C              InChi: InChI=1S/C8H16O2/c1-6(2)7(10-9)8(3,4)5/h7,9H,1H2,2-5H3
+IC8-1OR           ! SMILES: C([O])C(C)(C)CC(C)C              InChi: InChI=1S/C8H17O/c1-7(2)5-8(3,4)6-9/h7H,5-6H2,1-4H3
+IC8D4-1OOH        ! SMILES: C(OO)C(C)(C)CC(C)=C              InChi: InChI=1S/C8H16O2/c1-7(2)5-8(3,4)6-10-9/h9H,1,5-6H2,2-4H3
+IC8               ! SMILES: CC(C)(C)CC(C)C                   InChi: InChI=1S/C8H18/c1-7(2)6-8(3,4)5/h7H,6H2,1-5H3
+IC8OH3-4R         ! SMILES: CC(C)(C)C(O)[C](C)C              InChi: InChI=1S/C8H17O/c1-6(2)7(9)8(3,4)5/h7,9H,1-5H3
+IC8OH5-4R         ! SMILES: CC(C)(C)C[C](C)CO                InChi: InChI=1S/C8H17O/c1-7(6-9)5-8(2,3)4/h9H,5-6H2,1-4H3
+IC8-3OR           ! SMILES: CC(C)(C)C([O])C(C)C              InChi: InChI=1S/C8H17O/c1-6(2)7(9)8(3,4)5/h6-7H,1-5H3
+IC8OH4-5R         ! SMILES: CC(C)(C)CC(O)([CH2])C            InChi: InChI=1S/C8H17O/c1-7(2,3)6-8(4,5)9/h9H,4,6H2,1-3,5H3
+IC8-5OR           ! SMILES: CC(C)(C)CC(C)C[O]                InChi: InChI=1S/C8H17O/c1-7(6-9)5-8(2,3)4/h7H,5-6H2,1-4H3
+IC8D3-1OOH        ! SMILES: C(OO)C(C)(C)C=C(C)C              InChi: InChI=1S/C8H16O2/c1-7(2)5-8(3,4)6-10-9/h5,9H,6H2,1-4H3
+IC8-4OR           ! SMILES: CC(C)(C)CC([O])(C)C              InChi: InChI=1S/C8H17O/c1-7(2,3)6-8(4,5)9/h6H2,1-5H3
+IC8O45-3OOH       ! SMILES: CC(C)(C)C(OO)C(O1)(C)C1          InChi: InChI=1S/C8H16O3/c1-7(2,3)6(11-9)8(4)5-10-8/h6,9H,5H2,1-4H3
+IC8OOH5-3R        ! SMILES: CC(C)(C)[CH]C(C)COO              InChi: InChI=1S/C8H17O2/c1-7(6-10-9)5-8(2,3)4/h5,7,9H,6H2,1-4H3
+IC8O15-3OOH       ! SMILES: C(O1)C(C)(C)C(OO)C(C)C1          InChi: InChI=1S/C8H16O3/c1-6-4-10-5-8(2,3)7(6)11-9/h6-7,9H,4-5H2,1-3H3
+IC8O11A-4OOH      ! SMILES: CC(CO1)(C1)CC(OO)(C)C            InChi: InChI=1S/C8H16O3/c1-7(2,11-9)4-8(3)5-10-6-8/h9H,4-6H2,1-3H3
+IC8KET1-4         ! SMILES: O=CC(C)(C)CC(OO)(C)C             InChi: InChI=1S/C8H16O3/c1-7(2,6-9)5-8(3,4)11-10/h6,10H,5H2,1-4H3
+IC8O34-5OOH       ! SMILES: CC(C)(C)C(O1)C1(C)COO            InChi: InChI=1S/C8H16O3/c1-7(2,3)6-8(4,11-6)5-10-9/h6,9H,5H2,1-4H3
+IC8O45-5AOOH      ! SMILES: CC(C)(C)CC(O1)(COO)C1            InChi: InChI=1S/C8H16O3/c1-7(2,3)4-8(5-10-8)6-11-9/h9H,4-6H2,1-3H3
+IC8KET3-5         ! SMILES: CC(C)(C)C(=O)C(C)COO             InChi: InChI=1S/C8H16O3/c1-6(5-11-10)7(9)8(2,3)4/h6,10H,5H2,1-4H3
+IC8O35-1OOH       ! SMILES: C(OO)C(C)(C)C(O1)C(C)C1          InChi: InChI=1S/C8H16O3/c1-6-4-10-7(6)8(2,3)5-11-9/h6-7,9H,4-5H2,1-3H3
+IC8KET3-1         ! SMILES: C(OO)C(C)(C)C(=O)C(C)C           InChi: InChI=1S/C8H16O3/c1-6(2)7(9)8(3,4)5-11-10/h6,10H,5H2,1-4H3
+IC8OOH4-3R        ! SMILES: CC(C)(C)[CH]C(OO)(C)C            InChi: InChI=1S/C8H17O2/c1-7(2,3)6-8(4,5)10-9/h6,9H,1-5H3
+IC8O34-1OOH       ! SMILES: C(OO)C(C)(C)C(O1)C1(C)C          InChi: InChI=1S/C8H16O3/c1-7(2,5-10-9)6-8(3,4)11-6/h6,9H,5H2,1-4H3
+IC8OOH1-5R        ! SMILES: C(OO)C(C)(C)CC(C)[CH2]           InChi: InChI=1S/C8H17O2/c1-7(2)5-8(3,4)6-10-9/h7,9H,1,5-6H2,2-4H3
+IC8OOH4-5R        ! SMILES: CC(C)(C)CC(OO)(C)[CH2]           InChi: InChI=1S/C8H17O2/c1-7(2,3)6-8(4,5)10-9/h9H,4,6H2,1-3,5H3
+IC8OOH1-3R        ! SMILES: C(OO)C(C)(C)[CH]C(C)C            InChi: InChI=1S/C8H17O2/c1-7(2)5-8(3,4)6-10-9/h5,7,9H,6H2,1-4H3
+IC8OOH5-5AR       ! SMILES: CC(C)(C)CC([CH2])COO             InChi: InChI=1S/C8H17O2/c1-7(6-10-9)5-8(2,3)4/h7,9H,1,5-6H2,2-4H3
+IC8O55A-1OOH      ! SMILES: C(OO)C(C)(C)CC(CO1)C1            InChi: InChI=1S/C8H16O3/c1-8(2,6-11-9)3-7-4-10-5-7/h7,9H,3-6H2,1-2H3
+IC8OOH3-5R        ! SMILES: CC(C)(C)C(OO)C(C)[CH2]           InChi: InChI=1S/C8H17O2/c1-6(2)7(10-9)8(3,4)5/h6-7,9H,1H2,2-5H3
+IC8OOH1-4R        ! SMILES: C(OO)C(C)(C)C[C](C)C             InChi: InChI=1S/C8H17O2/c1-7(2)5-8(3,4)6-10-9/h9H,5-6H2,1-4H3
+IC8O45-1OOH       ! SMILES: C(OO)C(C)(C)CC(O1)(C)C1          InChi: InChI=1S/C8H16O3/c1-7(2,5-11-9)4-8(3)6-10-8/h9H,4-6H2,1-3H3
+IC8OOH1-1AR       ! SMILES: C(OO)C([CH2])(C)CC(C)C           InChi: InChI=1S/C8H17O2/c1-7(2)5-8(3,4)6-10-9/h7,9H,3,5-6H2,1-2,4H3
+IC8O14-1AOOH      ! SMILES: C(O1)C(COO)(C)CC1(C)C            InChi: InChI=1S/C8H16O3/c1-7(2)4-8(3,5-10-7)6-11-9/h9H,4-6H2,1-3H3
+IC8O13-1AOOH      ! SMILES: C(O1)C(COO)(C)C1C(C)C            InChi: InChI=1S/C8H16O3/c1-6(2)7-8(3,4-10-7)5-11-9/h6-7,9H,4-5H2,1-3H3
+IC8OOH3-4R        ! SMILES: CC(C)(C)C(OO)[C](C)C             InChi: InChI=1S/C8H17O2/c1-6(2)7(10-9)8(3,4)5/h7,9H,1-5H3
+IC8O11A-5OOH      ! SMILES: CC(CO1)(C1)CC(C)COO              InChi: InChI=1S/C8H16O3/c1-7(4-11-9)3-8(2)5-10-6-8/h7,9H,3-6H2,1-2H3
+IC8OOH5-4R        ! SMILES: CC(C)(C)C[C](C)COO               InChi: InChI=1S/C8H17O2/c1-7(6-10-9)5-8(2,3)4/h9H,5-6H2,1-4H3
+IC8O15-1AOOH      ! SMILES: C(O1)C(COO)(C)CC(C)C1            InChi: InChI=1S/C8H16O3/c1-7-3-8(2,6-11-9)5-10-4-7/h7,9H,3-6H2,1-2H3
+IC8OOH4-1R        ! SMILES: [CH2]C(C)(C)CC(OO)(C)C           InChi: InChI=1S/C8H17O2/c1-7(2,3)6-8(4,5)10-9/h9H,1,6H2,2-5H3
+IC8O55A-3OOH      ! SMILES: CC(C)(C)C(OO)C(CO1)C1            InChi: InChI=1S/C8H16O3/c1-8(2,3)7(11-9)6-4-10-5-6/h6-7,9H,4-5H2,1-3H3
+IC8KET5-5A        ! SMILES: CC(C)(C)CC(COO)C=O               InChi: InChI=1S/C8H16O3/c1-8(2,3)4-7(5-9)6-11-10/h5,7,10H,4,6H2,1-3H3
+IC8O11A-3OOH      ! SMILES: CC(CO1)(C1)C(OO)C(C)C            InChi: InChI=1S/C8H16O3/c1-6(2)7(11-9)8(3)4-10-5-8/h6-7,9H,4-5H2,1-3H3
+IC8O14-3OOH       ! SMILES: C(O1)C(C)(C)C(OO)C1(C)C          InChi: InChI=1S/C8H16O3/c1-7(2)5-10-8(3,4)6(7)11-9/h6,9H,5H2,1-4H3
+IC8O13-4OOH       ! SMILES: C(O1)C(C)(C)C1C(OO)(C)C          InChi: InChI=1S/C8H16O3/c1-7(2)5-10-6(7)8(3,4)11-9/h6,9H,5H2,1-4H3
+IC8-1O2R          ! SMILES: C(O[O])C(C)(C)CC(C)C             InChi: InChI=1S/C8H17O2/c1-7(2)5-8(3,4)6-10-9/h7H,5-6H2,1-4H3
+IC8O11A-1BOOH     ! SMILES: C(OO)C(CO1)(C1)CC(C)C            InChi: InChI=1S/C8H16O3/c1-7(2)3-8(6-11-9)4-10-5-8/h7,9H,3-6H2,1-2H3
+IC8OOH3-1R        ! SMILES: [CH2]C(C)(C)C(OO)C(C)C           InChi: InChI=1S/C8H17O2/c1-6(2)7(10-9)8(3,4)5/h6-7,9H,3H2,1-2,4-5H3
+IC8-5O2R          ! SMILES: CC(C)(C)CC(C)CO[O]               InChi: InChI=1S/C8H17O2/c1-7(6-10-9)5-8(2,3)4/h7H,5-6H2,1-4H3
+IC8O35-5AOOH      ! SMILES: CC(C)(C)C(O1)C(COO)C1            InChi: InChI=1S/C8H16O3/c1-8(2,3)7-6(4-10-7)5-11-9/h6-7,9H,4-5H2,1-3H3
+IC8KET1-1A        ! SMILES: O=CC(COO)(C)CC(C)C               InChi: InChI=1S/C8H16O3/c1-7(2)4-8(3,5-9)6-11-10/h5,7,10H,4,6H2,1-3H3
+IC8O15-5AOOH      ! SMILES: C(O1)C(C)(C)CC(COO)C1            InChi: InChI=1S/C8H16O3/c1-8(2)3-7(5-11-9)4-10-6-8/h7,9H,3-6H2,1-2H3
+IC8OOH5-1R        ! SMILES: [CH2]C(C)(C)CC(C)COO             InChi: InChI=1S/C8H17O2/c1-7(6-10-9)5-8(2,3)4/h7,9H,2,5-6H2,1,3-4H3
+IC8KET5-3         ! SMILES: CC(C)(C)C(OO)C(C)C=O             InChi: InChI=1S/C8H16O3/c1-6(5-9)7(11-10)8(2,3)4/h5-7,10H,1-4H3
+IC8O13-5OOH       ! SMILES: C(O1)C(C)(C)C1C(C)COO            InChi: InChI=1S/C8H16O3/c1-6(4-11-9)7-8(2,3)5-10-7/h6-7,9H,4-5H2,1-3H3
+IC8KET1-3         ! SMILES: O=CC(C)(C)C(OO)C(C)C             InChi: InChI=1S/C8H16O3/c1-6(2)7(11-10)8(3,4)5-9/h5-7,10H,1-4H3
+IC8-4O2R          ! SMILES: CC(C)(C)CC(O[O])(C)C             InChi: InChI=1S/C8H17O2/c1-7(2,3)6-8(4,5)10-9/h6H2,1-5H3
+IC8-3O2R          ! SMILES: CC(C)(C)C(O[O])C(C)C             InChi: InChI=1S/C8H17O2/c1-6(2)7(10-9)8(3,4)5/h6-7H,1-5H3
+IC8OOH1           ! SMILES: C(OO)C(C)(C)CC(C)C               InChi: InChI=1S/C8H18O2/c1-7(2)5-8(3,4)6-10-9/h7,9H,5-6H2,1-4H3
+IC8OOH4           ! SMILES: CC(C)(C)CC(OO)(C)C               InChi: InChI=1S/C8H18O2/c1-7(2,3)6-8(4,5)10-9/h9H,6H2,1-5H3
+IC8OH3-4O2R       ! SMILES: CC(C)(C)C(O)C(O[O])(C)C          InChi: InChI=1S/C8H17O3/c1-7(2,3)6(9)8(4,5)11-10/h6,9H,1-5H3
+IC8OH4-3O2R       ! SMILES: CC(C)(C)C(O[O])C(O)(C)C          InChi: InChI=1S/C8H17O3/c1-7(2,3)6(11-10)8(4,5)9/h6,9H,1-5H3
+IC8OH4-5O2R       ! SMILES: CC(C)(C)CC(O)(C)CO[O]            InChi: InChI=1S/C8H17O3/c1-7(2,3)5-8(4,9)6-11-10/h9H,5-6H2,1-4H3
+IC8OOH5           ! SMILES: CC(C)(C)CC(C)COO                 InChi: InChI=1S/C8H18O2/c1-7(6-10-9)5-8(2,3)4/h7,9H,5-6H2,1-4H3
+IC8OOH3           ! SMILES: CC(C)(C)C(OO)C(C)C               InChi: InChI=1S/C8H18O2/c1-6(2)7(10-9)8(3,4)5/h6-7,9H,1-5H3
+IC8OH5-4O2R       ! SMILES: CC(C)(C)CC(O[O])(C)CO            InChi: InChI=1S/C8H17O3/c1-7(2,3)5-8(4,6-9)11-10/h9H,5-6H2,1-4H3
+IC8Q13-1AR        ! SMILES: C(OO)C([CH2])(C)C(OO)C(C)C       InChi: InChI=1S/C8H17O4/c1-6(2)7(12-10)8(3,4)5-11-9/h6-7,9-10H,3,5H2,1-2,4H3
+IC8Q15-3R         ! SMILES: C(OO)C(C)(C)[CH]C(C)COO          InChi: InChI=1S/C8H17O4/c1-7(5-11-9)4-8(2,3)6-12-10/h4,7,9-10H,5-6H2,1-3H3
+IC8Q15-5AR        ! SMILES: C(OO)C(C)(C)CC([CH2])COO         InChi: InChI=1S/C8H17O4/c1-7(5-11-9)4-8(2,3)6-12-10/h7,9-10H,1,4-6H2,2-3H3
+IC8OOH1-3O2R      ! SMILES: C(OO)C(C)(C)C(O[O])C(C)C         InChi: InChI=1S/C8H17O4/c1-6(2)7(12-10)8(3,4)5-11-9/h6-7,9H,5H2,1-4H3
+IC8Q55A-4R        ! SMILES: CC(C)(C)C[C](COO)COO             InChi: InChI=1S/C8H17O4/c1-8(2,3)4-7(5-11-9)6-12-10/h9-10H,4-6H2,1-3H3
+IC8OOH1-1AO2R     ! SMILES: C(OO)C(CO[O])(C)CC(C)C           InChi: InChI=1S/C8H17O4/c1-7(2)4-8(3,5-11-9)6-12-10/h7,9H,4-6H2,1-3H3
+IC8Q15-1AR        ! SMILES: C(OO)C([CH2])(C)CC(C)COO         InChi: InChI=1S/C8H17O4/c1-7(5-11-9)4-8(2,3)6-12-10/h7,9-10H,2,4-6H2,1,3H3
+IC8Q35-1R         ! SMILES: [CH2]C(C)(C)C(OO)C(C)COO         InChi: InChI=1S/C8H17O4/c1-6(5-11-9)7(12-10)8(2,3)4/h6-7,9-10H,2,5H2,1,3-4H3
+IC8OOH5-5AO2R     ! SMILES: CC(C)(C)CC(CO[O])COO             InChi: InChI=1S/C8H17O4/c1-8(2,3)4-7(5-11-9)6-12-10/h7,9H,4-6H2,1-3H3
+IC8Q11A-3R        ! SMILES: C(OO)C(COO)(C)[CH]C(C)C          InChi: InChI=1S/C8H17O4/c1-7(2)4-8(3,5-11-9)6-12-10/h4,7,9-10H,5-6H2,1-3H3
+IC8Q14-3R         ! SMILES: C(OO)C(C)(C)[CH]C(OO)(C)C        InChi: InChI=1S/C8H17O4/c1-7(2,6-11-9)5-8(3,4)12-10/h5,9-10H,6H2,1-4H3
+IC8OOH5-1O2R      ! SMILES: C(O[O])C(C)(C)CC(C)COO           InChi: InChI=1S/C8H17O4/c1-7(5-11-9)4-8(2,3)6-12-10/h7,9H,4-6H2,1-3H3
+IC8Q11A-1BR       ! SMILES: C(OO)C(COO)([CH2])CC(C)C         InChi: InChI=1S/C8H17O4/c1-7(2)4-8(3,5-11-9)6-12-10/h7,9-10H,3-6H2,1-2H3
+IC8OOH1-4O2R      ! SMILES: C(OO)C(C)(C)CC(O[O])(C)C         InChi: InChI=1S/C8H17O4/c1-7(2,6-11-9)5-8(3,4)12-10/h9H,5-6H2,1-4H3
+IC8OOH5-3O2R      ! SMILES: CC(C)(C)C(O[O])C(C)COO           InChi: InChI=1S/C8H17O4/c1-6(5-11-9)7(12-10)8(2,3)4/h6-7,9H,5H2,1-4H3
+IC8OOH3-5O2R      ! SMILES: CC(C)(C)C(OO)C(C)CO[O]           InChi: InChI=1S/C8H17O4/c1-6(5-11-9)7(12-10)8(2,3)4/h6-7,10H,5H2,1-4H3
+IC8Q13-5R         ! SMILES: C(OO)C(C)(C)C(OO)C(C)[CH2]       InChi: InChI=1S/C8H17O4/c1-6(2)7(12-10)8(3,4)5-11-9/h6-7,9-10H,1,5H2,2-4H3
+IC8Q35-4R         ! SMILES: CC(C)(C)C(OO)[C](C)COO           InChi: InChI=1S/C8H17O4/c1-6(5-11-9)7(12-10)8(2,3)4/h7,9-10H,5H2,1-4H3
+IC8Q13-4R         ! SMILES: C(OO)C(C)(C)C(OO)[C](C)C         InChi: InChI=1S/C8H17O4/c1-6(2)7(12-10)8(3,4)5-11-9/h7,9-10H,5H2,1-4H3
+IC8Q15-4R         ! SMILES: C(OO)C(C)(C)C[C](C)COO           InChi: InChI=1S/C8H17O4/c1-7(5-11-9)4-8(2,3)6-12-10/h9-10H,4-6H2,1-3H3
+IC8Q35-5AR        ! SMILES: CC(C)(C)C(OO)C([CH2])COO         InChi: InChI=1S/C8H17O4/c1-6(5-11-9)7(12-10)8(2,3)4/h6-7,9-10H,1,5H2,2-4H3
+IC8Q11A-4R        ! SMILES: C(OO)C(COO)(C)C[C](C)C           InChi: InChI=1S/C8H17O4/c1-7(2)4-8(3,5-11-9)6-12-10/h9-10H,4-6H2,1-3H3
+IC8OOH3-1O2R      ! SMILES: C(O[O])C(C)(C)C(OO)C(C)C         InChi: InChI=1S/C8H17O4/c1-6(2)7(12-10)8(3,4)5-11-9/h6-7,10H,5H2,1-4H3
+IC8Q14-5R         ! SMILES: C(OO)C(C)(C)CC(OO)(C)[CH2]       InChi: InChI=1S/C8H17O4/c1-7(2,6-11-9)5-8(3,4)12-10/h9-10H,3,5-6H2,1-2,4H3
+IC8Q55A-1R        ! SMILES: [CH2]C(C)(C)CC(COO)COO           InChi: InChI=1S/C8H17O4/c1-8(2,3)4-7(5-11-9)6-12-10/h7,9-10H,1,4-6H2,2-3H3
+IC8Q55A-3R        ! SMILES: CC(C)(C)[CH]C(COO)COO            InChi: InChI=1S/C8H17O4/c1-8(2,3)4-7(5-11-9)6-12-10/h4,7,9-10H,5-6H2,1-3H3
+IC8OOH4-1O2R      ! SMILES: C(O[O])C(C)(C)CC(OO)(C)C         InChi: InChI=1S/C8H17O4/c1-7(2,6-11-9)5-8(3,4)12-10/h10H,5-6H2,1-4H3
+IC8Q14-1AR        ! SMILES: C(OO)C([CH2])(C)CC(OO)(C)C       InChi: InChI=1S/C8H17O4/c1-7(2,6-11-9)5-8(3,4)12-10/h9-10H,1,5-6H2,2-4H3
+IC8OOH1-5O2R      ! SMILES: C(OO)C(C)(C)CC(C)CO[O]           InChi: InChI=1S/C8H17O4/c1-7(5-11-9)4-8(2,3)6-12-10/h7,10H,4-6H2,1-3H3
+IC8Q11A-5R        ! SMILES: C(OO)C(COO)(C)CC(C)[CH2]         InChi: InChI=1S/C8H17O4/c1-7(2)4-8(3,5-11-9)6-12-10/h7,9-10H,1,4-6H2,2-3H3
+
+END 
+
+
+REACTIONS     CAL/MOLE     MOLES
+
+!!!!!!!!! class !!!!!!!!!
+!       SUBMECH!       FUEL
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+IC8-5O2R+IC8=IC8OOH5+IC8-4R                2.020E+12     0.000    16000
+IC8=NEOC5H11+IC3H7                         2.450E+23    -2.010    83400
+IC8+H=IC8-4R+H2                            6.020E+05     2.400     2583
+IC8+CH3O=IC8-1R+CH3OH                      4.500E+11     0.000     7000
+IC8+O2CHO=IC8-3R+HO2CHO                    5.600E+12     0.000    17690
+IC8-5O2R+IC8=IC8OOH5+IC8-5R                1.210E+13     0.000    20430
+IC8+HO2=IC8-3R+H2O2                        6.320E+01     3.400    13720
+IC8+C2H3=IC8-1R+C2H4                       1.500E+12     0.000    18000
+IC8=I24C7-2R+CH3                           1.640E+27    -2.790    83930
+IC8+CH3O=IC8-5R+CH3OH                      3.000E+11     0.000     7000
+IC8=IC8-1R+H                               5.750E+17    -0.360   101200
+IC8+C2H5=IC8-1R+C2H6                       1.500E+11     0.000    13400
+IC8+O=IC8-5R+OH                            1.130E+14     0.000     7850
+IC8+OH=IC8-3R+H2O                          5.620E+11     0.320      847
+IC8+H=IC8-3R+H2                            1.300E+06     2.400     4471
+IC8+CH3=IC8-5R+CH4                         9.040E-01     3.600     7154
+IC8+C2H5=IC8-3R+C2H6                       5.000E+10     0.000    10400
+IC8+O=IC8-4R+OH                            3.970E+05     2.400     1150
+IC8+CH3O2=IC8-4R+CH3O2H                    2.620E+02     3.100    11100
+IC8-3O2R+IC8=IC8OOH3+IC8-4R                2.020E+12     0.000    16000
+IC8+H=IC8-1R+H2                            5.220E+05     2.700     6450
+IC8+C2H3=IC8-5R+C2H4                       1.000E+12     0.000    18000
+IC8+O2=IC8-1R+HO2                          6.300E+13     0.000    52800
+IC8-3O2R+IC8=IC8OOH3+IC8-3R                4.030E+12     0.000    17700
+IC8+CH3O=IC8-3R+CH3OH                      1.100E+11     0.000     5000
+IC8+O2=IC8-4R+HO2                          7.000E+12     0.000    48000
+IC8+O2=IC8-5R+HO2                          4.200E+13     0.000    52800
+IC8-4O2R+IC8=IC8OOH4+IC8-5R                1.210E+13     0.000    20430
+IC8-5O2R+IC8=IC8OOH5+IC8-1R                1.820E+13     0.000    20430
+IC8=IC8-5R+H                               1.920E+17    -0.360   100400
+IC8+CH3=IC8-3R+CH4                         8.400E+04     2.100     7574
+IC8-1O2R+IC8=IC8OOH1+IC8-5R                1.210E+13     0.000    20430
+IC8-4O2R+IC8=IC8OOH4+IC8-3R                4.030E+12     0.000    17700
+IC8+CH3=IC8-1R+CH4                         1.360E+00     3.600     7154
+IC8+HO2=IC8-5R+H2O2                        4.080E+01     3.600    17160
+IC8-1O2R+IC8=IC8OOH1+IC8-3R                4.030E+12     0.000    17700
+IC8+C2H5=IC8-5R+C2H6                       1.000E+11     0.000    13400
+IC8+OH=IC8-5R+H2O                          3.350E+06     2.080      376
+IC8+C2H3=IC8-3R+C2H4                       4.000E+11     0.000    16800
+IC8=TC4H9+IC4H9                            7.830E+29    -3.930    84150
+IC8+CH3=IC8-4R+CH4                         6.010E-10     6.400      893
+IC8+C2H5=IC8-4R+C2H6                       1.000E+11     0.000     7900
+IC8+O2CHO=IC8-5R+HO2CHO                    1.680E+13     0.000    20440
+IC8=NEC7-4R+CH3                            1.380E+26    -2.590    85860
+IC8-4O2R+IC8=IC8OOH4+IC8-4R                2.020E+12     0.000    16000
+IC8-3O2R+IC8=IC8OOH3+IC8-5R                1.210E+13     0.000    20430
+IC8+OH=IC8-4R+H2O                          4.720E+10     0.576      -70
+IC8+O=IC8-3R+OH                            5.950E+05     2.400     2846
+IC8-1O2R+IC8=IC8OOH1+IC8-4R                2.020E+12     0.000    16000
+IC8+HO2=IC8-4R+H2O2                        6.500E+02     3.000    12090
+IC8+O2CHO=IC8-1R+HO2CHO                    2.520E+13     0.000    20440
+IC8+OH=IC8-1R+H2O                          4.920E+07     1.760      743
+IC8+C2H3=IC8-4R+C2H4                       2.000E+11     0.000    14300
+IC8+H=IC8-5R+H2                            3.490E+05     2.700     6450
+IC8-1O2R+IC8=IC8OOH1+IC8-1R                1.820E+13     0.000    20430
+IC8-3O2R+IC8=IC8OOH3+IC8-1R                1.820E+13     0.000    20430
+IC8+O=IC8-1R+OH                            3.150E+06     2.400     4766
+IC8+O2CHO=IC8-4R+HO2CHO                    1.500E+04     2.500    12260
+IC8+CH3O2=IC8-5R+CH3O2H                    1.390E+00     4.000    18280
+IC8+CH3O2=IC8-1R+CH3O2H                    2.080E+00     4.000    18280
+IC8=IC8-4R+H                               1.150E+19    -0.940    95430
+IC8-5O2R+IC8=IC8OOH5+IC8-3R                4.030E+12     0.000    17700
+IC8+HO2=IC8-1R+H2O2                        6.120E+01     3.600    17160
+IC8+O2=IC8-3R+HO2                          1.400E+13     0.000    50160
+IC8-4O2R+IC8=IC8OOH4+IC8-1R                1.820E+13     0.000    20430
+IC8+CH3O2=IC8-3R+CH3O2H                    1.020E+01     3.600    14810
+IC8+CH3O=IC8-4R+CH3OH                      1.900E+10     0.000     2800
+IC8=IC8-3R+H                               3.300E+18    -0.720    98730
+!!!!!!!!! class !!!!!!!!!
+!       SUBMECH!       FUEL_ADD_O2
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+IC8OOH1=IC8-1OR+OH                         1.500E+16     0.000    43000
+IC8-5O2R+HO2=IC8OOH5+O2                    1.750E+10     0.000    -3275
+IC8-1O2R+H2O2=IC8OOH1+HO2                  2.400E+12     0.000    10000
+IC8-3O2R+H2O2=IC8OOH3+HO2                  2.400E+12     0.000    10000
+IC8OOH4=IC8-4OR+OH                         1.500E+16     0.000    43000
+IC8-5O2R+H2O2=IC8OOH5+HO2                  2.400E+12     0.000    10000
+IC8-4O2R+H2O2=IC8OOH4+HO2                  2.400E+12     0.000    10000
+IC8-1O2R+HO2=IC8OOH1+O2                    1.750E+10     0.000    -3275
+IC8OOH3=IC8-3OR+OH                         1.500E+16     0.000    43000
+IC8-3O2R+HO2=IC8OOH3+O2                    1.750E+10     0.000    -3275
+IC8OOH5=IC8-5OR+OH                         1.500E+16     0.000    43000
+IC8-4O2R+HO2=IC8OOH4+O2                    1.750E+10     0.000    -3275
+!!!!!!!!! class !!!!!!!!!
+!       SUBMECH!       FUEL_RAD
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+IC8-5R+IC8-3O2R=IC8-5OR+IC8-3OR            9.000E+12     0.000    -1000
+NEOC5H11+C3H6=IC8-5R                       4.000E+02     2.480     8520
+IC8-3R+HO2=IC8-3OR+OH                      9.000E+12     0.000    -1000
+TC4H9+IC4H8=IC8-4R                         6.090E+02     2.480     6130
+IC8-5R+IC8-4O2R=IC8-5OR+IC8-4OR            9.000E+12     0.000    -1000
+IC8-4R+IC8-5O2R=IC8-4OR+IC8-5OR            9.000E+12     0.000    -1000
+IC8-4R+O2=IC8D3+HO2                        1.310E-09     5.660     3050
+DUP 
+IC8-4R+O2=IC8D3+HO2                        8.050E+00     3.320     6470
+DUP 
+IC8-5R+O2=IC8-5O2R                         6.860E+16    -1.627      199
+IC8-1R+IC8-1O2R=IC8-1OR+IC8-1OR            9.000E+12     0.000    -1000
+IC8-3R+IC8-1O2R=IC8-3OR+IC8-1OR            9.000E+12     0.000    -1000
+IC8D4+H=IC8-4R                             1.060E+12     0.500     1230
+IC8-1R=IC8-4R                              3.710E+11     0.000    20400
+IC8-4R+IC8-3O2R=IC8-4OR+IC8-3OR            9.000E+12     0.000    -1000
+IC8-4R+CH3O2=IC8-4OR+CH3O                  9.000E+12     0.000    -1000
+I24C7D1+CH3=IC8-1R                         1.300E+03     2.480     8520
+IC8-5R+IC8-1O2R=IC8-5OR+IC8-1OR            9.000E+12     0.000    -1000
+IC8-5R+CH3O2=IC8-5OR+CH3O                  9.000E+12     0.000    -1000
+IC8-1R+HO2=IC8-1OR+OH                      9.000E+12     0.000    -1000
+NEC7D3+CH3=IC8-3R                          1.300E+03     2.480     8520
+I24C7D2+CH3=IC8-3R                         1.300E+03     2.480     8520
+IC8-3R+O2=IC8-3O2R                         3.490E+14    -0.816     -536
+IC8-5R+O2=IC8D4+HO2                        6.550E-10     5.660     1050
+DUP 
+IC8-5R+O2=IC8D4+HO2                        4.030E+00     3.320     4470
+DUP 
+IC8-4R+HO2=IC8-4OR+OH                      9.000E+12     0.000    -1000
+IC8-1R+IC8-3O2R=IC8-1OR+IC8-3OR            9.000E+12     0.000    -1000
+IC8-1R=IC8-5R                              1.390E+11     0.000    15400
+NEC7D4+CH3=IC8-5R                          1.300E+03     2.480     8520
+IC8-5R+HO2=IC8-5OR+OH                      9.000E+12     0.000    -1000
+IC8-1R+IC8-5O2R=IC8-1OR+IC8-5OR            9.000E+12     0.000    -1000
+IC8-3R+CH3O2=IC8-3OR+CH3O                  9.000E+12     0.000    -1000
+IC4H8+IC4H9=IC8-1R                         6.090E+02     2.480     8520
+IC8-4R+O2=IC8-4O2R                         9.750E+11     0.325     -417
+IC8-4R+IC8-1O2R=IC8-4OR+IC8-1OR            9.000E+12     0.000    -1000
+IC8-3R+O2=IC8D3+HO2                        6.550E-10     5.660     1050
+DUP 
+IC8-3R+O2=IC8D3+HO2                        4.030E+00     3.320     4470
+DUP 
+IC8-4R+IC8-4O2R=IC8-4OR+IC8-4OR            9.000E+12     0.000    -1000
+IC8-3R+IC8-3O2R=IC8-3OR+IC8-3OR            9.000E+12     0.000    -1000
+IC8-4R+O2=IC8D4+HO2                        1.600E-05     4.630     2480
+DUP 
+IC8-4R+O2=IC8D4+HO2                        5.290E+01     3.230     5330
+DUP 
+IC8-1R+CH3O2=IC8-1OR+CH3O                  9.000E+12     0.000    -1000
+IC8-1R+IC8-4O2R=IC8-1OR+IC8-4OR            9.000E+12     0.000    -1000
+IC8-3R+IC8-4O2R=IC8-3OR+IC8-4OR            9.000E+12     0.000    -1000
+IC8-5R+IC8-5O2R=IC8-5OR+IC8-5OR            9.000E+12     0.000    -1000
+IC8D4+H=IC8-5R                             6.250E+11     0.500     2620
+IC8-3R+IC8-5O2R=IC8-3OR+IC8-5OR            9.000E+12     0.000    -1000
+IC8D3+H=IC8-3R                             2.500E+11     0.500     2620
+IC8D3+H=IC8-4R                             6.250E+11     0.500     2620
+IC8-1R+O2=IC8-1O2R                         6.860E+16    -1.627      199
+!!!!!!!!! class !!!!!!!!!
+!       SUBMECH!       R_O
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+IC8-1O2R+IC8-1O2R=IC8-1OR+IC8-1OR+O2       1.400E+16    -1.600     1860
+IC8-4O2R+IC8-3O2R=IC8-4OR+IC8-3OR+O2       1.400E+16    -1.600     1860
+IC8OH4-3R+O2=IC8OH4-3O2R                   2.000E+12     0.000        0
+IC8OH3-4R+O2=IC8OH3-4O2R                   2.000E+12     0.000        0
+IC8D3+OH=IC8OH4-3R                         1.000E+12     0.000    -1042
+IC8-5O2R+IC8-3O2R=IC8-5OR+IC8-3OR+O2       1.400E+16    -1.600     1860
+TC4H9+IC3H7CHO=IC8-3OR                     1.660E+10     0.000     5230
+IC8-5O2R+CH3O2=IC8-5OR+CH3O+O2             1.400E+16    -1.600     1860
+IC8-5O2R+IC8-1O2R=IC8-5OR+IC8-1OR+O2       1.400E+16    -1.600     1860
+IC8-1O2R+CH3O2=IC8-1OR+CH3O+O2             1.400E+16    -1.600     1860
+TC4H9CHO+IC3H7=IC8-3OR                     5.000E+10     0.000     2330
+IC8OH4-5R+O2=IC8OH4-5O2R                   2.000E+12     0.000        0
+IC8-4O2R+CH3O2=IC8-4OR+CH3O+O2             1.400E+16    -1.600     1860
+NEOC5H11+CH3COCH3=IC8-4OR                  8.330E+09     0.000     7240
+IC8OH5-4R+O2=IC8OH5-4O2R                   2.000E+12     0.000        0
+IC8-3O2R+IC8-1O2R=IC8-3OR+IC8-1OR+O2       1.400E+16    -1.600     1860
+IC8-3O2R+IC8-3O2R=IC8-3OR+IC8-3OR+O2       1.400E+16    -1.600     1860
+IC8D3+OH=IC8OH3-4R                         1.000E+12     0.000    -1042
+IC8-5O2R+IC8-5O2R=IC8-5OR+IC8-5OR+O2       1.400E+16    -1.600     1860
+CH2O+I24C7-2R=IC8-1OR                      5.000E+10     0.000     2330
+IC8-5O2R+IC8-4O2R=IC8-5OR+IC8-4OR+O2       1.400E+16    -1.600     1860
+IC8D4+OH=IC8OH4-5R                         1.000E+12     0.000    -1042
+IC8-3O2R+CH3O2=IC8-3OR+CH3O+O2             1.400E+16    -1.600     1860
+IC8-4O2R+IC8-1O2R=IC8-4OR+IC8-1OR+O2       1.400E+16    -1.600     1860
+NEC7-4R+CH2O=IC8-5OR                       5.000E+10     0.000     2330
+NEC7Y4+CH3=IC8-4OR                         1.500E+11     0.000    11900
+IC8D4+OH=IC8OH5-4R                         1.000E+12     0.000    -1042
+IC8-4O2R+IC8-4O2R=IC8-4OR+IC8-4OR+O2       1.400E+16    -1.600     1860
+!!!!!!!!! class !!!!!!!!!
+!       SUBMECH!       R_O2
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+IC8OOH4-1R=IC8O1-4+OH                      5.540E+10     0.000    10247
+IC8-5O2R=IC8OOH5-4R                        2.310E+09     0.800    27100
+IC8OOH1-3R=IC8O1-3+OH                      9.510E+11     0.000    14796
+IC8OOH1-1AR=IC4H7OOH+IC4H9                 2.460E+14    -0.140    26780
+IC8-5O2R=IC8OOH5-3R                        1.360E+07     1.300    18200
+IC8OOH1-4R+O2=IC8OOH1-4O2R                 4.880E+11     0.325     -417
+IC8OOH4-5R=IC8O4-5+OH                      3.550E+12     0.000     9903
+IC8-1O2R=IC8OOH1-1AR                       7.130E+06     1.600    21000
+IC8-3O2R=IC8OOH3-4R                        7.450E+09     0.600    27300
+IC8-4O2R=IC8OOH4-5R                        2.920E+09     1.100    33500
+IC8-5O2R=IC8OOH5-5AR                       3.570E+06     1.600    21000
+IC8-3O2R=IC8D3+HO2                         7.000E+10     0.710    30100
+IC8OOH3-1R=IC8O1-3+OH                      9.510E+11     0.000    14370
+IC8-1O2R=IC8OOH1-5R                        5.880E+05     1.500    19900
+IC8OOH3-4R=IC8D3+HO2                       7.820E+09     0.900    14900
+IC8OOH3-5R+O2=IC8OOH3-5O2R                 3.430E+16    -1.627      199
+IC8-4O2R=IC8OOH4-1R                        3.700E+06     1.500    20000
+IC8-5O2R=IC8D4+HO2                         2.520E+08     1.320    27900
+IC8OOH1-1AR=CH2O+I24C7D1+OH                3.080E+13     0.000    24935
+IC8OOH5-3R=NEC7D3+CH2O+OH                  3.080E+13     0.000    27203
+IC8OOH1-5R+O2=IC8OOH1-5O2R                 3.430E+16    -1.627      199
+IC8OOH1-4R=IC8O1-4+OH                      5.540E+10     0.000     7716
+IC8OOH3-4R=IC8O3-4+OH                      3.550E+12     0.000     5595
+IC8OOH1-5R=IC8O1-5+OH                      1.040E+10     0.000     9948
+IC8OOH5-4R=IC8D4+HO2                       8.380E+09     0.920    14500
+IC8-3O2R=IC8OOH3-1R                        4.320E+07     1.400    20800
+IC8OOH1-3R=I24C7D2+CH2O+OH                 3.080E+13     0.000    25258
+IC8OOH5-5AR=NEC7D4+CH2O+OH                 3.080E+13     0.000    25560
+IC8OOH3-1R=IC4H8+IC3H7CHO+OH               3.080E+13     0.000    21987
+IC8OOH4-1R=IC4H8+TC4H8O2H-I                2.460E+14    -0.140    26780
+IC8OOH5-5AR+O2=IC8OOH5-5AO2R               3.430E+16    -1.627      199
+IC8OOH5-1R+O2=IC8OOH5-1O2R                 3.430E+16    -1.627      199
+IC8-1O2R=IC8OOH1-3R                        1.360E+07     1.300    18200
+IC8-4O2R=IC8D3+HO2                         1.120E+11     0.580    29600
+IC8OOH5-3R=IC8O3-5+OH                      9.510E+11     0.000    14796
+IC8-4O2R=IC8OOH4-3R                        6.510E+09     0.700    30100
+IC8-4O2R=IC8D4+HO2                         2.450E+10     0.890    29500
+IC8-5O2R=IC8OOH5-1R                        8.820E+05     1.500    19900
+IC8OOH3-5R=IC8O3-5+OH                      9.510E+11     0.000    14370
+IC8OOH1-1AR+O2=IC8OOH1-1AO2R               3.430E+16    -1.627      199
+IC8OOH5-4R=IC8O4-5+OH                      3.550E+12     0.000     7422
+IC8OOH1-4R=IC4H8O2H-T+IC4H8                6.240E+14    -0.140    25890
+IC8OOH1-1AR=IC8O1-1A+OH                    6.340E+11     0.000    15518
+IC8OOH3-5R=C3H6+TC4H9CHO+OH                3.080E+13     0.000    22345
+IC8-3O2R=IC8OOH3-5R                        2.880E+07     1.400    20800
+IC8-1O2R=IC8OOH1-4R                        1.710E+06     1.200    13800
+IC8OOH4-3R=IC8D3+HO2                       3.010E+11     0.350    15200
+IC8OOH1-3R+O2=IC8OOH1-3O2R                 1.740E+14    -0.816     -536
+IC8OOH5-3R+O2=IC8OOH5-3O2R                 1.740E+14    -0.816     -536
+IC8OOH5-1R=IC8O1-5+OH                      1.040E+10     0.000     9948
+IC8OOH4-3R=IC8O3-4+OH                      3.550E+12     0.000     8233
+IC8OOH4-5R=IC8D4+HO2                       3.890E+13    -0.150    15500
+IC8OOH4-1R+O2=IC8OOH4-1O2R                 3.430E+16    -1.627      199
+IC8OOH3-1R+O2=IC8OOH3-1O2R                 3.430E+16    -1.627      199
+IC8OOH5-5AR=IC8O5-5A+OH                    6.340E+11     0.000    15518
+!!!!!!!!! class !!!!!!!!!
+!       SUBMECH!       R_O3-H
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+IC8O11A-3OOH=IC4H7O+IC3H7CHO+OH            1.500E+16     0.000    43000
+IC8O13-5OOH=IC6D3-2R+CH2O+CH2O+OH          1.500E+16     0.000    43000
+IC8KET1-3=IC8KET1-3O+OH                    1.500E+16     0.000    43000
+IC8O14-1AOOH=IC4H7+CH3COCH3+CH2O2H         1.500E+16     0.000    43000
+IC8O15-3OOH=NEOC5KETOX+C3H6+OH             1.500E+16     0.000    43000
+IC8O34-5OOH=NEC7Y4-3R+CH2O+OH              1.500E+16     0.000    43000
+IC8O34-1OOH=I24C7D2-4OR+CH2O+OH            1.500E+16     0.000    43000
+IC8O55A-3OOH=TC4H9CHO+C3H5O+OH             1.500E+16     0.000    43000
+IC8KET5-5A=IC8KET5-5AO+OH                  1.500E+16     0.000    43000
+IC8O11A-5OOH=IC4H7O+C3H6+CH2O2H            1.500E+16     0.000    43000
+IC8O45-3OOH=TC4H9CHO+CH3COCH2+OH           1.500E+16     0.000    43000
+IC8O15-1AOOH=IC6D1-4R+CH2O+CH2O+OH         1.500E+16     0.000    43000
+IC8O13-4OOH=TC4H8CHO+CH3COCH3+OH           1.500E+16     0.000    43000
+IC8O11A-4OOH=NEO-PC5H9O+CH3COCH3+OH        1.500E+16     0.000    43000
+IC8O15-3OOH=IC4H8+CHOIC3H6O+OH             1.500E+16     0.000    43000
+IC8KET3-5=IC8KET3-5O+OH                    1.500E+16     0.000    43000
+IC8O55A-1OOH=IC4H8+C3H5O+CH2O2H            1.500E+16     0.000    43000
+IC8O11A-1BOOH=CH2O+C3H4-A+IC3H7+CH2O2H     1.500E+16     0.000    43000
+IC8O45-5AOOH=NEOC5H11+CH2CO+CH2O2H         1.500E+16     0.000    43000
+IC8KET5-3=IC8KET5-3O+OH                    1.500E+16     0.000    43000
+IC8KET1-4=IC8KET1-4O+OH                    1.500E+16     0.000    43000
+IC8O45-1OOH=IC4H8+CH3COCH2+CH2O2H          1.500E+16     0.000    43000
+IC8O35-5AOOH=TC4H9+C2H3CHO+CH2O2H          1.500E+16     0.000    43000
+IC8KET3-1=IC8KET3-1O+OH                    1.500E+16     0.000    43000
+IC8O35-1OOH=IC6D3-2R+CH2O+CH2O+OH          1.500E+16     0.000    43000
+IC8O13-1AOOH=IC3H5CHO+IC3H7+CH2O2H         1.500E+16     0.000    43000
+IC8O14-3OOH=TC4H8CHO+CH3COCH3+OH           1.500E+16     0.000    43000
+IC8O15-5AOOH=IC6D4-2R+CH2O+CH2O+OH         1.500E+16     0.000    43000
+IC8KET1-1A=IC8KET1-1AO+OH                  1.500E+16     0.000    43000
+!!!!!!!!! class !!!!!!!!!
+!       SUBMECH!       R_O4
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+IC8Q14-3R=IC8O13-4OOH+OH                   9.510E+11     0.000    13655
+IC8Q11A-1BR=IC8O11A-1BOOH+OH               1.270E+12     0.000    15518
+IC8OOH1-1AO2R=IC8Q11A-5R                   5.880E+05     1.500    19900
+IC8Q35-4R=IC8O34-5OOH+OH                   3.550E+12     0.000     5329
+IC8OOH1-3O2R=IC8Q13-5R                     2.880E+07     1.400    20800
+IC8OOH1-1AO2R=IC8Q11A-1BR                  3.570E+06     1.600    21000
+IC8Q15-1AR=IC8O11A-5OOH+OH                 6.340E+11     0.000    15518
+IC8OOH1-1AO2R=IC8KET1-1A+OH                5.190E+04     1.900    18800
+IC8OOH5-1O2R=IC8Q15-1AR                    7.130E+06     1.600    21000
+IC8Q14-1AR=IC8O14-1AOOH+OH                 5.540E+10     0.000    10247
+IC8Q13-4R=IC8D3-1OOH+HO2                   7.820E+09     0.900    14900
+IC8OOH1-4O2R=IC8Q14-5R                     2.920E+09     1.100    33500
+IC8OOH1-4O2R=IC8KET1-4+OH                  2.820E+03     2.200    16400
+IC8OOH1-3O2R=IC8D3-1OOH+HO2                7.000E+10     0.710    30100
+IC8Q13-1AR=IC8O11A-3OOH+OH                 6.340E+11     0.000    15518
+IC8Q13-5R=IC8O15-3OOH+OH                   1.040E+10     0.000     8718
+IC8OOH5-5AO2R=IC8D4-5OOH+HO2               2.520E+08     1.320    27900
+IC8OOH1-4O2R=IC8Q14-3R                     6.510E+09     0.700    30100
+IC8OOH4-1O2R=IC8Q14-5R                     5.880E+05     1.500    19900
+IC8OOH3-5O2R=IC8Q35-5AR                    3.570E+06     1.600    21000
+IC8Q14-3R=IC8D3-1OOH+HO2                   3.010E+11     0.350    15200
+IC8OOH1-5O2R=IC8Q15-1AR                    5.880E+05     1.500    19900
+IC8Q15-3R=I24C7D2-5OOH+CH2O+OH             3.080E+13     0.000    25258
+IC8OOH1-3O2R=IC8Q13-1AR                    2.880E+07     1.400    20800
+IC8OOH3-1O2R=IC8Q13-4R                     1.710E+06     1.200    13800
+IC8OOH1-5O2R=IC8Q15-5AR                    3.570E+06     1.600    21000
+IC8Q13-1AR=IC4H7OOH+IC3H7CHO+OH            3.080E+13     0.000    24542
+IC8Q35-1R=IC4H8+IC4KETII+OH                3.080E+13     0.000    21515
+IC8Q35-5AR=TC4H9CHO+AC3H5OOH+OH            3.080E+13     0.000    23495
+IC8OOH3-1O2R=IC8Q13-1AR                    7.130E+06     1.600    21000
+IC8Q13-1AR=I24C7D1-3OOH+CH2O+OH            3.080E+13     0.000    26753
+IC8Q14-3R=IC8O34-1OOH+OH                   3.550E+12     0.000     8693
+IC8OOH5-3O2R=IC8D3-5OOH+HO2                7.000E+10     0.710    30100
+IC8OOH5-3O2R=IC8KET5-3+OH                  1.100E+04     2.400    19900
+IC8OOH1-1AO2R=IC8Q11A-4R                   1.710E+06     1.200    13800
+IC8Q14-5R=IC8O45-1OOH+OH                   3.550E+12     0.000     9843
+IC8Q15-5AR=IC8O15-5AOOH+OH                 1.040E+10     0.000     9948
+IC8OOH5-3O2R=IC8Q35-1R                     4.320E+07     1.400    20800
+IC8Q15-3R=IC8O13-5OOH+OH                   9.510E+11     0.000    14796
+IC8OOH5-1O2R=IC8Q15-4R                     1.710E+06     1.200    13800
+IC8OOH1-4O2R=IC8D4-1OOH+HO2                2.450E+10     0.890    29500
+IC8OOH3-5O2R=IC8KET3-5+OH                  5.790E+01     2.900    17000
+IC8OOH5-1O2R=IC8Q15-3R                     1.360E+07     1.300    18200
+IC8OOH4-1O2R=IC8Q14-1AR                    7.130E+06     1.600    21000
+IC8Q35-1R=IC8O15-3OOH+OH                   1.040E+10     0.000     8718
+IC8Q11A-3R=IC8O13-1AOOH+OH                 1.900E+12     0.000    14796
+IC8Q35-5AR=IC8O35-5AOOH+OH                 9.510E+11     0.000    14370
+IC8Q11A-4R=IC8O14-1AOOH+OH                 1.110E+11     0.000     7716
+IC8Q11A-4R=IIC4H7Q2-T+IC4H8                6.240E+14    -0.100    25890
+IC8OOH5-5AO2R=IC8Q55A-4R                   2.310E+09     0.800    27100
+IC8Q14-1AR=IC8O11A-4OOH+OH                 6.340E+11     0.000    14377
+IC8OOH1-4O2R=IC8Q14-1AR                    2.470E+06     1.500    20000
+IC8Q55A-4R=IC8O45-5AOOH+OH                 7.100E+12     0.000     7156
+IC8Q35-4R=IC8D3-5OOH+HO2                   7.820E+09     0.900    14900
+IC8OOH1-3O2R=IC8Q13-4R                     7.450E+09     0.600    27300
+IC8Q13-5R=NEOC5KET+C3H6+OH                 3.080E+13     0.000    22345
+IC8Q13-5R=IC8O35-1OOH+OH                   9.510E+11     0.000    14370
+IC8Q55A-1R=IC8O15-5AOOH+OH                 2.080E+10     0.000     9948
+IC8Q15-5AR=IC8O55A-1OOH+OH                 6.340E+11     0.000    15518
+IC8OOH5-3O2R=IC8Q35-4R                     7.450E+09     0.600    27300
+IC8OOH3-1O2R=IC8KET3-1+OH                  5.790E+01     2.900    17000
+IC8Q14-5R=IC8D4-1OOH+HO2                   3.890E+13    -0.150    15500
+IC8Q14-1AR=IC4H7OOH+TC4H8O2H-I             3.080E+13     0.000    22156
+IC8Q15-1AR=IC8O15-1AOOH+OH                 1.040E+10     0.000     9948
+IC8OOH1-5O2R=IC8Q15-3R                     1.360E+07     1.300    18200
+IC8Q55A-4R=IC8D4-5OOH+HO2                  8.380E+09     0.920    14500
+IC8Q15-4R=IC8D4-1OOH+HO2                   8.380E+09     0.920    14500
+IC8Q35-1R=IC8O13-5OOH+OH                   9.510E+11     0.000    14370
+IC8Q13-1AR=IC8O13-1AOOH+OH                 9.510E+11     0.000    15510
+IC8Q35-4R=IC8O45-3OOH+OH                   3.550E+12     0.000     5341
+IC8OOH5-5AO2R=IC8KET5-5A+OH                5.190E+04     1.900    18800
+IC8OOH4-1O2R=IC8Q14-3R                     1.360E+07     1.300    18200
+IC8Q35-4R=IC8D4-3OOH+HO2                   8.380E+09     0.920    14500
+IC8Q13-4R=IC8O14-3OOH+OH                   5.540E+10     0.000     4239
+IC8OOH5-1O2R=IC8Q15-5AR                    2.940E+05     1.500    19900
+IC8OOH1-5O2R=IC8D4-1OOH+HO2                2.520E+08     1.320    27900
+IC8Q11A-5R=IC8O15-1AOOH+OH                 2.080E+10     0.000     9948
+IC8Q15-5AR=NEOC5H10OOH+AC3H5OOH            3.080E+13     0.000    25560
+IC8OOH1-5O2R=IC8Q15-4R                     2.310E+09     0.800    27100
+IC8OOH3-5O2R=IC8Q35-1R                     8.820E+05     1.500    19900
+IC8OOH5-5AO2R=IC8Q55A-3R                   1.360E+07     1.300    18200
+IC8Q55A-3R=IC8O35-5AOOH+OH                 1.900E+12     0.000    14796
+IC8Q15-1AR=IC4H7OOH+IC4H8O2H-I             3.080E+13     0.000    21955
+IC8Q15-4R=IC8O45-1OOH+OH                   3.550E+12     0.000     7156
+IC8OOH3-1O2R=IC8Q13-5R                     5.880E+05     1.500    19900
+IC8OOH1-3O2R=IC8KET1-3+OH                  1.100E+04     2.400    19900
+IC8OOH1-4O2R=IC8D3-1OOH+HO2                1.120E+11     0.580    29600
+IC8Q15-3R=IC8O35-1OOH+OH                   9.510E+11     0.000    14796
+IC8OOH3-5O2R=IC8D4-3OOH+HO2                2.520E+08     1.320    27900
+IC8Q35-5AR=IC8O55A-3OOH+OH                 6.340E+11     0.000    14377
+IC8OOH3-5O2R=IC8Q35-4R                     2.310E+09     0.800    27100
+IC8OOH5-5AO2R=IC8Q55A-1R                   8.820E+05     1.500    19900
+IC8OOH5-3O2R=IC8Q35-5AR                    1.440E+07     1.400    20800
+IC8Q13-4R=IC8O34-1OOH+OH                   3.550E+12     0.000     3453
+IC8OOH1-1AO2R=IC8Q11A-3R                   1.360E+07     1.300    18200
+
+END 

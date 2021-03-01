@@ -34,8 +34,9 @@ class SortMech:
                     self.spc_dct: species dictionary
         """
         # extract data from mech info
-        [formula_dct_lst, formula_str_lst, rct_names_lst,
-            prd_names_lst, rxn_name_lst] = mech_info
+        [formula_dct_lst, _, rct_names_lst,
+            prd_names_lst, thrdbdy_lst, rxn_name_lst] = mech_info
+        rxn_index = list(zip(rxn_name_lst, thrdbdy_lst))
         # set dataframe: extract useful info
         pes_lst = util.count_atoms(formula_dct_lst)
         molecularity = list(map(len, rct_names_lst))
@@ -46,11 +47,11 @@ class SortMech:
             prd_names_lst, spc_dct=spc_dct)  # put heavier product first
         rct_1, rct_2 = util.get_S1S2(rct_names_lst_ordered)
         data = np.array([rct_names_lst, prd_names_lst, rct_names_lst_ordered, prd_names_lst_ordered,
-                         rct_1, rct_2, molecularity, n_of_prods, pes_lst], dtype=object).T
-        self.mech_df = pd.DataFrame(data, index=rxn_name_lst, columns=[
+                         rct_1, rct_2, molecularity, n_of_prods, pes_lst, thrdbdy_lst], dtype=object).T
+        self.mech_df = pd.DataFrame(data, index=rxn_index, columns=[
                                     'rct_names_lst', 'prd_names_lst', 'rct_names_lst_ord',
-                                    'prd_names_lst_ord', 'R1', 'R2', 'molecularity',
-                                    'N_of_prods', 'pes'])
+                                    'prd_names_lst_ord', 'r1', 'r2', 'molecularity',
+                                    'N_of_prods', 'pes', 'thrdbdy'])
 
         self.spc_dct = spc_dct  # set for later use
         # empty list for initialization (otherwise pylint warning)
@@ -153,7 +154,7 @@ class SortMech:
             # of the reaction considered
             if (not any(rct == species for species in species_list for rct in rcts)
                     and not any(prd == species for species in species_list for prd in prds)):
-                mech_df = mech_df.drop([rxn])
+                mech_df = mech_df.drop(index=[rxn])
             else:
                 # append all species to the list
                 spc_list.extend(rcts)
@@ -334,12 +335,8 @@ class SortMech:
                 # exclude all reactions with more than 2 reactants or products (not elementary!)
                 if len(rct_names) < 3 and len(prd_names) < 3:
 
-                    try:
-                        rclass = classify_graph(
-                            self.spc_dct, rct_names, prd_names)
-                    except IndexError:
-                        rclass = classify_graph_old(
-                            self.spc_dct, rct_names, prd_names)
+                    rclass = classify_graph(
+                        self.spc_dct, rct_names, prd_names)
 
                     if rclass is None:
                         if (subpes_df['molecularity'][rxn] == 1
@@ -443,7 +440,8 @@ class SortMech:
 
         rct_names = self.mech_df['rct_names_lst'].values
         prd_names = self.mech_df['prd_names_lst'].values
-        new_idx = list(zip(rct_names, prd_names))
+        thrdbdy = self.mech_df['thrdbdy'].values
+        new_idx = list(zip(rct_names, prd_names, thrdbdy))
         # store comments in dct
         cmts_df = pd.DataFrame(self.mech_df[['cmts_top', 'cmts_inline']].values, index=new_idx,
                                columns=['cmts_top', 'cmts_inline'])
@@ -479,9 +477,12 @@ def classify_graph(spc_dct, rct_names, prd_names):
         prd_ichs = tuple(spc_dct[spc]['inchi'] for spc in prd_names)
 
         if automol.formula.reac.is_valid_reaction(rct_fmls, prd_fmls):
-
-            rxn_classes = automol.reac._find.find_from_inchis(
-                rct_ichs, prd_ichs)
+            #print(rct_names,prd_names,rct_ichs,prd_ichs)
+            try:
+                rxn_classes = automol.reac._find.find_from_inchis(
+                    rct_ichs, prd_ichs)
+            except AssertionError:
+                rxn_classes = ['AssertionError','2']
 
             if rxn_classes:
                 # save only the first possible reaction type

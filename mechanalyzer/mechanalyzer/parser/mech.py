@@ -44,9 +44,10 @@ def build_dct(spc_dct, rxn_param_dct):
     '''
     # extract info from dictionary:
     # reactants and products
-    rcts, prds = zip(*rxn_param_dct.keys())
+    rcts, prds, thrdbdy = zip(*rxn_param_dct.keys())
     rct_names_lst = list(rcts)
     prd_names_lst = list(prds)
+    thrdbdy_lst = list(thrdbdy)
 
     # inchis dictionary
     ich_dct = mechanalyzer.parser.ckin_.get_ich_dct(spc_dct)
@@ -56,7 +57,7 @@ def build_dct(spc_dct, rxn_param_dct):
         rct_names_lst, prd_names_lst, ich_dct)
 
     mech_info = [formula_dct, formula_str,
-                 rct_names_lst, prd_names_lst, rxn_name]
+                 rct_names_lst, prd_names_lst, thrdbdy_lst, rxn_name]
 
     return mech_info
 
