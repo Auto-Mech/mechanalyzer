@@ -34,7 +34,7 @@ class SortMech:
                     self.spc_dct: species dictionary
         """
         # extract data from mech info
-        [formula_dct_lst, formula_str_lst, rct_names_lst,
+        [formula_dct_lst, _, rct_names_lst,
             prd_names_lst, thrdbdy_lst, rxn_name_lst] = mech_info
         rxn_index = list(zip(rxn_name_lst, thrdbdy_lst))
         # set dataframe: extract useful info

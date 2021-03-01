@@ -126,7 +126,22 @@ def test__sortby_submech():
     sort_main(CWD, SPC_NAME, MECH_NAME, SORTMECH_NAME,
               MECH_REST_NAME, ISOLATE_SPECIES, SORT_STR)
 
-
+def test__sortby_submech_class():
+    """
+    sort by fuel submechanism: extract reactions of
+    fuel, fuel radicals, R+O2, R+O4
+    then order by subpes
+    """
+    SPC_NAME = os.path.join(CWD, 'data', 'LLNL_species.csv')
+    MECH_NAME = os.path.join(CWD, 'data', 'LLNL_IC8_red_mech.dat')
+    MECH_REST_NAME = os.path.join(
+        CWD_RESULTS, 'LLNL_IC8_submech_class_mech_rest.txt')
+    SORTMECH_NAME = os.path.join(
+        CWD_RESULTS, 'LLNL_test_sortby_submech_class_IC8.txt')
+    ISOLATE_SPECIES = ['IC8', 'submech']
+    SORT_STR = ['submech', 'rxn_class_broad','rxn_class_graph', 1]  # NO HEADER
+    sort_main(CWD, SPC_NAME, MECH_NAME, SORTMECH_NAME,
+              MECH_REST_NAME, ISOLATE_SPECIES, SORT_STR)
 
 def sort_main(CWD, SPC_NAME, MECH_NAME, SORTMECH_NAME, MECH_REST_NAME, ISOLATE_SPECIES, SORT_STR):
     spc_dct_full, rxn_param_dct, elem_tuple = mechanalyzer.parser.mech.readfiles(
@@ -159,4 +174,5 @@ if __name__ == '__main__':
  #   test__sortby_submech()
  #   test__sortby_mult()
  #   test__sortby_molec_R1()
-    test__sortby_rxnclass()
+ #   test__sortby_rxnclass()
+    test__sortby_submech_class()
