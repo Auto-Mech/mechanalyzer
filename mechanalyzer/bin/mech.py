@@ -11,6 +11,7 @@ CWD = os.getcwd()
 # MODIFY THIS SECTION WITH INPUT NAMES AND SORTING OPTIONS
 
 SPC_NAME = 'LLNL_iC8H18_species.csv'
+
 MECH_NAME = 'mechanism.dat'
 SORTMECH_NAME = 'sorted_mech_IC8_cl_species.txt'
 # LIST OF SPECIES TO BE INCLUDED IN THE MECH; IF EMPTY: PROCESS THE FULL MECH
@@ -37,6 +38,7 @@ SORT_STR = ['submech', 'molecularity', 'rxn_class_broad', 'species', 1]
 ############ input reading ####################
 
 # READ FILE AND BUILD DICTIONARIES
+
 spc_dct_full, rxn_param_dct, elem_tuple = mechanalyzer.parser.mech.readfiles(
     os.path.join(CWD, SPC_NAME), os.path.join(CWD, MECH_NAME))
 
