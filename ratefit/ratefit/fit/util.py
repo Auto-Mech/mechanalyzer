@@ -5,6 +5,21 @@ utility functions used for the fitting functions
 import numpy as np
 
 
+def filter_ktp_dct(inp_ktp_dct, bimol, tmin=None, tmax=None):
+    """ Filters out negative and undefined rates from a ktp dictionary
+    """
+
+    filt_ktp_dct = {}
+    for pressure, kt_lst in inp_ktp_dct.items():
+        temps, kts = kt_lst[0], kt_lst[1]
+        filt_temps, filt_kts = get_valid_tk(
+            temps, kts, bimol, tmin=tmin, tmax=tmax)
+        if filt_kts.size > 0:
+            filt_ktp_dct[pressure] = [filt_temps, filt_kts]
+
+    return filt_ktp_dct
+
+
 def get_valid_tk(temps, rate_constants, bimol,
                  tmin=None, tmax=None):
     """ Takes in lists of temperature-rate constant pairs [T,k(T)]

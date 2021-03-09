@@ -4,7 +4,6 @@ Read the mechanism file
 
 import os
 import sys
-import mechanalyzer
 
 
 CWD = os.getcwd()
@@ -24,5 +23,3 @@ with open(os.path.join(CWD, SPC_NAME), 'r') as file_obj:
 # OLD
 # mechanalyzer.parser.spc.write_stereo_csv(
 #     SPC_STR, outname=OUTNAME, path=CWD, allstereo=ALLSTEREO)
-
-

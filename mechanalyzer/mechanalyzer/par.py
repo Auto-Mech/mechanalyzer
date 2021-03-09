@@ -12,6 +12,7 @@ class SPC():
     SMILES = 'smiles'
     CHARGE = 'charge'
     MULT = 'mult'
+    TSMULT = 'tsmult'
     # MULT = 'multiplicity'
     SENS = 'sensitivity'
     ELECLVLS = 'electronic_levels'
@@ -37,4 +38,4 @@ class THY():
     PROGRAM = 'program'
     METHOD = 'method'
     BASIS = 'basis'
-    ORB_RESTRICT = 'orb_restrict'  # fix
+    ORB_RESTRICT = 'orb_res'  # fix
