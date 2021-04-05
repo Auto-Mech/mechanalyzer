@@ -171,6 +171,32 @@ def write_basis_csv(spc_str, outname='species_hof_basis.csv', path='.', parallel
 
 def write_stereo_csv(spc_str, outname='species_stereo.csv', path='.',
                      allstereo=False):
+
+    # Build a stereochemical dictionary
+    new_dct, new_headers, names_in_order = write_stereo_dct(
+        spc_str, allstereo=allstereo)
+
+    # Writer string
+    spc_str = ','.join(['name'] + new_headers) + '\n'
+    for name in names_in_order:
+        if name in new_dct:
+            spc_str += '{},'.format(name)
+            for idx, header in enumerate(new_headers):
+                val = new_dct[name][header]
+                if isinstance(val, str):
+                    val = "'{}'".format(val)
+                spc_str += str(val)
+                if idx+1 < len(new_headers):
+                    spc_str += ','
+            spc_str += '\n'
+
+    # Write the file
+    stereo_file = os.path.join(path, outname)
+    with open(stereo_file, 'w') as file_obj:
+        file_obj.write(spc_str)
+
+
+def write_stereo_dct(spc_str, allstereo=False):
     """ read the species file in a .csv format and write a new one
         that has stero information
     """
@@ -217,24 +243,7 @@ def write_stereo_csv(spc_str, outname='species_stereo.csv', path='.',
     for proc in procs:
         proc.join()
 
-    # Writer string
-    spc_str = ','.join(['name'] + new_headers) + '\n'
-    for name in names_in_order:
-        if name in new_dct:
-            spc_str += '{},'.format(name)
-            for idx, header in enumerate(new_headers):
-                val = new_dct[name][header]
-                if isinstance(val, str):
-                    val = "'{}'".format(val)
-                spc_str += str(val)
-                if idx+1 < len(new_headers):
-                    spc_str += ','
-            spc_str += '\n'
-
-    # Write the file
-    stereo_file = os.path.join(path, outname)
-    with open(stereo_file, 'w') as file_obj:
-        file_obj.write(spc_str)
+    return new_dct, new_headers, names_in_order
 
 
 def _add_stereo_to_dct(queue, names, init_dct, headers_noich, allstereo):
