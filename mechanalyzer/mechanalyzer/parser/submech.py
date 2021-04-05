@@ -34,7 +34,7 @@ def species_subset(fuel, spc_dct):
     # extract formulas
     fml_df = extract_fml_df(spc_dct)
 
-    # generate a list of stoichiometries to extract and the corresponding labels
+    # Generate list of stoichiometries to extract and the corresponding labels
     stoich_fuel = fml_df.loc[fuel][['nC', 'nH', 'nO']].values
 
     stoich_dct = {
