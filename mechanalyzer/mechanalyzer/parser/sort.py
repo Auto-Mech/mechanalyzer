@@ -195,7 +195,7 @@ class SortMech:
         return conn_chn_df
 
     def group_species(self, reac_sp_df):
-        """ Checks if the reactions in self.mech_df contain any species 
+        """ Checks if the reactions in self.mech_df contain any species
             of self.species_list and if so it marks the species.
             Assignment is hierarchical: the first species of species_list
             found determines the label of the reaction being checked
@@ -228,7 +228,7 @@ class SortMech:
 
         :param self.mech_df: dataframe with mech info (contains all reactions)
         :param self.species_list: list of subset of species considered
-        :param self.species_subset_df: dataframe with species assigned to a 
+        :param self.species_subset_df: dataframe with species assigned to a
                                         certain type (fuel, fuel radical..)
         :param submech_df: empty dataframe index=rxns, column: 'submech'
 
@@ -292,7 +292,7 @@ class SortMech:
         return rxncl_broad_df
 
     def rxnclass_graph(self, rxncl_graph_df):
-        """ assigns reaction classes using graph approach to all reactions 
+        """ assigns reaction classes using graph approach to all reactions
             first subdivides the mech into subpeses; then classifies all rxn
             within the subpes, including wellskipping channels
 
@@ -477,12 +477,15 @@ def classify_graph(spc_dct, rct_names, prd_names):
         prd_ichs = tuple(spc_dct[spc]['inchi'] for spc in prd_names)
 
         if automol.formula.reac.is_valid_reaction(rct_fmls, prd_fmls):
-            #print(rct_names,prd_names,rct_ichs,prd_ichs)
+            # print(rct_names,prd_names,rct_ichs,prd_ichs)
             try:
+                # rxn_objs = automol.reac.util.rxn_objs_from_inchi(
+                #     rct_ichs, prd_ichs)
+                # rxn_classes = tuple(obj[0].class_ for obj in rxn_objs)
                 rxn_classes = automol.reac._find.find_from_inchis(
                     rct_ichs, prd_ichs)
             except AssertionError:
-                rxn_classes = ['AssertionError','2']
+                rxn_classes = ['AssertionError', '2']
 
             if rxn_classes:
                 # save only the first possible reaction type
@@ -492,8 +495,7 @@ def classify_graph(spc_dct, rct_names, prd_names):
 
         else:
             rclass = 'unclassified - Wrong Stoichiometry'
-        # check stereo compatibility - I am not sure about this input
-        # ret = automol.graph.trans.is_stereo_compatible(rclass, rct_graph, prd_graph)
+
     return rclass
 
 
@@ -528,9 +530,9 @@ def classify_ws(subpes_df, elem_reac_df, species_subpes, rxn):
     rxn_types_2 = rxn_types[rxn_types != '']
 
     try:
-        # TEMPORARY: SHOULD RECONSTRUCT THE FULL PATH FROM REACTANTS TO PRODUCTS
+        # TEMPORARY: SHOULD RECONSTRUCT FULL PATH FROM REACTANTS TO PRODUCTS
         rxn_type_1 = rxn_types_1[0]
-        # TEMPORARY: SHOULD RECONSTRUCT THE FULL PATH FROM REACTANTS TO PRODUCTS
+        # TEMPORARY: SHOULD RECONSTRUCT FULL PATH FROM REACTANTS TO PRODUCTS
         rxn_type_2 = rxn_types_2[0]
 
         # WRITE THE REACTION TYPE STRING
@@ -649,7 +651,7 @@ def format_graph(gra):
     returns: gra = sequence of graphs with appropriate format for the classifier
     - explicit hydrogens
     - no stereo parities
-    - unique keys    
+    - unique keys
     '''
     gra_explicit = list(
         map(automol.graph._graph.explicit, gra))

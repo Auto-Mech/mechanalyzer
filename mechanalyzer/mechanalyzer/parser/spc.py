@@ -39,15 +39,6 @@ def build_spc_dct(spc_str, spc_type):
 
 
 # Modify new file
-def modify_csv(spc_dct, mod_lst=()):
-    """ Take a CSV and add species and info as desired
-    """
-
-    # Modify the entries of the dct
-
-    # Add species
-
-
 def order_species_by_atomcount(spc_dct):
     """
     Returns a species dictionary ordered by increasing N of atoms in the species

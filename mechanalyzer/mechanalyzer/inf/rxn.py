@@ -16,8 +16,10 @@ RXN_PROPS = [
 
 
 def from_dct(reacs, prods, spc_dct, rxn_mul='low'):
-    """ prepare rxn info and reverse the reactants and products
-        if reaction is endothermic
+    """ Build a reaction info object using a species dictionary and names
+       
+        Add the names to the info object?
+        Have a way to get a dict object {(rctnames, prdnames) = rxn_info}
     """
 
     # Build the tuples of the reacs+prods infos

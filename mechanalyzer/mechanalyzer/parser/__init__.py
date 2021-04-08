@@ -9,6 +9,7 @@ from mechanalyzer.parser.json_ import parse_json
 from mechanalyzer.parser import submech
 from mechanalyzer.parser import util
 from mechanalyzer.parser import sort
+from mechanalyzer.parser._stereo import expand_mech_stereo
 
 __all__ = [
     'pes',
@@ -17,5 +18,6 @@ __all__ = [
     'parse_json',
     'submech',
     'util',
-    'sort'
+    'sort',
+    'expand_mech_stereo'
 ]

@@ -27,23 +27,6 @@ def read_mechanism_file(mech_str, mech_type, spc_dct, sort_rxns=False):
     # list, list of tuples, list of tuples, list
 
 
-def filter_keys(dct_1, dct_2):
-    '''
-    Given 2 dictionaries, with 1 bigger than 2,
-    it filters out from 1 all the entries present in 2
-    Returns filtered dictionary
-    '''
-
-    keys_topop = list(dct_2.keys())
-
-    for key in keys_topop:
-        try:
-            dct_1.pop(key, None)
-        except KeyError:
-            continue
-
-    return dct_1
-
 ########################## useful functions to the sorter #######################
 
 
@@ -138,3 +121,14 @@ def get_mult(spc_tuple, spc_dct):
         mult *= spc_dct[spc]['mult']
 
     return mult
+
+
+def get_ich_dct(spc_dct):
+    """Generates inchis dictionary from species dictionary
+    """
+    ich_dct = {}
+    for key in spc_dct.keys():
+        if 'ts' not in key and 'global' not in key:
+            ich_dct[key] = spc_dct[key]['inchi']
+
+    return ich_dct

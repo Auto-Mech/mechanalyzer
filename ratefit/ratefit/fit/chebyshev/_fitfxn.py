@@ -9,7 +9,7 @@ from scipy.special import eval_chebyt
 RCOND = -1 if int(np.__version__.split('.')[1]) < 14 else None
 
 
-def kfit(temps, ktp_dct, tdeg=6, pdeg=4, a_conv_factor=1):
+def reaction(temps, ktp_dct, tdeg=6, pdeg=4, a_conv_factor=1):
     """ Fits T,P-dependent rate constants [k(T,P)]s to a
         a Chebyshev functional expression.
 
