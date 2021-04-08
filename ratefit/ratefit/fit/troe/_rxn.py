@@ -8,7 +8,7 @@ from ratefit.fit.troe import troefit_io
 RC = 1.98720425864083e-3  # Gas Constant in kcal/mol.K
 
 
-def std_form(kpt_dct, troe_param_fit_lst, troefit_path,
+def reaction(kpt_dct, troe_param_fit_lst, troefit_path,
              highp_a=8.1e-11, highp_n=-0.01, highp_ea=1000.0,
              lowp_a=8.1e-11, lowp_n=-0.01, lowp_ea=1000.0,
              alpha=0.19, ts1=590.0, ts2=1.0e6, ts3=6.0e4,

@@ -1,0 +1,30 @@
+reg rxns
+rxn 0
+['InChI=1S/C4H9F/c1-3-4(2)5/h4H,3H2,1-2H3/t4-/m1/s1', 'InChI=1S/H']
+['InChI=1S/C4H8F/c1-3-4(2)5/h4H,1,3H2,2H3/t4-/m1/s1', 'InChI=1S/H2/h1H']
+rxn 1
+['InChI=1S/C5H10/c1-3-5-4-2/h3,5H,4H2,1-2H3/b5-3+', 'InChI=1S/H']
+['InChI=1S/C5H9/c1-3-5-4-2/h4-5H,1,3H2,2H3/b5-4+', 'InChI=1S/H2/h1H']
+rxn 0
+(['InChI=1S/C4H9F/c1-3-4(2)5/h4H,3H2,1-2H3/t4-/m0/s1', 'InChI=1S/H'], ['InChI=1S/H2/h1H', 'InChI=1S/C4H8F/c1-3-4(2)5/h4H,1,3H2,2H3'])
+(['InChI=1S/C4H9F/c1-3-4(2)5/h4H,3H2,1-2H3/t4-/m1/s1', 'InChI=1S/H'], ['InChI=1S/H2/h1H', 'InChI=1S/C4H8F/c1-3-4(2)5/h4H,1,3H2,2H3'])
+rxn 1
+(['InChI=1S/C5H10/c1-3-5-4-2/h3,5H,4H2,1-2H3/b5-3+', 'InChI=1S/H'], ['InChI=1S/H2/h1H', 'InChI=1S/C5H9/c1-3-5-4-2/h4-5H,1,3H2,2H3'])
+(['InChI=1S/C5H10/c1-3-5-4-2/h3,5H,4H2,1-2H3/b5-3-', 'InChI=1S/H'], ['InChI=1S/H2/h1H', 'InChI=1S/C5H9/c1-3-5-4-2/h4-5H,1,3H2,2H3'])
+ichdct
+ {'InChI=1S/C4H9F/c1-3-4(2)5/h4H,3H2,1-2H3/t4-/m1/s1': 'CH3CH2CHFCH3', 'InChI=1S/C4H8F/c1-3-4(2)5/h4H,1,3H2,2H3/t4-/m1/s1': 'CH2CH2CHFCH3', 'InChI=1S/C5H10/c1-3-5-4-2/h3,5H,4H2,1-2H3/b5-3+': 'CH3CH2CHCHCH3', 'InChI=1S/C5H9/c1-3-5-4-2/h4-5H,1,3H2,2H3/b5-4+': 'CH2CH2CHCHCH3', 'InChI=1S/H': 'H', 'InChI=1S/H2/h1H': 'H2'}
+spcdct
+ {'CH3CH2CHFCH3': {'smiles': 'CC[C@@H](C)F', 'inchi': 'InChI=1S/C4H9F/c1-3-4(2)5/h4H,3H2,1-2H3/t4-/m1/s1', 'inchikey': '', 'mult': 1, 'charge': 0, 'sens': 0.0, 'fml': {'C': 4, 'F': 1, 'H': 9}}, 'CH2CH2CHFCH3': {'smiles': '[CH2]C[C@@H](C)F', 'inchi': 'InChI=1S/C4H8F/c1-3-4(2)5/h4H,1,3H2,2H3/t4-/m1/s1', 'inchikey': '', 'mult': 2, 'charge': 0, 'sens': 0.0, 'fml': {'C': 4, 'F': 1, 'H': 8}}, 'CH3CH2CHCHCH3': {'smiles': 'C/C=C/CC', 'inchi': 'InChI=1S/C5H10/c1-3-5-4-2/h3,5H,4H2,1-2H3/b5-3+', 'inchikey': '', 'mult': 1, 'charge': 0, 'sens': 0.0, 'fml': {'C': 5, 'H': 10}}, 'CH2CH2CHCHCH3': {'smiles': '[CH2]C/C=C/C', 'inchi': 'InChI=1S/C5H9/c1-3-5-4-2/h4-5H,1,3H2,2H3/b5-4+', 'inchikey': '', 'mult': 2, 'charge': 0, 'sens': 0.0, 'fml': {'C': 5, 'H': 9}}, 'H': {'smiles': '[H]', 'inchi': 'InChI=1S/H', 'inchikey': '', 'mult': 2, 'charge': 0, 'sens': 0.0, 'fml': {'H': 1}}, 'H2': {'smiles': '[HH]', 'inchi': 'InChI=1S/H2/h1H', 'inchikey': '', 'mult': 1, 'charge': 0, 'sens': 0.0, 'fml': {'H': 2}}}
+rct_ichs ['InChI=1S/C4H9F/c1-3-4(2)5/h4H,3H2,1-2H3/t4-/m0/s1', 'InChI=1S/H']
+rct_ichs ['InChI=1S/C4H9F/c1-3-4(2)5/h4H,3H2,1-2H3/t4-/m1/s1', 'InChI=1S/H']
+rct_ichs ['InChI=1S/C5H10/c1-3-5-4-2/h3,5H,4H2,1-2H3/b5-3+', 'InChI=1S/H']
+rct_ichs ['InChI=1S/C5H10/c1-3-5-4-2/h3,5H,4H2,1-2H3/b5-3-', 'InChI=1S/H']
+H
+{'smiles': '[H]', 'inchi': 'InChI=1S/H', 'inchikey': '', 'mult': 2, 'charge': 0, 'sens': 0.0, 'fml': {'H': 1}}
+CH3CH2CHFCH3
+{'smiles': 'CC[C@@H](C)F', 'inchi': 'InChI=1S/C4H9F/c1-3-4(2)5/h4H,3H2,1-2H3/t4-/m1/s1', 'inchikey': '', 'mult': 1, 'charge': 0, 'sens': 0.0, 'fml': {'C': 4, 'F': 1, 'H': 9}}
+CH3CH2CHCHCH3
+{'smiles': 'C/C=C/CC', 'inchi': 'InChI=1S/C5H10/c1-3-5-4-2/h3,5H,4H2,1-2H3/b5-3+', 'inchikey': '', 'mult': 1, 'charge': 0, 'sens': 0.0, 'fml': {'C': 5, 'H': 10}}
+STE 
+
+END
