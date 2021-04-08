@@ -84,14 +84,14 @@ def get_valid_tk(temps, rate_constants, bimol,
             valid_t.append(temp)
             valid_k.append(rate_constant)
 
-     # Convert the lists to numpy arrays
-     valid_t = np.array(valid_t, dtype=np.float64)
-     valid_k = np.array(valid_k, dtype=np.float64)
+    # Convert the lists to numpy arrays
+    valid_t = np.array(valid_t, dtype=np.float64)
+    valid_k = np.array(valid_k, dtype=np.float64)
 
     # if not np.isclose(tmin, tmax):
     #     for temp, rate_constant in zip(temps, rate_constants):
 
-     return valid_t, valid_k
+    return valid_t, valid_k
 
 
 def flip_ktp_dct(ktp_dct):

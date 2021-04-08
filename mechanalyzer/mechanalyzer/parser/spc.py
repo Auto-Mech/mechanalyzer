@@ -333,9 +333,9 @@ def _generate_stereo(ich, allstereo=False):
     try:
         if not automol.inchi.is_complete(ich):
             if allstereo:
-                ret_ichs = automol.inchi.add_stereo(ich)
+                ret_ichs = automol.inchi.expand_stereo(ich)
             else:
-                ret_ichs = [automol.inchi.add_stereo(ich)[0]]
+                ret_ichs = [automol.inchi.add_stereo(ich)]
         else:
             ret_ichs = [ich]
     except:
