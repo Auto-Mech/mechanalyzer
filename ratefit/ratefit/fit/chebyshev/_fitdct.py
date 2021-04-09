@@ -7,20 +7,26 @@
 import numpy
 import ratefit
 import chemkin_io
-from mechlib.amech_io import printer as ioprinter
+from ratefit.fit import arrhenius
+from ratefit.fit._util import set_a_conversion_factor
 
 
-def perform_fits(ktp_dct, inp_temps, reaction, mess_path,
-                 a_conv_factor=1.0, t_ref=1.0, arrfit_method='python',
-                 tdeg=6, pdeg=4):
+# def pes(ktp_dct, inp_temps, reaction, mess_path,
+def pes(ktp_dct, reaction, mess_path,
+        t_ref=1.0, tdeg=6, pdeg=4,
+        fit_tolerance=20.0):
     """ Read the rates for each channel and perform the fits
     """
 
+    # Initialize the a conversion factor
+    a_conv_factor = set_a_conversion_factor(reaction)
+
     # Obtain the fit paramts for the 1-atm rate constants, if available
     if 1 in ktp_dct.keys():
+        a_conv_factor = ''
         [temps, rate_constants] = ktp_dct[1]
-        one_atm_params = ratefit.fit.arrhenius.single(
-            temps, rate_constants, t_ref, arrfit_method,
+        one_atm_params = arrhenius.single(
+            temps, rate_constants, t_ref, 'python',
             dsarrfit_path=mess_path, a_conv_factor=a_conv_factor)
     else:
         one_atm_params = [1.0, 0.0, 0.0]
@@ -36,7 +42,7 @@ def perform_fits(ktp_dct, inp_temps, reaction, mess_path,
         num_kts.append(len(rate_kts))
     fit_viable = True
     if len(set(num_kts)) != 1:
-        ioprinter.warning_message(
+        print(
             'Different number of k(T) values at different pressures...')
         fit_viable = False
 
@@ -47,15 +53,15 @@ def perform_fits(ktp_dct, inp_temps, reaction, mess_path,
         # print('fit_temps', fit_temps)
 
         # Fit rate constants to Chebyshev polynomial
-        alpha, trange, prange = ratefit.fit.chebyshev.kfit(
-            inp_temps, ktp_dct, tdeg=tdeg, pdeg=pdeg,
+        alpha, trange, prange = ratefit.fit.chebyshev.reaction(
+            fit_temps, ktp_dct, tdeg=tdeg, pdeg=pdeg,
             a_conv_factor=a_conv_factor)
         tmin, tmax = trange
         pmin, pmax = prange
 
         # Calculate the fitted rate constants
         fit_ktps = ratefit.calc.chebyshev(
-            alpha, tmin, tmax, pmin, pmax, inp_temps, pressures)
+            alpha, tmin, tmax, pmin, pmax, fit_temps, pressures)
 
         # Calculate errors
         err_dct, temp_dct = {}, {}
@@ -70,8 +76,8 @@ def perform_fits(ktp_dct, inp_temps, reaction, mess_path,
             err_dct[pressure] = [mean_avg_err, max_avg_err]
 
         # look at err and same num k(T) at each P
-        if max((vals[1] for vals in err_dct.values())) > 20.0:
-            ioprinter.warning_message(
+        if max((vals[1] for vals in err_dct.values())) > fit_tolerance:
+            print(
                 'Errors from Chebyshev fit too large (see string)...')
             fit_viable = False
 
@@ -84,7 +90,7 @@ def perform_fits(ktp_dct, inp_temps, reaction, mess_path,
 
     if not fit_viable:
         # Print message and reset string to empty to trigger Arrhenius
-        ioprinter.info_message('Chemkin string from Chebyshev fit')
+        print('Chemkin string from Chebyshev fit')
         chemkin_str = ''
 
     return chemkin_str

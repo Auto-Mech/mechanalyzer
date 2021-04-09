@@ -2,7 +2,56 @@
 Functions to handle various aspects of pressure dependence
 """
 
+import copy
 import numpy as np
+
+
+INI_PDEP_DCT = {
+    'pdep_temps': (500, 100),
+    'pdep_tol': 20.0,
+    'no_pdep_pval': 1.0,
+    'pdep_low': None,
+    'pdep_high': None
+}
+
+
+def pressure_dependent_ktp_dct(inp_ktp_dct,
+                               tolerance=INI_PDEP_DCT['pdep_tol'],
+                               pdep_temps=INI_PDEP_DCT['pdep_temps'],
+                               plow=INI_PDEP_DCT['plow'],
+                               phigh=INI_PDEP_DCT['phigh'],
+                               no_pdep_pval=INI_PDEP_DCT['no_pdep_pval']):
+    """ Takes a full ktp dictionary, assesses if there is significant
+        pressure dependnce in the rate constants.
+
+        If so, return the pressure dependent rates.
+        If not, return rates at a single pressure equal to some valeu
+
+        :param ktp_dct:
+        :type ktp_dct:
+    """
+
+    # Assess the pressure dependence of the rate constants
+    rxn_is_pdependent = assess_pressure_dependence(
+        inp_ktp_dct,
+        tolerance=tolerance,
+        assess_pdep_temps=pdep_temps,
+        plow=plow,
+        phigh=phigh)
+
+    # Build the rate constants
+    if rxn_is_pdependent:
+        print('Reaction found to be pressure dependent.',
+              'Fitting all k(T)s from all pressures',
+              'found in MESS.')
+        pdep_ktp_dct = copy.deepcopy(inp_ktp_dct)
+    else:
+        print('No pressure dependence detected.',
+              'Grabbing k(T)s at {} atm'.format(no_pdep_pval))
+        if no_pdep_pval in inp_ktp_dct:
+            pdep_ktp_dct = {'high': inp_ktp_dct[no_pdep_pval]}
+
+    return pdep_ktp_dct
 
 
 def assess_pressure_dependence(tk_dct, assess_pdep_temps,
