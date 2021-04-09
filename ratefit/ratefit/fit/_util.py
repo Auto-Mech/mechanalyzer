@@ -2,7 +2,9 @@
 utility functions used for the fitting functions
 """
 
+
 import numpy as np
+from phydat import phycon
 
 
 def filter_ktp_dct(inp_ktp_dct, bimol, tmin=None, tmax=None):
@@ -142,3 +144,10 @@ def pull_highp_from_dct(param_dct):
         highp_params = tuple()
 
     return highp_params, pdep_dct, pressures
+
+
+def set_a_conversion_factor(reaction):
+    """ Use reaction to set A conversion factor
+    """
+    [lab_i, _] = reaction.split('=')
+    return phycon.NAVO if 'W' not in lab_i else 1.00

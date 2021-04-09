@@ -4,78 +4,91 @@
 """
 
 import copy
-import numpy
-import ratefit
 import mess_io
-from phydat import phycon
-from mechlib.amech_io import writer
-from mechlib.amech_io import printer as print
-from mechroutines.pf.ktp.fit import _arr as arr
-from mechroutines.pf.ktp.fit import _cheb as cheb
+import ioformat
+from ratefit.fit import arrhenius as arrfit
+from ratefit.fit import chebyshev as chebfit
+# from ratefit.fit import troe as troefit
+from ratefit.fit import filter_ktp_dct
+from ratefit.fit import pressure_dependent_ktp_dct
 
 
-INI_ARRFIT_DCT = {}
-INI_TROE_DCT = {}
+DEFAULT_PDEP_DCT = {
+    'pdep_temps': (500, 100),
+    'pdep_tol': 20.0,
+    'no_pdep_pval': 1.0,
+    'pdep_low': None,
+    'pdep_high': None
+}
+DEFAULT_ARRFIT_DCT = {
+    'dblarr_tolerance': 15.0,
+    'dblarr_check': 'max'
+}
+DEFAULT_TROE_DCT = {
+    'param_list': ('ts1', 'ts2', 'ts3', 'alpha')
+}
+DEFAULT_CHEB_DCT = {
+    'tdeg': 6,
+    'pdeg': 4,
+    'fit_tolerance': 20.0
+}
 
 
-def fit_ktp_dct(mess_path, pes_formula,
-                pdep_dct={},
-                arrfit_dct={}, troe_dct={},
+def fit_ktp_dct(mess_path, pes_formula, fit_method,
+                pdep_dct=DEFAULT_PDEP_DCT,
+                arrfit_dct=DEFAULT_ARRFIT_DCT,
+                chebfit_dct=DEFAULT_CHEB_DCT,
+                troefit_dct=DEFAULT_TROE_DCT,
                 label_dct=None,
-                fit_temps=None, fit_pressure=None
+                fit_temps=None, fit_pressures=None,
                 fit_tunit='K', fit_punit='atm'):
     """ Parse the MESS output and fit the rates to
         Arrhenius expressions written as CHEMKIN strings
     """
 
     # Read the mess input and output strings using the path
-    mess_inp_str, mess_out_str = _read_mess(mess_path)
+    mess_out_str = ioformat.pathtools.read_file(mess_path, 'rate.out')
 
     # Read the label dct from the MESS file if unprovided
     if label_dct is None:
-        label_dct = _mess_labels(mess_path)
+        labels = mess_io.reader.rates.labels(mess_out_str, read_fake=False)
+        label_dct = dict(zip(labels, labels))
+    rxn_pairs = gen_reaction_pairs(label_dct)
 
     # Loop through reactions, fit rates, and write ckin strings
-    rxn_pairs = gen_reaction_pairs(label_dct)
+    chemkin_str_dct = {}
     for (name_i, lab_i), (name_j, lab_j) in rxn_pairs:
 
         # Set the name and A conversion factor
         reaction = name_i + '=' + name_j
-        a_conv_factor = phycon.NAVO if 'W' not in lab_i else 1.00
-        bimol = False if 'W' not in lab_i else True
-
         print('Reading and Fitting Rates for {}'.format(reaction))
 
         # Read the rate constants out of the mess outputs
         print('\nReading k(T,P)s from MESS output...')
         ktp_dct = read_rates(
-            inp_temps, inp_pressures, inp_tunit, inp_punit,
-            lab_i, lab_j, mess_path, pdep_fit,
-            bimol=bimol)
+            mess_out_str, pdep_dct, lab_i, lab_j,
+            fit_temps=fit_temps, fit_pressures=fit_pressures,
+            fit_tunit=fit_tunit, fit_punit=fit_punit)
 
         # Check the ktp dct and fit_method to see how to fit rates
-        fit_method = _assess_fit_method(ktp_dct, inp_fit_method)
+        fit_method = _assess_fit_method(ktp_dct, fit_method)
 
         # Get the desired fits in the form of CHEMKIN strs
         if fit_method is None:
             continue
         if fit_method == 'arrhenius':
-            chemkin_str = arr.perform_fits(
-                ktp_dct, reaction, mess_path,
-                a_conv_factor, arrfit_thresh)
+            chemkin_str = arrfit.pes(
+                ktp_dct, reaction, mess_path, **arrfit_dct)
         elif fit_method == 'chebyshev':
-            chemkin_str = cheb.perform_fits(
-                ktp_dct, inp_temps, reaction, mess_path,
-                a_conv_factor)
+            chemkin_str = chebfit.pes(
+                ktp_dct, reaction, mess_path, **chebfit_dct)
+            # ktp_dct, inp_temps, reaction, mess_path)
             if not chemkin_str:
-                chemkin_str = arr.perform_fits(
-                    ktp_dct, reaction, mess_path,
-                    a_conv_factor, arrfit_thresh)
+                chemkin_str = arrfit.pes(
+                    ktp_dct, reaction, mess_path, **arrfit_dct)
         # elif fit_method == 'troe':
-        #     # chemkin_str += troe.perform_fits(
-        #     #     ktp_dct, reaction, mess_path,
-        #     #     troe_param_fit_lst,
-        #     #     a_conv_factor, err_thresh)
+        #     chemkin_str += troefit.pes(
+        #         ktp_dct, reaction, mess_path, **troefit_dct)
 
         # Update the chemkin string dct
         print('Final Fitting Parameters in CHEMKIN Format:', chemkin_str)
@@ -88,6 +101,7 @@ def fit_ktp_dct(mess_path, pes_formula,
 def gen_reaction_pairs(label_dct):
     """ Generate pairs of reactions
     """
+
     rxn_pairs = ()
     for name_i, lab_i in label_dct.items():
         if 'F' not in lab_i and 'B' not in lab_i:
@@ -107,100 +121,66 @@ def gen_reaction_pairs(label_dct):
 
 
 # Readers
-def read_rates(mess_out_str, pdep_fit, rct_lab, prd_lab,
-               bimol=False,
-               fit_temps=None, fit_pressures=None
+def read_rates(mess_out_str, pdep_dct, rct_lab, prd_lab,
+               fit_temps=None, fit_pressures=None,
                fit_tunit=None, fit_punit=None):
     """ Read the rate constants from the MESS output and
         (1) filter out the invalid rates that are negative or undefined
         and obtain the pressure dependent values
     """
 
+    # Initialize vars
+    ktp_dct = {}
+    bimol = bool('W' not in rct_lab)
+
     # Read temperatures, pressures and rateks from MESS output
-    mess_temps, tunit = mess_io.reader.rates.temperatures(output_str)
-    mess_pressures, punit = mess_io.reader.rates.pressures(output_str)
-    
+    mess_temps, tunit = mess_io.reader.rates.temperatures(mess_out_str)
+    mess_press, punit = mess_io.reader.rates.pressures(mess_out_str)
+
     fit_temps = fit_temps if fit_temps is not None else mess_temps
-    fit_pressures = fit_pressures if fit_pressures is not None else mess_pressures
-    fit_tunit = fit_tunit if fit_tunit is not None else mess_tunit
-    fit_punit = fit_punit if fit_punit is not None else mess_punit
+    fit_pressures = fit_pressures if fit_pressures is not None else mess_press
+    fit_tunit = fit_tunit if fit_tunit is not None else tunit
+    fit_punit = fit_punit if fit_punit is not None else punit
 
     fit_temps = list(set(list(fit_temps)))
     fit_temps.sort()
-    assert inp_temps <= mess_temps
-    assert inp_pressures <= mess_pressures
+    assert fit_temps <= mess_temps
+    assert fit_pressures <= mess_press
 
-    # Loop over the pressures obtained from the MESS output
+    # Read all k(T,P) values from MESS output; filter negative/undefined values
     calc_ktp_dct = mess_io.reader.rates.ktp_dct(
-        output_string, rct_lab, prd_lab)
+        mess_out_str, rct_lab, prd_lab)
 
-    # Remove k(T) vals at each P where where k is negative or undefined
-    # If ANY valid k(T,P) vals at given pressure, store in dct
     print(
         'Removing invalid k(T,P)s from MESS output that are either:\n',
         '  (1) negative, (2) undefined [***], or (3) below 10**(-21) if',
         'reaction is bimolecular', newline=1)
-    filt_ktp_dct = ratefit.fit.filter_ktp_dct(calc_ktp_dct, bimol)
+    filt_ktp_dct = filter_ktp_dct(calc_ktp_dct, bimol)
 
     # Filter the ktp dictionary by assessing the presure dependence
     if filt_ktp_dct:
         if list(filt_ktp_dct.keys()) == ['high']:
-            print(
-                'Valid k(T)s only found at High Pressure...', newline=1)
+            print('\nValid k(T)s only found at High Pressure...')
             ktp_dct['high'] = filt_ktp_dct['high']
         else:
-            # if pdep_dct:
-            if pdep_fit:
+            if pdep_dct:
                 print(
                     'User requested to assess pressure dependence',
                     'of reaction.', newline=1)
-                rxn_is_pdependent = ratefit.fit.assess_pressure_dependence(
+                ktp_dct = pressure_dependent_ktp_dct(
                     filt_ktp_dct,
                     tolderance=pdep_dct['pdep_tol'],
                     pdep_temps=pdep_dct['pdep_temps'],
-                    plow=pdep_dct['plow'], plow=pdep_dct['plow'])
-                if rxn_is_pdependent:
-                    print(
-                        'Reaction found to be pressure dependent.',
-                        'Fitting all k(T)s from all pressures',
-                        'found in MESS.', indent=1/2.)
-                    ktp_dct = copy.deepcopy(filt_ktp_dct)
-                else:
-                    no_pdep_pval = pdep_fit['no_pdep_pval']
-                    print(
-                        'No pressure dependence detected.',
-                        'Grabbing k(T)s at {} {}'.format(
-                            no_pdep_pval, punit), newline=1)
-                    if no_pdep_pval in filt_ktp_dct:
-                        ktp_dct['high'] = filt_ktp_dct[no_pdep_pval]
+                    plow=pdep_dct['plow'],
+                    phigh=pdep_dct['phigh'],
+                    no_pdep_pval=DEFAULT_PDEP_DCT['no_pdep_pval'])
             else:
                 ktp_dct = copy.deepcopy(filt_ktp_dct)
-
-        # Patchy way to get high-pressure rates in dct if needed
-        if 'high' not in ktp_dct and 'high' in filt_ktp_dct.keys():
-            ktp_dct['high'] = filt_ktp_dct['high']
-    else:
-        ktp_dct = None
 
     return ktp_dct
 
 
-def _read_mess_path(mess_path):
-    """ Read the input and output strings from the MESS path
-    """
-
-    
-
-def read_labels(mess_path):
-    """ get the labels from the mess path
-    """
-    labels = mess_io.reader.labels(mess_inp_str, read_fake=False)
-    label_dct = dict(zip(label_dct, label_dct))
-
-    return label_dct
-
-
-def _assess_fit_method(ktp_dct, fit_method):
+def _assess_fit_method(ktp_dct, inp_fit_method):
     """ Assess if there are any rates to fit and if so, check if
         the input fit method should be used, or just simple Arrhenius
         fits will suffice because there is only one pressure for which

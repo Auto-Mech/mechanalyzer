@@ -3,24 +3,31 @@
   Arrhenius expressions
 """
 
-import ratefit
+from statistics import mean
 import chemkin_io
-from mechroutines.pf.ktp.fit._util import pull_highp_from_dct
-from mechlib.amech_io import printer as ioprinter
+from ratefit.fit import arrhenius as arrfit
+from ratefit.calc import rates as ratecalc
+from ratefit.fit import fitting_errors
+from ratefit.fit._util import pull_highp_from_dct
+from ratefit.fit._util import set_a_conversion_factor
 
 
 # Functions to fit rates to Arrhenius/PLOG function
 def pes(ktp_dct, reaction, mess_path,
-        a_conv_factor, arrfit_thresh):
+        dblarr_tolerance=15.0,
+        dblarr_check='max'):
     """ Read the rates for each channel and perform the fits
     """
+
+    # Initialize the a conversion factor
+    a_conv_factor = set_a_conversion_factor(reaction)
 
     # Fit rate constants to single Arrhenius expressions
     sing_params_dct, sing_fit_temp_dct, sing_fit_success = mod_arr_fit(
         ktp_dct, mess_path, fit_type='single', fit_method='python',
         t_ref=1.0, a_conv_factor=a_conv_factor)
     if sing_fit_success:
-        ioprinter.info_message(
+        print(
             'Successful fit to Single Arrhenius at all T, P', newline=1)
 
     # Assess the errors of the single Arrhenius Fit
@@ -43,14 +50,13 @@ def pes(ktp_dct, reaction, mess_path,
 
     # Assess single fitting errors:
     # are they within threshold at each pressure
-    thresh, choice = arrfit_thresh
-    if choice == 'max':
+    if dblarr_check == 'max':
         test_val = max((
             vals[1] for vals in sing_fit_err_dct.values()))
-    elif choice == 'mean':
-        test_val = max((
+    elif dblarr_check == 'mean':
+        test_val = mean((
             vals[0] for vals in sing_fit_err_dct.values()))
-    sgl_fit_good = bool(test_val < thresh)
+    sgl_fit_good = bool(test_val < dblarr_tolerance)
 
     # Put a double fit assess function
     # Skip first and last points in estimating maximum errors –
@@ -63,21 +69,21 @@ def pes(ktp_dct, reaction, mess_path,
     # Write chemkin string for single/double fit, based on errors
     chemkin_str = ''
     if sgl_fit_good:
-        ioprinter.info_message(
+        print(
             'Single fit errors acceptable: Using single fits')
         chemkin_str += sing_chemkin_str
     elif not sgl_fit_good and not dbl_fit_poss:
-        ioprinter.info_message(
+        print(
             'Not enough temperatures for a double fit:',
             ' Using single fits')
         chemkin_str += sing_chemkin_str
     elif not sgl_fit_good and dbl_fit_poss:
-        ioprinter.info_message(
+        print(
             'Single fit errs too large & double fit possible:',
             ' Trying double fit')
 
         # Generate guess parameters
-        ioprinter.info_message(
+        print(
             'Generating Double Fit Guess from Single Fit Parameters')
         guess_params_dct = make_dbl_fit_guess(sing_params_dct)
 
@@ -89,13 +95,13 @@ def pes(ktp_dct, reaction, mess_path,
             inp_param_dct=guess_params_dct)
 
         if doub_fit_suc:
-            ioprinter.info_message(
+            print(
                 'Successful fit to double Arrhenius at all T, P', newline=1)
 
-            ioprinter.info_message(
+            print(
                 'Writing fitting parameters and errors from ',
                 'single arrhenius fit for comparison', newline=1)
-            ioprinter.info_message(sing_chemkin_str)
+            print(sing_chemkin_str)
 
             # Assess the errors of the single Arrhenius Fit
             doub_fit_err_dct = assess_arr_fit_err(
@@ -114,7 +120,7 @@ def pes(ktp_dct, reaction, mess_path,
             chemkin_str += chemkin_io.writer.reaction.fit_info(
                 pressures, doub_fit_temp_dct, doub_fit_err_dct)
         else:
-            ioprinter.warning_message(
+            print(
                 'Double Arrhenius fit failed for some reason:',
                 ' Using single fits')
             chemkin_str += sing_chemkin_str
@@ -153,7 +159,7 @@ def mod_arr_fit(ktp_dct, mess_path,
         # Fit rate constants using desired Arrhenius fit
         if fit_type == 'single':
 
-            fit_params = ratefit.fit.arrhenius.single(
+            fit_params = arrfit.single(
                 temps, rate_constants, t_ref, fit_method,
                 dsarrfit_path=mess_path, a_conv_factor=a_conv_factor)
 
@@ -166,7 +172,7 @@ def mod_arr_fit(ktp_dct, mess_path,
             else:
                 arr1_guess, arr2_guess = (8.1e-11, -0.01, 2000.0), ()
 
-            fit_params = ratefit.fit.arrhenius.double(
+            fit_params = arrfit.double(
                 temps, rate_constants, t_ref, fit_method,
                 arr1_guess=arr1_guess, arr2_guess=arr2_guess,
                 dsarrfit_path=mess_path, a_conv_factor=a_conv_factor)
@@ -231,10 +237,10 @@ def _check_double_fit(sing_fit_dct, dbl_fit_dct,
         dparams = darr[1]
 
         # Calculate fitted rate constants, based on fit type
-        sgl_ks = ratefit.calc.single_arrhenius(
+        sgl_ks = ratecalc.single_arrhenius(
             sparams[0], sparams[1], sparams[2],
             t_ref, temps)
-        dbl_ks = ratefit.calc.double_arrhenius(
+        dbl_ks = ratecalc.double_arrhenius(
             dparams[0], dparams[1], dparams[2],
             dparams[3], dparams[4], dparams[5],
             t_ref, temps)
@@ -266,11 +272,11 @@ def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',
 
         # Calculate fitted rate constants, based on fit type
         if fit_type == 'single':
-            fit_ks = ratefit.calc.single_arrhenius(
+            fit_ks = ratecalc.single_arrhenius(
                 params[0], params[1], params[2],
                 t_ref, temps)
         elif fit_type == 'double':
-            fit_ks = ratefit.calc.double_arrhenius(
+            fit_ks = ratecalc.double_arrhenius(
                 params[0], params[1], params[2],
                 params[3], params[4], params[5],
                 t_ref, temps)
@@ -286,7 +292,7 @@ def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',
         # Assess the errors using some subset of the rate constants
         test_calc_ks, test_fit_ks = _gen_err_set(
             calc_ks, fit_ks, err_set=err_set)
-        mean_avg_err, max_avg_err = ratefit.fit.fitting_errors(
+        mean_avg_err, max_avg_err = fitting_errors(
             test_calc_ks, test_fit_ks)
 
         # Store in a dictionary

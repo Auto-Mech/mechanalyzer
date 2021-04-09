@@ -7,8 +7,8 @@ from scipy.special import eval_chebyt
 from phydat import phycon
 
 
-RC = phycon.RC_cal  # gas constant in cal/(mol.K) 
-RC2 = phycon.RC_atm  # gas constant in cm^3.atm/(mol.K) 
+RC = phycon.RC_cal  # gas constant in cal/(mol.K)
+RC2 = phycon.RC_atm  # gas constant in cm^3.atm/(mol.K)
 
 
 def single_arrhenius(a_par, n_par, ea_par,
@@ -508,7 +508,4 @@ def p_to_m(pressure, temps, rval=RC2):
         :return mconc: Conncentration of Gas (mol/cm^3)
         :rtype: float
     """
-    # print(pressure, type(pressure))
-    # print(temps, type(temps))
-    # print(rval, type(rval))
     return pressure / (rval * temps)
