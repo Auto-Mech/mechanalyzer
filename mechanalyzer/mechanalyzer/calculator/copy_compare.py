@@ -489,7 +489,7 @@ def reverse_ktp_dct(ktp_dct, spc_thermo_dct, rxn, temps):
         :type ktp_dct: dict {pressure1: (temp_array1, rates_array1), pressure2: ...}
     """
     [rcts, prds, third_bods] = rxn
-    #print('inside reverse_ktp_dct, rxn:\n', rxn)
+    print('inside reverse_ktp_dct, rxn:\n', rxn)
     k_equils = _calculate_equilibrium_constant(spc_thermo_dct, rcts, prds, temps)
     rev_ktp_dct = {}
     for pressure, (_, kts) in ktp_dct.items():

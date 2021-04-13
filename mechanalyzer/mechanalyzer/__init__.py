@@ -16,5 +16,5 @@ __all__ = [
     'parser',
     'plotter',
     'par',
-    'inf'
+    'inf',
 ]
