@@ -13,9 +13,19 @@ import chemkin_io
 
 
 def readfiles(spcfile, mechfile):
-    '''
+    """
     read the mechanism and the species files provided by the user
-    '''
+    :param spcfile: path of csv file for species
+    :type spcfile: string
+    :param mechfile: path of mech file
+    :type mechfile: string
+    :return spc_dct: species dictionary
+    :rtype spc_dct: dictionary
+    :return rxn_param_dct: reaction parameter dictionary
+    :rtype rxn_param_dct: dictionary
+    :return elem_tuple: elements of the mech
+    :rtype elem_tuple: tuple of strings ('el1','el2')
+    """
     with open(spcfile, 'r') as file_obj:
         spc_str = file_obj.read()
 
@@ -31,20 +41,29 @@ def readfiles(spcfile, mechfile):
     block_str = chemkin_io.parser.mechanism.reaction_block(mech_str)
     rxn_param_dct = chemkin_io.parser.reaction.param_dct(
         block_str, units[0], units[1])
-    # extract elements
-    el_block = chemkin_io.parser.mechanism.element_block(mech_str)
-    elem_tuple = chemkin_io.parser.species.names(el_block)
+    # extract elements if present
+    try:
+        el_block = chemkin_io.parser.mechanism.element_block(mech_str)
+        elem_tuple = chemkin_io.parser.species.names(el_block)
+    except:
+        elem_tuple = None
 
     return spc_dct, rxn_param_dct, elem_tuple
 
 
-def build_dct(spc_dct, rxn_param_dct):
-    '''
-    Build required info for mech sorting
-    '''
+def build_dct(spc_dct, rxn_dct):
+    """
+    Build mech_info object for mech sorting
+    :param spc_dct: species dictionary
+    :type spc_dct: dictionary
+    :param rxn_dct: parameter dictionary
+    :type rxn_dct_keys: dict
+    :return mech_info: objects with mech info
+    :rtype: list
+    """
     # extract info from dictionary:
     # reactants and products
-    rcts, prds, thrdbdy = zip(*rxn_param_dct.keys())
+    rcts, prds, thrdbdy = zip(*rxn_dct.keys())
     rct_names_lst = list(rcts)
     prd_names_lst = list(prds)
     thrdbdy_lst = list(thrdbdy)
@@ -57,7 +76,7 @@ def build_dct(spc_dct, rxn_param_dct):
         rct_names_lst, prd_names_lst, ich_dct)
 
     mech_info = [formula_dct, formula_str,
-                 rct_names_lst, prd_names_lst, thrdbdy_lst, rxn_name]
+                 rct_names_lst, prd_names_lst, thrdbdy_lst, rxn_name, list(rxn_dct.values())]
 
     return mech_info
 

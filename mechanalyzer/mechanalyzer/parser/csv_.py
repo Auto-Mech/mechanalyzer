@@ -154,6 +154,10 @@ def _read_csv_smiles(data, idxs):
         spc_dct = {}
         print('No "SMILES" or "InChI" column in csv file')
 
+    for name in idxs:
+        if str(spc_dct[name]) == 'nan':
+            spc_dct[name] = ''
+
     return spc_dct
 
 
