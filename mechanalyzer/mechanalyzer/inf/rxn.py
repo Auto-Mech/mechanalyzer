@@ -177,3 +177,23 @@ def ts_mult(inf_obj, rxn_mul='low'):
         _mul = int(round(2*_mul + 1))
 
     return _mul
+
+
+def radrad(inf_obj):
+    """ check if rxn is a rad-rad rxn
+    """
+
+    muls = value(inf_obj, par.SPC.MULT)
+    rct_muls = muls[0]
+    if len(rct_muls) > 1:
+        mul1, mul2 = rct_muls
+        rad_rad = bool(mul1 > 1 and mul2 > 1)
+    else:
+        prd_muls = muls[1]
+        if len(prd_muls) > 1:
+            mul1, mul2 = prd_muls
+            rad_rad = bool(mul1 > 1 and mul2 > 1)
+        else:
+            rad_rad = False
+
+    return rad_rad
