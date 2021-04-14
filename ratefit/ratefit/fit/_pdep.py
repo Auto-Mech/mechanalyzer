@@ -10,8 +10,8 @@ INI_PDEP_DCT = {
     'pdep_temps': (500, 100),
     'pdep_tol': 20.0,
     'no_pdep_pval': 1.0,
-    'pdep_low': None,
-    'pdep_high': None
+    'plow': None,
+    'phigh': None
 }
 
 
@@ -40,6 +40,12 @@ def pressure_dependent_ktp_dct(inp_ktp_dct,
         phigh=phigh)
 
     # Build the rate constants
+
+    # no pdep_dct is amde if no pdependence found and no_pdep_pval not in filtered ktp dct
+    # no high may be in there because rates may be undefined
+    # pdependecne check could fail if assess temp ranges not big enough
+    # pdep check lowest/highest temp
+
     if rxn_is_pdependent:
         print('Reaction found to be pressure dependent.',
               'Fitting all k(T)s from all pressures',
@@ -48,8 +54,12 @@ def pressure_dependent_ktp_dct(inp_ktp_dct,
     else:
         print('No pressure dependence detected.',
               'Grabbing k(T)s at {} atm'.format(no_pdep_pval))
+        # print('pval', no_pdep_pval)
+        # print('ktpdct\n', inp_ktp_dct)
         if no_pdep_pval in inp_ktp_dct:
             pdep_ktp_dct = {'high': inp_ktp_dct[no_pdep_pval]}
+        else:
+            pdep_ktp_dct = None
 
     return pdep_ktp_dct
 

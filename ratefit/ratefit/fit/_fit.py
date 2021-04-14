@@ -9,16 +9,16 @@ import ioformat
 from ratefit.fit import arrhenius as arrfit
 from ratefit.fit import chebyshev as chebfit
 # from ratefit.fit import troe as troefit
-from ratefit.fit import filter_ktp_dct
-from ratefit.fit import pressure_dependent_ktp_dct
+from ratefit.fit._util import filter_ktp_dct
+from ratefit.fit._pdep import pressure_dependent_ktp_dct
 
 
 DEFAULT_PDEP_DCT = {
     'pdep_temps': (500, 100),
     'pdep_tol': 20.0,
     'no_pdep_pval': 1.0,
-    'pdep_low': None,
-    'pdep_high': None
+    'plow': None,
+    'phigh': None
 }
 DEFAULT_ARRFIT_DCT = {
     'dblarr_tolerance': 15.0,
@@ -91,7 +91,7 @@ def fit_ktp_dct(mess_path, pes_formula, fit_method,
         #         ktp_dct, reaction, mess_path, **troefit_dct)
 
         # Update the chemkin string dct
-        print('Final Fitting Parameters in CHEMKIN Format:', chemkin_str)
+        print('\nFinal Fitting Parameters in CHEMKIN Format:', chemkin_str)
         ridx = pes_formula + '_' + reaction.replace('=', '_')
         chemkin_str_dct.update({ridx: chemkin_str})
 
@@ -144,17 +144,17 @@ def read_rates(mess_out_str, pdep_dct, rct_lab, prd_lab,
 
     fit_temps = list(set(list(fit_temps)))
     fit_temps.sort()
-    assert fit_temps <= mess_temps
-    assert fit_pressures <= mess_press
+    assert set(fit_temps) <= set(mess_temps)
+    assert set(fit_pressures) <= set(mess_press)
 
     # Read all k(T,P) values from MESS output; filter negative/undefined values
     calc_ktp_dct = mess_io.reader.rates.ktp_dct(
         mess_out_str, rct_lab, prd_lab)
 
     print(
-        'Removing invalid k(T,P)s from MESS output that are either:\n',
+        '\nRemoving invalid k(T,P)s from MESS output that are either:\n',
         '  (1) negative, (2) undefined [***], or (3) below 10**(-21) if',
-        'reaction is bimolecular', newline=1)
+        'reaction is bimolecular')
     filt_ktp_dct = filter_ktp_dct(calc_ktp_dct, bimol)
 
     # Filter the ktp dictionary by assessing the presure dependence
@@ -165,11 +165,11 @@ def read_rates(mess_out_str, pdep_dct, rct_lab, prd_lab,
         else:
             if pdep_dct:
                 print(
-                    'User requested to assess pressure dependence',
-                    'of reaction.', newline=1)
+                    '\nUser requested to assess pressure dependence',
+                    'of reaction.')
                 ktp_dct = pressure_dependent_ktp_dct(
                     filt_ktp_dct,
-                    tolderance=pdep_dct['pdep_tol'],
+                    tolerance=pdep_dct['pdep_tol'],
                     pdep_temps=pdep_dct['pdep_temps'],
                     plow=pdep_dct['plow'],
                     phigh=pdep_dct['phigh'],
@@ -194,6 +194,8 @@ def _assess_fit_method(ktp_dct, inp_fit_method):
         npressures = len(pressures)
         if npressures == 1 or (npressures == 2 and 'high' in pressures):
             fit_method = 'arrhenius'
+        else:
+            fit_method = inp_fit_method
     else:
         fit_method = None
 
@@ -201,18 +203,18 @@ def _assess_fit_method(ktp_dct, inp_fit_method):
     if fit_method == 'arrhenius':
         if inp_fit_method != 'arrhenius':
             print(
-                'Rates at not enough pressures for Troe/Chebyshev.', newline=1)
+                '\nRates at not enough pressures for Troe/Chebyshev.')
         print(
-            'Fitting k(T,P)s to PLOG/Arrhenius Form....', newline=1)
+            '\nFitting k(T,P)s to PLOG/Arrhenius Form....')
     elif fit_method == 'chebyshev':
         print(
-            'Fitting k(T,P)s to Chebyshev Form...', newline=1)
+            '\nFitting k(T,P)s to Chebyshev Form...')
     elif fit_method == 'troe':
         print(
-            'Fitting k(T,P)s to Tree Form...', newline=1)
+            '\nFitting k(T,P)s to Tree Form...')
     elif fit_method is None:
         print(
-            'No valid k(T,Ps)s from MESS output to fit.',
-            'Skipping to next reaction...', newline=1)
+            '\nNo valid k(T,Ps)s from MESS output to fit.',
+            'Skipping to next reaction...')
 
     return fit_method

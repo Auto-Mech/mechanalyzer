@@ -8,17 +8,90 @@
     kinetically connected via non-thermal processeses.
 """
 
-def find_connections(well_lst_dct, spc_lst_dct):
-    """ find places where rxns can connect
 
-        dct = {idx: (name1, name2, ..., name3)}
+def conn_pes(pes_dct):
+    """ Determine how PESs are connected
+
+        Fails to link multiple PESs with dif wells
+
+        Linked:
+        R+O2 = QOOH
+        QOOH + O2 = OOQOOH
+
+        Not Linked to Above I think (need new code)
+        OOQOOH = HOOQOOH
+
+        above will come back in two conn dcts
+
+    """
+
+    well_lst_dct, bimols_lst_dct, spc_lst_dct = _find_spc(pes_dct)
+    wells_in_pes = _well_locations(well_lst_dct, spc_lst_dct)
+
+    conn_lst = _sort_connected_pes(pes_dct, wells_in_pes)
+
+    return conn_lst
+
+
+# Determine where well species and all species exist on PESs
+def _find_spc(pes_dct):
+    """ Find all the wells on each PES.
+
+        Currently gets wells from all PESs, maybe should have
+        a check for getting the multichannel.
+
+        :param pes_dct: dictionary of pess
+        :type pes_dct: dict[?]
+        :rtype: dict[int: tuple]
+    """
+
+    # Build idx_name dct {idx: [names]}}
+    wells, bimols, spc = {}, {}, {}
+    for pes_idx, pes_rxns in enumerate(pes_dct):
+        pes_wells, pes_species, pes_bimols = [], [], []
+
+        for rxn in pes_rxns:
+            rcts, prds = rxn[0], rxn[1]
+
+            # Find the wells (could get the bimol)
+            if len(rcts) == 1:
+                pes_wells.append(rcts[0])
+            else:
+                pes_bimols.append(rcts)
+            if len(prds) == 1:
+                pes_wells.append(prds[0])
+            else:
+                pes_bimols.append(prds)
+
+            # Get the species for the reaction
+            pes_species.extend(rcts + prds)
+
+        wells.update({pes_idx: set(pes_wells)})
+        bimols.update({pes_idx: set(pes_bimols)})
+        spc.update({pes_idx: set(pes_species)})
+
+    # Get names where the wells are bimols
+
+    return wells, bimols, spc
+
+
+def _well_locations(well_lst_dct, spc_lst_dct):
+    """ Taking a list of all the wells (from multichannel PESs)
+
+        We determine what PESs the species that comprise these
+        wells exist in.
+
+        first get wells_in_pes = {well: [idx_lst]}
+
+        dct = {name: (idx1, idx2, ..., idx3)}
     """
 
     # Just build a list of wells
     wells = []
-    for well_lst in wells_lst_dct.values():
+    for well_lst in well_lst_dct.values():
         wells.extend(well_lst)
 
+    # Determine what PESs a well exists inside of
     wells_in_pes = {}
     for well in wells:
         idx_lst = []
@@ -27,56 +100,24 @@ def find_connections(well_lst_dct, spc_lst_dct):
                 idx_lst.append(pes_idx)
         wells_in_pes.update({well: idx_lst})
 
-    # OLD
-    for idx1, wells1 in wells_dct.items():
-        conns = {} 
-        conn_lst = []
-        for idx2, spc_lst in spc_dct.items():
-            # See if the well in pes1 in spclst of pes2
-            conn_wells = wells1 & spc_lst
-            if conn_wells:
-                conn_lst.append(idx2)
-
-        if conn_lst:
-            conns.update({idx1: (conn_wells, conn_lst)})
-
-    return conns
+    return wells_in_pes
 
 
-def find_species_and_wells(pes_dct):
-    """ Find all the wells on each PES
-
-        :param pes_dct: dictionary of pess
-        :type pes_dct: dict[?]
-        :rtype: dict[int: tuple]
+# Parse, modify, and sort well in PES list to write connections
+def _sort_connected_pes(pes_dct, wells_in_pes):
+    """ figures out what PESs are connected to do a chain of PESs
     """
 
-    # Build idx_name dct {idx: [names]}}
-    wells = {}
-    spc = {}
-    for pes_idx, pes_rxns in enumerate(ped_dct):
-        pes_wells = []
-        pes_species = []
-        # Only look at multichannel PESs for the wells?
-        for rxn in pes_rxns:
-            rcts, prds = rxn[0], rxn[1]
+    # Build new dictionary of well species that appear in multiple PESs
+    msurf_wells = {well: idxs
+                   for (well, idxs) in wells_in_pes.items()
+                   if len(idxs) > 1}
 
-            # Find the wells
-            if len(rcts) == 1:
-                pes_wells.append(rcts[0])
-            if len(prds) == 1:
-                pes_wells.append(prds[0])
+    # Now figure out how the idxs should be lists
+    # For a given well:
+    # (1) find pes idx1 where it is a well
+    # (2) find pes idx2 where it is in a bimol (where idx1 != idx2)
+    # (3) order indices to that idx1 comes first
 
-            # Get the species for the reaction
-            pes_spc.extend(rcts + prds)
 
-        wells.update({ped_idx: set(pes_wells)}) 
-        spc.update({ped_idx: set(pes_species)}) 
-
-    # Build name_idx dct for wells {name: idx}
-    name_idx_dct = {}
-    for idx, names in wells.items():
-        for name in names:
-            name_idx_dct[name] = idx
-
-    return wells, spc
+    return conn_lst

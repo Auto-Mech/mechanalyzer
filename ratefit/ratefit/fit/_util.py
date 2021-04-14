@@ -45,9 +45,19 @@ def get_valid_tk(temps, rate_constants, bimol,
         :rtype numpy.ndarray
         """
 
+    # Check inputs
+    # assert tmin in temps and tmax in temps
+
     # Set max temperature to user input, if none use max of input temperatures
     if tmax is None:
         tmax = max(temps)
+    else:
+        assert tmax in temps, ('{} not in temps: {}'.format(tmax, temps))
+
+    # print(rate_constants)
+    # print(temps)
+    # print(tmax)
+    # print(tmin)
 
     # Set min temperature to user input, if none use either
     # min of input temperatures or
@@ -63,23 +73,26 @@ def get_valid_tk(temps, rate_constants, bimol,
             if frate_constant < 0.0:
                 max_neg_idx = kt_idx
         # If a negative kt is found use temp+1
+        # If idx greater than num_temps: highest T is negative
         if max_neg_idx is not None:
-            tmin = temps[max_neg_idx+1]
+            if max_neg_idx+1 > len(temps):
+                tmin = temps[max_neg_idx+1]
         else:
             tmin = min(temps)
-
-    assert tmin in temps and tmax in temps
+    else:
+        assert tmin in temps, ('{} not in temps: {}'.format(tmin, temps))
 
     # Grab the temperature, rate constant pairs which correspond to
     # temp > 0, temp within tmin and tmax, rate constant defined (not ***)
     valid_t, valid_k = [], []
-    for temp, rate_constant in zip(temps, rate_constants):
-        if rate_constant == '***':
-            continue
-        kthresh = 0.0 if not bimol else 1.0e-24
-        if float(rate_constant) > kthresh and tmin <= temp <= tmax:
-            valid_t.append(temp)
-            valid_k.append(rate_constant)
+    if tmin is not None and tmax is not None:
+        for temp, rate_constant in zip(temps, rate_constants):
+            if rate_constant == '***':
+                continue
+            kthresh = 0.0 if not bimol else 1.0e-24
+            if float(rate_constant) > kthresh and tmin <= temp <= tmax:
+                valid_t.append(temp)
+                valid_k.append(rate_constant)
 
     # Convert the lists to numpy arrays
     valid_t = np.array(valid_t, dtype=np.float64)

@@ -7,7 +7,7 @@ from statistics import mean
 import chemkin_io
 from ratefit.fit import arrhenius as arrfit
 from ratefit.calc import rates as ratecalc
-from ratefit.fit import fitting_errors
+from ratefit.fit._err import fitting_errors
 from ratefit.fit._util import pull_highp_from_dct
 from ratefit.fit._util import set_a_conversion_factor
 
@@ -28,7 +28,7 @@ def pes(ktp_dct, reaction, mess_path,
         t_ref=1.0, a_conv_factor=a_conv_factor)
     if sing_fit_success:
         print(
-            'Successful fit to Single Arrhenius at all T, P', newline=1)
+            '\nSuccessful fit to Single Arrhenius at all T, P')
 
     # Assess the errors of the single Arrhenius Fit
     sing_fit_err_dct = assess_arr_fit_err(
@@ -96,11 +96,11 @@ def pes(ktp_dct, reaction, mess_path,
 
         if doub_fit_suc:
             print(
-                'Successful fit to double Arrhenius at all T, P', newline=1)
+                'Successful fit to double Arrhenius at all T, P')
 
             print(
                 'Writing fitting parameters and errors from ',
-                'single arrhenius fit for comparison', newline=1)
+                'single arrhenius fit for comparison')
             print(sing_chemkin_str)
 
             # Assess the errors of the single Arrhenius Fit

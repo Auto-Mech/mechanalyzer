@@ -1,0 +1,466 @@
+WELL1=WELL2                                       4.711E+03     1.910    12946
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-600 K,  MeanAbsErr:   2.7%,  MaxErr:   4.5%
+
+
+WELL1=WELL3                                       1.874E+04     1.576    18502
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-800 K,  MeanAbsErr:   8.2%,  MaxErr:  13.2%
+
+
+WELL1=WELL4                                       1.983E-08     5.220    22192   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   7.546E+05     0.000    23069 /
+    PLOG /                            1.000E-01   2.642E+00     2.220    23119 /
+    PLOG /                            1.000E+00   1.983E-08     5.220    22192 /
+    PLOG /                            1.000E+01   5.197E-15     7.582    21227 /
+    PLOG /                            1.000E+02   7.537E+00     2.859    26180 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-500 K,  MeanAbsErr:   4.2%,  MaxErr:   6.1%
+! Pressure: 0.100     Temps:    300-600 K,  MeanAbsErr:   4.3%,  MaxErr:   7.1%
+! Pressure: 1.000     Temps:    300-700 K,  MeanAbsErr:  14.1%,  MaxErr:  23.7%
+! Pressure: 10.000    Temps:    300-800 K,  MeanAbsErr:  20.7%,  MaxErr:  41.8%
+! Pressure: 100.000   Temps:   300-1200 K,  MeanAbsErr:  42.4%,  MaxErr: 105.6%
+! Pressure: High      Temps:   300-2000 K,  MeanAbsErr:  29.6%,  MaxErr: 104.2%
+
+
+WELL1=BIMOL1                                      2.508E+34    -7.375    34209   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   3.411E+47   -12.127    36075 /
+    PLOG /                            1.000E-01   9.327E+40    -9.664    35421 /
+    PLOG /                            1.000E+00   2.508E+34    -7.375    34209 /
+    PLOG /                            1.000E+01   2.966E+27    -5.050    32618 /
+    PLOG /                            1.000E+02   1.008E+23    -3.550    31605 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:   6.7%,  MaxErr:  14.5%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:  13.3%,  MaxErr:  28.4%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr:  18.0%,  MaxErr:  35.2%
+! Pressure: 10.000    Temps:   300-1100 K,  MeanAbsErr:  18.7%,  MaxErr:  33.5%
+! Pressure: 100.000   Temps:   300-1300 K,  MeanAbsErr:  19.6%,  MaxErr:  37.2%
+! Pressure: High      Temps:   300-2000 K,  MeanAbsErr:   0.4%,  MaxErr:   1.7%
+
+
+WELL1=BIMOL2                                      2.350E+22    -3.279    41723   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   6.517E+54   -14.820    47030 /
+    PLOG /                            1.000E-01   7.152E+48   -12.052    47578 /
+    PLOG /                            1.000E+00   2.350E+22    -3.279    41723 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:   2.9%,  MaxErr:   6.0%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:   7.1%,  MaxErr:  16.0%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr: 144.2%,  MaxErr: 930.1%
+
+
+WELL1=BIMOL3                                      3.304E+36    -7.799    29773   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   4.471E+41    -9.886    28296 /
+    PLOG /                            1.000E-01   5.009E+38    -8.707    28657 /
+    PLOG /                            1.000E+00   3.304E+36    -7.799    29773 /
+    PLOG /                            1.000E+01   4.274E+24    -3.927    27920 /
+    PLOG /                            1.000E+02   2.568E+10     0.492    24754 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:   6.5%,  MaxErr:  13.6%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:   9.5%,  MaxErr:  15.2%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr:  15.0%,  MaxErr:  27.6%
+! Pressure: 10.000    Temps:   300-1100 K,  MeanAbsErr:  14.5%,  MaxErr:  36.4%
+! Pressure: 100.000   Temps:   300-1300 K,  MeanAbsErr:  20.8%,  MaxErr:  69.7%
+
+
+WELL1=BIMOL4                                      1.336E+30    -6.424    37874   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   5.054E+30    -7.592    34654 /
+    PLOG /                            1.000E-01   3.006E+34    -8.178    37826 /
+    PLOG /                            1.000E+00   1.336E+30    -6.424    37874 /
+    PLOG /                            1.000E+01   1.610E+22    -3.666    36435 /
+    PLOG /                            1.000E+02   1.640E+17    -1.928    35554 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:  17.2%,  MaxErr:  39.7%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:  24.8%,  MaxErr:  70.5%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr:  35.2%,  MaxErr: 103.0%
+! Pressure: 10.000    Temps:   300-1100 K,  MeanAbsErr:  41.2%,  MaxErr: 116.4%
+! Pressure: 100.000   Temps:   300-1300 K,  MeanAbsErr:  42.1%,  MaxErr: 120.0%
+! Pressure: High      Temps:   300-2000 K,  MeanAbsErr:  17.9%,  MaxErr:  77.9%
+
+
+WELL1=BIMOL5                                      5.020E+39    -9.333    36431   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   2.795E+46   -12.099    35774 /
+    PLOG /                            1.000E-01   2.448E+41   -10.133    35529 /
+    PLOG /                            1.000E+00   5.020E+39    -9.333    36431 /
+    PLOG /                            1.000E+01   6.511E+31    -6.608    36010 /
+    PLOG /                            1.000E+02   4.732E+16    -1.793    32928 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:   7.4%,  MaxErr:  16.0%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:  12.5%,  MaxErr:  26.7%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr:  14.7%,  MaxErr:  27.1%
+! Pressure: 10.000    Temps:   300-1100 K,  MeanAbsErr:  16.3%,  MaxErr:  34.1%
+! Pressure: 100.000   Temps:   300-1300 K,  MeanAbsErr:  19.4%,  MaxErr:  43.6%
+
+
+WELL1=BIMOL6                                      7.275E+14    -1.442    33473
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:   300-1000 K,  MeanAbsErr:  59.7%,  MaxErr: 314.2%
+
+
+WELL1=BIMOL7                                      7.741E+43   -10.532    43546   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   2.263E+50   -13.632    39791 /
+    PLOG /                            1.000E-01   4.656E+49   -12.802    42510 /
+    PLOG /                            1.000E+00   7.741E+43   -10.532    43546 /
+    PLOG /                            1.000E+01   1.613E+28    -5.296    41228 /
+    PLOG /                            1.000E+02   4.331E+18    -2.321    39619 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:   6.8%,  MaxErr:  14.1%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:  11.7%,  MaxErr:  23.8%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr:  20.3%,  MaxErr:  48.5%
+! Pressure: 10.000    Temps:   300-1100 K,  MeanAbsErr:  29.7%,  MaxErr:  71.5%
+! Pressure: 100.000   Temps:   300-1300 K,  MeanAbsErr:  48.8%,  MaxErr: 163.7%
+
+
+WELL2=WELL3                                       1.783E-06     4.636    11849
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-600 K,  MeanAbsErr:   2.0%,  MaxErr:   3.4%
+
+
+WELL2=WELL4                                       3.383E-10     5.440    16147
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-600 K,  MeanAbsErr:   0.8%,  MaxErr:   1.3%
+
+
+WELL2=BIMOL1                                      2.439E+00     3.178    18390
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-600 K,  MeanAbsErr:   3.7%,  MaxErr:   6.4%
+
+
+WELL2=BIMOL2                                      4.672E-06     5.421    27952
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-600 K,  MeanAbsErr:   4.1%,  MaxErr:   7.2%
+
+
+WELL2=BIMOL3                                      7.703E+30    -6.389    16551
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-600 K,  MeanAbsErr:   0.6%,  MaxErr:   1.0%
+
+
+WELL2=BIMOL4                                      8.171E-16     7.847    19249
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-600 K,  MeanAbsErr:   0.2%,  MaxErr:   0.3%
+
+
+WELL2=BIMOL5                                      8.682E+33    -8.052    23444
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-600 K,  MeanAbsErr:   0.2%,  MaxErr:   0.4%
+
+
+WELL2=BIMOL6                                      6.857E-09     5.739    21240
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-600 K,  MeanAbsErr:   3.6%,  MaxErr:   6.3%
+
+
+WELL2=BIMOL7                                      6.639E+00     2.938    24764
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-600 K,  MeanAbsErr:   0.9%,  MaxErr:   1.5%
+
+
+WELL3=WELL4                                       4.901E+08    -0.678    17276
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-700 K,  MeanAbsErr:   8.9%,  MaxErr:  15.0%
+
+
+WELL3=BIMOL1                                      2.588E+12    -1.006    17521
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-800 K,  MeanAbsErr:  12.8%,  MaxErr:  23.7%
+
+
+WELL3=BIMOL2                                      1.700E+18    -1.997    24345
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-800 K,  MeanAbsErr:   1.9%,  MaxErr:   2.9%
+
+
+WELL3=BIMOL3                                      1.206E+15    -1.592    14737
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-800 K,  MeanAbsErr:  10.7%,  MaxErr:  16.7%
+
+
+WELL3=BIMOL4                                      3.932E+18    -3.281    24031
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-800 K,  MeanAbsErr:  13.3%,  MaxErr:  26.6%
+
+
+WELL3=BIMOL5                                      2.704E+18    -3.232    19918
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-800 K,  MeanAbsErr:  10.7%,  MaxErr:  19.1%
+
+
+WELL3=BIMOL6                                      1.945E+13    -1.110    15672
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-800 K,  MeanAbsErr:   2.5%,  MaxErr:   4.6%
+
+
+WELL3=BIMOL7                                      6.724E+25    -5.453    26702
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-800 K,  MeanAbsErr:   8.1%,  MaxErr:  17.9%
+
+
+WELL4=BIMOL1                                      1.096E+36    -8.074    22256   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   1.569E+08     0.000    12423 /
+    PLOG /                            1.000E-01   3.821E+42   -10.714    22476 /
+    PLOG /                            1.000E+00   1.096E+36    -8.074    22256 /
+    PLOG /                            1.000E+01   4.959E+23    -3.774    19907 /
+    PLOG /                            1.000E+02   1.842E+18    -1.905    18827 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-500 K,  MeanAbsErr:  15.8%,  MaxErr:  21.5%
+! Pressure: 0.100     Temps:    300-600 K,  MeanAbsErr:   1.3%,  MaxErr:   2.2%
+! Pressure: 1.000     Temps:    300-700 K,  MeanAbsErr:   2.0%,  MaxErr:   3.3%
+! Pressure: 10.000    Temps:    300-800 K,  MeanAbsErr:   3.9%,  MaxErr:   7.4%
+! Pressure: 100.000   Temps:   300-1200 K,  MeanAbsErr:   5.3%,  MaxErr:   9.6%
+! Pressure: High      Temps:   300-2000 K,  MeanAbsErr:   0.3%,  MaxErr:   0.9%
+
+
+WELL4=BIMOL2                                      2.233E+17    -3.160    28535   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   7.241E+02     0.000    18682 /
+    PLOG /                            1.000E-01   1.287E+24    -6.045    26624 /
+    PLOG /                            1.000E+00   2.233E+17    -3.160    28535 /
+    PLOG /                            1.000E+01   1.599E-01     2.866    26639 /
+    PLOG /                            1.000E+02   9.026E-03     3.029    28602 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-500 K,  MeanAbsErr:  11.2%,  MaxErr:  15.7%
+! Pressure: 0.100     Temps:    300-600 K,  MeanAbsErr:   3.2%,  MaxErr:   5.6%
+! Pressure: 1.000     Temps:    300-700 K,  MeanAbsErr:   1.1%,  MaxErr:   1.9%
+! Pressure: 10.000    Temps:    300-800 K,  MeanAbsErr:  10.3%,  MaxErr:  19.2%
+! Pressure: 100.000   Temps:   300-1200 K,  MeanAbsErr:  25.5%,  MaxErr:  53.6%
+
+
+WELL4=BIMOL3                                      1.800E+15    -2.140    17912   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   2.667E+06     0.000    10077 /
+    PLOG /                            1.000E-01   1.473E+15    -2.468    14927 /
+    PLOG /                            1.000E+00   1.800E+15    -2.140    17912 /
+    PLOG /                            1.000E+01   1.456E+10    -0.279    19657 /
+    PLOG /                            1.000E+02   7.233E+01     2.279    19733 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-500 K,  MeanAbsErr:   7.3%,  MaxErr:  10.5%
+! Pressure: 0.100     Temps:    300-600 K,  MeanAbsErr:   1.0%,  MaxErr:   1.8%
+! Pressure: 1.000     Temps:    300-700 K,  MeanAbsErr:   3.4%,  MaxErr:   6.6%
+! Pressure: 10.000    Temps:    300-800 K,  MeanAbsErr:  14.6%,  MaxErr:  30.0%
+! Pressure: 100.000   Temps:   300-1200 K,  MeanAbsErr:  28.8%,  MaxErr:  71.7%
+
+
+WELL4=BIMOL4                                      2.397E+27    -6.852    27263   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   9.214E+01     0.000    14937 /
+    PLOG /                            1.000E-01   2.890E+25    -6.896    23762 /
+    PLOG /                            1.000E+00   2.397E+27    -6.852    27263 /
+    PLOG /                            1.000E+01   1.186E+09    -0.519    24935 /
+    PLOG /                            1.000E+02   5.994E+00     2.170    24157 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-500 K,  MeanAbsErr:   7.4%,  MaxErr:  10.7%
+! Pressure: 0.100     Temps:    300-600 K,  MeanAbsErr:   1.5%,  MaxErr:   2.6%
+! Pressure: 1.000     Temps:    300-700 K,  MeanAbsErr:   3.6%,  MaxErr:   6.5%
+! Pressure: 10.000    Temps:    300-800 K,  MeanAbsErr:  12.5%,  MaxErr:  24.5%
+! Pressure: 100.000   Temps:   300-1200 K,  MeanAbsErr:  26.2%,  MaxErr:  54.9%
+
+
+WELL4=BIMOL5                                      3.147E+22    -5.157    22959   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   4.533E+03     0.000    12452 /
+    PLOG /                            1.000E-01   5.943E+22    -5.726    19991 /
+    PLOG /                            1.000E+00   3.147E+22    -5.157    22959 /
+    PLOG /                            1.000E+01   3.144E+11    -1.276    23282 /
+    PLOG /                            1.000E+02   7.021E+00     2.090    22873 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-500 K,  MeanAbsErr:  10.1%,  MaxErr:  14.3%
+! Pressure: 0.100     Temps:    300-600 K,  MeanAbsErr:   1.5%,  MaxErr:   2.6%
+! Pressure: 1.000     Temps:    300-700 K,  MeanAbsErr:   3.3%,  MaxErr:   5.9%
+! Pressure: 10.000    Temps:    300-800 K,  MeanAbsErr:  12.5%,  MaxErr:  25.0%
+! Pressure: 100.000   Temps:   300-1200 K,  MeanAbsErr:  25.5%,  MaxErr:  58.3%
+
+
+WELL4=BIMOL6                                      2.213E+17    -3.530    24795   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   9.324E+02     0.000    14222 /
+    PLOG /                            1.000E-01   4.660E+22    -5.751    22548 /
+    PLOG /                            1.000E+00   2.213E+17    -3.530    24795 /
+    PLOG /                            1.000E+01   9.634E+00     1.821    23169 /
+    PLOG /                            1.000E+02   5.560E-01     1.888    24567 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-500 K,  MeanAbsErr:  10.0%,  MaxErr:  14.2%
+! Pressure: 0.100     Temps:    300-600 K,  MeanAbsErr:   2.0%,  MaxErr:   3.5%
+! Pressure: 1.000     Temps:    300-700 K,  MeanAbsErr:   3.3%,  MaxErr:   5.8%
+! Pressure: 10.000    Temps:    300-800 K,  MeanAbsErr:  13.2%,  MaxErr:  25.7%
+! Pressure: 100.000   Temps:   300-1200 K,  MeanAbsErr:  33.4%,  MaxErr:  66.1%
+
+
+WELL4=BIMOL7                                      2.976E+26    -5.017    15104   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   2.762E+09     0.000     8901 /
+    PLOG /                            1.000E-01   7.097E+33    -7.698    16137 /
+    PLOG /                            1.000E+00   2.976E+26    -5.017    15104 /
+    PLOG /                            1.000E+01   3.470E+17    -1.961    13232 /
+    PLOG /                            1.000E+02   2.020E+15    -1.171    12877 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-500 K,  MeanAbsErr:  13.4%,  MaxErr:  18.5%
+! Pressure: 0.100     Temps:    300-600 K,  MeanAbsErr:   0.0%,  MaxErr:   0.0%
+! Pressure: 1.000     Temps:    300-700 K,  MeanAbsErr:   3.2%,  MaxErr:   5.2%
+! Pressure: 10.000    Temps:    300-800 K,  MeanAbsErr:   3.8%,  MaxErr:   7.1%
+! Pressure: 100.000   Temps:   300-1200 K,  MeanAbsErr:   5.6%,  MaxErr:  10.3%
+! Pressure: High      Temps:   300-2000 K,  MeanAbsErr:   0.4%,  MaxErr:   1.7%
+
+
+BIMOL1=BIMOL2                                     8.032E+50   -13.534    35921
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:   600-2000 K,  MeanAbsErr:   9.7%,  MaxErr:  20.1%
+
+
+BIMOL1=BIMOL3                                     2.824E+42   -11.114    19003   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   4.268E+40   -10.748    14343 /
+    PLOG /                            1.000E-01   4.687E+42   -11.277    16803 /
+    PLOG /                            1.000E+00   2.824E+42   -11.114    19003 /
+    PLOG /                            1.000E+01   1.737E+47   -12.350    25197 /
+    PLOG /                            1.000E+02   1.850E+45   -11.556    30024 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:   300-2000 K,  MeanAbsErr:  20.4%,  MaxErr:  38.7%
+! Pressure: 0.100     Temps:   300-2000 K,  MeanAbsErr:  20.3%,  MaxErr:  44.5%
+! Pressure: 1.000     Temps:   300-2000 K,  MeanAbsErr:  19.8%,  MaxErr:  69.5%
+! Pressure: 10.000    Temps:   400-2000 K,  MeanAbsErr:  11.9%,  MaxErr:  32.5%
+! Pressure: 100.000   Temps:   500-2000 K,  MeanAbsErr:  16.4%,  MaxErr:  36.6%
+
+
+BIMOL1=BIMOL4                                     1.096E+20    -4.683    17777
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:   600-2000 K,  MeanAbsErr:   5.0%,  MaxErr:  12.1%
+
+
+BIMOL1=BIMOL5                                     1.056E+37    -9.966    20933
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:   500-2000 K,  MeanAbsErr:  12.6%,  MaxErr:  23.1%
+
+
+BIMOL1=BIMOL6                                     2.102E+59   -16.542    35493
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:   600-2000 K,  MeanAbsErr:  12.9%,  MaxErr:  40.0%
+
+
+BIMOL1=BIMOL7                                     2.986E+26    -5.310    18071   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   3.269E+20    -3.619    14159 /
+    PLOG /                            1.000E-01   5.201E+22    -4.249    15484 /
+    PLOG /                            1.000E+00   2.986E+26    -5.310    18071 /
+    PLOG /                            1.000E+01   2.387E+32    -6.946    22816 /
+    PLOG /                            1.000E+02   3.764E+24    -4.577    21686 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:   300-2000 K,  MeanAbsErr:   9.5%,  MaxErr:  19.2%
+! Pressure: 0.100     Temps:   300-2000 K,  MeanAbsErr:   5.5%,  MaxErr:  11.3%
+! Pressure: 1.000     Temps:   300-2000 K,  MeanAbsErr:   3.6%,  MaxErr:  14.0%
+! Pressure: 10.000    Temps:   400-2000 K,  MeanAbsErr:   7.0%,  MaxErr:  20.5%
+! Pressure: 100.000   Temps:   400-2000 K,  MeanAbsErr:  17.8%,  MaxErr:  42.4%
+
+
+BIMOL2=BIMOL3                                     1.725E+46   -11.269    19842   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   2.284E+36    -8.570    11662 /
+    PLOG /                            1.000E-01   5.013E+42   -10.384    15303 /
+    PLOG /                            1.000E+00   1.725E+46   -11.269    19842 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:   300-2000 K,  MeanAbsErr:   6.9%,  MaxErr:  14.7%
+! Pressure: 0.100     Temps:   300-2000 K,  MeanAbsErr:   8.1%,  MaxErr:  28.1%
+! Pressure: 1.000     Temps:   300-2000 K,  MeanAbsErr:  35.1%,  MaxErr:  83.3%
+
+
+BIMOL2=BIMOL4                                     9.805E+32    -7.551    22266   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   1.062E+19    -3.637    11984 /
+    PLOG /                            1.000E-01   1.136E+23    -4.779    14663 /
+    PLOG /                            1.000E+00   9.805E+32    -7.551    22266 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:   300-2000 K,  MeanAbsErr:  13.3%,  MaxErr:  31.5%
+! Pressure: 0.100     Temps:   300-2000 K,  MeanAbsErr:   9.1%,  MaxErr:  21.5%
+! Pressure: 1.000     Temps:   400-2000 K,  MeanAbsErr:   8.9%,  MaxErr:  19.2%
+
+
+BIMOL2=BIMOL5                                     8.377E+38    -9.614    19907   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   1.581E+29    -6.944    11842 /
+    PLOG /                            1.000E-01   2.038E+34    -8.399    15037 /
+    PLOG /                            1.000E+00   8.377E+38    -9.614    19907 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:   300-2000 K,  MeanAbsErr:  10.0%,  MaxErr:  21.4%
+! Pressure: 0.100     Temps:   300-2000 K,  MeanAbsErr:   7.1%,  MaxErr:  24.3%
+! Pressure: 1.000     Temps:   300-2000 K,  MeanAbsErr:  27.4%,  MaxErr:  81.8%
+
+
+BIMOL2=BIMOL6                                     2.065E+22    -3.470    14210   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   8.301E+20    -3.138    11859 /
+    PLOG /                            1.000E-01   1.036E+22    -3.443    12718 /
+    PLOG /                            1.000E+00   2.065E+22    -3.470    14210 /
+    PLOG /                            1.000E+01   5.394E+11    -0.316    11668 /
+    PLOG /                            1.000E+02   7.864E+07     0.573    10724 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:   300-2000 K,  MeanAbsErr:  22.7%,  MaxErr:  59.0%
+! Pressure: 0.100     Temps:   300-2000 K,  MeanAbsErr:  22.8%,  MaxErr:  60.0%
+! Pressure: 1.000     Temps:   300-2000 K,  MeanAbsErr:  33.7%,  MaxErr:  94.7%
+! Pressure: 10.000    Temps:   300-2000 K,  MeanAbsErr:  31.7%,  MaxErr:  89.3%
+! Pressure: 100.000   Temps:   300-2000 K,  MeanAbsErr:  19.3%,  MaxErr:  56.7%
+
+
+BIMOL2=BIMOL7                                     5.616E+38    -9.388    23708   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   2.031E+22    -4.775    11796 /
+    PLOG /                            1.000E-01   1.103E+27    -6.119    14870 /
+    PLOG /                            1.000E+00   5.616E+38    -9.388    23708 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:   300-2000 K,  MeanAbsErr:  13.5%,  MaxErr:  31.1%
+! Pressure: 0.100     Temps:   300-2000 K,  MeanAbsErr:   8.4%,  MaxErr:  20.5%
+! Pressure: 1.000     Temps:   400-2000 K,  MeanAbsErr:   9.6%,  MaxErr:  18.9%
+
+
+BIMOL3=BIMOL5                                     1.293E+18    -3.330    55582
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:  1600-2000 K,  MeanAbsErr:   0.0%,  MaxErr:   0.0%
+
+
+BIMOL5=BIMOL6                                     1.380E+27    -6.473    45528
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:  1500-2000 K,  MeanAbsErr:   0.2%,  MaxErr:   0.2%
+
+
+BIMOL5=BIMOL7                                     8.913E+14    -2.309    48311
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:  1400-2000 K,  MeanAbsErr:   0.0%,  MaxErr:   0.0%
+
+
+BIMOL6=BIMOL7                                     8.816E-01     0.000        0
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:  2000-2000 K,  MeanAbsErr:   0.0%,  MaxErr:   0.0%

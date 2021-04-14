@@ -90,6 +90,7 @@ def run_dsarrfit(path):
 
     # Run the executable
     exe_cmd = 'dsarrfit.x_cfg'
+    # exe_cmd = 'ratefit/external/dsarrfit/debug/dsarrfit.x_cfg'
     try:
         subprocess.check_call([exe_cmd])
     except subprocess.CalledProcessError:
