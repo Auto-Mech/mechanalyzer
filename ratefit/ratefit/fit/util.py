@@ -43,6 +43,7 @@ def get_valid_tk(temps, rate_constants, bimol,
         :rtype numpy.ndarray
         """
 
+
     # Set max temperature to user input, if none use max of input temperatures
     if tmax is None:
         tmax = max(temps)
@@ -62,7 +63,11 @@ def get_valid_tk(temps, rate_constants, bimol,
                 max_neg_idx = kt_idx
         # If a negative kt is found use temp+1
         if max_neg_idx is not None:
-            tmin = temps[max_neg_idx+1]
+            if np.isclose(temps[max_neg_idx], tmax):
+                tmin = temps[max_neg_idx]
+            else:
+                tmin = temps[max_neg_idx+1]
+            # tmin = temps[max_neg_idx+1]
         else:
             tmin = min(temps)
 
@@ -82,6 +87,9 @@ def get_valid_tk(temps, rate_constants, bimol,
     # Convert the lists to numpy arrays
     valid_t = np.array(valid_t, dtype=np.float64)
     valid_k = np.array(valid_k, dtype=np.float64)
+
+    # if not np.isclose(tmin, tmax):
+    #     for temp, rate_constant in zip(temps, rate_constants):
 
     return valid_t, valid_k
 
