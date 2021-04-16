@@ -34,7 +34,7 @@ DEFAULT_CHEB_DCT = {
 }
 
 
-def fit_ktp_dct(mess_path, pes_formula, fit_method,
+def fit_ktp_dct(mess_path, pes_formula, inp_fit_method,
                 pdep_dct=DEFAULT_PDEP_DCT,
                 arrfit_dct=DEFAULT_ARRFIT_DCT,
                 chebfit_dct=DEFAULT_CHEB_DCT,
@@ -61,17 +61,18 @@ def fit_ktp_dct(mess_path, pes_formula, fit_method,
 
         # Set the name and A conversion factor
         reaction = name_i + '=' + name_j
+        print('------------------------------------------------\n')
         print('Reading and Fitting Rates for {}'.format(reaction))
 
         # Read the rate constants out of the mess outputs
         print('\nReading k(T,P)s from MESS output...')
-        ktp_dct = read_rates(
+        ktp_dct, fit_temps = read_rates(
             mess_out_str, pdep_dct, lab_i, lab_j,
             fit_temps=fit_temps, fit_pressures=fit_pressures,
             fit_tunit=fit_tunit, fit_punit=fit_punit)
 
         # Check the ktp dct and fit_method to see how to fit rates
-        fit_method = _assess_fit_method(ktp_dct, fit_method)
+        fit_method = _assess_fit_method(ktp_dct, inp_fit_method)
 
         # Get the desired fits in the form of CHEMKIN strs
         if fit_method is None:
@@ -81,7 +82,8 @@ def fit_ktp_dct(mess_path, pes_formula, fit_method,
                 ktp_dct, reaction, mess_path, **arrfit_dct)
         elif fit_method == 'chebyshev':
             chemkin_str = chebfit.pes(
-                ktp_dct, reaction, mess_path, **chebfit_dct)
+                ktp_dct, reaction, mess_path,
+                fit_temps=fit_temps, **chebfit_dct)
             # ktp_dct, inp_temps, reaction, mess_path)
             if not chemkin_str:
                 chemkin_str = arrfit.pes(
@@ -144,6 +146,7 @@ def read_rates(mess_out_str, pdep_dct, rct_lab, prd_lab,
 
     fit_temps = list(set(list(fit_temps)))
     fit_temps.sort()
+    print('fit_temps', fit_temps)
     assert set(fit_temps) <= set(mess_temps)
     assert set(fit_pressures) <= set(mess_press)
 
@@ -177,7 +180,7 @@ def read_rates(mess_out_str, pdep_dct, rct_lab, prd_lab,
             else:
                 ktp_dct = copy.deepcopy(filt_ktp_dct)
 
-    return ktp_dct
+    return ktp_dct, fit_temps
 
 
 def _assess_fit_method(ktp_dct, inp_fit_method):

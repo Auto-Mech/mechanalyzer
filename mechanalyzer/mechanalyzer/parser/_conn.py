@@ -26,9 +26,10 @@ def conn_pes(pes_dct):
     """
 
     well_lst_dct, bimols_lst_dct, spc_lst_dct = _find_spc(pes_dct)
-    wells_in_pes = _well_locations(well_lst_dct, spc_lst_dct)
+    msurf_wells = _well_locations(well_lst_dct, spc_lst_dct)
+    print('msurf_wells', msurf_wells)
 
-    conn_lst = _sort_connected_pes(pes_dct, wells_in_pes)
+    conn_lst = _sort_connected_pes(msurf_wells, well_lst_dct, bimols_lst_dct)
 
     return conn_lst
 
@@ -47,30 +48,28 @@ def _find_spc(pes_dct):
 
     # Build idx_name dct {idx: [names]}}
     wells, bimols, spc = {}, {}, {}
-    for pes_idx, pes_rxns in enumerate(pes_dct):
-        pes_wells, pes_species, pes_bimols = [], [], []
+    for pes_form, pes_rxns in pes_dct.items():
+        pes_wells, pes_species, pes_bimols = (), (), ()
 
         for rxn in pes_rxns:
             rcts, prds = rxn[0], rxn[1]
 
             # Find the wells (could get the bimol)
             if len(rcts) == 1:
-                pes_wells.append(rcts[0])
+                pes_wells += (rcts[0],)
             else:
-                pes_bimols.append(rcts)
+                pes_bimols += (rcts,)
             if len(prds) == 1:
-                pes_wells.append(prds[0])
+                pes_wells += (prds[0],)
             else:
-                pes_bimols.append(prds)
+                pes_bimols += (prds,)
 
             # Get the species for the reaction
-            pes_species.extend(rcts + prds)
+            pes_species += (rcts + prds)
 
-        wells.update({pes_idx: set(pes_wells)})
-        bimols.update({pes_idx: set(pes_bimols)})
-        spc.update({pes_idx: set(pes_species)})
-
-    # Get names where the wells are bimols
+        wells.update({pes_form: set(pes_wells)})
+        bimols.update({pes_form: set(pes_bimols)})
+        spc.update({pes_form: set(pes_species)})
 
     return wells, bimols, spc
 
@@ -94,30 +93,51 @@ def _well_locations(well_lst_dct, spc_lst_dct):
     # Determine what PESs a well exists inside of
     wells_in_pes = {}
     for well in wells:
-        idx_lst = []
-        for pes_idx, spc_lst in spc_lst_dct.items():
+        form_lst = []
+        for pes_form, spc_lst in spc_lst_dct.items():
             if well in spc_lst:
-                idx_lst.append(pes_idx)
-        wells_in_pes.update({well: idx_lst})
+                form_lst.append(pes_form)
+        wells_in_pes.update({well: form_lst})
 
-    return wells_in_pes
+    # Trim to wells on multiple surfaces
+    msurf_wells = {well: forms
+                   for (well, forms) in wells_in_pes.items()
+                   if len(forms) > 1}
+
+    return msurf_wells
 
 
 # Parse, modify, and sort well in PES list to write connections
-def _sort_connected_pes(pes_dct, wells_in_pes):
+def _sort_connected_pes(msurf_wells, wells, bimols):
     """ figures out what PESs are connected to do a chain of PESs
+
+        start with the PES where the well-species is an actual well
+        then have all the bimolecular species
     """
 
-    # Build new dictionary of well species that appear in multiple PESs
-    msurf_wells = {well: idxs
-                   for (well, idxs) in wells_in_pes.items()
-                   if len(idxs) > 1}
-
+    msurf_well_wtyp = {}
+    for well, surfs in msurf_wells.items():
+        for surf in surfs:
+            surf_wells = wells[surf]
+            if well in surf_wells:
+                loc = 'well'
+            else:
+                surf_bimols = bimols[surf]
+                if well in surf_bimols:
+                    loc = 'bimol'
+            locs.append((well,loc))
+    
     # Now figure out how the idxs should be lists
     # For a given well:
     # (1) find pes idx1 where it is a well
     # (2) find pes idx2 where it is in a bimol (where idx1 != idx2)
     # (3) order indices to that idx1 comes first
 
-
     return conn_lst
+
+
+def _check_conns(msurf_wells):
+    """ For wells in the dct see if they are connected
+    """
+
+

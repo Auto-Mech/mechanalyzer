@@ -257,10 +257,11 @@ def _dsarrfit(temps, rate_constants, arr1_guess, arr2_guess,
     dsarrfit_io.run_dsarrfit(dsarrfit_path)
 
     # Read the output of the single and double fit
-    if fit_type == 'single':
-        arrname = 'arrfit.out'
-    else:
-        arrname = 'dbl_arrfit.out'
+    # if fit_type == 'single':
+    #     arrname = 'sgl_arrfit.out'
+    # else:
+    #     arrname = 'dbl_arrfit.out'
+    arrname = 'arrfit.out'
 
     dsarrfit_out_file = os.path.join(dsarrfit_path, arrname)
     with open(dsarrfit_out_file, 'r') as arrfit_outfile:

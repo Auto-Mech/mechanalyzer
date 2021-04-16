@@ -82,10 +82,13 @@ def pes(ktp_dct, reaction, mess_path,
             'Single fit errs too large & double fit possible:',
             ' Trying double fit')
 
-        # Generate guess parameters
-        print(
-            'Generating Double Fit Guess from Single Fit Parameters')
-        guess_params_dct = make_dbl_fit_guess(sing_params_dct)
+        # Nonfunctioning
+        # # Generate guess parameters
+        # print(
+        #     'Generating Double Fit Guess from Single Fit Parameters')
+        # guess_params_dct = make_dbl_fit_guess(sing_params_dct)
+        # End
+        guess_params_dct = None
 
         # Fit rate constants to double Arrhenius expressions
         doub_params_dct, doub_fit_temp_dct, doub_fit_suc = mod_arr_fit(
@@ -170,6 +173,7 @@ def mod_arr_fit(ktp_dct, mess_path,
                 arr_guess = inp_param_dct[pressure]
                 arr1_guess, arr2_guess = arr_guess[:3], arr_guess[3:]
             else:
+                # arr1_guess = (8.1e-11, -0.01, 2000.0)
                 arr1_guess, arr2_guess = (8.1e-11, -0.01, 2000.0), ()
 
             fit_params = arrfit.double(

@@ -30,7 +30,7 @@ RATEK_DATA = _read_csv(
     os.path.join(DATA_PATH, RATEK_FILE_NAME))
 
 # Set the rate constant data
-TEMPS = RATEK_DATA.TEMPS.values
+TEMPS = RATEK_DATA.temps.values
 RATEKS = RATEK_DATA.rateks.values
 
 # Set NA and the T0 value in the (T/T0)^n term in the Arrhenius expr.
@@ -117,6 +117,7 @@ def test__double_arrhenius_fit_dsarrfit():
         1.2337e-13, 0.944382, 9.440829863993441
     ]
 
+    print('fit_params', fit_params)
     assert numpy.allclose(fit_params, ref_fit_params)
 
     # Calculate fitted rate constants using the fitted parameters
