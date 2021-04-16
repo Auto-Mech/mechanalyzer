@@ -13,6 +13,7 @@ from ratefit.fit._util import set_a_conversion_factor
 
 # def pes(ktp_dct, inp_temps, reaction, mess_path,
 def pes(ktp_dct, reaction, mess_path,
+        fit_temps=None,
         t_ref=1.0, tdeg=6, pdeg=4,
         fit_tolerance=20.0):
     """ Read the rates for each channel and perform the fits
@@ -23,7 +24,6 @@ def pes(ktp_dct, reaction, mess_path,
 
     # Obtain the fit paramts for the 1-atm rate constants, if available
     if 1 in ktp_dct.keys():
-        a_conv_factor = ''
         [temps, rate_constants] = ktp_dct[1]
         one_atm_params = arrhenius.single(
             temps, rate_constants, t_ref, 'python',
@@ -34,6 +34,15 @@ def pes(ktp_dct, reaction, mess_path,
     # If there are rates for more than one pressure
     pressures = tuple(pressure for pressure in ktp_dct.keys()
                       if pressure != 'high')
+
+    # Build the fit temps if not provided
+    if fit_temps is None:
+        fit_temps = []
+        for pressure in pressures:
+            fit_temps.extend(ktp_dct[pressure][0])
+        fit_temps = list(set(fit_temps))
+        fit_temps.sort()
+    print('fit_temps test', fit_temps)
 
     # check existence of rates at all conditions
     num_kts = []
@@ -48,8 +57,8 @@ def pes(ktp_dct, reaction, mess_path,
 
     if fit_viable:
 
-        fit_temps = list(set(inp_temps) & set(ktp_dct[pressures[0]][0]))
-        fit_temps.sort()
+        # fit_temps = list(set(inp_temps) & set(ktp_dct[pressures[0]][0]))
+        # fit_temps.sort()
         # print('fit_temps', fit_temps)
 
         # Fit rate constants to Chebyshev polynomial

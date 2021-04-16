@@ -11,23 +11,18 @@ c with the parameters specified in that order.
       dimension a0(ma),a(ma),lista(ma),dkda(ma)
       dimension ilist(ma)
       dimension covar(100,100),alpha(100,100)
-      character*2 ftype
       external funcs,funcd
 
       OPEN(UNIT=5,STATUS='OLD',FILE='arrfit.dat')
+      OPEN(UNIT=6,STATUS='unknown',FILE='arrfit.out')
+      OPEN(UNIT=7,STATUS='unknown',FILE='darrfit.out')
 
       read (5,*) converg1,converg2
-      read (5,*) ftype
       read (5,*) (ilist(ii),ii=1,ma)
       read (5,*) iinp
       if (iinp.eq.1) then
          read (5,*) (a0(ii),ii=1,mas)
          a0(1) = log(a0(1))-a0(2)*log(298.)
-      elseif (iinp.eq.2) then
-         read (5,*) (a0(ii),ii=1,mas)
-         read (5,*) (a0(ii+3),ii=1,mas)
-         a0(1) = log(a0(1))-a0(2)*log(298.)
-         a0(4) = log(a0(4))-a0(5)*log(298.)
       endif
       tmin = 1.0d30
       tmax = 0.0d0
@@ -50,15 +45,13 @@ c with the parameters specified in that order.
 
 c start with single modified arrhenius  **************************************
 
-      if (ftype.eq.'s' .or. ftype.eq.'sd') then ! start single fit
-      OPEN(UNIT=6,STATUS='unknown',FILE='sgl_arrfit.out')
-c     generate initial guess if one wasn't given
+c generate initial guess if one wasn't given
       if (iinp.eq.0) then
          a0(3)=(log(dkht)-log(dklt))/(1.0d0/tmin-1.0d0/tmax)
          a0(1)=log(dklt*exp(a0(3)/tmin))
          a0(2)=0.0d0
       endif
-c     print out initial guess comparison
+c print out initial guess comparison
       write (6,*) 'initial guess'
       write (6,102) exp(a0(1))*(298.**a0(2)),(a0(ii),ii=2,mas)
       do it = 1 , nttot
@@ -95,7 +88,7 @@ c     print out initial guess comparison
       iit = iit + 1
       write (6,*) 'results for iteration',iit
       write (6,101) chisq,alamda
- 101  format (1x,'chi ',g12.5,' lamda ',g12.5)
+ 101  format (1x,'chi ',g12.5,'lamda ',g12.5)
       write (6,*) 'params'
 c     write (6,102) exp(a0(1))*(298.**a0(2)),(a0(ii),ii=2,mas)
       write (6,102) exp(a0(1)),(a0(ii),ii=2,mas)
@@ -114,46 +107,18 @@ c calculate reference fitted k
       enddo
       go to 100
   200 continue
-c     Write the converged results
-      write (6,*)
-      write (6,*)
-      write (6,*) "Converged Params for single modified Arrhenius"
-      write (6,101) chisq,alamda
-      write (6,*) 'params'
-c      write (6,1002) a0(1)*(298.**a0(2)),a0(2),a0(3),
-c     $ a0(4)*(298.**a0(5)),a0(5),a0(6)
-c      write (6,1002) dlog10(a0(1)),a0(2),a0(3)*1.987,
-c     $ dlog10(a0(4)),a0(5),a0(6)*1.987
-      write (6,*) '   A              n              Ea/R'
-      write (6,102) exp(a0(1)),(a0(ii),ii=2,mas)
-      write (6,*) '   A*Navo         n              Ea (kcal/mol)'
-      write (6,102) 6.0221e23*exp(a0(1)),a0(2),a0(3)*1.987
-      do it = 1 , nttot
-         tempi = temp(it)
-c calculate reference fitted k
-         dkfitl1 = a0(1)+a0(2)*log(tempi)-a0(3)/tempi
-         dkfit = exp(dkfitl1)
-         dki=10**(dkin(it))
-         err = abs(dkfit-dki)*100./dki
-         write (6,111) tempi,10**(dkin(it)),dkfit,err
-      enddo
-      if (nttot.lt.4) then
+      if (nttot.lt.4)
          go to 8000
       endif
-      endif ! end single fit
 c
 c now repeat for sum of two modified arrhenius    *****************************
 c
-      if (ftype.eq.'d' .or. ftype.eq.'sd') then ! start double fit
-      OPEN(UNIT=7,STATUS='unknown',FILE='dbl_arrfit.out')
-      if (iinp.eq.0 .or. iinp.eq.1 .or. ftype.eq.'sd') then
-          a1inp = exp(a0(1))*(298.**a0(2))/2.0d0
-          a0(2) = a0(2)-2.0d0
-          a0(5) = a0(2)+4.0d0
-          a0(6) = a0(3)
-          a0(1) = a1inp/(298.**a0(2))
-          a0(4) = a1inp/(298.**a0(5))
-      endif
+      a1inp = exp(a0(1))*(298.**a0(2))/2.0d0
+      a0(2) = a0(2)-2.0d0
+      a0(5) = a0(2)+4.0d0
+      a0(6) = a0(3)
+      a0(1) = a1inp/(298.**a0(2))
+      a0(4) = a1inp/(298.**a0(5))
       write (7,*) 'initial guesses'
       write (7,1002) a0(1)*(298.**a0(2)),a0(2),a0(3),
      $ a0(4)*(298.**a0(5)),a0(5),a0(6)
@@ -193,7 +158,7 @@ c calculate reference fitted k
       iit = iit + 1
       write (7,*) 'results for iteration',iit
       write (7,1001) chisq,alamda
- 1001 format (1x,'chi ',g12.5,' lamda ',g12.5)
+ 1001 format (1x,'chi ',g12.5,'lamda ',g12.5)
       write (7,*) 'params'
       write (7,1002) a0(1)*(298.**a0(2)),a0(2),a0(3),
      $ a0(4)*(298.**a0(5)),a0(5),a0(6)
@@ -211,22 +176,18 @@ c calculate reference fitted k
       enddo
       go to 1000
  2000 continue
-c     Write the converged results
-      write (7,*)
-      write (7,*)
-      write (7,*) "Converged Params from double modified Arrhenius"
-      write (7,1001) chisq,alamda
-      write (7,*) 'params'
-c      write (7,1002) a0(1)*(298.**a0(2)),a0(2),a0(3),
+      write (6,*)
+      write (6,*) 'results from sum of two modified arrhenius'
+      write (6,1001) chisq,alamda
+      write (6,*) 'params'
+c      write (6,1002) a0(1)*(298.**a0(2)),a0(2),a0(3),
 c     $ a0(4)*(298.**a0(5)),a0(5),a0(6)
-c      write (7,1002) dlog10(a0(1)),a0(2),a0(3)*1.987,
+c      write (6,1002) dlog10(a0(1)),a0(2),a0(3)*1.987,
 c     $ dlog10(a0(4)),a0(5),a0(6)*1.987
-      write (7,*) 'A              n              Ea/R'
-      write (7,1002) a0(1),a0(2),a0(3),
+      write (6,1002) a0(1),a0(2),a0(3),
      $ a0(4),a0(5),a0(6)
-      write (7,*) 'A*Navo         n              Ea (kcal/mol)'
-      write (7,1002) a0(1)*6.02e23,a0(2),a0(3)*1.987,
-     $ a0(4)*7.02e23,a0(5),a0(6)*1.987
+      write (6,1002) a0(1)*6.02e23,a0(2),a0(3)*1.987,
+     $ a0(4)*6.02e23,a0(5),a0(6)*1.987
       do it = 1 , nttot
          tempi = temp(it)
 c calculate reference fitted k
@@ -235,14 +196,11 @@ c calculate reference fitted k
          dkfit = a0(1)*exp(dkfitl1)+a0(4)*exp(dkfitl2)
          dki=10**(dkin(it))
          err = abs(dkfit-dki)*100./dki
-         write (7,111) tempi,10**(dkin(it)),dkfit,err
+         write (6,111) tempi,10**(dkin(it)),dkfit,err
       enddo
-      endif  ! end of double fit
  8000 continue
       stop
       end
-cccccccccc
-cccccccccc
       subroutine funcs(temp,a0,dkfit,dkda,ma)
       implicit real*8(a-h,o-z)
       dimension a(ma),a0(ma),dkda(ma)
@@ -281,8 +239,6 @@ c     write (7,112) (dkfitm(ii),ii=1,ma)
      
       return
       end 
-cccccccccc
-cccccccccc
       subroutine funcd(temp,a0,dkfit,dkda,ma)
       implicit real*8(a-h,o-z)
       dimension a(ma),a0(ma),dkda(ma)
@@ -330,8 +286,6 @@ c     write (7,112) (dkfitm(ii),ii=1,ma)
      
       return
       end 
-cccccccccc
-cccccccccc
       SUBROUTINE mrqmin(x,y,sig,ndata,a,ia,ma,covar,alpha,nca,chisq,
      *funcs,alamda)
       INTEGER ma,nca,ndata,ia(ma),MMAX
@@ -392,8 +346,6 @@ CU    USES covsrt,gaussj,mrqcof
       endif
       return
       END
-cccccccccc
-cccccccccc
 C  (C) Copr. 1986-92 Numerical Recipes Software .
       SUBROUTINE mrqcof(x,y,sig,ndata,a,ia,ma,alpha,beta,nalp,chisq,
      *funcs)

@@ -10,6 +10,8 @@ from mechanalyzer.parser import submech
 from mechanalyzer.parser import util
 from mechanalyzer.parser import sort
 from mechanalyzer.parser._stereo import expand_mech_stereo
+from mechanalyzer.parser._conn import conn_pes
+
 
 __all__ = [
     'pes',
@@ -19,5 +21,6 @@ __all__ = [
     'submech',
     'util',
     'sort',
-    'expand_mech_stereo'
+    'expand_mech_stereo',
+    'conn_pes'
 ]

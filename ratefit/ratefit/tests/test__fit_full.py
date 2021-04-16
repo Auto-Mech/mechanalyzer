@@ -36,6 +36,9 @@ LABEL_DCT = {
     'BIMOL6': 'p6',
     'BIMOL7': 'p7'
 }
+FIT_TEMPS = (300, 400, 500, 600, 700, 800, 900, 1000, 1100,
+             1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000)
+
 
 def test__full_arrfit():
     """ test ratefit.fit.ktp_dct
@@ -52,6 +55,21 @@ def test__full_arrfit():
     # print(arrfit_str)
     
     chebfit_dct = ratefit.fit.fit_ktp_dct(
+        MESS_PATH, PES_FORMULA, FIT_METHOD1, label_dct=LABEL_DCT)
+    print('\n\n\n-------\n\n\n')
+    print('CHEMKIN STR\n\n')
+    chebfit_str = ''
+    for key, val in chebfit_dct.items():
+        chebfit_str += val
+        chebfit_str += '\n\n'
+    print(chebfit_str)
+
+
+def test__full_chebfit():
+    """ test ratefit.fit.ktp_dct
+    """
+
+    chebfit_dct = ratefit.fit.fit_ktp_dct(
         MESS_PATH, PES_FORMULA, FIT_METHOD2, label_dct=LABEL_DCT)
     print('\n\n\n-------\n\n\n')
     print('CHEMKIN STR\n\n')
@@ -64,3 +82,4 @@ def test__full_arrfit():
 
 if __name__ == '__main__':
     test__full_arrfit()
+    # test__full_chebfit()
