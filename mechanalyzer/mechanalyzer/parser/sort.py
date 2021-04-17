@@ -77,13 +77,13 @@ class SortMech:
 
         # if species_list is not empty: pre-process the mechanism
         if len(species_list) > 0:
-            if len(species_list) == 2 and species_list[-1] == 'submech':
+            if len(species_list) == 1 and 'submech' in hierarchy:
                 # select a subset of species appropriately according to the stoichiometries
                 # specified in submech.py
                 species_list, species_subset_df = submech.species_subset(
                     species_list[0], self.spc_dct)
                 self.species_subset_df = species_subset_df
-            elif len(species_list) > 2 and species_list[-1] == 'submech':
+            elif len(species_list) > 1 and 'submech' in hierarchy:
                 print('Error: pyr/ox submech extraction available for only 1 species')
                 sys.exit()
 
