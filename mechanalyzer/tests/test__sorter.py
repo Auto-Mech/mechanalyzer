@@ -115,7 +115,7 @@ def test__sortby_submech():
         CWD_RESULTS, 'LLNL_IC8_submech_mech_rest.txt')
     SORTMECH_NAME = os.path.join(
         CWD_RESULTS, 'LLNL_test_sortby_submech_IC8.txt')
-    ISOLATE_SPECIES = ['IC8', 'submech']
+    ISOLATE_SPECIES = ['IC8']
     SORT_STR = ['submech', 1]  # HEADER INDICATING THE SPECIES SUBSET
     sort_main(CWD, SPC_NAME, MECH_NAME, SORTMECH_NAME,
               MECH_REST_NAME, ISOLATE_SPECIES, SORT_STR)
@@ -171,8 +171,8 @@ def sort_main(CWD, SPC_NAME, MECH_NAME, SORTMECH_NAME, MECH_REST_NAME, ISOLATE_S
 if __name__ == '__main__':
  #   test__readwrite_thirdbody()
  #   test__sortby_species_subpes()
- #   test__sortby_submech()
+    test__sortby_submech()
  #   test__sortby_mult()
  #   test__sortby_molec_R1()
  #   test__sortby_rxnclass()
-    test__sortby_submech_class()
+#    test__sortby_submech_class()
