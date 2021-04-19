@@ -139,5 +139,4 @@ def _sort_connected_pes(msurf_wells, wells, bimols):
 def _check_conns(msurf_wells):
     """ For wells in the dct see if they are connected
     """
-
-
+    return NotImplementedError

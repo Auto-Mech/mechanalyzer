@@ -4,7 +4,7 @@ Calculate rates with various fitting functions
 
 import numpy as np
 from scipy.special import eval_chebyt
-import ratefit.calc.rates as ratefit
+from ratefit import calc as ratecalc
 from phydat import phycon
 
 

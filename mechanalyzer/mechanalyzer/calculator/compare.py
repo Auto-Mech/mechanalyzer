@@ -1,7 +1,7 @@
 """
   Take data dictionaries from mechanisms and combine them under a common index
 """
-import mechlib.amech_io.parser.mechanism as parser
+# import mechlib.amech_io.parser.mechanism as parser
 import itertools
 import numpy as np
 import ratefit

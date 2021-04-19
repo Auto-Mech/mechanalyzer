@@ -4,6 +4,7 @@ Read the a CHEMKIN mechanism file
 
 import automol
 import chemkin_io
+from mechanalyzer.parser.util import get_ich_dct
 
 
 def parse(mech_str, spc_dct, sort_rxns):
@@ -47,17 +48,6 @@ def parse(mech_str, spc_dct, sort_rxns):
 
 
 # functions called in parse; may be called separately by other scripts
-def get_ich_dct(spc_dct):
-    """Generates inchis dictionary from species dictionary
-    """
-    ich_dct = {}
-    for key in spc_dct.keys():
-        if 'ts' not in key and 'global' not in key:
-            ich_dct[key] = spc_dct[key]['inchi']
-
-    return ich_dct
-
-
 def mech_info(rct_names_lst, prd_names_lst, ich_dct):
     """
     Derives reactants and products formulas and reaction names
