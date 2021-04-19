@@ -128,6 +128,8 @@ def test__chebyshev_fit():
     # assert numpy.allclose(mean_avg_err, ref_mean_avg_err)
     # assert numpy.allclose(max_avg_err, ref_max_avg_err)
 
+    assert True == False
+
 
 if __name__ == '__main__':
     test__chebyshev_fit()

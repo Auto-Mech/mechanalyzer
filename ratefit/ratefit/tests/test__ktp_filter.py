@@ -4,7 +4,6 @@ where the fits are performed using Python and dsarrfit
 """
 
 import os
-import tempfile
 import numpy
 import pandas
 import ratefit
@@ -47,7 +46,7 @@ def test__valid_tk_no_rates():
 
     # Filter the temperatures and rate constants to get valid values
     # k > 0 and k != *** and tmin <= T <= tmax
-    temps, calc_ks = ratefit.fit.util.get_valid_tk(
+    temps, calc_ks = ratefit.fit.get_valid_tk(
         TEMPS[:3], RATEKS[:3], tmin=TMIN, tmax=TMAX, bimol=False)
 
     # Print header for python fitting
@@ -58,7 +57,7 @@ def test__valid_tk_with_rates():
     """ test ratefit.fit.util.get_valid_tk
     """
 
-    temps, calc_ks = ratefit.fit.util.get_valid_tk(
+    temps, calc_ks = ratefit.fit.get_valid_tk(
         TEMPS, RATEKS, tmin=TMIN, tmax=TMAX, bimol=False)
 
     ref_temps = [

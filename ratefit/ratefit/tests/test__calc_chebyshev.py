@@ -34,6 +34,8 @@ CHEB_FILE_NAME = 'chebyshev.csv'
 # T_REF = 1.0
 #
 # numpy.set_printoptions(precision=15)
+
+CHEB_K_DATA = ()
 HIGH_PARAMS = [1.00, 0.00, 0.00]
 TMIN, TMAX = (300.000, 2200.000)
 PMIN, PMAX = (0.01, 20.0)
@@ -56,17 +58,16 @@ def test__chebyshev():
 
     cheb_ktps = ratefit.calc.chebyshev(
         ALPHA, TMIN, TMAX, PMIN, PMAX, TEMPS, PRESSURES)
-    print(cheb_ktps)
 
-    # cheb_ktps1 = cheb_ktps[0.1]
-    # cheb_ktps2 = cheb_ktps[0.9869]
-    # cheb_ktps3 = cheb_ktps[2.0]
-    # cheb_ktps4 = cheb_ktps[5.0]
+    cheb_ktps1 = cheb_ktps[0.1]
+    cheb_ktps2 = cheb_ktps[0.9869]
+    cheb_ktps3 = cheb_ktps[2.0]
+    cheb_ktps4 = cheb_ktps[5.0]
 
-    # assertnumpy.allclose(cheb_ktps1,numpy.array(CHEB_K_DATA.ktp1), atol=0.01)
-    # assertnumpy.allclose(cheb_ktps2,numpy.array(CHEB_K_DATA.ktp2), atol=0.01)
-    # assertnumpy.allclose(cheb_ktps3,numpy.array(CHEB_K_DATA.ktp3), atol=0.01)
-    # assertnumpy.allclose(cheb_ktps4,numpy.array(CHEB_K_DATA.ktp4), atol=0.01)
+    assert numpy.allclose(cheb_ktps1,numpy.array(CHEB_K_DATA.ktp1), atol=0.01)
+    assert numpy.allclose(cheb_ktps2,numpy.array(CHEB_K_DATA.ktp2), atol=0.01)
+    assert numpy.allclose(cheb_ktps3,numpy.array(CHEB_K_DATA.ktp3), atol=0.01)
+    assert numpy.allclose(cheb_ktps4,numpy.array(CHEB_K_DATA.ktp4), atol=0.01)
 
 
 if __name__ == '__main__':

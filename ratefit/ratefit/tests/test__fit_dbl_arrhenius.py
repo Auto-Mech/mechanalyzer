@@ -45,71 +45,75 @@ DSARRFIT_PATH = tempfile.mkdtemp()
 print('dsarffit', DSARRFIT_PATH)
 
 
-# def test__double_arrhenius_fit_python():
-#     """ test ratefit.fit.arrhenius.double
-#     """
-#
-#     # Filter the temperatures and rate constants to get valid values
-#     TEMPS, RATEKS = ratefit.fit.util.get_valid_tk(
-#         TEMPS, RATEKS, tmin=TMIN, tmax=TMAX, bimol=False)
-#
-#     # Run a single Arrhenius fit to build a guess for the double fit
-#     sgl_fit = ratefit.fit.arrhenius.single(
-#         TEMPS, RATEKS, T_REF, 'python')
-#
-#     ref_sgl_fit = [1.18698937208059e-15,
-#                    1.6600455223689599,
-#                    9.28586359726521]
-#
-#     assert numpy.allclose(sgl_fit, ref_sgl_fit)
-#
-#     # Run a double Arrhenius fit
-#     fit_params = ratefit.fit.arrhenius.double(
-#         TEMPS, RATEKS, T_REF, 'python',
-#         a_guess=sgl_fit[0],
-#         n_guess=sgl_fit[1],
-#         ea_guess=sgl_fit[2])
-#
-#     ref_fit_params = [
-#         8.036185028297988e-10, 0.0761979228320102, 16.66413018792614,
-#         1.8274992480059228e-13, 0.8886973965169201, 9.488903662805047
-#     ]
-#
-#     assert numpy.allclose(fit_params, ref_fit_params)
-#
-#     # Calculate fitted rate constants using the fitted parameters
-#     fit_ks = ratefit.calc.double_arrhenius(
-#         fit_params[0], fit_params[1], fit_params[2],
-#         fit_params[3], fit_params[4], fit_params[5],
-#         T_REF, TEMPS)
-#
-#     ref_fit_ks = [
-#         3.32484E-15, 2.87796E-14, 1.31244E-13, 4.13627E-13,
-#         1.02511E-12, 3.13576E-12, 7.26684E-12, 1.39700E-11,
-#         2.35473E-11, 3.60671E-11, 5.14228E-11, 7.92788E-11,
-#         1.36158E-10
-#     ]
-#
-#     assert numpy.allclose(fit_ks, ref_fit_ks)
-#
-#     # Calculate the sum-of-square errors and mean-average-errors
-#     mean_avg_err, max_avg_err = ratefit.calc.fitting_errors(
-#         RATEKS, fit_ks)
-#
-#     ref_mean_avg_err = 0.4741670536354967
-#     ref_max_avg_err = 0.875017109912643
-#
-#     assert numpy.allclose(mean_avg_err, ref_mean_avg_err)
-#     assert numpy.allclose(max_avg_err, ref_max_avg_err)
+def test__double_arrhenius_fit_python():
+    """ test ratefit.fit.arrhenius.double
+    """
+
+    # Filter the temperatures and rate constants to get valid values
+    temps, rateks = ratefit.fit.util.get_valid_tk(
+        TEMPS, RATEKS, tmin=TMIN, tmax=TMAX, bimol=False)
+
+    # Run a single Arrhenius fit to build a guess for the double fit
+    sgl_fit = ratefit.fit.arrhenius.single(
+        temps, rateks, T_REF, 'python')
+
+    ref_sgl_fit = [1.18698937208059e-15,
+                   1.6600455223689599,
+                   9.28586359726521]
+
+    assert numpy.allclose(sgl_fit, ref_sgl_fit)
+
+    # Run a double Arrhenius fit
+    fit_params = ratefit.fit.arrhenius.double(
+        temps, rateks, T_REF, 'python',
+        a_guess=sgl_fit[0],
+        n_guess=sgl_fit[1],
+        ea_guess=sgl_fit[2])
+
+    ref_fit_params = [
+        8.036185028297988e-10, 0.0761979228320102, 16.66413018792614,
+        1.8274992480059228e-13, 0.8886973965169201, 9.488903662805047
+    ]
+
+    assert numpy.allclose(fit_params, ref_fit_params)
+
+    # Calculate fitted rate constants using the fitted parameters
+    fit_ks = ratefit.calc.double_arrhenius(
+        fit_params[0], fit_params[1], fit_params[2],
+        fit_params[3], fit_params[4], fit_params[5],
+        T_REF, TEMPS)
+
+    ref_fit_ks = [
+        3.32484E-15, 2.87796E-14, 1.31244E-13, 4.13627E-13,
+        1.02511E-12, 3.13576E-12, 7.26684E-12, 1.39700E-11,
+        2.35473E-11, 3.60671E-11, 5.14228E-11, 7.92788E-11,
+        1.36158E-10
+    ]
+
+    assert numpy.allclose(fit_ks, ref_fit_ks)
+
+    # Calculate the sum-of-square errors and mean-average-errors
+    mean_avg_err, max_avg_err = ratefit.fit.fitting_errors(
+        rateks, fit_ks)
+
+    ref_mean_avg_err = 0.4741670536354967
+    ref_max_avg_err = 0.875017109912643
+
+    assert numpy.allclose(mean_avg_err, ref_mean_avg_err)
+    assert numpy.allclose(max_avg_err, ref_max_avg_err)
 
 
 def test__double_arrhenius_fit_dsarrfit():
     """ test ratefit.fit.arrhenius.double
     """
 
+    # Filter the temperatures and rate constants to get valid values
+    temps, rateks = ratefit.fit.get_valid_tk(
+        TEMPS, RATEKS, tmin=TMIN, tmax=TMAX, bimol=False)
+
     # Run a double Arrhenius fit
     fit_params = ratefit.fit.arrhenius.double(
-        TEMPS, RATEKS, T_REF, 'dsarrfit', dsarrfit_path=DSARRFIT_PATH,
+        temps, rateks, T_REF, 'dsarrfit', dsarrfit_path=DSARRFIT_PATH,
         a_conv_factor=1.0)
 
     ref_fit_params = [
@@ -136,8 +140,8 @@ def test__double_arrhenius_fit_dsarrfit():
     assert numpy.allclose(fit_ks, ref_fit_ks)
 
     # Calculate the sum-of-square errors and mean-average-errors
-    mean_avg_err, max_avg_err = ratefit.calc.fitting_errors(
-        RATEKS, fit_ks)
+    mean_avg_err, max_avg_err = ratefit.fit.fitting_errors(
+        rateks, fit_ks)
 
     ref_mean_avg_err = 0.47471982687376374
     ref_max_avg_err = 0.8711794726859022
@@ -147,5 +151,5 @@ def test__double_arrhenius_fit_dsarrfit():
 
 
 if __name__ == '__main__':
-    # test__double_arrhenius_fit_python()
+    test__double_arrhenius_fit_python()
     test__double_arrhenius_fit_dsarrfit()

@@ -6,7 +6,7 @@
 from statistics import mean
 import chemkin_io
 from ratefit.fit import arrhenius as arrfit
-from ratefit.calc import rates as ratecalc
+from ratefit import calc as ratecalc
 from ratefit.fit._err import fitting_errors
 from ratefit.fit._util import pull_highp_from_dct
 from ratefit.fit._util import set_a_conversion_factor

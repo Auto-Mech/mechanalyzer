@@ -107,7 +107,7 @@ c calculate reference fitted k
       enddo
       go to 100
   200 continue
-      if (nttot.lt.4)
+      if (nttot.lt.4) then
          go to 8000
       endif
 c
