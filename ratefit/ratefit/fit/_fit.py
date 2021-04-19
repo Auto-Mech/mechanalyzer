@@ -38,7 +38,7 @@ def fit_ktp_dct(mess_path, inp_fit_method,
                 pdep_dct=DEFAULT_PDEP_DCT,
                 arrfit_dct=DEFAULT_ARRFIT_DCT,
                 chebfit_dct=DEFAULT_CHEB_DCT,
-                # troefit_dct=DEFAULT_TROE_DCT,
+                troefit_dct=DEFAULT_TROE_DCT,
                 label_dct=None,
                 fit_temps=None, fit_pressures=None,
                 fit_tunit='K', fit_punit='atm'):
