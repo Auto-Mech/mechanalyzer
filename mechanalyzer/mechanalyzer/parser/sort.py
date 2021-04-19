@@ -40,7 +40,7 @@ class SortMech:
         # set dataframe: extract useful info
         pes_lst = util.count_atoms(formula_dct_lst)
         isthrdbdy = np.array(
-            [t[0] is not None for t in thrdbdy_lst], dtype=int)
+            [(t[0] is not None and '(' not in t[0]) for t in thrdbdy_lst], dtype=int)
         molecularity = np.array(
             list(map(len, rct_names_lst)), dtype=int) + isthrdbdy
         n_of_prods = list(map(len, prd_names_lst))
