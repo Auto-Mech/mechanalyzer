@@ -1,7 +1,8 @@
 """
   Take data dictionaries from mechanisms and combine them under a common index
 """
-import mechlib.amech_io.parser.mechanism as parser
+#import mechlib.amech_io.parser.mechanism as parser
+import ioformat.pathtools as parser
 import itertools
 import numpy as np
 import ratefit
@@ -15,7 +16,7 @@ from mechanalyzer.calculator import thermo as calc_thermo
 from mechanalyzer.calculator import rates as calc_rates
 import copy
 
-RC_CAL = phycon.RC_cal
+RC_CAL = phycon.RC_cal  # universal gas constant in cal/mol-K
 
 
 def get_aligned_rxn_ktp_dct(rxn_ktp_dcts, spc_thermo_dcts, spc_ident_dcts, temps,
@@ -214,14 +215,12 @@ def rename_dcts(target_dcts, spc_ident_dcts, target_type):
         :return renamed_dcts: dcts with species renamed
         :rtype: list of dcts [dct1, dct2, ...]
     """
+    renamed_target_dcts = copy.deepcopy(target_dcts)  # deepcopy to prevent external changes
+    renamed_spc_ident_dcts = copy.deepcopy(spc_ident_dcts)
     num_mechs = len(target_dcts)
     assert num_mechs == len(spc_ident_dcts), (
         f'Length of dct_list is {num_mechs} while length of spc_dct_lst is {len(spc_ident_dcts)}.'
         )
-
-    # Copy both sets of dcts
-    renamed_target_dcts = copy.copy(target_dcts)
-    renamed_spc_ident_dcts = copy.copy(spc_ident_dcts)
 
     # Loop through each item in the list of dictionaries
     rename_instructions_lst = []
@@ -259,7 +258,7 @@ def get_rename_instructions(spc_ident_dct1, spc_ident_dct2):
         :return combined_spc_dct: spc_ident_dct1 plus any species unique to spc_ident_dct2
         :rtype: dct {spc1: ident_array1, spc2: ...}
     """
-    combined_spc_dct = copy.copy(spc_ident_dct1)
+    combined_spc_dct = copy.deepcopy(spc_ident_dct1)  # deepcopy to prevent external changes
     rename_instructions = {}
     rename_str = '-zz'
     
@@ -339,11 +338,11 @@ def rename_species(target_dct, rename_instructions, target_type='rxn'):
 
         return stripped_third_bod, addition
 
-
     assert target_type in ('rxn', 'thermo', 'spc'), (
         f'The target_type is {target_type}, but should be either "rxn", "thermo", or "spc"'
         )
     renamed_dct = {}
+
     # If a rxn_ktp_dct
     if target_type == 'rxn':
         for rcts, prds, third_bods in target_dct.keys():
@@ -408,8 +407,10 @@ def reverse_rxn_ktp_dcts(renamed_rxn_ktp_dcts, renamed_spc_thermo_dcts, temps, r
             prods in the same order (and reversed if that was indicated)
         :rtype: list of dcts [rxn_ktp_dct1, rxn_ktp_dct2, ...]
     """
+    #renamed_rxn_ktp_dcts = copy.deepcopy(renamed_rxn_ktp_dcts)  # deepcopy to prevent external changes
     num_mechs = len(renamed_rxn_ktp_dcts)
-    reversed_rxn_ktp_dcts = copy.copy(renamed_rxn_ktp_dcts)
+    reversed_rxn_ktp_dcts = copy.deepcopy(renamed_rxn_ktp_dcts)  # deepcopy so no external changes
+    #reversed_rxn_ktp_dcts = renamed_rxn_ktp_dcts
     for mech_idx in range(num_mechs-1):
         rxn_ktp_dct1 = renamed_rxn_ktp_dcts[mech_idx]
         for idx2 in range(mech_idx+1, num_mechs):
@@ -446,7 +447,9 @@ def reverse_rxn_ktp_dct(rxn_ktp_dct1, rxn_ktp_dct2, spc_thermo_dct1, temps, rev_
         :param rev_rates: whether or not rates should be reversed
         :type rev_rates: Bool
     """
-    rev_rxn_ktp_dct2 = copy.copy(rxn_ktp_dct2)
+#    rxn_ktp_dct1 = copy.deepcopy(rxn_ktp_dct1)  # deepcopy to prevent external changes
+#    rxn_ktp_dct2 = copy.deepcopy(rxn_ktp_dct2)  # deepcopy to prevent external changes
+    rev_rxn_ktp_dct2 = copy.deepcopy(rxn_ktp_dct2)  # deepcopy to prevent external changes
     for rxn1, ktp_dct1 in rxn_ktp_dct1.items():
         rxn2, rev_rate = assess_rxn_match(rxn1, rxn_ktp_dct2)
         # Only do something if a match was found
@@ -489,7 +492,6 @@ def reverse_ktp_dct(ktp_dct, spc_thermo_dct, rxn, temps):
         :type ktp_dct: dict {pressure1: (temp_array1, rates_array1), pressure2: ...}
     """
     [rcts, prds, third_bods] = rxn
-    #print('inside reverse_ktp_dct, rxn:\n', rxn)
     k_equils = _calculate_equilibrium_constant(spc_thermo_dct, rcts, prds, temps)
     rev_ktp_dct = {}
     for pressure, (_, kts) in ktp_dct.items():
@@ -617,7 +619,7 @@ def load_rxn_ktp_dcts_chemkin(mech_filenames, direc, temps, pressures):
     """
     rxn_ktp_dcts = []
     for idx in range(len(mech_filenames)):
-        mech_str = parser.ptt.read_inp_str(direc, mech_filenames[idx], remove_comments=False)
+        mech_str = parser.read_file(direc, mech_filenames[idx])
         ea_units, a_units = parser_mech.reaction_units(mech_str)
         rxn_block_str = parser_mech.reaction_block(mech_str)
         rxn_param_dct = parser_rxn.param_dct(rxn_block_str, ea_units, a_units)
@@ -642,7 +644,7 @@ def load_spc_thermo_dcts_chemkin(thermo_filenames, direc, temps):
     """
     spc_thermo_dcts = []
     for idx in range(len(thermo_filenames)):
-        thermo_str = parser.ptt.read_inp_str(direc, thermo_filenames[idx], remove_comments=False)
+        thermo_str = parser.read_file(direc, thermo_filenames[idx])
         thermo_block_str = parser_mech.thermo_block(thermo_str)
         spc_nasa7_dct = parser_thermo.create_spc_nasa7_dct(thermo_block_str)
         spc_thermo_dct = calc_thermo.create_spc_thermo_dct(spc_nasa7_dct, temps)
@@ -664,7 +666,7 @@ def load_spc_ident_dcts(spc_csv_filenames, direc):
     """
     spc_ident_dcts = []
     for idx in range(len(spc_csv_filenames)):
-        spc_csv_str = parser.ptt.read_inp_str(direc, spc_csv_filenames[idx], remove_comments=False)
+        spc_csv_str = parser.read_file(direc, spc_csv_filenames[idx])
         spc_ident_dct = parser_spc.build_spc_dct(spc_csv_str, 'csv')
         spc_ident_dcts.append(spc_ident_dct)
 

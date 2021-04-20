@@ -6,6 +6,10 @@ import os
 import numpy as np
 import mechanalyzer
 
+BIG_ARRAY = np.array([1e15, 1e15, 1e15])
+MIDDLE_ARRAY = np.array([1e14, 1e14, 1e14]) 
+LITTLE_ARRAY = np.array([1e13, 1e13, 1e13]) 
+
 al_ktp_dct = {
 (('H2', 'O'), ('OH', 'H'), (None,)): [
     {'high': (np.array([500, 1000, 1500]), np.array([0.157572885e+134, 2.79926202e+143, 1.72670689e+149])),
@@ -47,12 +51,12 @@ al_ktp_dct = {
 #      1: (np.array([500, 1000, 1500]), [2.7807443439483792e+128, 7.115874780854176e+111, 1.4947637222572564e+108]),
 #      10: (np.array([500, 1000, 1500]), [1.1409027830446496e+133, 5.839099418788192e+116, 1.8398456094270225e+113])}],
  (('H2', 'O(S)'), ('OH', 'H'), (None,)): [
-     {'high': (np.array([500, 1000, 1500]), np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+149])),
-      1: (np.array([500, 1000, 1500]), np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+149])),
-      10: (np.array([500, 1000, 1500]), np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+149]))},
-     {'high': (np.array([500, 1000, 1500]), np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+149])),
-      1: (np.array([500, 1000, 1500]), np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+149])),
-      10: (np.array([500, 1000, 1500]), np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+149]))}],
+     {'high': (np.array([500, 1000, 1500]), np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+139])),
+      1: (np.array([500, 1000, 1500]), np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+139])),
+      10: (np.array([500, 1000, 1500]), np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+139]))},
+     {'high': (np.array([500, 1000, 1500]), np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+139])),
+      1: (np.array([500, 1000, 1500]), np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+139])),
+      10: (np.array([500, 1000, 1500]), np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+139]))}],
  (('H2', 'O2'), ('HO2V', 'H'), (None,)): [None, {
      'high': (np.array([500, 1000, 1500]), np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+149])),
      1: (np.array([500, 1000, 1500]), np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+149])),
@@ -82,6 +86,6 @@ mech_info = mechanalyzer.parser.mech.build_dct(spc_dct_full,al_ktp_dct)
 sorted_idx,cmts_dct,spc_dct = mechanalyzer.parser.mech.sort_mechanism(mech_info,spc_dct_full,SORT_STR,ISOLATE_SPECIES)
 al_ktp_dct_sorted = mechanalyzer.parser.mech.reordered_mech(al_ktp_dct,sorted_idx)
 rxn_param_dct_sorted =  mechanalyzer.parser.mech.reordered_mech(rxn_param_dct,sorted_idx)
-
+print(al_ktp_dct_sorted)
 # WRITE THE NEW MECHANISM
 mechanalyzer.parser.mech.write_mech(elem_tuple,spc_dct,rxn_param_dct_sorted,SORTMECH_NAME,comments=cmts_dct)
