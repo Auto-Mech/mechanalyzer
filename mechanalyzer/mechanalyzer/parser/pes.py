@@ -4,7 +4,7 @@ Extract PES and SUBPESs from a given mechanism
 
 import pandas as pd
 import numpy as np
-from mechanalyzer.parser import util
+from mechanalyzer.parser._util import order_rct_bystoich
 
 # functions working with dictionaries
 # FUNTIONS FOR THE PES DICT OBJECTS CONTAINING INFO FOR THE REACTIONS ON PES
@@ -47,7 +47,7 @@ def connected_channels_dct(pes_dct):
         pes_prd_lst = pes_dct[formula]['prd_names_lst']
         pes_rxn_name_lst = pes_dct[formula]['rxn_name_lst']
 
-        connchnls = find_conn_chnls(
+        connchnls = _find_conn_chnls(
             pes_rct_lst, pes_prd_lst, pes_rxn_name_lst)
 
         # Add connected channels list to the dictionary
@@ -56,7 +56,7 @@ def connected_channels_dct(pes_dct):
     return conn_chn_dct
 
 
-def find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
+def _find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
     '''
     Given rxn names, reactants, products belonging to 1 PES:
     generate SUB PESs dictionaries
@@ -67,8 +67,8 @@ def find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
     # preprocessing:
     # order (bimol) reactants and products in the same fashion
     # example if you have A+B and B+A they will be ordered in the same way
-    pes_rct_lst = util.order_rct_bystoich(pes_rct_lst)
-    pes_prd_lst = util.order_rct_bystoich(pes_prd_lst)
+    pes_rct_lst = order_rct_bystoich(pes_rct_lst)
+    pes_prd_lst = order_rct_bystoich(pes_prd_lst)
     # put everything in a dataframe. indices are the numbers given by enumerate
     len_rct_prd = np.array(list(map(len, pes_rct_lst))) + \
         np.array(list(map(len, pes_prd_lst)))
@@ -141,16 +141,6 @@ def build_pes_idx_dct(pes_dct):
     return idx_dct, form_dct
 
 
-def reduce_pes_dct_to_user_inp(pes_dct, pesnums):
-    """ get a pes dictionary containing only the PESs the user is running
-    """
-    run_pes_dct = {}
-    for pes_idx, formula in enumerate(pes_dct):
-        if pes_idx+1 in pesnums:
-            run_pes_dct[formula] = pes_dct[formula]
-    return run_pes_dct
-
-
 def print_pes_channels(pes_dct):
     """ Print the PES
     """
@@ -209,37 +199,3 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct,
                 run_pes_dct[(formula, pes_idx, sub_pes_idx+1)] = rxn_lst
 
     return run_pes_dct
-
-
-def format_run_rxn_lst(rct_names_lst, prd_names_lst, rxn_chn_idxs):
-    """ Get the lst of reactions to be run
-    """
-
-    # Get a list of all the species in the pes
-    spc_queue = []
-    for idx, _ in enumerate(rct_names_lst):
-        rxn_spc = list(rct_names_lst[idx])
-        rxn_spc.extend(list(prd_names_lst[idx]))
-        for spc in rxn_spc:
-            if spc not in spc_queue:
-                spc_queue.append(spc)
-
-    # Now loop over all the reactions to build rxn_lst
-    run_lst = []
-    for idx, _ in enumerate(rct_names_lst):
-        spc_queue = []
-        rxn_spc = list(rct_names_lst[idx])
-        rxn_spc.extend(list(prd_names_lst[idx]))
-        for spc in rxn_spc:
-            if spc not in spc_queue:
-                spc_queue.append(spc)
-        run_lst.append(
-            {'species': spc_queue,
-             'reacs': list(rct_names_lst[idx]),
-             'prods': list(prd_names_lst[idx]),
-             # 'model': rxn_model_lst[idx],
-             'chn_idx': rxn_chn_idxs[idx],
-             'dummy': []}
-        )
-
-    return run_lst

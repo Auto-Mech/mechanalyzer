@@ -4,7 +4,26 @@ Read the a CHEMKIN mechanism file
 
 import automol
 import chemkin_io
-from mechanalyzer.parser.util import get_ich_dct
+from mechanalyzer.parser._util import get_ich_dct, get_fml
+
+
+def parse_new(mech_str):
+    """ parse
+    """
+    
+    # extract rxn block and build reaction parameter dictionary
+    units = chemkin_io.parser.mechanism.reaction_units(mech_str)
+    block_str = chemkin_io.parser.mechanism.reaction_block(mech_str)
+    rxn_param_dct = chemkin_io.parser.reaction.param_dct(
+        block_str, units[0], units[1])
+    # extract elements if present
+    try:
+        el_block = chemkin_io.parser.mechanism.element_block(mech_str)
+        elem_tuple = chemkin_io.parser.species.names(el_block)
+    except:
+        elem_tuple = None
+
+    return spc_dct, rxn_param_dct, elem_tuple
 
 
 def parse(mech_str, spc_dct, sort_rxns):
@@ -51,6 +70,10 @@ def parse(mech_str, spc_dct, sort_rxns):
 def mech_info(rct_names_lst, prd_names_lst, ich_dct):
     """
     Derives reactants and products formulas and reaction names
+
+    only called by mech.parse_mechanism
+
+    it is called bu mech.build_Dct bu then augmnted by the rxn dct
     """
     # Sort reactant and product name lists by formula to facilitate
     # multichannel, multiwell rate evaluations
@@ -68,17 +91,3 @@ def mech_info(rct_names_lst, prd_names_lst, ich_dct):
         formula_str_lst.append(formula_str)
 
     return formula_dct_lst, formula_str_lst, rxn_name_lst
-
-
-def get_fml(rxn_ichs):
-    '''
-    rxn_icn: inchis of the species of one side of a reaction (ich1, ich2, ..)
-    returns: formula dictionary, formula string
-    '''
-    formula_dct = ''
-    for rct_ich in rxn_ichs:
-        formula_i_dct = automol.inchi.formula(rct_ich)
-        formula_dct = automol.formula.join(formula_dct, formula_i_dct)
-    formula_str = automol.formula.string2(formula_dct)
-
-    return formula_dct, formula_str

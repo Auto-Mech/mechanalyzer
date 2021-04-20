@@ -4,38 +4,18 @@ Useful functions for mechanalyzer.parser
 - extract useful info from the mechanism (reactions, formulas..)
 """
 
-import sys
 import copy
-import numpy as np
 import automol
 from automol.formula._formula import element_count as n_el
-from mechanalyzer.parser import ckin_ as ckin
-
-
-def read_mechanism_file(mech_str, mech_type, spc_dct, sort_rxns=False):
-    """ Get the reactions and species from the mechanism input
-    """
-
-    # Parse the info from the chemkin file
-    if mech_type == 'chemkin':
-        formulas_dct, formulas, rct_names, prd_names, rxn_names = ckin.parse(
-            mech_str, spc_dct, sort_rxns)
-    else:
-        raise NotImplementedError
-
-    return [formulas_dct, formulas, rct_names, prd_names, rxn_names]
-    # list, list of tuples, list of tuples, list
-
-
-########################## useful functions to the sorter #######################
 
 
 def order_rct_bystoich(rct_names_lst, spc_dct=None):
-    '''
-    reorder reactants and products based on the higher number of atoms
-    If no species dictionary is given as input: reorder just according to name length,
-    if length or stoichiometry is the same, by alphabetical order
-    '''
+    """ Reorder reactants and products based on the higher number of atoms
+        If no species dictionary is given:
+            reorder just according to name length,
+        If length or stoichiometry is the same:
+            reorder by alphabetical order
+    """
     rct_names_lst_ordered = copy.deepcopy(rct_names_lst)
     ich_dct = {}
     if spc_dct:
@@ -87,32 +67,30 @@ def count_atoms(fml_list):
     return fml_num_list
 
 
-def get_S1S2(SPECIES):
-    '''
+def extract_spc(spc):
+    """
     extract species 1 from tuple
-    '''
-    S1 = []
-    S2 = []
-    for S in SPECIES:
-        if len(S) > 1:
+    """
+    _spc1, _spc2 = [], []
+    for _spc in spc:
+        _spc1.append(_spc[0])
+        if len(_spc) > 1:
             # bimol species
-            S1.append(S[0])
-            S2.append(S[1])
+            _spc2.append(_spc[1])
         else:
             # unimol species
-            S1.append(S[0])
-            S2.append('')
+            _spc2.append('')
 
-    return S1, S2
+    return _spc1, _spc2
 
 
 def get_mult(spc_tuple, spc_dct):
-    '''
+    """
     extracts the total multiplicity of the set of species
     spc_tuple = (A,B,C,..)
     spc_dct: species dictionary
     returns integer of the multiplicity
-    '''
+    """
     mult = 1
     if isinstance(spc_tuple, str):
         spc_tuple = tuple([spc_tuple])
@@ -132,3 +110,18 @@ def get_ich_dct(spc_dct):
             ich_dct[key] = spc_dct[key]['inchi']
 
     return ich_dct
+
+
+def get_fml(rxn_ichs):
+    '''
+    rxn_icn: inchis of the species of one side of a reaction (ich1, ich2, ..)
+    returns: formula dictionary, formula string
+    '''
+    formula_dct = ''
+    for rct_ich in rxn_ichs:
+        formula_i_dct = automol.inchi.formula(rct_ich)
+        formula_dct = automol.formula.join(formula_dct, formula_i_dct)
+    formula_str = automol.formula.string2(formula_dct)
+
+    return formula_dct, formula_str
+

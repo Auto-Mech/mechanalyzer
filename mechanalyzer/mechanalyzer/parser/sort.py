@@ -12,10 +12,12 @@ import copy
 import pandas as pd
 import numpy as np
 import automol
-from mechanalyzer.parser import ckin_ as ckin
 from mechanalyzer.parser import submech
-from mechanalyzer.parser import util
 from mechanalyzer.parser import pes
+from mechanalyzer.parser._util import count_atoms
+from mechanalyzer.parser._util import order_rct_bystoich
+from mechanalyzer.parser._util import extract_spc
+from mechanalyzer.parser._util import get_mult
 
 
 class SortMech:
@@ -38,17 +40,17 @@ class SortMech:
             prd_names_lst, thrdbdy_lst, rxn_name_lst, param_vals] = mech_info
         rxn_index = list(zip(rxn_name_lst, thrdbdy_lst))
         # set dataframe: extract useful info
-        pes_lst = util.count_atoms(formula_dct_lst)
+        pes_lst = count_atoms(formula_dct_lst)
         isthrdbdy = np.array(
             [t[0] is not None for t in thrdbdy_lst], dtype=int)
         molecularity = np.array(
             list(map(len, rct_names_lst)), dtype=int) + isthrdbdy
         n_of_prods = list(map(len, prd_names_lst))
-        rct_names_lst_ordered = util.order_rct_bystoich(
+        rct_names_lst_ordered = order_rct_bystoich(
             rct_names_lst, spc_dct=spc_dct)  # put heavier reactant first
-        prd_names_lst_ordered = util.order_rct_bystoich(
+        prd_names_lst_ordered = order_rct_bystoich(
             prd_names_lst, spc_dct=spc_dct)  # put heavier product first
-        rct_1, rct_2 = util.get_S1S2(rct_names_lst_ordered)
+        rct_1, rct_2 = extract_spc(rct_names_lst_ordered)
         data = np.array([rct_names_lst, prd_names_lst, rct_names_lst_ordered, prd_names_lst_ordered,
                          rct_1, rct_2, molecularity, n_of_prods, pes_lst, thrdbdy_lst, param_vals], dtype=object).T
         self.mech_df = pd.DataFrame(data, index=rxn_index, columns=[
@@ -266,7 +268,7 @@ class SortMech:
         for rxn in reac_mult_df.index:
             mult = 1
             rcts = self.mech_df['rct_names_lst'][rxn]
-            mult = util.get_mult(rcts, self.spc_dct)
+            mult = get_mult(rcts, self.spc_dct)
             reac_mult_df['mult'][rxn] = str(mult)
 
         return reac_mult_df
@@ -517,7 +519,7 @@ def classify_graph(spc_dct, rct_names, prd_names):
         if automol.formula.reac.is_valid_reaction(rct_fmls, prd_fmls):
             # print(rct_names,prd_names,rct_ichs,prd_ichs)
             try:
-                # rxn_objs = automol.reac.util.rxn_objs_from_inchi(
+                # rxn_objs = automol.reac.rxn_objs_from_inchi(
                 #     rct_ichs, prd_ichs)
                 # rxn_classes = tuple(obj[0].class_ for obj in rxn_objs)
                 rxn_classes = automol.reac._find.find_from_inchis(
