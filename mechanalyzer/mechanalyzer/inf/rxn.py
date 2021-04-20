@@ -17,7 +17,11 @@ RXN_PROPS = [
 
 def from_dct(reacs, prods, spc_dct, rxn_mul='low'):
     """ Build a reaction info object using a species dictionary and names
+<<<<<<< HEAD
        
+=======
+
+>>>>>>> tmp
         Add the names to the info object?
         Have a way to get a dict object {(rctnames, prdnames) = rxn_info}
     """
@@ -181,7 +185,11 @@ def ts_mult(inf_obj, rxn_mul='low'):
     return _mul
 
 
+<<<<<<< HEAD
 def is_radrad(inf_obj):
+=======
+def radrad(inf_obj):
+>>>>>>> tmp
     """ check if rxn is a rad-rad rxn
     """
 
@@ -191,7 +199,11 @@ def is_radrad(inf_obj):
         mul1, mul2 = rct_muls
         rad_rad = bool(mul1 > 1 and mul2 > 1)
     else:
+<<<<<<< HEAD
         prd_muls = rxn_muls[1]
+=======
+        prd_muls = muls[1]
+>>>>>>> tmp
         if len(prd_muls) > 1:
             mul1, mul2 = prd_muls
             rad_rad = bool(mul1 > 1 and mul2 > 1)

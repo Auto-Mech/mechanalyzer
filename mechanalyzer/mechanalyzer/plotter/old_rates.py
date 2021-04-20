@@ -1,319 +1,260 @@
-"""
-Plot the rates from a CHEMKIN mechanism file
-"""
-import os
-import subprocess
-import numpy as np
-import matplotlib
 import matplotlib.pyplot as plt
-import sys
+from matplotlib import cm
+from matplotlib.ticker import FormatStrFormatter
+import matplotlib.backends.backend_pdf as plt_pdf
+import numpy as np
+import pandas as pd
+from chemkin_io.writer import _util as writer
+
+K_UNITS_DCT = {1: '(s$^{-1}$)', 2: '(cm$^3$ mol$^{-1}$ s$^{-1}$)',
+               3: '(cm$^6$ mol$^{-2}$ s$^{-1}$)', 4: '(cm$^9$ mol$^{-3}$ s$^{-1}$)'}
 
 
-# Set plotting options
-COLORS = ['k', 'b', 'r', 'g', 'm', 'y', 'c', '#ff9333']
-LINESTYLES = ['-', '--', '-.']
-MARKERS = ['.', 'o', 's']
-
-# Set various labels for plotting
-FIG_TITLE = 'Comparison of Rate Data'
-# AXES_DCTS = [
-#     {'title': 'All rate constants'},
-#     {'title': 'Ratio of rate constants'}
-# ]
-AXES_DCTS = [
-    {},
-    {}
-]
+def build_plots(aligned_rxn_ktp_dct, pressures, filename=None, mech_names=None, sort_method=None):
 
 
-FONT = {'size': 14}
-matplotlib.rc('font', **FONT)
+    # Get the number of mechanisms
+    vals = aligned_rxn_ktp_dct.values()
+    val_iter = iter(vals)
+    first_val = next(val_iter)
+    num_mechs = len(first_val)
 
-
-def build(ktp_dct, temps, dir_prefix='.', names=None, mech_labels=None):
-    """ Generates plots of rate constants for all the reactions
-        in two mechanisms.
-
-        :param ktp_dct: k(T,P)s at all temps and pressures
-        :type: dict[pressure: temps]
-        :param temps: Temps used to calculate high- and low-k(T)s
-        :type temps: numpy.ndarray
-        :param dir_prefix: path where the plot directory will be built
-        :type dir_prefix: str
-        :param names: names of each reaction that serve as titles of their plot
-        :type names: list(str)
-    """
-    # print('\n\n\nIN FUNCTION')
-    # build new dct where we only have reactions with both mechs
-    # filt_ktp_dct = {}
-    # for reaction, ktps in ktp_dct.items():
-    #     if list(ktps['mech1'].keys()) == list(ktps['mech2'].keys()):
-    #         filt_ktp_dct[reaction] = ktps
-    #     else:
-    #         print(reaction)
-    #         print(ktps['mech1'].keys())
-    #         print(ktps['mech2'].keys())
-    #         print('no match')
-    # sys.exit()
-
-    # Initialize file string to species and file names
-    file_name_str = '{0:40s}{1}\n'.format('Name', 'Filename')
-
-    # Set names to dict values if ther aren't anything
-    if names is None:
-        names = list(ktp_dct.keys())
-
-    # Set mech labels if not set
-    if mech_labels is None:
-        mech_labels = ['M1', 'M2']
-
-    # Make the directory that holds the plots if it doesn't exist
-    plot_dir = '{0}/rate_plots'.format(dir_prefix)
-    if not os.path.exists(plot_dir):
-        os.mkdir(plot_dir)
-
-    # Plot the rate constants for each reaction
-    reactions = list(ktp_dct.keys())
-    # reactions = list(filt_ktp_dct.keys())
-
-    print('match', bool(names == reactions))
-    # for x, y in zip(names, reactions):
-    #     print(x, '   ', y, '   ', bool(x==y))
-    # print(names)
-    # print(reactions)
-    # sys.exit()
-    for i in range(0, len(reactions), 2):
-
-        # Determine if plot will have two reactions in it, or one reaction
-        if i+1 <= len(reactions)-1:
-            nreactions = 2
-        else:
-            nreactions = 1
-
-        # Create the figure object
-        fig, axes = _build_figure(nreactions)
-
-        # Set the axes object containing the plotted data for each reaction
-        reaction_names = []
-        for j in range(nreactions):
-            # Determine the reaction dictionaries
-            reaction = reactions[i+j]
-            reaction_mech_ktp_dcts = [ktp_dct[reaction]['mech1'],
-                                      ktp_dct[reaction]['mech2']]
-            # reaction_mech_ktp_dcts = [filt_ktp_dct[reaction]['mech1'],
-            #                           filt_ktp_dct[reaction]['mech2']]
-            reaction_names.append(names[i+j])
-            # Set variables needed for the plotting
-            isbimol = _is_bimolecular(reaction)
-            # Build the axes objects containing the plotted rate constants
-            axes_col = axes[:, j] if nreactions == 2 else axes
-            # print('reaction', reaction)
-            _build_axes(axes_col, reaction_mech_ktp_dcts, isbimol,
-                        temps, mech_labels)
-
-        # Update figure title with the reaction(s) on the page
-        _set_figure_title(fig, reaction_names)
-
-        # Set the name of the plot
-        file_name = 'r{0}'.format(str(i))
-        file_name_str += '{0:40s}{1}\n'.format('reaction', file_name)
-
-        # build and save the figure to a PDF
-        fig_name = '{0}/{1}.pdf'.format(plot_dir, file_name)
-        fig.savefig(fig_name, dpi=100)
-        plt.close(fig)
-
-    # # Collate all of the pdfs together
-    # _collate_pdfs(plot_dir)
-
-    # # Write file relating plot.pdf names to reaction names
-    # with open(os.path.join(plot_dir, 'names.txt'), 'w') as name_file:
-    #     name_file.write(file_name_str)
-
-
-def _build_figure(nreactions):
-    """ Initialize the size and format of the plot figure.
-
-        :param nreactions: number of reactions on single page of figure
-        :type nreactions: int
-        :return: figure object for single page of plots
-        :rtype: matplotlib.pyplot object
-        :return: axes object for single page of plots
-        :rtype: matplotlib.pyplot object
-    """
-
-    # Initialize plot objects
-    if nreactions == 2:
-        fig, axes = plt.subplots(
-            nrows=2, ncols=2, figsize=(12, 8))
+    # Check/fix the mech_names input
+    if mech_names is None:
+        mech_names = []
+        for i in range(num_mechs):
+            mech_names.append('mech' + str(i + 1))
     else:
-        grid = {'width_ratios': [0.5]}
-        fig, axes = plt.subplots(
-            nrows=2, ncols=1, figsize=(12, 8), gridspec_kw=grid)
+        assert num_mechs == len(mech_names), (
+            f"""The number of mechs is {num_mechs}, while the length of the variable
+                   mech_names is {len(mech_names)}."""
+        )
 
-    # Set various plot options
-    fig.tight_layout()
-    fig.subplots_adjust(left=0.075,
-                        top=0.920, bottom=0.075,
-                        wspace=0.2, hspace=0.175)
+    # Get the aligned_rxn_ratio_dct
+    aligned_rxn_ratio_dct = get_aligned_rxn_ratio_dct(aligned_rxn_ktp_dct)
+    #print('aligned_rxn_ratio_dct in build_plots:\n', aligned_rxn_ratio_dct)
 
-    return fig, axes
+    # Get the format_dct
+    format_dct = get_format_dct(pressures)
+
+    # Loop over each rxn and plot
+    figs = []
+    for rxn, ktp_dcts in aligned_rxn_ktp_dct.items():
+        #print(rxn)
+        #print(ktp_dcts)
+        #print(aligned_rxn_ratio_dct)
+        ratio_dcts = aligned_rxn_ratio_dct[rxn]
+        # Hacky fix for now
+        for ratio_dct in ratio_dcts:
+            if ratio_dct is not None:
+                for pressure, (temps, ratios) in ratio_dct.items():
+                    if max(ratios) > 10 or min(ratios) < 0.1:
+                        print(f'Ratio greater than 10x for reaction {rxn}')
+        for ktp_dct in ktp_dcts:
+            if ktp_dct is not None:
+                for pressure, (temps, kts) in ktp_dct.items():
+                    if max(kts) > 1e15:
+                        print(f'Rate constant greater than 1E+15 for reaction {rxn}')
+                        print(temps)
+                        print(kts)
+    
 
 
-def _build_axes(ax_col, reaction_mech_dcts, isbimol, temps, mech_labels):
-    """ plot the rates for various pressures
-        certain checks are made throughout to deal with plotting
-        only one reaction on a page
+        molecularity = get_molecularity(rxn)
+        fig, axs = build_fig_and_axs(molecularity, ratio_dcts, mech_names)
+        fig = plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
+        figs.append(fig)
 
-        :param ax_col: column of the axis
-        :type ax_col: matplotlib.pyplot axis object
-        :param isbimol: signal reaction is bimolecular
-        :type isbimol: bool
-        :param temps: Temperatures (K)
-        :type temps: numpy.ndarray
+    # Build the pdf
+    if filename is None:
+        filename = 'rate_comparison.pdf'
+    build_pdf(figs, filename)
+
+
+def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct):
+
+
+    linestyles = ['-', '--', '-.', ':']
+    for mech_idx, ktp_dct in enumerate(ktp_dcts):
+        if ktp_dct is not None:
+            for pressure, (temps, kts) in ktp_dct.items():
+                (_color, _label) = format_dct[pressure]
+                _label += ', ' + mech_names[mech_idx]
+
+                if min(kts) < 0:
+                    print(f'Negative rate constant for {rxn} in {mech_names[mech_idx]}')
+                    print(f'Pressure (atm): {pressure}')
+                    print(temps, kts)
+                # Plot the rate constants
+                plot1 = axs[0].plot(1000 / temps, np.log10(kts), label=_label, color=_color,
+                                 linestyle=linestyles[mech_idx])
+
+                # Plot the ratios if they exist
+                ratios_plotted = False
+                if ratio_dcts[mech_idx] is not None:  # putting second "if" below prevents errors
+                    if ratio_dcts[mech_idx][pressure] is not None:
+                        (_, ratios) = ratio_dcts[mech_idx][pressure]
+                        ratios_plotted = True
+                        plot2 = axs[1].plot(1000 / temps, np.log10(ratios), label=_label,
+                                            color=_color, linestyle=linestyles[mech_idx])
+    # Add legend
+    axs[0].legend(fontsize=12, loc='upper right')
+    if ratios_plotted:
+        axs[1].legend(fontsize=12, loc='upper right')
+
+    rxn_name_formatted = writer.format_rxn_name(rxn) 
+    fig.suptitle(rxn_name_formatted, x=0.5, y=0.94, fontsize=20)
+
+    return fig
+
+
+def sort_by_rate_constant(aligned_rxn_ktp_dct):
+
+    sorting_vals = {}
+    for rxn_idx, (rxn, ktp_dcts) in enumerate(aligned_rxn_ktp_dct.items()):
+        #print(rxn_idx)
+        #print(rxn)
+        max_val = 0
+        molecularity = get_molecularity(rxn)
+        for ktp_dct in ktp_dcts:
+            if ktp_dct is not None:
+                for pressure, (_, kts) in ktp_dct.items():
+                    if max(kts) > max_val:
+                        max_val = max(kts)
+        # Store values
+        sorting_vals[rxn] = [max_val, molecularity, rxn_idx]
+
+    # Convert to dataframe
+    df = pd.DataFrame.from_dict(sorting_vals)
+    df = df.transpose()
+    #print('df:\n', df)
+
+
+    # df.sort_values()
+
+
+def get_aligned_rxn_ratio_dct(aligned_rxn_ktp_dct):
+
+
+    aligned_rxn_ratio_dct = {}
+    for rxn, ktp_dcts in aligned_rxn_ktp_dct.items():
+        #print('rxn:\n', rxn)
+        #print('ktp_dcts:\n', ktp_dcts)
+        ref_ktp_dct = ktp_dcts[0]
+        ratio_dcts = []
+        for mech_idx, ktp_dct in enumerate(ktp_dcts):
+            #print('mech_idx:\n', mech_idx)
+            #print('ktp_dct:\n', ktp_dct)
+            # If (1) on the first ktp_dct, (2) the ref_ktp_dct is None, or (3) the current_ktp_dct
+            # is None, set the ratio_dct to None
+            if mech_idx == 0 or ref_ktp_dct is None or ktp_dct is None:
+                ratio_dct = None
+                #print('first if statement, setting to None')
+            # Otherwise, calculate the ratio_dct
+            else:
+                #print('else statement')
+                ratio_dct = {}
+                for pressure, (temps, kts) in ktp_dct.items():
+                    # If the pressure is defined in the ref ktp_dct, calculate and store the ratio
+                    if pressure in ref_ktp_dct.keys():
+                        #print(pressure)
+                        _, ref_kts = ref_ktp_dct[pressure]
+                        ratios = kts / ref_kts
+                        ratio_dct[pressure] = (temps, ratios)
+                if ratio_dct == {}:  # account for the case when no pressures contain ratios
+                    ratio_dct = None
+                    #print('second if statement, setting to None')
+
+            # Append the current ratio_dct
+            ratio_dcts.append(ratio_dct)
+            #print('current ratio dcts:\n', ratio_dcts)
+        aligned_rxn_ratio_dct[rxn] = ratio_dcts
+        #print('aligned_rxn_ratio_dct:\n', aligned_rxn_ratio_dct)
+
+    return aligned_rxn_ratio_dct
+
+
+def get_molecularity(rxn):
+    """ Get the molecularity of a reaction
+
+    :param rxn:
+    :type rxn:
+    :return molecularity: the molecularity of the reaction; 1 = unimolec., 2 = bimolec., etc.
+    :rtype: int
     """
-
-    # Obtain a list of the pressures and sort from low to high pressure
-    reaction_pressures_lst = [_get_sorted_pressures(list(reaction.keys()))
-                              for reaction in reaction_mech_dcts]
-    reaction_pressures_union = _get_union_pressures(reaction_pressures_lst)
-    # print(reaction_mech_dcts)
-    # print(reaction_mech_dcts)
-    # print('plst', reaction_pressures_lst)
-    # print('punion', reaction_pressures_union)
-
-    # Plot the data, setting formatting options for the axes
-    _full_plot(ax_col[0], reaction_mech_dcts, reaction_pressures_lst,
-               temps, mech_labels)
-    _ratio_plot(ax_col[1], reaction_mech_dcts, reaction_pressures_union, temps)
-    ax_col[0].set(**_set_axes_labels(AXES_DCTS[0], isbimol, bottom=False))
-    ax_col[1].set(**_set_axes_labels(AXES_DCTS[1], isbimol, bottom=True))
-
-
-def _full_plot(ax_obj, mech_ktp_dcts, mech_pressures, temps, mech_labels):
-    """ Place data points corresponding to all of the rate constants
-        from the two mechanisms on a plot.
-
-        :param ax_obj: axes onject to put points on
-        :type ax_obj: matplotlib.pyplot object
-        :param mech_ktp_dcts: rate constants for two mechanisms
-        :type mech_ktp_dcts: list(dict[rxn: dict[pressure: rate constant]])
-        :param mech_pressures: Pressures (atm)
-        :type mech_pressures: list(float)
-        :param temps: Temperatures (K)
-        :type temps: list(float)
-    """
-    for i, ktp_dct in enumerate(mech_ktp_dcts):
-        for j, pressure in enumerate(mech_pressures[i]):
-            plab = pressure if pressure != 'high' else 'PIndep'
-            # print(ktp_dct[pressure])
-            # print(np.log10(ktp_dct[pressure]))
-            # print(temps)
-            if pressure in ktp_dct:
-                ax_obj.plot((1000.0/temps), np.log10(ktp_dct[pressure]),
-                            color=COLORS[j], linestyle=LINESTYLES[i],
-                            label=mech_labels[i]+'-'+str(plab))
-    ax_obj.legend(loc='upper right')
-
-
-def _ratio_plot(ax_obj, mech_ktp_dcts, pressures, temps):
-    """ plot the ratio of rate constants from two mechanisms
-    """
-    [m1_ktp_dct, m2_ktp_dct] = mech_ktp_dcts
-    for i, pressure in enumerate(pressures):
-        plab = pressure if pressure != 'high' else 'PIndep'
-        m1_ktp = np.array(m1_ktp_dct[pressure])
-        m2_ktp = np.array(m2_ktp_dct[pressure])
-        ratios = m1_ktp / m2_ktp
-        ax_obj.plot((1000.0/temps), ratios,
-                    color=COLORS[i], linestyle=LINESTYLES[0],
-                    label=plab)
-    ax_obj.legend(loc='upper left')
-
-
-def _get_sorted_pressures(unsorted_pressures):
-    """ get a sorted list of pressures for the reaction
-    """
-    if unsorted_pressures != ['high']:
-        pressures = [pressure for pressure in unsorted_pressures
-                     if pressure != 'high']
-        pressures.sort()
-        if 'high' in unsorted_pressures:
-            pressures.append('high')
+    rcts, _, third_bods = rxn
+    num_rcts = len(rcts)
+    third_bod = third_bods[0]
+    if third_bod is not None:
+        if third_bod[0:2] == '(+':  # if the third body does not count toward molecularity
+            molecularity = num_rcts
+        else:  # if the third body counts as another species
+            molecularity = num_rcts + 1
+    # If no third body
     else:
-        pressures = ['high']
+        molecularity = num_rcts
 
-    return pressures
+    return molecularity
 
 
-def _get_union_pressures(pressures):
-    """ get list of pressured where rates are defined for both mechanisms
+def get_format_dct(pressures):
+    """ Set up the formatting dictionary that describes colors and labels
+
+        :param pressures: pressures at which calculations were performed
+        :type pressures: list
+        :return format_dct: dct containing color and label for each pressure
+        :rtype: dct {pressure1: (color1, label1), pressure2: ...}
     """
-    [pr1, pr2] = pressures
-    return list(set(pr1) & set(pr2))
+    if len(pressures) <= 6:
+        colors = ['r', 'b', 'g', 'm', 'c', 'y']
+    else:  # account for the unlikely case where there are more than 6 pressures
+        colors = cm.rainbow(np.linspace(0, 1, len(pressures)))
+    format_dct = {}
+    for idx, pressure in enumerate(pressures):
+        format_dct[pressure] = (colors[idx], str(pressure) + ' atm')
+    format_dct['high'] = ('k', 'P-indep')
+
+    return format_dct
 
 
-def _is_bimolecular(reaction):
-    """ Determines if a reaction is bimolecular
-    """
-    reactants = reaction[0]
-    isbimol = bool(len(reactants) == 2)
-    return isbimol
+def build_fig_and_axs(molecularity, ratio_dcts, mech_names):
 
 
-def _set_axes_labels(axes_dct, isbimol, bottom):
-    """ alter the axes dictionary
-    """
-    if isbimol:
-        units = 'cm3/s'
-    else:
-        units = '1/s'
 
-    if bottom:
-        axes_dct['xlabel'] = '1000/T (1/K)'
-        axes_dct['ylabel'] = 'k4/k1'
-    else:
-        axes_dct['ylabel'] = 'log10 k({0})'.format(units)
+    # Set up the y labels for the rate plot and the ratios plot
+    k_units = K_UNITS_DCT[molecularity]
+    k_label = 'log$_{10}$$k$ ' + k_units
+    ratio_label = ''
+    for mech_idx, ratio_dct in enumerate(ratio_dcts):
+        if ratio_dct is not None:
+            ref_mech_name = mech_names[mech_idx-1]
+            ratio_label = 'log$_{10}$ of $k$ ratio relative to' + f' {ref_mech_name}'
+            break
 
-    return axes_dct
+    # Set up the figure and axes
+    fig = plt.figure(figsize=(8.5, 11))
+    axs = []
+    axs.append(fig.add_subplot(211))
+    plt.xlabel('1000/$T$ (K$^{-1}$)', fontsize=14)
+    plt.ylabel(k_label, fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    axs[0].yaxis.set_major_formatter(FormatStrFormatter('%0.2f'))
+    axs.append(fig.add_subplot(212))
+    plt.xlabel('1000/$T$ (K$^{-1}$)', fontsize=14)
+    plt.ylabel(ratio_label, fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    axs[1].yaxis.set_major_formatter(FormatStrFormatter('%0.2f'))
 
-
-def _set_figure_title(fig_obj, reactions_lst):
-    """ Update the string for the figure title
-    """
-    reaction_str_lst = []
-    for reaction in reactions_lst:
-        side_strs = []
-        for side in reaction:
-            side_strs.append('+'.join(side))
-        reaction_str_lst.append(side_strs)
-        # reaction_str_lst.append('='.join(side_strs))
-
-    if len(reactions_lst) == 2:
-        # print('rxn str lst', reaction_str_lst)
-        fig_title = '{0:^60s}{1:^60s}\n{2:^60s}{3:^60s}'.format(
-            reaction_str_lst[0][0]+'=',
-            reaction_str_lst[1][0]+'=',
-            reaction_str_lst[0][1],
-            reaction_str_lst[1][1])
-        # fig_title = '{0:^60s}{1:^60s}'.format(
-        #    reaction_str_lst[0], reaction_str_lst[1])
-    else:
-        fig_title = '{0:^80s}\n{1:^80s}'.format(
-            reaction_str_lst[0][0]+'=',
-            reaction_str_lst[0][1])
-
-    fig_obj.suptitle(fig_title)
+    return fig, axs
 
 
-def _collate_pdfs(plot_dir):
-    """ collate all of the pdfs together
-    """
-    plots = [directory for directory in os.listdir(plot_dir)
-             if 'pdf' in directory]
-    plots.sort(key=lambda x: int(x.replace('r', '').replace('.pdf', '')))
-    plots.append('all_rates.pdf')
-    plots = [os.path.join(plot_dir, name) for name in plots]
+def build_pdf(figs, filename):
 
-    command = ['pdfunite'] + plots
-    subprocess.call(command)
+    print('Producing PDF...')
+    pdf = plt_pdf.PdfPages(filename)
+    for fig in figs:
+        pdf.savefig(fig)
+    pdf.close()
+

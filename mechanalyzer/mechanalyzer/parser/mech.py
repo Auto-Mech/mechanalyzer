@@ -3,19 +3,40 @@ Functions for mechanism reading and sorting
 Making script mechanalyzer/bin/mech.py more compact
 """
 
-#import os
-#import sys
-#import copy
-import mechanalyzer
 import chemkin_io
-#import pandas as pd
-#import numpy as np
+import mechanalyzer
+from mechanalyzer.parser import ckin_ as ckin
+
+
+def parse_mechanism(mech_str, mech_type, spc_dct, sort_rxns=False):
+    """ Get the reactions and species from the mechanism input
+    """
+
+    # Parse the info from the chemkin file
+    if mech_type == 'chemkin':
+        formulas_dct, formulas, rct_names, prd_names, rxn_names = ckin.parse(
+            mech_str, spc_dct, sort_rxns)
+    else:
+        raise NotImplementedError
+
+    return [formulas_dct, formulas, rct_names, prd_names, rxn_names]
+    # list, list of tuples, list of tuples, list
 
 
 def readfiles(spcfile, mechfile):
-    '''
+    """
     read the mechanism and the species files provided by the user
-    '''
+    :param spcfile: path of csv file for species
+    :type spcfile: string
+    :param mechfile: path of mech file
+    :type mechfile: string
+    :return spc_dct: species dictionary
+    :rtype spc_dct: dictionary
+    :return rxn_param_dct: reaction parameter dictionary
+    :rtype rxn_param_dct: dictionary
+    :return elem_tuple: elements of the mech
+    :rtype elem_tuple: tuple of strings ('el1','el2')
+    """
     with open(spcfile, 'r') as file_obj:
         spc_str = file_obj.read()
 
@@ -31,20 +52,31 @@ def readfiles(spcfile, mechfile):
     block_str = chemkin_io.parser.mechanism.reaction_block(mech_str)
     rxn_param_dct = chemkin_io.parser.reaction.param_dct(
         block_str, units[0], units[1])
-    # extract elements
-    el_block = chemkin_io.parser.mechanism.element_block(mech_str)
-    elem_tuple = chemkin_io.parser.species.names(el_block)
+    # extract elements if present
+    try:
+        el_block = chemkin_io.parser.mechanism.element_block(mech_str)
+        elem_tuple = chemkin_io.parser.species.names(el_block)
+    except:
+        elem_tuple = None
 
     return spc_dct, rxn_param_dct, elem_tuple
 
 
-def build_dct(spc_dct, rxn_param_dct):
-    '''
-    Build required info for mech sorting
-    '''
+def build_dct(spc_dct, rxn_dct):
+    """
+    Build mech_info object for mech sorting
+    :param spc_dct: species dictionary
+    :type spc_dct: dictionary
+    :param rxn_dct: parameter dictionary
+    :type rxn_dct_keys: dict
+    :return mech_info: objects with mech info
+    :rtype: list
+
+    maybe replace mech_info function in ckin
+    """
     # extract info from dictionary:
     # reactants and products
-    rcts, prds, thrdbdy = zip(*rxn_param_dct.keys())
+    rcts, prds, thrdbdy = zip(*rxn_dct.keys())
     rct_names_lst = list(rcts)
     prd_names_lst = list(prds)
     thrdbdy_lst = list(thrdbdy)
@@ -52,12 +84,12 @@ def build_dct(spc_dct, rxn_param_dct):
     # inchis dictionary
     ich_dct = mechanalyzer.parser.ckin_.get_ich_dct(spc_dct)
 
-    # formulas and reaction names
+    # formulas and reaction names (repplace with the mech info from ckin
     formula_dct, formula_str, rxn_name = mechanalyzer.parser.ckin_.mech_info(
         rct_names_lst, prd_names_lst, ich_dct)
 
     mech_info = [formula_dct, formula_str,
-                 rct_names_lst, prd_names_lst, thrdbdy_lst, rxn_name]
+                 rct_names_lst, prd_names_lst, thrdbdy_lst, rxn_name, list(rxn_dct.values())]
 
     return mech_info
 

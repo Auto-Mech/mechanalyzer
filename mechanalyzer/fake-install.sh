@@ -7,6 +7,4 @@ for d in ls $_THIS_DIR/*/; do
 done
 
 # fake-install external packages as well
-. /lcrc/project/CMRP/amech/ratefit/external/dsarrfit/debug/fake-install.sh
-# . /lcrc/project/CMRP/amech/rateFit/external/troefit/debug/fake-install.sh
-
+. /lcrc/project/CMRP/amech/mechanalyzer/ratefit/external/dsarrfit/debug/fake-install.sh

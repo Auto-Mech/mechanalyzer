@@ -12,9 +12,9 @@ from mechanalyzer import inf
 
 __all__ = [
     'builder',
-   'calculator',
+    'calculator',
     'parser',
     'plotter',
     'par',
-    'inf'
+    'inf',
 ]

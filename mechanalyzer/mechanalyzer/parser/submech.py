@@ -11,7 +11,7 @@ import sys
 import numpy as np
 import pandas as pd
 import automol
-from mechanalyzer.parser import util
+from mechanalyzer.parser._util import get_mult
 
 
 def species_subset(fuel, spc_dct):
@@ -113,8 +113,8 @@ def classify_unimol(rcts, prds, spc_dct):
     """
     # extract formula dictionary
     fml_df = extract_fml_df(spc_dct)
-    mult_rcts = util.get_mult(rcts, spc_dct)
-    mult_prds = util.get_mult(prds, spc_dct)
+    mult_rcts = get_mult(rcts, spc_dct)
+    mult_prds = get_mult(prds, spc_dct)
 
     if len(prds) == 1:
         rxn_class_broad = 'Isomerization'
@@ -158,8 +158,8 @@ def classify_bimol(rcts, prds, spc_dct):
     # extract formula dictionary
     fml_df = extract_fml_df(spc_dct)
     # extracts reactants and products multiplicity
-    mult_rcts = util.get_mult(rcts, spc_dct)
-    mult_prds = util.get_mult(prds, spc_dct)
+    mult_rcts = get_mult(rcts, spc_dct)
+    mult_prds = get_mult(prds, spc_dct)
 
     if mult_rcts < 4:
         rxn_class_broad = 'Addition'
@@ -245,10 +245,10 @@ def classify_habs(rcts, prds, fml_df, spc_dct):
         print('error: not A+B=C+D reaction')
         sys.exit()
 
-    mult_rct = np.array([util.get_mult(rcts[0], spc_dct),
-                         util.get_mult(rcts[1], spc_dct)])
-    mult_prd = np.array([util.get_mult(prds[0], spc_dct),
-                         util.get_mult(prds[1], spc_dct)])
+    mult_rct = np.array([get_mult(rcts[0], spc_dct),
+                         get_mult(rcts[1], spc_dct)])
+    mult_prd = np.array([get_mult(prds[0], spc_dct),
+                         get_mult(prds[1], spc_dct)])
 
     if (any(mult_rct == 1) and any(mult_rct > 1) and
             any(mult_prd == 1) and any(mult_prd > 1)):

@@ -98,6 +98,9 @@ def get_valid_tk(temps, rate_constants, bimol,
     valid_t = np.array(valid_t, dtype=np.float64)
     valid_k = np.array(valid_k, dtype=np.float64)
 
+    # if not np.isclose(tmin, tmax):
+    #     for temp, rate_constant in zip(temps, rate_constants):
+
     return valid_t, valid_k
 
 

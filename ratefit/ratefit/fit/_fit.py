@@ -14,7 +14,7 @@ from ratefit.fit._pdep import pressure_dependent_ktp_dct
 
 
 DEFAULT_PDEP_DCT = {
-    'pdep_temps': (500, 100),
+    'pdep_temps': (500, 1000),
     'pdep_tol': 20.0,
     'no_pdep_pval': 1.0,
     'plow': None,
@@ -34,7 +34,7 @@ DEFAULT_CHEB_DCT = {
 }
 
 
-def fit_ktp_dct(mess_path, pes_formula, inp_fit_method,
+def fit_ktp_dct(mess_path, inp_fit_method,
                 pdep_dct=DEFAULT_PDEP_DCT,
                 arrfit_dct=DEFAULT_ARRFIT_DCT,
                 chebfit_dct=DEFAULT_CHEB_DCT,
@@ -67,6 +67,7 @@ def fit_ktp_dct(mess_path, pes_formula, inp_fit_method,
         # Read the rate constants out of the mess outputs
         print('\nReading k(T,P)s from MESS output...')
         ktp_dct, fit_temps = read_rates(
+        ktp_dct, cheb_fit_temps = read_rates(
             mess_out_str, pdep_dct, lab_i, lab_j,
             fit_temps=fit_temps, fit_pressures=fit_pressures,
             fit_tunit=fit_tunit, fit_punit=fit_punit)
@@ -83,8 +84,7 @@ def fit_ktp_dct(mess_path, pes_formula, inp_fit_method,
         elif fit_method == 'chebyshev':
             chemkin_str = chebfit.pes(
                 ktp_dct, reaction, mess_path,
-                fit_temps=fit_temps, **chebfit_dct)
-            # ktp_dct, inp_temps, reaction, mess_path)
+                fit_temps=cheb_fit_temps, **chebfit_dct)
             if not chemkin_str:
                 chemkin_str = arrfit.pes(
                     ktp_dct, reaction, mess_path, **arrfit_dct)
@@ -92,9 +92,9 @@ def fit_ktp_dct(mess_path, pes_formula, inp_fit_method,
         #     chemkin_str += troefit.pes(
         #         ktp_dct, reaction, mess_path, **troefit_dct)
 
-        # Update the chemkin string dct
+        # Update the chemkin string dct {PES FORMULA: [PES CKIN STRS]}
         print('\nFinal Fitting Parameters in CHEMKIN Format:', chemkin_str)
-        ridx = pes_formula + '_' + reaction.replace('=', '_')
+        ridx = reaction.replace('=', '_')
         chemkin_str_dct.update({ridx: chemkin_str})
 
     return chemkin_str_dct

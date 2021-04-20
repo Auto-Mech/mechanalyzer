@@ -12,10 +12,12 @@ import copy
 import pandas as pd
 import numpy as np
 import automol
-from mechanalyzer.parser import ckin_ as ckin
 from mechanalyzer.parser import submech
-from mechanalyzer.parser import util
 from mechanalyzer.parser import pes
+from mechanalyzer.parser._util import count_atoms
+from mechanalyzer.parser._util import order_rct_bystoich
+from mechanalyzer.parser._util import extract_spc
+from mechanalyzer.parser._util import get_mult
 
 
 class SortMech:
@@ -35,23 +37,26 @@ class SortMech:
         """
         # extract data from mech info
         [formula_dct_lst, _, rct_names_lst,
-            prd_names_lst, thrdbdy_lst, rxn_name_lst] = mech_info
+            prd_names_lst, thrdbdy_lst, rxn_name_lst, param_vals] = mech_info
         rxn_index = list(zip(rxn_name_lst, thrdbdy_lst))
         # set dataframe: extract useful info
-        pes_lst = util.count_atoms(formula_dct_lst)
-        molecularity = list(map(len, rct_names_lst))
+        pes_lst = count_atoms(formula_dct_lst)
+        isthrdbdy = np.array(
+            [(t[0] is not None and '(' not in t[0]) for t in thrdbdy_lst], dtype=int)
+        molecularity = np.array(
+            list(map(len, rct_names_lst)), dtype=int) + isthrdbdy
         n_of_prods = list(map(len, prd_names_lst))
-        rct_names_lst_ordered = util.order_rct_bystoich(
+        rct_names_lst_ordered = order_rct_bystoich(
             rct_names_lst, spc_dct=spc_dct)  # put heavier reactant first
-        prd_names_lst_ordered = util.order_rct_bystoich(
+        prd_names_lst_ordered = order_rct_bystoich(
             prd_names_lst, spc_dct=spc_dct)  # put heavier product first
-        rct_1, rct_2 = util.get_S1S2(rct_names_lst_ordered)
+        rct_1, rct_2 = extract_spc(rct_names_lst_ordered)
         data = np.array([rct_names_lst, prd_names_lst, rct_names_lst_ordered, prd_names_lst_ordered,
-                         rct_1, rct_2, molecularity, n_of_prods, pes_lst, thrdbdy_lst], dtype=object).T
+                         rct_1, rct_2, molecularity, n_of_prods, pes_lst, thrdbdy_lst, param_vals], dtype=object).T
         self.mech_df = pd.DataFrame(data, index=rxn_index, columns=[
                                     'rct_names_lst', 'prd_names_lst', 'rct_names_lst_ord',
                                     'prd_names_lst_ord', 'r1', 'r2', 'molecularity',
-                                    'N_of_prods', 'pes', 'thrdbdy'])
+                                    'N_of_prods', 'pes', 'thrdbdy', 'param_vals'])
 
         self.spc_dct = spc_dct  # set for later use
         # empty list for initialization (otherwise pylint warning)
@@ -74,13 +79,13 @@ class SortMech:
 
         # if species_list is not empty: pre-process the mechanism
         if len(species_list) > 0:
-            if len(species_list) == 2 and species_list[-1] == 'submech':
+            if len(species_list) == 1 and 'submech' in hierarchy:
                 # select a subset of species appropriately according to the stoichiometries
                 # specified in submech.py
                 species_list, species_subset_df = submech.species_subset(
                     species_list[0], self.spc_dct)
                 self.species_subset_df = species_subset_df
-            elif len(species_list) > 2 and species_list[-1] == 'submech':
+            elif len(species_list) > 1 and 'submech' in hierarchy:
                 print('Error: pyr/ox submech extraction available for only 1 species')
                 sys.exit()
 
@@ -88,7 +93,7 @@ class SortMech:
             self.species_list = species_list
 
         # 0. look for keywords and sort accordingly
-        # LIST OF AVAILABLE SORTING OPTIONS (BESIDES R1 AND PES, ALWAYS AVAILABLE)
+        # list of available sorting options with specific sorting functions
         sort_optns_dct = {
             'species': self.group_species,
             'subpes': self.conn_chn,
@@ -96,6 +101,8 @@ class SortMech:
             'rxn_class_broad': self.rxnclass_broad,
             'rxn_class_graph': self.rxnclass_graph,
             'submech': self.group_submech,
+            'rxn_max_vals': self.rxn_max_vals,
+            'rxn_max_ratio': self.rxn_max_ratio
         }
 
         for optn, fun_name in sort_optns_dct.items():
@@ -118,10 +125,10 @@ class SortMech:
 
         # 2. assign class headers
         # set labels for all the possible criteria
-        criteria_all = ['molecularity', 'N_of_prods', 'species', 'pes', 'subpes',
-                        'submech', 'r1', 'mult', 'rxn_class_broad', 'rxn_class_graph']
+        criteria_all = ['molecularity', 'N_of_prods', 'species', 'pes', 'subpes', 'submech',
+                        'r1', 'mult', 'rxn_class_broad', 'rxn_class_graph', 'rxn_max_vals', 'rxn_max_ratio']
         labels_all = ['NR', 'N_of_prods', 'SPECIES', 'N_COH_PES', 'N_COH.subpes', 'SUBMECH',
-                      'Heavier rct', 'Total multiplicity', 'rxn type', 'rxn class']
+                      'Heavier rct', 'Total multiplicity', 'rxn type', 'rxn class', 'max val', 'max ratio']
         labels = pd.Series(labels_all, index=criteria_all)
         self.class_headers(hierarchy, labels)
 
@@ -261,7 +268,7 @@ class SortMech:
         for rxn in reac_mult_df.index:
             mult = 1
             rcts = self.mech_df['rct_names_lst'][rxn]
-            mult = util.get_mult(rcts, self.spc_dct)
+            mult = get_mult(rcts, self.spc_dct)
             reac_mult_df['mult'][rxn] = str(mult)
 
         return reac_mult_df
@@ -279,13 +286,14 @@ class SortMech:
         for rxn in rxncl_broad_df.index:
             rcts = self.mech_df['rct_names_lst_ord'][rxn]
             prds = self.mech_df['prd_names_lst_ord'][rxn]
-            if len(rcts) > 1:
-                # bimolecular reaction classification
-                rxn_class_broad = submech.classify_bimol(
-                    rcts, prds, self.spc_dct)
-            else:
+            if (self.mech_df['molecularity'][rxn] == 1 or
+                    (self.mech_df['molecularity'][rxn] == 1 and self.mech_df['thrdbdy'][rxn][0] is not None)):
                 # unimolecular reaction classification
                 rxn_class_broad = submech.classify_unimol(
+                    rcts, prds, self.spc_dct)
+            else:
+                # bimolecular reaction classification
+                rxn_class_broad = submech.classify_bimol(
                     rcts, prds, self.spc_dct)
             rxncl_broad_df['rxn_class_broad'][rxn] = rxn_class_broad
 
@@ -369,6 +377,38 @@ class SortMech:
                         rxncl_graph_df['rxn_class_graph'][rxn] = rxn_type_ws
 
         return rxncl_graph_df
+
+    def rxn_max_vals(self, rxn_maxvals_df):
+        """ determines the maximum value of the rates in ktp dictionary
+        :param rxn_maxvals_df: empty dataframe index=rxns, column: 'rxn_max_vals'
+
+        :returns: rxn_maxvals_df dataframe with overall max value of the rate
+        :rtype: dataframe[float][tuple]
+        """
+        # extract maximum value for each ktp dictionary
+        for rxn in rxn_maxvals_df.index:
+            param_vals_dct = self.mech_df['param_vals'][rxn]
+            max_val = get_max_aligned_values(param_vals_dct)
+            rxn_maxvals_df['rxn_max_vals'][rxn] = max_val
+
+        return rxn_maxvals_df
+
+    def rxn_max_ratio(self, rxn_maxratio_df):
+        """ determines the maximum value of the ratios between different rates of ktp dct
+        :param rxn_maxratio_df: empty dataframe index=rxns, column: 'rxn_max_ratio'
+
+        :returns: rxn_max_ratio dataframe with overall max value of the ratio
+        :rtype: dataframe[float][tuple]
+        """
+        # extract maximum ratio for each set ktp dictionary
+        for rxn in rxn_maxratio_df.index:
+            param_vals_dct = self.mech_df['param_vals'][rxn]
+            # get the ratio:
+            param_ratio_dct = get_aligned_rxn_ratio_dct(param_vals_dct)
+            max_val = get_max_aligned_values(param_ratio_dct)
+            rxn_maxratio_df['rxn_max_ratio'][rxn] = max_val
+
+        return rxn_maxratio_df
 
     ################## ASSIGN HEADERS ###################################################
 
@@ -479,7 +519,7 @@ def classify_graph(spc_dct, rct_names, prd_names):
         if automol.formula.reac.is_valid_reaction(rct_fmls, prd_fmls):
             # print(rct_names,prd_names,rct_ichs,prd_ichs)
             try:
-                # rxn_objs = automol.reac.util.rxn_objs_from_inchi(
+                # rxn_objs = automol.reac.rxn_objs_from_inchi(
                 #     rct_ichs, prd_ichs)
                 # rxn_classes = tuple(obj[0].class_ for obj in rxn_objs)
                 rxn_classes = automol.reac._find.find_from_inchis(
@@ -576,6 +616,61 @@ def cmts_string(name, label, cltype):
         rxnclass = '! ' + cmtlabel + ' _'.join(name)
 
     return rxnclass
+
+######################## functions working with ktp dictionaries #################
+
+
+def get_aligned_rxn_ratio_dct(aligned_rxn_dct_entry):
+    """ converts the entry of the aligned_rxn_ktp_dictionary to the ratios
+        between the reference rate and the given rate
+
+    :param aligned_rxn_dct_entry: entry of aligned_rxn_ktp/ratio_dct
+    :type aligned_rxn_dct_entry: list[dct{pressure: np.array(temps), np.array(values)}]
+    :return aligned_ratio_dct_entry: aligned dictionary entry
+    :rtype: list(dct)
+    """
+    ref_ktp_dct = aligned_rxn_dct_entry[0]
+    ratio_dct_entry = []
+    for mech_idx, ktp_dct in enumerate(aligned_rxn_dct_entry):
+        # If (1) on the first ktp_dct, (2) the ref_ktp_dct is None, or (3) the current_ktp_dct
+        # is None, set the ratio_dct to None
+        if mech_idx == 0 or ref_ktp_dct is None or ktp_dct is None:
+            ratio_dct = None
+        # Otherwise, calculate the ratio_dct
+        else:
+            ratio_dct = {}
+            for pressure, (temps, kts) in ktp_dct.items():
+                # If the pressure is defined in the ref ktp_dct, calculate and store the ratio
+                if pressure in ref_ktp_dct.keys():
+                    _, ref_kts = ref_ktp_dct[pressure]
+                    ratios = kts / ref_kts
+                    ratio_dct[pressure] = (temps, ratios)
+            if ratio_dct == {}:  # account for the case when no pressures contain ratios
+                ratio_dct = None
+
+        # Append the current ratio_dct
+        ratio_dct_entry.append(ratio_dct)
+
+    return ratio_dct_entry
+
+
+def get_max_aligned_values(aligned_rxn_dct_entry):
+    """ Gets the maximum values for each reaction from an entry (value) of
+        either an aligned_rxn_ktp_dct or an aligned_rxn_ratio_dct
+
+    :param aligned_rxn_dct_entry: entry of aligned_rxn_ktp/ratio_dct
+    :type aligned_rxn_dct_entry: list[dct{pressure: np.array(temps), np.array(values)}]
+    :return max_val: max value
+    :rtype: float
+    """
+    max_val = 0
+    for single_dct in aligned_rxn_dct_entry:
+        if single_dct is not None:
+            for _, (_, values) in single_dct.items():
+                if max(values) > max_val:
+                    max_val = max(values)
+
+    return max_val
 
 ######################## Archived Functions ######################
 
