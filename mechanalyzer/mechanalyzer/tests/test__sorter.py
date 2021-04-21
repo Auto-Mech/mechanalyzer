@@ -143,6 +143,7 @@ def test__sortby_submech_class():
     sort_main(CWD, SPC_NAME, MECH_NAME, SORTMECH_NAME,
               MECH_REST_NAME, ISOLATE_SPECIES, SORT_STR)
 
+
 def sort_main(CWD, SPC_NAME, MECH_NAME, SORTMECH_NAME, MECH_REST_NAME, ISOLATE_SPECIES, SORT_STR):
     spc_dct_full, rxn_param_dct, elem_tuple = mechanalyzer.parser.mech.readfiles(
         os.path.join(CWD, SPC_NAME), os.path.join(CWD, MECH_NAME))
@@ -157,8 +158,10 @@ def sort_main(CWD, SPC_NAME, MECH_NAME, SORTMECH_NAME, MECH_REST_NAME, ISOLATE_S
         rxn_param_dct, sorted_idx)
 
     # WRITE THE NEW MECHANISM
-    mechanalyzer.parser.mech.write_mech(
-        elem_tuple, spc_dct, rxn_param_dct_sorted, SORTMECH_NAME, comments=cmts_dct)
+    spc_dct = mechanalyzer.parser.spc.order_species_by_atomcount(spc_dct)
+    chemkin_io.writer.mechanism.write_chemkin_file(
+        elem_tuple=elem_tuple, spc_dct=spc_dct, rxn_param_dct=rxn_param_dct_sorted,
+        comments=cmts_dct)
 
     # IF YOU DERIVED A MECH SUBSET: SAVE ALL THE REMAINING REACTIONS IN ANOTHER FILE
     if ISOLATE_SPECIES:

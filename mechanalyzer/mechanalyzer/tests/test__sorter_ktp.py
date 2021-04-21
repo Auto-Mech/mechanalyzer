@@ -88,4 +88,9 @@ al_ktp_dct_sorted = mechanalyzer.parser.mech.reordered_mech(al_ktp_dct,sorted_id
 rxn_param_dct_sorted =  mechanalyzer.parser.mech.reordered_mech(rxn_param_dct,sorted_idx)
 print(al_ktp_dct_sorted)
 # WRITE THE NEW MECHANISM
-mechanalyzer.parser.mech.write_mech(elem_tuple,spc_dct,rxn_param_dct_sorted,SORTMECH_NAME,comments=cmts_dct)
+spc_dct = mechanalyzer.parser.spc.order_species_by_atomcount(spc_dct)
+chemkin_io.writer.mechanism.write_chemkin_file(
+    elem_tuple=elem_tuple, spc_dct=spc_dct, rxn_param_dct=rxn_param_dct_sorted,
+    comments=None)
+
+

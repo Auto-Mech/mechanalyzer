@@ -47,7 +47,7 @@ def connected_channels_dct(pes_dct):
         pes_prd_lst = pes_dct[formula]['prd_names_lst']
         pes_rxn_name_lst = pes_dct[formula]['rxn_name_lst']
 
-        connchnls = _find_conn_chnls(
+        connchnls = find_conn_chnls(
             pes_rct_lst, pes_prd_lst, pes_rxn_name_lst)
 
         # Add connected channels list to the dictionary
@@ -56,7 +56,7 @@ def connected_channels_dct(pes_dct):
     return conn_chn_dct
 
 
-def _find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
+def find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
     '''
     Given rxn names, reactants, products belonging to 1 PES:
     generate SUB PESs dictionaries
@@ -72,10 +72,11 @@ def _find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
     # put everything in a dataframe. indices are the numbers given by enumerate
     len_rct_prd = np.array(list(map(len, pes_rct_lst))) + \
         np.array(list(map(len, pes_prd_lst)))
-    pes_df = pd.DataFrame(np.array([pes_rct_lst, pes_prd_lst, len_rct_prd], dtype=object).T,
-                          index=np.arange(0, len(pes_rxn_name_lst)),
-                          columns=['rcts', 'prds', 'N_rcts_prds'])
-    # order according to the total number of species (N of reactants + N of products)
+    pes_df = pd.DataFrame(
+        np.array([pes_rct_lst, pes_prd_lst, len_rct_prd], dtype=object).T,
+        index=np.arange(0, len(pes_rxn_name_lst)),
+        columns=['rcts', 'prds', 'N_rcts_prds'])
+    # order by total number of species (N of reactants + N of products)
     pes_df = pes_df.sort_values(by='N_rcts_prds')
     # Split up channels into a connected sub-pes within a formula
     subpes_idx = 0
@@ -90,10 +91,12 @@ def _find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
         for conn_chnls_idx in conndct:
             for spc_pair in chnl_species:
                 if len(spc_pair) == 1 and spc_pair in conndct[conn_chnls_idx]:
-                    # this works for unimol species; need also to verify bimol wellskipping channels
+                    # This works for unimol species
+                    # Need also to verify bimol wellskipping channels
                     if conn_chnls_idx not in connected_to:
                         connected_to.append(conn_chnls_idx)
-                elif len(spc_pair) == 1 and spc_pair[::-1] in conndct[conn_chnls_idx]:
+                elif (len(spc_pair) == 1 and
+                      spc_pair[::-1] in conndct[conn_chnls_idx]):
                     if conn_chnls_idx not in connected_to:
                         connected_to.append(conn_chnls_idx)
 
@@ -127,6 +130,7 @@ def _find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
 
     return connchnls
 
+
 # ORIGINALLY IN MECHDRIVER
 # FUNTIONS FOR THE PES DICT OBJECTS CONTAINING INFO FOR THE REACTIONS ON PES
 def build_pes_idx_dct(pes_dct):
@@ -157,7 +161,7 @@ def print_pes_channels(pes_dct):
                 ' + '.join(pes_prd_names_lst[chn_idx])))
 
 
-def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct,
+def pes_dct_w_rxn_lsts(pes_dct, form_dct,
                        conn_chnls_dct, pes_idxs):
     """ Form a new PES dictionary with the rxn_lst formatted to work
         with the drivers currently
@@ -190,12 +194,14 @@ def pes_dct_w_rxn_lsts(pes_dct, idx_dct, form_dct,
                     rct_names_lst.append(pes_rct_names_lst[chn_idx-1])
                     prd_names_lst.append(pes_prd_names_lst[chn_idx-1])
                     rxn_name_lst.append(pes_rxn_name_lst[chn_idx-1])
-                    # rxn_model_lst.append(run_obj_dct[(pes_idx, chn_idx)])  # need dif way to get kin,spc models
+                    # rxn_model_lst.append(run_obj_dct[(pes_idx, chn_idx)])
+                    # need dif way to get kin,spc models
                     rxn_chn_idxs.append(chn_idx)
 
             # Form reaction list (is empty if no chnls requested on sub pes)
-            rxn_lst = format_run_rxn_lst(
-                rct_names_lst, prd_names_lst, rxn_chn_idxs)
+            rxn_lst = ()
+            # rxn_lst = format_run_rxn_lst(
+            #     rct_names_lst, prd_names_lst, rxn_chn_idxs)
 
             # Add the rxn lst to the pes dictionary if there is anythin
             if rxn_lst:
