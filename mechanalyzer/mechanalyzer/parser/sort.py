@@ -34,8 +34,9 @@ class SortMech:
                     self.spc_dct: species dictionary
         """
         # extract data from mech info
-        [formula_dct_lst, _, rct_names_lst,
+        [formula_dct_lst, formulas, rct_names_lst,
             prd_names_lst, thrdbdy_lst, rxn_name_lst, param_vals] = mech_info
+
         rxn_index = list(zip(rxn_name_lst, thrdbdy_lst))
         # set dataframe: extract useful info
         pes_lst = util.count_atoms(formula_dct_lst)
@@ -50,11 +51,11 @@ class SortMech:
             prd_names_lst, spc_dct=spc_dct)  # put heavier product first
         rct_1, rct_2 = util.get_S1S2(rct_names_lst_ordered)
         data = np.array([rct_names_lst, prd_names_lst, rct_names_lst_ordered, prd_names_lst_ordered,
-                         rct_1, rct_2, molecularity, n_of_prods, pes_lst, thrdbdy_lst, param_vals], dtype=object).T
+                         rct_1, rct_2, molecularity, n_of_prods, pes_lst, formulas, thrdbdy_lst, param_vals], dtype=object).T
         self.mech_df = pd.DataFrame(data, index=rxn_index, columns=[
                                     'rct_names_lst', 'prd_names_lst', 'rct_names_lst_ord',
                                     'prd_names_lst_ord', 'r1', 'r2', 'molecularity',
-                                    'N_of_prods', 'pes', 'thrdbdy', 'param_vals'])
+                                    'N_of_prods', 'pes', 'formulas', 'thrdbdy', 'param_vals'])
 
         self.spc_dct = spc_dct  # set for later use
         # empty list for initialization (otherwise pylint warning)
@@ -175,6 +176,7 @@ class SortMech:
 
     def conn_chn(self, conn_chn_df):
         """ Identifies connected channels and assigns them to the same subpes
+            Generate pes dictionary for each reaction and save for later use
 
         :param self.mech_df: dataframe with mech info (contains all reactions)
         :param conn_chn_df: empty dataframe df[subpes][rxn]
@@ -182,7 +184,8 @@ class SortMech:
         :returns: conn_chn_df dataframe[subpes][rxn]
         :rtype: dataframe[int][tuple]
         """
-
+        pes_index = 0
+        pes_dct_df = pd.DataFrame(index = self.mech_df.index, columns=['pes_dct'], dtype=object)
         for fml, peslist in self.mech_df.groupby('pes'):
             # print(peslist)
             # Set the names lists for the rxns and species needed below
@@ -196,6 +199,14 @@ class SortMech:
                 rxns = peslist.iloc[value].index
                 fml_num = fml + key/100
                 conn_chn_df['subpes'][rxns] = fml_num
+                # store in pes_dct_df
+                fml_str = self.mech_df['formulas'][rxns].values[0]
+                for rxn in rxns:
+                    pes_dct_df['pes_dct'][rxn] = (fml_str, pes_index, key)
+
+            pes_index += 1
+
+        conn_chn_df = pd.concat([conn_chn_df, pes_dct_df], axis=1)
 
         return conn_chn_df
 
@@ -486,7 +497,34 @@ class SortMech:
         cmts = cmts_df.to_dict('index')
 
         return new_idx, cmts, self.spc_dct
+        
+    def return_pes_dct(self):
+        """ returns a PES dictionary
 
+        :returns: pes_dct: {('fml', n_pes, n_subpes): (rcts, prds), ...}
+        :rtype: dct{tuple: tuple}
+        """
+        # check that SUBPES is present in indexes, otherwise generate corresponding dataframe
+        if 'subpes' not in self.mech_df.columns:
+            df_optn = pd.DataFrame(
+                index=self.mech_df.index, columns=['subpes'])
+            df_optn = self.conn_chn(df_optn)
+            # concatenate the new portion of dataframe
+            self.mech_df = pd.concat([self.mech_df, df_optn], axis=1)
+
+        # get the pes dictionary
+        pes_dct = {}
+        for _, pes_dct_df in self.mech_df.groupby('subpes'):    
+            pes_dct_key = pes_dct_df['pes_dct'].values[0]
+            rct_names = pes_dct_df['rct_names_lst'].values
+            prd_names = pes_dct_df['prd_names_lst'].values
+            #thrdbdy = pes_dct_df['thrdbdy'].values
+            #new_idx = list(zip(rct_names, prd_names, thrdbdy))
+            new_idx = list(zip(rct_names, prd_names))
+
+            pes_dct[pes_dct_key] = tuple(new_idx)
+        
+        return pes_dct
 
 ######### functions specific for the sorter - non specific functions are in util ###########
 

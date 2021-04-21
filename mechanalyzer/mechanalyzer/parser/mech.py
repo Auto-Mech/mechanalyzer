@@ -80,33 +80,62 @@ def build_dct(spc_dct, rxn_dct):
 
     return mech_info
 
-
-def sort_mechanism(mech_info, spc_dct, sort_str, isolate_species):
-    '''
-    mech_info: formulas, reaction names
-    spc_dct: species dictionary
-    sort_str: list with sorting criteria
-    isolate_species: list of species you want to isolate in the final mechanism
-
-    calls sorting functions in mechanalyzer/pes
-    returns the rxn indices associated with the comments about sorting
-    '''
+def sorting(mech_info, spc_dct, sort_str, isolate_species):
+    """ Build srt_mch object and sort according the desired criteria
+    :param mech_info: useful mech info: formulas dct, formulas, reactants and products
+                      names, third bodies for each rxn, rxn names, dct parameters
+    :type mech_info: list
+    :param spc_dct: species dictionary
+    :type spc_dct: dictionary
+    :param sort_str: sorting criteria
+    :type sort_str: list(str)
+    :return srt_mch: sorted mechanism
+    :rtype: object
+    """
     # call the sorting class
     srt_mch = mechanalyzer.parser.sort.SortMech(mech_info, spc_dct)
     # sort according to the desired criteria
     srt_mch.sort(sort_str, isolate_species)
+
+    return srt_mch
+
+def get_sorted_mechanism(srt_mch):
+    """ get sorted indexes and comments for a sorted mech object
+    :param srt_mch: sorted mechanism
+    :type srt_mch: object
+    :return sortex_idx, cmts_dct, spc_dct: sorted indexes, dct with comments, species dct
+    :rtype: list, dct:str, dct
+    """
     # returns the sorted indices and the corresponding comments
     sorted_idx, cmts_dct, spc_dct = srt_mch.return_mech_df()
 
     return sorted_idx, cmts_dct, spc_dct
 
+def get_sorted_pes_dct(srt_mch):
+    """ sort mech info according to the desired criteria and
+        get a sorted pes dictionary
+    :param srt_mch: sorted mechanism
+    :type srt_mch: objectria
+    :type sort_str: list(str)
+    :return pes_dct: sorted pes dictionary
+    :rtype: dct
+    """
+    # returns the sorted pes dictionary
+    pes_dct = srt_mch.return_pes_dct()
+
+    return pes_dct
+
 
 def reordered_mech(rxn_param_dct, sorted_idx):
-    '''
-    rxn_param_dct: non-sorted reactions
-    sorted_idx: indices of the rxn_param_dct in the desired order
-    cmts_dct: comments related to new_idx containing the rxn class
-    '''
+    """ Reorder a rxn_param_dct according to the desired sorted indexes
+
+    :param rxn_param_dct: non-sorted reaction parameter dictionary
+    :type rxn_param_dct: dct
+    :param sorted_idx: indices of the rxn_param_dct in the desired order
+    :type sorted_idx: list
+    :return rxn_param_dct_sorted: sorted reaction parameter dictionary
+    :rtype: dct
+    """
     sorted_val = list(map(rxn_param_dct.get, sorted_idx))
     rxn_param_dct_sorted = dict(zip(sorted_idx, sorted_val))
 
@@ -114,13 +143,19 @@ def reordered_mech(rxn_param_dct, sorted_idx):
 
 
 def write_mech(elem_tuple, spc_dct, rxn_param_dct_sorted, sortedmech_name, comments=None):
-    '''
-    elem_tuple: tuple with elements
-    spc_dct: species dictionary
-    rxn_param_dct_sorted: reaction parameters dictionary in the desired order
-    cmts_dct: comments dictionary associated with the sorted mechanism
-    sortedmech_name: name of the final mech
-    '''
+    """ Write the sorted mechanism - move in writer?
+
+    :param elem_tuple: elements of the mechanism
+    :type elem_tuple: tuple
+    :param spc_dct: species dictionary
+    :type spc_dct: dct
+    :param rxn_param_dct_sorted: reaction parameters dictionary in the desired order
+    :type rxn_param_dct_sorted: dct
+    :param sortedmech_name: name of the sorted mech file
+    :type sortedmech_name: string
+    :param comments: comments dictionary associated with the sorted mechanism
+    :type comments: dct
+    """
     # reorder spc_dct before writing to make it nicer
     spc_dct = mechanalyzer.parser.spc.order_species_by_atomcount(spc_dct)
     # write
