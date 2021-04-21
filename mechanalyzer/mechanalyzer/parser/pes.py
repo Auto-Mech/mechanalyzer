@@ -31,6 +31,25 @@ def build_pes_dct(formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst):
     return pes_dct
 
 
+def build_pes_dct_new(rxn_param_dct):
+    """ Construct a dictionary of PES and channels
+    """
+
+    pes_dct = {}
+    current_formula = ''
+    for fidx, formula in enumerate(formula_str_lst):
+        if current_formula == formula:
+            pes_dct[formula]['rct_names_lst'].append(rct_names_lst[fidx])
+            pes_dct[formula]['prd_names_lst'].append(prd_names_lst[fidx])
+            pes_dct[formula]['rxn_name_lst'].append(rxn_name_lst[fidx])
+        else:
+            current_formula = formula
+            pes_dct[formula] = {}
+            pes_dct[formula]['rct_names_lst'] = [rct_names_lst[fidx]]
+            pes_dct[formula]['prd_names_lst'] = [prd_names_lst[fidx]]
+            pes_dct[formula]['rxn_name_lst'] = [rxn_name_lst[fidx]]
+
+
 def connected_channels_dct(pes_dct):
     """ Determine all the connected reaction channels for each PES
         Build a dictionary for each PES with lists of connected channels:

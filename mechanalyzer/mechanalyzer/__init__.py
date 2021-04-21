@@ -8,7 +8,6 @@ from mechanalyzer import parser
 from mechanalyzer import plotter
 from mechanalyzer import par
 from mechanalyzer import inf
-from mechanalyzer._util import filter_keys
 
 
 __all__ = [
@@ -18,5 +17,4 @@ __all__ = [
     'plotter',
     'par',
     'inf',
-    'filter_keys'
 ]

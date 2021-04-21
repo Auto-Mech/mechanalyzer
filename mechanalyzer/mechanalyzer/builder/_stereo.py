@@ -3,7 +3,6 @@
 """
 
 import automol
-from mechanalyzer.parser.util import get_ich_dct
 
 
 # MAIN: Reaction Stereochem
@@ -12,7 +11,7 @@ def expand_mech_stereo(rxn_dct, spc_dct):
     """
 
     # Dictionaries to map inchi <-> name
-    name_ich_dct = get_ich_dct(spc_dct)
+    name_ich_dct = _get_ich_dct(spc_dct)
     ich_name_dct = automol.util.dict_.invert(name_ich_dct)
 
     # Get lists of the reactions
@@ -152,7 +151,7 @@ def _build_new(ste_rxn_set_lst, spc_dct, ich_dct):
                     # look up ich in non_ste ich
                     name = _generate_name
 
-    for x,y in new_spc_dct.items():
+    for x, y in new_spc_dct.items():
         print(x)
         print(y)
 
@@ -164,4 +163,14 @@ def _generate_name():
     """
     return 'random'
 
+
 # Species stereochem (move to here?)
+def _get_ich_dct(spc_dct):
+    """Generates inchis dictionary from species dictionary
+    """
+    ich_dct = {}
+    for key in spc_dct.keys():
+        if 'ts' not in key and 'global' not in key:
+            ich_dct[key] = spc_dct[key]['inchi']
+
+    return ich_dct

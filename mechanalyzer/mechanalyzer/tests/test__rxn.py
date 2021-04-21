@@ -36,30 +36,5 @@ def test__mech_build():
     print(spc_str)
 
 
-def test__hydrogen_abstractions():
-    """ test calculating hydrogen abstractions
-    """
-
-    print('\nh abstractions')
-    rxns = mechanalyzer.builder.rxn.hydrogen_abstractions(
-        INI_ICH, RAD_ICHS)
-    for rxn in rxns:
-        print(rxn)
-
-
-def test__homolytic_scissions():
-    """ test calculating homolytic scicssions
-    """
-
-    print('\nhomolytic scissions')
-    rxns = mechanalyzer.builder.rxn.homolytic_scissions(
-        INI_ICH)
-    for rxn in rxns:
-        print(rxn)
-
-
 if __name__ == '__main__':
     test__mech_build()
-    # test__hydrogen_abstractions()
-    # test__homolytic_scissions()
-

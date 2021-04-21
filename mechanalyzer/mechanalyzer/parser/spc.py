@@ -19,6 +19,7 @@ from mechroutines.pf.thermo import basis
 
 # HACK FOR A MECHANISM
 # put in bad names for the hack
+BAD_NAMES = []
 
 
 # Build a spc dct containing all info species from an input file

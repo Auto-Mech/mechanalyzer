@@ -1,4 +1,7 @@
-from mechanalyzer.parser import checker
+""" test mechanalyzer.builder.checker
+"""
+
+from mechanalyzer.builder import checker
 
 RXN_PARAM_DCT1 = {
     (('H2', 'O'), ('OH', 'H'), (None,)): None,
@@ -16,13 +19,17 @@ RXN_PARAM_DCT2 = {
     (('OH',), ('H', 'O'), (None,)): None
 }
 
+
 def test__source_and_sink_species():
+    """ test mechanalyzer.builder.checker.source_and_sink_species
+    """
+
     sources1, sinks1 = checker.source_and_sink_species(RXN_PARAM_DCT1)
     sources2, sinks2 = checker.source_and_sink_species(RXN_PARAM_DCT2)
     assert list(set(sources1) - set(['O2', 'O(S)', 'H2'])) == []
     assert list(set(sinks1) - set(['OH', 'HO2'])) == []
     assert sources2 == sinks2 == []
 
+
 if __name__ == '__main__':
     test__source_and_sink_species()
-

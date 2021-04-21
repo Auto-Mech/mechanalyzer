@@ -9,7 +9,7 @@ from mechanalyzer.parser._util import get_ich_dct, get_fml
 
 
 # OPERATIONS ON MECHANISM OBJECTS
-def sort_mechanism(mech_info, spc_dct, sort_str, isolate_species):
+def sorting(mech_info, spc_dct, sort_str, isolate_species):
     """ Uses the SortMech class to sort mechanism info and
         returns the sorted indices and the corresponding comments.
 
@@ -25,8 +25,19 @@ def sort_mechanism(mech_info, spc_dct, sort_str, isolate_species):
 
     srt_mch = mechanalyzer.parser.sort.SortMech(mech_info, spc_dct)
     srt_mch.sort(sort_str, isolate_species)
-    sorted_idx, cmts_dct, spc_dct = srt_mch.return_mech_df()
 
+    return srt_mch
+
+
+def sorted_mech(srt_mch):
+    """ get sorted indexes and comments for a sorted mech object
+    :param srt_mch: sorted mechanism
+    :type srt_mch: object
+    :return sortex_idx, cmts_dct, spc_dct:
+        sorted indexes, dct with comments, species dct
+    :rtype: list, dct:str, dct
+    """
+    sorted_idx, cmts_dct, spc_dct = srt_mch.return_mech_df()
     return sorted_idx, cmts_dct, spc_dct
 
 
@@ -34,14 +45,31 @@ def reordered_mech(rxn_param_dct, sorted_idx):
     """ Sort the reaction parameter dcitionary using the indices from
         sort functions.
 
-        :param rxn_param_dct: non-sorted reactions
-        :sorted_idx: indices of the rxn_param_dct in the desired order
+        :param rxn_param_dct: non-sorted reaction parameter dictionary
+        :type rxn_param_dct: dct
+        :param sorted_idx: indices of the rxn_param_dct in the desired order
+        :type sorted_idx: list
+        :return rxn_param_dct_sorted: sorted reaction parameter dictionary
+        :rtype: dct
     """
 
     sorted_val = list(map(rxn_param_dct.get, sorted_idx))
     rxn_param_dct_sorted = dict(zip(sorted_idx, sorted_val))
 
     return rxn_param_dct_sorted
+
+
+def sorted_pes_dct(srt_mch):
+    """ sort mech info according to the desired criteria and
+        get a sorted pes dictionary
+    :param srt_mch: sorted mechanism
+    :type srt_mch: objectria
+    :type sort_str: list(str)
+    :return pes_dct: sorted pes dictionary
+    :rtype: dct
+    """
+    pes_dct = srt_mch.return_pes_dct()
+    return pes_dct
 
 
 # I/O

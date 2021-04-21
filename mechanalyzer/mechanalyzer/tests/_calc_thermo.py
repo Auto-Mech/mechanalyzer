@@ -29,7 +29,7 @@ SYNGAS_CSV_STR = _read_file(
 # Read species blocks
 SYNGAS_THERMO_BLOCK = chemkin_io.parser.mechanism.thermo_block(
     SYNGAS_MECH_STR)
-SYNGAS_BLOCK_STRS = chemkin_io.parser.thermo.data_strings(
+SYNGAS_BLOCK_STRS = chemkin_io.parser.reaction.data_strings(
     SYNGAS_THERMO_BLOCK)
 
 # Set polynomial and temps for comparison tests

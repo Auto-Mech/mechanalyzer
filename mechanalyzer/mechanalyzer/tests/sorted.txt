@@ -18,7 +18,8 @@ H2+O2=HO2V+H       1.000E+00     1.000        1 ! class: NR _max val _max ratio 
 H2+O=OH+OH         1.000E+00     1.000        1 ! class: NR _max val _max ratio _rxn type  2 _2.72670689e+149 _0.0 _H abstraction
 H+O2=OH+O          1.000E+00     1.000        1 ! class: NR _max val _max ratio _rxn type  2 _2.72670689e+149 _1.3017843126207617e-89 _Addition-decomposition - branching
 H+O=OH             1.000E+00     1.000        1 ! class: NR _max val _max ratio _rxn type  2 _2.72670689e+149 _6.688960003233871e-30 _Recombination O
-H2+O=OH+H          1.000E+00     1.000        1 ! class: NR _max val _max ratio _rxn type  2 _4.72670689e+149 _22.692539074854153 _H abstraction
 H+O(+M)=OH(+M)     1.000E+00     1.000        1 ! class: NR _max val _max ratio _rxn type  3 _2.72670689e+149 _4.619780379447244e-16 _Recombination O
+
+H2+O=OH+H          1.000E+00     1.000        1 ! class: NR _max val _max ratio _rxn type  2 _4.72670689e+149 _22.692539074854153 _H abstraction
 
 END 

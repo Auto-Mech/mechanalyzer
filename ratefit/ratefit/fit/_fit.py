@@ -66,7 +66,6 @@ def fit_ktp_dct(mess_path, inp_fit_method,
 
         # Read the rate constants out of the mess outputs
         print('\nReading k(T,P)s from MESS output...')
-        ktp_dct, fit_temps = read_rates(
         ktp_dct, cheb_fit_temps = read_rates(
             mess_out_str, pdep_dct, lab_i, lab_j,
             fit_temps=fit_temps, fit_pressures=fit_pressures,
