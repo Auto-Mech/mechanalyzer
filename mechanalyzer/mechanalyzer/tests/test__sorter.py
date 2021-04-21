@@ -151,8 +151,9 @@ def sort_main(CWD, SPC_NAME, MECH_NAME, SORTMECH_NAME, MECH_REST_NAME, ISOLATE_S
     mech_info = mechanalyzer.parser.mech.build_dct(spc_dct_full, rxn_param_dct)
 
     # SORTING: sort the mech and build the sorted rxn param dct
-    sorted_idx, cmts_dct, spc_dct = mechanalyzer.parser.mech.sort_mechanism(
-        mech_info, spc_dct_full, SORT_STR, ISOLATE_SPECIES)
+    srt_mch = mechanalyzer.parser.mech.sorting(
+                       mech_info, spc_dct_full, SORT_STR, ISOLATE_SPECIES)
+    sorted_idx, cmts_dct, spc_dct = mechanalyzer.parser.mech.get_sorted_mechanism(srt_mch)
     rxn_param_dct_sorted = mechanalyzer.parser.mech.reordered_mech(
         rxn_param_dct, sorted_idx)
 
