@@ -17,11 +17,6 @@ RXN_PROPS = [
 
 def from_dct(reacs, prods, spc_dct, rxn_mul='low'):
     """ Build a reaction info object using a species dictionary and names
-<<<<<<< HEAD
-       
-=======
-
->>>>>>> tmp
         Add the names to the info object?
         Have a way to get a dict object {(rctnames, prdnames) = rxn_info}
     """

@@ -8,48 +8,6 @@ from mechanalyzer.parser._util import order_rct_bystoich
 
 # functions working with dictionaries
 # FUNTIONS FOR THE PES DICT OBJECTS CONTAINING INFO FOR THE REACTIONS ON PES
-
-
-def build_pes_dct(formula_str_lst, rct_names_lst, prd_names_lst, rxn_name_lst):
-    """ Build a dictionary of the PESs
-    """
-
-    pes_dct = {}
-    current_formula = ''
-    for fidx, formula in enumerate(formula_str_lst):
-        if current_formula == formula:
-            pes_dct[formula]['rct_names_lst'].append(rct_names_lst[fidx])
-            pes_dct[formula]['prd_names_lst'].append(prd_names_lst[fidx])
-            pes_dct[formula]['rxn_name_lst'].append(rxn_name_lst[fidx])
-        else:
-            current_formula = formula
-            pes_dct[formula] = {}
-            pes_dct[formula]['rct_names_lst'] = [rct_names_lst[fidx]]
-            pes_dct[formula]['prd_names_lst'] = [prd_names_lst[fidx]]
-            pes_dct[formula]['rxn_name_lst'] = [rxn_name_lst[fidx]]
-
-    return pes_dct
-
-
-def build_pes_dct_new(rxn_param_dct):
-    """ Construct a dictionary of PES and channels
-    """
-
-    pes_dct = {}
-    current_formula = ''
-    for fidx, formula in enumerate(formula_str_lst):
-        if current_formula == formula:
-            pes_dct[formula]['rct_names_lst'].append(rct_names_lst[fidx])
-            pes_dct[formula]['prd_names_lst'].append(prd_names_lst[fidx])
-            pes_dct[formula]['rxn_name_lst'].append(rxn_name_lst[fidx])
-        else:
-            current_formula = formula
-            pes_dct[formula] = {}
-            pes_dct[formula]['rct_names_lst'] = [rct_names_lst[fidx]]
-            pes_dct[formula]['prd_names_lst'] = [prd_names_lst[fidx]]
-            pes_dct[formula]['rxn_name_lst'] = [rxn_name_lst[fidx]]
-
-
 def connected_channels_dct(pes_dct):
     """ Determine all the connected reaction channels for each PES
         Build a dictionary for each PES with lists of connected channels:
@@ -167,63 +125,11 @@ def build_pes_idx_dct(pes_dct):
 def print_pes_channels(pes_dct):
     """ Print the PES
     """
-
-    print('\n  Sorted Mechanism read from file:')
-    for pes_idx, formula in enumerate(pes_dct):
-        print('! PES:', pes_idx+1, formula)
-        pes_rxn_name_lst = pes_dct[formula]['rxn_name_lst']
-        pes_rct_names_lst = pes_dct[formula]['rct_names_lst']
-        pes_prd_names_lst = pes_dct[formula]['prd_names_lst']
-        for chn_idx, _ in enumerate(pes_rxn_name_lst):
+    
+    for (form, pidx, sidx), chnls in pes_dct.items():
+        print('! PES:', pidx+1, sidx+1, form)
+        for chnl in chnls:
+            cidx, rxn = chnl
             print('  {} = {}   1.0 0.0 0.0'.format(
-                ' + '.join(pes_rct_names_lst[chn_idx]),
-                ' + '.join(pes_prd_names_lst[chn_idx])))
-
-
-def pes_dct_w_rxn_lsts(pes_dct, form_dct,
-                       conn_chnls_dct, pes_idxs):
-    """ Form a new PES dictionary with the rxn_lst formatted to work
-        with the drivers currently
-    """
-    run_pes_dct = {}
-    for formula in pes_dct:
-
-        # Set correct pes index based on the formula
-        pes_idx = form_dct[formula]
-
-        # Build the names list
-        pes_rct_names_lst = pes_dct[formula]['rct_names_lst']
-        pes_prd_names_lst = pes_dct[formula]['prd_names_lst']
-        pes_rxn_name_lst = pes_dct[formula]['rxn_name_lst']
-
-        # Get a list of the idxs corresponding to which channels to run
-        run_chnls = pes_idxs[pes_idx]
-        # for pes_num, chnls_lst in pes_idxs.items():
-        #     if idx_dct[pes_num] == formula:
-        #         run_chnls.append(chn_num)
-
-        # Select names from the names list corresponding to chnls to run
-        for sub_pes_idx, sub_chnl_idxs in conn_chnls_dct[formula].items():
-            rct_names_lst = []
-            prd_names_lst = []
-            rxn_name_lst = []
-            rxn_chn_idxs = []
-            for chn_idx in run_chnls:
-                if chn_idx-1 in sub_chnl_idxs:
-                    rct_names_lst.append(pes_rct_names_lst[chn_idx-1])
-                    prd_names_lst.append(pes_prd_names_lst[chn_idx-1])
-                    rxn_name_lst.append(pes_rxn_name_lst[chn_idx-1])
-                    # rxn_model_lst.append(run_obj_dct[(pes_idx, chn_idx)])
-                    # need dif way to get kin,spc models
-                    rxn_chn_idxs.append(chn_idx)
-
-            # Form reaction list (is empty if no chnls requested on sub pes)
-            rxn_lst = ()
-            # rxn_lst = format_run_rxn_lst(
-            #     rct_names_lst, prd_names_lst, rxn_chn_idxs)
-
-            # Add the rxn lst to the pes dictionary if there is anythin
-            if rxn_lst:
-                run_pes_dct[(formula, pes_idx, sub_pes_idx+1)] = rxn_lst
-
-    return run_pes_dct
+                ' + '.join(rxn[0]),
+                ' + '.join(rxn[1])))

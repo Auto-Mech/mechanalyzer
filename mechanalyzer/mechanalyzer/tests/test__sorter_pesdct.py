@@ -31,7 +31,7 @@ def sort_main(CWD, SPC_NAME, MECH_NAME, ISOLATE_SPECIES, SORT_STR):
         mech_info, spc_dct_full, SORT_STR, ISOLATE_SPECIES)
 
     # get the pes dictionary
-    pes_dct = mechanalyzer.parser.mech.get_sorted_pes_dct(srt_mch)
+    pes_dct = mechanalyzer.parser.mech.sorted_pes_dct(srt_mch)
     print(pes_dct)
 
 if __name__ == '__main__':

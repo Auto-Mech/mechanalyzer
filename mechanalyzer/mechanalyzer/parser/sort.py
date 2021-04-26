@@ -326,7 +326,7 @@ class SortMech:
             _smol = (self.mech_df['molecularity'][rxn] == 1)
             _tbody = (self.mech_df['thrdbdy'][rxn][0] is not None)
             if _smol and _tbody:
-                # odd logic below? correct?
+                # odd logic below? match above?
                 # if (self.mech_df['molecularity'][rxn] == 1 or
                 #         (self.mech_df['molecularity'][rxn] == 1 and
                 #          self.mech_df['thrdbdy'][rxn][0] is not None)):
@@ -553,9 +553,13 @@ class SortMech:
 
     def return_pes_dct(self):
         """ returns a PES dictionary
-        :returns: pes_dct: {('fml', n_pes, n_subpes): (rcts, prds), ...}
+
+            chn idx is set to to OVERALL PES, not the SUB_PES
+
+        :returns: pes_dct: {('fml', n_pes, n_subpes): (chn_idx, (rcts, prds)), ...}
         :rtype: dct{tuple: tuple}
         """
+
         # Check SUBPES present in idxs, otherwise make corresponding dataframe
         if 'subpes' not in self.mech_df.columns:
             df_optn = pd.DataFrame(
@@ -566,15 +570,34 @@ class SortMech:
 
         # get the pes dictionary
         pes_dct = {}
+        prev_idx = -1
         for _, pes_dct_df in self.mech_df.groupby('subpes'):
+
+            # Get the ('fml', n_pes, n_subpes) for dict key
             pes_dct_key = pes_dct_df['pes_dct'].values[0]
+
+            # Get the names of the reaction reagents
             rct_names = pes_dct_df['rct_names_lst'].values
             prd_names = pes_dct_df['prd_names_lst'].values
             # thrdbdy = pes_dct_df['thrdbdy'].values
             # new_idx = list(zip(rct_names, prd_names, thrdbdy))
-            new_idx = list(zip(rct_names, prd_names))
+            rxn_names = tuple(zip(rct_names, prd_names))
+        
+            # Count number of channels on the previous SUB-PES (if there is one)
+            # Used to increment the channel idxs on the current SUB-PES
+            # Checks the idx to see if it has changed from previous
+            _, pidx, _ = pes_dct_key
+            if pidx == prev_idx:
+                nchnls += len(rxn_names)
+            else:
+                nchnls = 0
+            prev_idx = pidx
 
-            pes_dct[pes_dct_key] = tuple(new_idx)
+            # Build the full channel list for the SUB-PES
+            chnl_lst = tuple((idx+nchnls, rxn)
+                             for idx, rxn in enumerate(rxn_names))
+
+            pes_dct[pes_dct_key] = chnl_lst
 
         return pes_dct
 
