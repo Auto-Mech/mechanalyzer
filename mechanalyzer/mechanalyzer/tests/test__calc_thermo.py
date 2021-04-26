@@ -1,114 +1,54 @@
-""" test chemkin_io.calculator.thermo
+""" Test the calculator/thermo.py functions
 """
 
-from __future__ import unicode_literals
-from builtins import open
-import os
+from mechanalyzer.calculator import thermo
 import numpy as np
-import chemkin_io
+
+TEMPS = np.array([1000, 1500, 2000])
+BAD_TEMPS = np.array([1000, 1500, 7000])
+SPC_NASA7_DCT = {
+                 'N2O': ['L 7/88', 'N   1O   1          ', 'G', [200.0, 6000.0, 1000.0],
+                         ([0.48230729E+01, 0.26270251E-02, -0.95850872E-06, 0.16000712E-09,
+                              -0.97752302E-14, 0.80734047E+04, -0.22017208E+01],
+                          [0.22571502E+01, 0.11304728E-01, -0.13671319E-04, 0.96819803E-08,
+                              -0.29307182E-11, 0.87417746E+04, 0.10757992E+02])
+                         ]
+                 }
+
+CORRECT_H = np.array([27678.841886015183, 34523.21839952253, 41721.44174812351])
+CORRECT_CP = np.array([13.198655572491381, 14.104187903369416, 14.63922007474708])
+CORRECT_S = np.array([66.20082629652916, 71.73872123759558, 75.87663200436498])
+CORRECT_G = np.array([-38521.984410513964, -73084.86345687084, -110031.82226060645])
 
 
-def _read_file(file_name):
-    with open(file_name, encoding='utf8', errors='ignore') as file_obj:
-        file_str = file_obj.read()
-    return file_str
-
-
-# Set paths
-PATH = os.path.dirname(os.path.realpath(__file__))
-DATA_PATH = os.path.join(PATH, 'data')
-SYNGAS_MECH_NAME = 'syngas_mechanism.txt'
-SYNGAS_CSV_NAME = 'syngas_species.csv'
-
-# Read mechanism and csvfiles
-SYNGAS_MECH_STR = _read_file(
-    os.path.join(DATA_PATH, SYNGAS_MECH_NAME))
-SYNGAS_CSV_STR = _read_file(
-    os.path.join(DATA_PATH, SYNGAS_CSV_NAME))
-
-# Read species blocks
-SYNGAS_THERMO_BLOCK = chemkin_io.parser.mechanism.thermo_block(
-    SYNGAS_MECH_STR)
-SYNGAS_BLOCK_STRS = chemkin_io.parser.thermo.data_strings(
-    SYNGAS_THERMO_BLOCK)
-
-# Set polynomial and temps for comparison tests
-SPECIES_IDX = 10
-SPECIES_POLYNOMIAL = SYNGAS_BLOCK_STRS[SPECIES_IDX]
-TEMP1, TEMP2 = 500.0, 1000.0
-
-
-def test__mechanism():
-    """ test chemkin_io.calculator.thermo.mechanism
+def test__valid_temps():
+    """ Test the thermo calculator for temps within the valid range
     """
-    therm_dct = chemkin_io.calculator.thermo.mechanism(
-        SYNGAS_THERMO_BLOCK, [TEMP1, TEMP2])
-    print(therm_dct)
+    spc_thermo_dct = thermo.create_spc_thermo_dct(SPC_NASA7_DCT, TEMPS)
+    calc_h = spc_thermo_dct['N2O'][1]
+    calc_cp = spc_thermo_dct['N2O'][2]
+    calc_s = spc_thermo_dct['N2O'][3]
+    calc_g = spc_thermo_dct['N2O'][4]
+    assert np.allclose(calc_h, CORRECT_H, rtol=1e-3)
+    assert np.allclose(calc_cp, CORRECT_CP, rtol=1e-3)
+    assert np.allclose(calc_s, CORRECT_S, rtol=1e-3)
+    assert np.allclose(calc_g, CORRECT_G, rtol=1e-3)
 
 
-def test__enthalpy():
-    """ test chemkin_io.calculator.thermo.enthalpy
+def test__invalid_temps():
+    """ Test the thermo calculator for temps outside the valid range
     """
-    ht1 = chemkin_io.calculator.thermo.enthalpy(
-        SPECIES_POLYNOMIAL, TEMP1)
-    ht2 = chemkin_io.calculator.thermo.enthalpy(
-        SPECIES_POLYNOMIAL, TEMP2)
-
-    ref_ht1 = -30.240360335437266
-    ref_ht2 = -23.421760051163762
-
-    assert np.isclose(ht1, ref_ht1)
-    assert np.isclose(ht2, ref_ht2)
-
-
-def test__entropy():
-    """ test chemkin_io.calculator.thermo.entropy
-    """
-    st1 = chemkin_io.calculator.thermo.entropy(
-        SPECIES_POLYNOMIAL, TEMP1)
-    st2 = chemkin_io.calculator.thermo.entropy(
-        SPECIES_POLYNOMIAL, TEMP2)
-
-    ref_st1 = 0.06174090267135737
-    ref_st2 = 0.07107861508623411
-
-    assert np.isclose(st1, ref_st1)
-    assert np.isclose(st2, ref_st2)
-
-
-def test__gibbs():
-    """ test chemkin_io.calculator.thermo.gibbs
-    """
-    gt1 = chemkin_io.calculator.thermo.gibbs(
-        SPECIES_POLYNOMIAL, TEMP1)
-    gt2 = chemkin_io.calculator.thermo.gibbs(
-        SPECIES_POLYNOMIAL, TEMP2)
-
-    ref_gt1 = -61.110811671115954
-    ref_gt2 = -94.50037513739787
-
-    assert np.isclose(gt1, ref_gt1)
-    assert np.isclose(gt2, ref_gt2)
-
-
-def test__heat_capacity():
-    """ test chemkin_io.calculator.thermo.heat_capacity
-    """
-    cp1 = chemkin_io.calculator.thermo.heat_capacity(
-        SPECIES_POLYNOMIAL, TEMP1)
-    cp2 = chemkin_io.calculator.thermo.heat_capacity(
-        SPECIES_POLYNOMIAL, TEMP2)
-
-    ref_cp1 = 0.011992997783769053
-    ref_cp2 = 0.01494647663556653
-
-    assert np.isclose(cp1, ref_cp1)
-    assert np.isclose(cp2, ref_cp2)
+    spc_thermo_dct = thermo.create_spc_thermo_dct(SPC_NASA7_DCT, BAD_TEMPS)
+    calc_h = spc_thermo_dct['N2O'][1]
+    calc_cp = spc_thermo_dct['N2O'][2]
+    calc_s = spc_thermo_dct['N2O'][3]
+    calc_g = spc_thermo_dct['N2O'][4]
+    assert calc_h[2] is None
+    assert calc_cp[2] is None
+    assert calc_s[2] is None
+    assert calc_g[2] is None
 
 
 if __name__ == '__main__':
-    test__mechanism()
-    test__enthalpy()
-    test__entropy()
-    test__gibbs()
-    test__heat_capacity()
+    test__valid_temps()
+    test__invalid_temps()
