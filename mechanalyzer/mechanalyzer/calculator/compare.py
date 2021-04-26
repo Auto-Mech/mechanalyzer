@@ -1,19 +1,20 @@
 """
   Take data dictionaries from mechanisms and combine them under a common index
 """
-import ioformat.pathtools as parser
+
+import copy
 import itertools
 import numpy as np
+import ioformat.pathtools as parser
 import ratefit
 from phydat import phycon
-from mechanalyzer.parser import spc as parser_spc
 from chemkin_io.parser import mechanism as parser_mech
 from chemkin_io.parser import thermo as parser_thermo
 from chemkin_io.parser import reaction as parser_rxn
 from chemkin_io.writer import _util as writer_util
+from mechanalyzer.parser import spc as parser_spc
 from mechanalyzer.calculator import thermo as calc_thermo
 from mechanalyzer.calculator import rates as calc_rates
-import copy
 
 RC_CAL = phycon.RC_cal  # universal gas constant in cal/mol-K
 
@@ -23,7 +24,7 @@ def get_aligned_rxn_ktp_dct(rxn_ktp_dcts, spc_thermo_dcts, spc_ident_dcts, temps
     """ Create an aligned_rxn_ktp_dct, which contains a single set of rxn keys, where each reaction
         has a ktp_dct for each mechanism. Options exist for reversing rates or not, removing rates
         that don't have entries from all mechanisms, and writing outputs to a file.
-    
+
         :param rxn_ktp_dcts: list of rxn_ktp_dcts
         :type: list of dcts [rxn_ktp_dct1, rxn_ktp_dct2, ...]
         :param spc_thermo_dcts: list of spc_thermo_dcts
@@ -59,26 +60,23 @@ def get_aligned_rxn_ktp_dct(rxn_ktp_dcts, spc_thermo_dcts, spc_ident_dcts, temps
     reversed_rxn_ktp_dcts = reverse_rxn_ktp_dcts(renamed_rxn_ktp_dcts, renamed_spc_thermo_dcts,
                                                  temps, rev_rates=rev_rates)
 
-    #print('inside get_aligned_rxn')
-    #print('original:\n', rxn_ktp_dcts)
-    #print('renamed:\n', renamed_rxn_ktp_dcts)
-    #print('reversed:\n', reversed_rxn_ktp_dcts)
-
     # Get the aligned_rxn_ktp_dct
     aligned_rxn_ktp_dct = align_dcts(reversed_rxn_ktp_dcts)
-
-    #print('aligned_rxn_ktp_dct:\n', aligned_rxn_ktp_dct)
 
     # If indicated, remove rxns that don't have rates from all the mechanisms
     if remove_loners:
         aligned_rxn_ktp_dct = remove_incomplete_items(aligned_rxn_ktp_dct)
 
+    # Write to file
+    if write_file:
+        write_output_file(rename_instructions_lst)
+
     return aligned_rxn_ktp_dct
 
 
 def get_aligned_spc_thermo_dct(spc_thermo_dcts, spc_ident_dcts, remove_loners=True,
-                               write_file=False, print_output=False):
-    """ Create an aligned_spc_thermo_dct, which contains a single set of spc keys, where each 
+                               write_file=False):
+    """ Create an aligned_spc_thermo_dct, which contains a single set of spc keys, where each
         species has a thermo_array for each mechanism. Options exist for removing species
         that don't have entries from all mechanisms and writing outputs to a file.
 
@@ -110,6 +108,10 @@ def get_aligned_spc_thermo_dct(spc_thermo_dcts, spc_ident_dcts, remove_loners=Tr
     if remove_loners:
         aligned_spc_thermo_dct = remove_incomplete_items(aligned_spc_thermo_dct)
 
+    # Write to file
+    if write_file:
+        write_output_file(rename_instructions_lst)
+
     return aligned_spc_thermo_dct
 
 
@@ -129,7 +131,7 @@ def align_dcts(list_of_dcts):
 
             # If the key does not yet exist, add it
             if key not in aligned_dct.keys():
-                dct_list = [None] * mech_idx  # add empty entries to account for previous mechs that are missing
+                dct_list = [None] * mech_idx  # add Nones to account for previous empty mechs
                 dct_list.append(value)
                 aligned_dct[key] = dct_list
 
@@ -150,40 +152,43 @@ def align_dcts(list_of_dcts):
     return aligned_dct
 
 
-def write_output_file(rename_instructions_lst, aligned_rxn_ktp_dct=None):
+def write_output_file(rename_instructions_lst):
     """ Write the output of a comparison to a text file
     """
-    with open("comparison_output.txt", "w") as f:
+    with open("comparison_output.txt", "w") as fid:
         for mech_idx, rename_instructions in enumerate(rename_instructions_lst):
-            f.write(f"Rename instructions for converting mech {mech_idx+2} to mech {mech_idx+1}:\n")
-            f.write(f"First column: mech {mech_idx+2} name, Second column: mech {mech_idx+1} name\n")
+            fid.write(
+                f"Rename instructions for converting mech {mech_idx+2} to mech {mech_idx+1}:\n"
+            )
+            fid.write(
+                f"First column: mech {mech_idx+2} name, Second column: mech {mech_idx+1} name\n"
+            )
             for spc_name2, spc_name1 in rename_instructions.items():
-                f.write(('{0:<1s}, {1:<5s}\n').format(spc_name2, spc_name1))
-            f.write("\n\n")
-
-    # NOTICE TO SELF: Commenting out for now...need to redo when I finally fix the handling of third bodies
+                fid.write(('{0:<1s}, {1:<5s}\n').format(spc_name2, spc_name1))
+            fid.write("\n\n")
+# need to fix with new third body methods
 #    if aligned_rxn_ktp_dct:
 #        f.write(f"Combined_rxn_ktp_dct\n\n")
 #        f.write(('{0:<64s}{1:<15s}{2:<15s}').format('Rxn name', 'In mech 1?', 'In mech 2?'))
 #        for rxn, ktp_dct_lst in aligned_rxn_ktp_dct.items():
-#            rxn_name = format_rxn_name(rxn, aligned_rxn_em_dct[rxn])  # note: call this from chemkinio
+#            rxn_name = format_rxn_name(rxn, aligned_rxn_em_dct[rxn])  # note: call from chemkinio
 #            present = []
 #            for entry in ktp_dct_lst:
 #                if entry:
 #                    present.append('Yes')
-#                else: 
+#                else:
 #                    present.append('No')
 #
 #            f.write(('\n{0:<64s}{1:<15s}{2:<15s}').format(rxn_name, present[0], present[1]))
-       
-    f.close()
+
+    fid.close()
 
 
 def remove_incomplete_items(aligned_dct):
     """ Takes an aligned_dct and removes any entries that don't have values from
         all the mechs (i.e., any entries that have any None entries).
-    
-        :param aligned_dct: aligned dct with all keys (rxns or spcs) written in the same way 
+
+        :param aligned_dct: aligned dct with all keys (rxns or spcs) written in the same way
         :type aligned_dct: dct {key1: [val1, val2, ...], key2: ...}
         :return filtered_aligned_dct: aligned dct with only entries that have no None values
         :rtype: dct {key1: [val1, val2, ...], key2: ...}
@@ -232,14 +237,16 @@ def rename_dcts(target_dcts, spc_ident_dcts, target_type):
             rename_instructions, _ = get_rename_instructions(spc_ident_dct1, spc_ident_dct2)
 
             # Rename and store the current spc_dct
-            renamed_spc_ident_dct2 = rename_species(spc_ident_dct2, rename_instructions, target_type='spc')
+            renamed_spc_ident_dct2 = rename_species(spc_ident_dct2, rename_instructions,
+                                                    target_type='spc')
             renamed_spc_ident_dcts[idx2] = renamed_spc_ident_dct2
 
             # Rename and store the current dct
-            renamed_dct = rename_species(renamed_target_dcts[idx2], rename_instructions, target_type)
+            renamed_dct = rename_species(renamed_target_dcts[idx2], rename_instructions,
+                                         target_type)
             renamed_target_dcts[idx2] = renamed_dct
             rename_instructions_lst.append(rename_instructions)
-    
+
     return renamed_target_dcts, rename_instructions_lst
 
 
@@ -247,7 +254,7 @@ def get_rename_instructions(spc_ident_dct1, spc_ident_dct2):
     """ Get instructions for renaming spc_ident_dct2 to be consistent with spc_ident_dct1. Also,
         output a combined spc_ident_dct that contains all species from spc_ident_dct1 along with
         any species unique to spc_ident_dct2
-        
+
         :param spc_ident_dct1: the reference spc_ident_dct
         :type spc_ident_dct1: dct {spc1: ident_array1, spc2: ...}
         :param spc_ident_dct2: the spc_ident_dct to be renamed (and also added)
@@ -260,46 +267,44 @@ def get_rename_instructions(spc_ident_dct1, spc_ident_dct2):
     combined_spc_dct = copy.deepcopy(spc_ident_dct1)  # deepcopy to prevent external changes
     rename_instructions = {}
     rename_str = '-zz'
-    
+
     # Loop through each species in mech1
     for spc_name1, spc_vals1 in spc_ident_dct1.items():
-        i1 = spc_vals1['inchi']
-        m1 = spc_vals1['mult']
-        c1 = spc_vals1['charge']
+        ich1 = spc_vals1['inchi']
+        mlt1 = spc_vals1['mult']
+        chg1 = spc_vals1['charge']
 
         for spc_name2, spc_vals2 in spc_ident_dct2.items():
-            i2 = spc_vals2['inchi']
-            m2 = spc_vals2['mult']
-            c2 = spc_vals2['charge']
-             
-            # If species are identical      
-            if i1  == i2 and m1 == m2 and c1 == c2:
-                if spc_name1 == spc_name2: # do nothing
-                    break
-                else:
+            ich2 = spc_vals2['inchi']
+            mlt2 = spc_vals2['mult']
+            chg2 = spc_vals2['charge']
+
+            # If species are identical
+            if ich1  == ich2 and mlt1 == mlt2 and chg1 == chg2:
+                if spc_name1 != spc_name2:  # if spc names different, add to rename instructions
                     rename_instructions[spc_name2] = spc_name1
 
             # If species are different but have same name
-            elif spc_name1 == spc_name2:  
-                rename_instructions[spc_name2] = spc_name2 + rename_str                 
+            elif spc_name1 == spc_name2:
+                rename_instructions[spc_name2] = spc_name2 + rename_str
 
     # Add species that are only in mech2
     for spc_name2, spc_vals2 in spc_ident_dct2.items():
         unique = True
-        i2 = spc_vals2['inchi']
-        m2 = spc_vals2['mult']
-        c2 = spc_vals2['charge']
+        ich2 = spc_vals2['inchi']
+        mlt2 = spc_vals2['mult']
+        chg2 = spc_vals2['charge']
 
         for spc_name1, spc_vals1 in spc_ident_dct1.items():
-            i1 = spc_vals1['inchi']
-            m1 = spc_vals1['mult']
-            c1 = spc_vals1['charge']
+            ich1 = spc_vals1['inchi']
+            mlt1 = spc_vals1['mult']
+            chg1 = spc_vals1['charge']
 
-            if i1 == i2 and m1 == m2 and c1 == c2:
+            if ich1 == ich2 and mlt1 == mlt2 and chg1 == chg2:
                 if spc_name2 in rename_instructions.keys():
                     unique = False
                 break
-                
+
         if unique:
             if spc_name2 in rename_instructions.keys():
                 combined_spc_dct[spc_name2 + rename_str] = spc_vals2
@@ -364,14 +369,14 @@ def rename_species(target_dct, rename_instructions, target_type='rxn'):
                     new_third_bod = rename_instructions[spc]
                 else:  # this condition will occur if third_bod is '(+M)' or '+M'
                     new_third_bod = spc
-                
+
                 # Add back on the '(+...)' or '+' if indicated
                 if addition == 'paren':
                     new_third_bod = f'(+{new_third_bod})'
                 elif addition == 'plus only':
                     new_third_bod = f'+{new_third_bod}'
                 new_third_bods.append(new_third_bod)
-    
+
             new_rcts = tuple(new_rcts)
             new_prds = tuple(new_prds)
             new_third_bods = tuple(new_third_bods)
@@ -394,22 +399,20 @@ def reverse_rxn_ktp_dcts(renamed_rxn_ktp_dcts, renamed_spc_thermo_dcts, temps, r
         names and reverses any reactions if requested (if rev_rates=True) and also reorders all
         reactant/product ordering to be consistent.
 
-        :param renamed_rxn_ktp_dcts: list of rxn_ktp_dcts with all species renamed to be matching
+        :param renamed_rxn_ktp_dcts: list of rxn_ktp_dcts with species renamed to be matching
         :type renamed_rxn_ktp_dcts: list of dcts [rxn_ktp_dct1, rxn_ktp_dct2, ...]
-        :param renamed_spc_thermo_dcts: list of spc_thermo_dcts with all  species renamed to be matching
+        :param renamed_spc_thermo_dcts: list of spc_thermo_dcts with species renamed to be matching
         :type renamed_spc_thermo_dcts: list of dcts [spc_thermo_dct1, spc_thermo_dct2, ...]
         :param temps: temperatures at which to do calculations (Kelvin)
         :type temps: list [float]
         :param rev_rates: whether or not rates should be reversed
         :type rev_rates: Bool
-        :return reversed_rxn_ktp_dcts: list of rxn_ktp_dcts that have the rxns written with reacts and
-            prods in the same order (and reversed if that was indicated)
+        :return reversed_rxn_ktp_dcts: list of rxn_ktp_dcts that have the rxns written with reacts
+            and prods in the same order (and reversed if that was indicated)
         :rtype: list of dcts [rxn_ktp_dct1, rxn_ktp_dct2, ...]
     """
-    #renamed_rxn_ktp_dcts = copy.deepcopy(renamed_rxn_ktp_dcts)  # deepcopy to prevent external changes
     num_mechs = len(renamed_rxn_ktp_dcts)
     reversed_rxn_ktp_dcts = copy.deepcopy(renamed_rxn_ktp_dcts)  # deepcopy so no external changes
-    #reversed_rxn_ktp_dcts = renamed_rxn_ktp_dcts
     for mech_idx in range(num_mechs-1):
         rxn_ktp_dct1 = renamed_rxn_ktp_dcts[mech_idx]
         for idx2 in range(mech_idx+1, num_mechs):
@@ -446,10 +449,8 @@ def reverse_rxn_ktp_dct(rxn_ktp_dct1, rxn_ktp_dct2, spc_thermo_dct1, temps, rev_
         :param rev_rates: whether or not rates should be reversed
         :type rev_rates: Bool
     """
-#    rxn_ktp_dct1 = copy.deepcopy(rxn_ktp_dct1)  # deepcopy to prevent external changes
-#    rxn_ktp_dct2 = copy.deepcopy(rxn_ktp_dct2)  # deepcopy to prevent external changes
     rev_rxn_ktp_dct2 = copy.deepcopy(rxn_ktp_dct2)  # deepcopy to prevent external changes
-    for rxn1, ktp_dct1 in rxn_ktp_dct1.items():
+    for rxn1 in rxn_ktp_dct1.keys():  # search through all rxns in rxn_ktp_dct1
         rxn2, rev_rate = assess_rxn_match(rxn1, rxn_ktp_dct2)
         # Only do something if a match was found
         if rxn2 is not None:
@@ -460,17 +461,17 @@ def reverse_rxn_ktp_dct(rxn_ktp_dct1, rxn_ktp_dct2, spc_thermo_dct1, temps, rev_
                     rev_ktp_dct2 = reverse_ktp_dct(ktp_dct2, spc_thermo_dct1, rxn2, temps)
                     rev_rxn_ktp_dct2.pop(rxn2)
                     rev_rxn_ktp_dct2[rxn1] = rev_ktp_dct2
-                # If a match was found that does not need to be reversed but has rcts and prds written
-                # differently, align rcts and prds
+                # If a match was found that does not need to be reversed but has rcts and prds
+                # written differently, align rcts and prds
                 elif rxn1 != rxn2:
                     rev_rxn_ktp_dct2[rxn1] = rev_rxn_ktp_dct2[rxn2]
                     rev_rxn_ktp_dct2.pop(rxn2)
-    
-            # Otherwise, rename rxn2 so that rcts and prds are in the same order if they're not already
+
+            # Otherwise, rename rxn2 so that rcts and prds are in the same order (if not already)
             # Only do so if the rxns should not be flipped!
-            elif rxn1 != rxn2 and not rev_rate: 
-                    rev_rxn_ktp_dct2[rxn1] = rev_rxn_ktp_dct2[rxn2]
-                    rev_rxn_ktp_dct2.pop(rxn2)
+            elif rxn1 != rxn2 and not rev_rate:
+                rev_rxn_ktp_dct2[rxn1] = rev_rxn_ktp_dct2[rxn2]
+                rev_rxn_ktp_dct2.pop(rxn2)
 
     return rev_rxn_ktp_dct2
 
@@ -490,7 +491,7 @@ def reverse_ktp_dct(ktp_dct, spc_thermo_dct, rxn, temps):
         :return rev_ktp_dct: k(T,P) dct of the reversed reaction
         :type ktp_dct: dict {pressure1: (temp_array1, rates_array1), pressure2: ...}
     """
-    [rcts, prds, third_bods] = rxn
+    [rcts, prds, _] = rxn
     k_equils = _calculate_equilibrium_constant(spc_thermo_dct, rcts, prds, temps)
     rev_ktp_dct = {}
     for pressure, (_, kts) in ktp_dct.items():
@@ -617,8 +618,8 @@ def load_rxn_ktp_dcts_chemkin(mech_filenames, direc, temps, pressures):
         :rtype: list of dcts [rxn_ktp_dct1, rxn_ktp_dct2, ...]
     """
     rxn_ktp_dcts = []
-    for idx in range(len(mech_filenames)):
-        mech_str = parser.read_file(direc, mech_filenames[idx])
+    for mech_filename in mech_filenames:
+        mech_str = parser.read_file(direc, mech_filename)
         ea_units, a_units = parser_mech.reaction_units(mech_str)
         rxn_block_str = parser_mech.reaction_block(mech_str)
         rxn_param_dct = parser_rxn.param_dct(rxn_block_str, ea_units, a_units)
@@ -642,8 +643,8 @@ def load_spc_thermo_dcts_chemkin(thermo_filenames, direc, temps):
         :rtype: list of dcts [spc_thermo_dct1, spc_thermo_dct2, ...]
     """
     spc_thermo_dcts = []
-    for idx in range(len(thermo_filenames)):
-        thermo_str = parser.read_file(direc, thermo_filenames[idx])
+    for thermo_filename in thermo_filenames:
+        thermo_str = parser.read_file(direc, thermo_filename)
         thermo_block_str = parser_mech.thermo_block(thermo_str)
         spc_nasa7_dct = parser_thermo.create_spc_nasa7_dct(thermo_block_str)
         spc_thermo_dct = calc_thermo.create_spc_thermo_dct(spc_nasa7_dct, temps)
@@ -664,42 +665,9 @@ def load_spc_ident_dcts(spc_csv_filenames, direc):
         :rtype: list of dcts [spc_ident_dct1, spc_ident_dct2, ...]
     """
     spc_ident_dcts = []
-    for idx in range(len(spc_csv_filenames)):
-        spc_csv_str = parser.read_file(direc, spc_csv_filenames[idx])
+    for spc_csv_filename in spc_csv_filenames:
+        spc_csv_str = parser.read_file(direc, spc_csv_filename)
         spc_ident_dct = parser_spc.build_spc_dct(spc_csv_str, 'csv')
         spc_ident_dcts.append(spc_ident_dct)
 
     return spc_ident_dcts
-
-
-def combine_spc_nasa7(spc_nasa7_dct1, spc_nasa7_dct2, rename_instructions):
-    """
-
-    """
-    combined_spc_nasa7_dct = copy.copy(spc_nasa7_dct1)
-    renamed_spc_nasa7_dct2 = rename_species(spc_nasa7_dct2, rename_instructions, target_type='spc')
-
-    for spc_name2, nasa7_params2 in renamed_spc_nasa7_dct2.items():
-        if spc_name2 not in spc_nasa7_dct1.keys():
-            combined_spc_nasa7_dct[spc_name2] = nasa7_params2
-
-    return combined_spc_nasa7_dct
-
-
-def combine_mech_params(rxn_param_dct1, rxn_param_dct2, rename_instructions):
-    """ Combine together two rxn_param_dcts to create a single dct,
-        renaming all species as indicated in the rename_instructions.
-    """
-    combined_rxn_param_dct = copy.copy(rxn_param_dct1)
-    renamed_rxn_param_dct2 = rename_species(rxn_param_dct2, rename_instructions)
-
-    for rxn_name2, param2 in renamed_rxn_param_dct2.items():
-        rxn_name, flip_rxn, p_dep_same = assess_rxn_match(rxn_name2, param2, rxn_param_dct1)
-
-        # If rxn is unique to param2, add to param 1. Note: this does not
-        # consider whether the pressure dependence is the same. It just keeps
-        # the rate from mechanism 1.
-        if not rxn_name:
-            combined_rxn_param_dct[rxn_name2] = param2
-
-    return combined_rxn_param_dct

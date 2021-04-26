@@ -35,10 +35,15 @@ class SortMech:
                     self.mech_df: dataframe with mech info
                     self.spc_dct: species dictionary
         """
+<<<<<<< HEAD
 
         # Extract data from mech info
+=======
+        # extract data from mech info
+>>>>>>> 8051306731a722752935030e98b1a2ca16da3a7e
         [formula_dct_lst, formulas, rct_names_lst,
             prd_names_lst, thrdbdy_lst, rxn_name_lst, param_vals] = mech_info
+
         rxn_index = list(zip(rxn_name_lst, thrdbdy_lst))
 
         # Set dataframe: extract useful info
@@ -53,6 +58,7 @@ class SortMech:
             rct_names_lst, spc_dct=spc_dct)  # put heavier reactant first
         prd_names_lst_ordered = order_rct_bystoich(
             prd_names_lst, spc_dct=spc_dct)  # put heavier product first
+<<<<<<< HEAD
         rct_1, rct_2 = extract_spc(rct_names_lst_ordered)
         data = np.array(
             [rct_names_lst, prd_names_lst,
@@ -66,6 +72,15 @@ class SortMech:
                      'prd_names_lst_ord', 'r1', 'r2', 'molecularity',
                      'N_of_prods', 'pes', 'formulas',
                      'thrdbdy', 'param_vals'])
+=======
+        rct_1, rct_2 = util.get_S1S2(rct_names_lst_ordered)
+        data = np.array([rct_names_lst, prd_names_lst, rct_names_lst_ordered, prd_names_lst_ordered,
+                         rct_1, rct_2, molecularity, n_of_prods, pes_lst, formulas, thrdbdy_lst, param_vals], dtype=object).T
+        self.mech_df = pd.DataFrame(data, index=rxn_index, columns=[
+                                    'rct_names_lst', 'prd_names_lst', 'rct_names_lst_ord',
+                                    'prd_names_lst_ord', 'r1', 'r2', 'molecularity',
+                                    'N_of_prods', 'pes', 'formulas', 'thrdbdy', 'param_vals'])
+>>>>>>> 8051306731a722752935030e98b1a2ca16da3a7e
 
         self.spc_dct = spc_dct  # set for later use
         # empty list for initialization (otherwise pylint warning)
@@ -85,6 +100,15 @@ class SortMech:
             if ['onename','submech']: extracts fuel submechanism
         :returns: None. updates self
         """
+        # set labels for all the possible criteria
+        criteria_all = ['molecularity', 'N_of_prods', 'species', 'pes', 'subpes', 'submech',
+                        'r1', 'mult', 'rxn_class_broad', 'rxn_class_graph', 'rxn_max_vals', 'rxn_max_ratio']
+        labels_all = ['NR', 'N_of_prods', 'SPECIES', 'N_COH_PES', 'N_COH.subpes', 'SUBMECH',
+                      'Heavier rct', 'Total multiplicity', 'rxn type', 'rxn class', 'max val', 'max ratio']
+        # series: ascending/descending values
+        asc_val = [True]*len(criteria_all)
+        asc_val[-2:] = [False, False]
+        asc_series = pd.Series(asc_val, index=criteria_all)
 
         # if species_list is not empty: pre-process the mechanism
         if len(species_list) > 0:
@@ -127,7 +151,8 @@ class SortMech:
 
         # 1. Sort
         try:
-            self.mech_df = self.mech_df.sort_values(by=hierarchy[:-1])
+            self.mech_df = self.mech_df.sort_values(
+                by=hierarchy[:-1], ascending=list(asc_series[hierarchy[:-1]].values))
         except KeyError as err:
             print(
                 'WARNING: Reactions not sorted according ',
@@ -135,6 +160,7 @@ class SortMech:
             sys.exit()
 
         # 2. assign class headers
+<<<<<<< HEAD
         # set labels for all the possible criteria
         criteria_all = ['molecularity', 'N_of_prods', 'species',
                         'pes', 'subpes', 'submech',
@@ -144,6 +170,9 @@ class SortMech:
                       'N_COH_PES', 'N_COH.subpes', 'SUBMECH',
                       'Heavier rct', 'Total multiplicity',
                       'rxn type', 'rxn class', 'max val', 'max ratio']
+=======
+
+>>>>>>> 8051306731a722752935030e98b1a2ca16da3a7e
         labels = pd.Series(labels_all, index=criteria_all)
         self.class_headers(hierarchy, labels)
 
@@ -194,6 +223,7 @@ class SortMech:
 
     def conn_chn(self, conn_chn_df):
         """ Identifies connected channels and assigns them to the same subpes
+            Generate pes dictionary for each reaction and save for later use
 
         :param self.mech_df: dataframe with mech info (contains all reactions)
         :param conn_chn_df: empty dataframe df[subpes][rxn]
@@ -202,10 +232,15 @@ class SortMech:
         :rtype: dataframe[int][tuple]
         """
         pes_index = 0
+<<<<<<< HEAD
         pes_dct_df = pd.DataFrame(
             index=self.mech_df.index,
             columns=['pes_dct'],
             dtype=object)
+=======
+        pes_dct_df = pd.DataFrame(index=self.mech_df.index, columns=[
+                                  'pes_dct'], dtype=object)
+>>>>>>> 8051306731a722752935030e98b1a2ca16da3a7e
         for fml, peslist in self.mech_df.groupby('pes'):
             # print(peslist)
             # Set the names lists for the rxns and species needed below
@@ -219,6 +254,14 @@ class SortMech:
                 rxns = peslist.iloc[value].index
                 fml_num = fml + key/100
                 conn_chn_df['subpes'][rxns] = fml_num
+                # store in pes_dct_df
+                fml_str = self.mech_df['formulas'][rxns].values[0]
+                for rxn in rxns:
+                    pes_dct_df['pes_dct'][rxn] = (fml_str, pes_index, key)
+
+            pes_index += 1
+
+        conn_chn_df = pd.concat([conn_chn_df, pes_dct_df], axis=1)
 
                 # store in pes_dct_df
                 fml_str = self.mech_df['formulas'][rxns].values[0]
@@ -603,6 +646,7 @@ class SortMech:
 
 
 # FUNCTIONS FOR RXN GRAPH CLASSIFICATION #
+
 
 def classify_graph(spc_dct, rct_names, prd_names):
     """ calls the graph classifier for a given reaction

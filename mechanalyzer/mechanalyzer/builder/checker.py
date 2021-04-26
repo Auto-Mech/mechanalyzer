@@ -1,4 +1,6 @@
-import numpy as np
+""" Check mechanisms for various flaws/inconsistencies
+"""
+
 from collections import Counter as counter
 from chemkin_io.writer._util import format_rxn_name
 
@@ -27,11 +29,6 @@ def run_all_checks(rxn_param_dct, rxn_ktp_dct, k_thresholds, rxn_num_threshold, 
 
     total_str = separator()
 
-    # Sources and sinks
-    source_spcs, sink_spcs = get_sources_and_sinks(rxn_param_dct)
-    total_str += write_sources_and_sinks(source_spcs, sink_spcs)
-    total_str += separator()
-
     # Large rate constants
     large_rxn_ktp_dcts = get_large_kts(rxn_ktp_dct, k_thresholds)
     total_str += write_large_kts(large_rxn_ktp_dcts, k_thresholds)
@@ -40,11 +37,6 @@ def run_all_checks(rxn_param_dct, rxn_ktp_dct, k_thresholds, rxn_num_threshold, 
     # Negative rate constants
     negative_rxn_ktp_dct = get_negative_kts(rxn_ktp_dct)
     total_str += write_negative_kts(negative_rxn_ktp_dct)
-    total_str += separator()
-
-    # Lone species
-    lone_spcs = get_lone_spcs(rxn_param_dct, rxn_num_threshold)
-    total_str += write_lone_spcs(lone_spcs, rxn_num_threshold)
     total_str += separator()
 
     # Duplicate (more than 2) reactions
@@ -57,10 +49,20 @@ def run_all_checks(rxn_param_dct, rxn_ktp_dct, k_thresholds, rxn_num_threshold, 
     total_str += write_mismatches(mismatched_rxns)
     total_str += separator()
 
+    # Lone species
+    lone_spcs = get_lone_spcs(rxn_param_dct, rxn_num_threshold)
+    total_str += write_lone_spcs(lone_spcs, rxn_num_threshold)
+    total_str += separator()
+
+    # Sources and sinks
+    source_spcs, sink_spcs = get_sources_and_sinks(rxn_param_dct)
+    total_str += write_sources_and_sinks(source_spcs, sink_spcs)
+    total_str += separator()
+
     if filename is not None:
-        with open(filename, 'w') as f:
-            f.write(total_str)
-        f.close()
+        with open(filename, 'w') as fid:
+            fid.write(total_str)
+        fid.close()
 
     return total_str
 
@@ -321,7 +323,7 @@ def write_large_kts(large_rxn_ktp_dcts, thresholds):
 
     # Bimolecular
     if bimolec_rxn_ktp_dct == {}:
-        large_kts_str += f'No bimolecular reactions exceed {thresholds[1]:0.1E} cm^3 mol^-1 s^-1\n\n'
+        large_kts_str +=f'No bimolecular reactions exceed {thresholds[1]:0.1E} cm^3 mol^-1 s^-1\n\n'
     else:
         large_kts_str += (
             f'Bimolecular rate constants that exceed {thresholds[1]:0.1E} cm^3 mol^-1 s^-1\n\n'
@@ -397,7 +399,7 @@ def write_duplicates(duplicate_rxns):
         :rtype: str
     """
 
-    dups_str = f'\nDUPLICATE REACTIONS\n\nThese reactions have more than 2 rate expressions:\n' +\
+    dups_str = '\nDUPLICATE REACTIONS\n\nThese reactions have more than 2 rate expressions:\n' +\
                '(Number of rate expressions given in parentheses)\n\n'
 
     if duplicate_rxns != {}:
@@ -420,7 +422,7 @@ def write_mismatches(mismatched_rxns):
         :rtype: str
     """
 
-    mismatch_str = f'\nMISMATCHED REACTIONS\n\n'
+    mismatch_str = '\nMISMATCHED REACTIONS\n\n'
 
     if mismatched_rxns != {}:
         mismatch_str += 'The following reactions have mismatched rate expressions\n'
@@ -505,4 +507,3 @@ def get_molecularity(rxn):
         molecularity = num_rcts
 
     return molecularity
-

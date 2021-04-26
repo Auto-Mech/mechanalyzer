@@ -291,11 +291,6 @@ def align_spc_thermo_dcts(thermo_filenames, spc_csv_filenames, temps, remove_lon
     return aligned_spc_thermo_dct
 
 
-def get_diff_spc_thermo_dct(aligned_spc_thermo_dct):
-    """
-    """
-    for spc in aligned_spc_thermo_dct:
-        
 
 
 def remove_lone_spcs(aligned_spc_thermo_dct):
