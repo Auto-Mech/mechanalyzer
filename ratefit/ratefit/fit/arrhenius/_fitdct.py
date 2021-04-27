@@ -14,8 +14,8 @@ from ratefit.fit._util import set_a_conversion_factor
 
 # Functions to fit rates to Arrhenius/PLOG function
 def pes(ktp_dct, reaction, mess_path,
-        dblarr_tolerance=15.0,
-        dblarr_check='max'):
+        dbltol=15.0,
+        dblcheck='max'):
     """ Read the rates for each channel and perform the fits
     """
 
@@ -50,13 +50,13 @@ def pes(ktp_dct, reaction, mess_path,
 
     # Assess single fitting errors:
     # are they within threshold at each pressure
-    if dblarr_check == 'max':
+    if dblcheck == 'max':
         test_val = max((
             vals[1] for vals in sing_fit_err_dct.values()))
-    elif dblarr_check == 'mean':
+    elif dblcheck == 'mean':
         test_val = mean((
             vals[0] for vals in sing_fit_err_dct.values()))
-    sgl_fit_good = bool(test_val < dblarr_tolerance)
+    sgl_fit_good = bool(test_val < dbltol)
 
     # Put a double fit assess function
     # Skip first and last points in estimating maximum errors –

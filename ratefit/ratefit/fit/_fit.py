@@ -14,23 +14,23 @@ from ratefit.fit._pdep import pressure_dependent_ktp_dct
 
 
 DEFAULT_PDEP_DCT = {
-    'pdep_temps': (500, 1000),
-    'pdep_tol': 20.0,
-    'no_pdep_pval': 1.0,
+    'temps': (500, 1000),
+    'tol': 20.0,
+    'pval': 1.0,
     'plow': None,
     'phigh': None
 }
 DEFAULT_ARRFIT_DCT = {
-    'dblarr_tolerance': 15.0,
-    'dblarr_check': 'max'
+    'dbltol': 15.0,
+    'dblcheck': 'max'
 }
 DEFAULT_TROE_DCT = {
-    'param_list': ('ts1', 'ts2', 'ts3', 'alpha')
+    'params': ('ts1', 'ts2', 'ts3', 'alpha')
 }
 DEFAULT_CHEB_DCT = {
     'tdeg': 6,
     'pdeg': 4,
-    'fit_tolerance': 20.0
+    'tol': 20.0
 }
 
 
@@ -145,7 +145,6 @@ def read_rates(mess_out_str, pdep_dct, rct_lab, prd_lab,
 
     fit_temps = list(set(list(fit_temps)))
     fit_temps.sort()
-    print('fit_temps', fit_temps)
     assert set(fit_temps) <= set(mess_temps)
     assert set(fit_pressures) <= set(mess_press)
 
@@ -171,11 +170,11 @@ def read_rates(mess_out_str, pdep_dct, rct_lab, prd_lab,
                     'of reaction.')
                 ktp_dct = pressure_dependent_ktp_dct(
                     filt_ktp_dct,
-                    tolerance=pdep_dct['pdep_tol'],
-                    pdep_temps=pdep_dct['pdep_temps'],
+                    tolerance=pdep_dct['tol'],
+                    pdep_temps=pdep_dct['temps'],
                     plow=pdep_dct['plow'],
                     phigh=pdep_dct['phigh'],
-                    no_pdep_pval=DEFAULT_PDEP_DCT['no_pdep_pval'])
+                    no_pdep_pval=DEFAULT_PDEP_DCT['pval'])
             else:
                 ktp_dct = copy.deepcopy(filt_ktp_dct)
 
