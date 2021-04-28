@@ -42,7 +42,7 @@ numpy.set_printoptions(precision=15)
 def test__single_arrhenius():
     """ test ratefit.fxns.single_arrhenius
     """
-    
+
     ref_calc_ks = ARR_K_DATA.SingleArr.values
 
     calc_ks = ratefit.calc.single_arrhenius(A1, N1, EA1, T_REF, TEMPS)
