@@ -88,6 +88,7 @@ THY_DCT = {
 
 # Reaction info
 RXN1 = (('C2H5', 'H'), ('C2H6',))
+RXN1REV = (('C2H6',), ('C2H5', 'H'))
 RXN2 = (('C2H5', 'H'), ('C2H4', 'H2'))
 RXN3 = (('Fake6',), ('Fake7',))
 
@@ -165,9 +166,11 @@ def test__rxn():
 
     # Build reaction info objects to be used below
     reacs1, prods1 = RXN1
+    reacs1rev, prods1rev = RXN1REV
     reacs2, prods2 = RXN2
     reacs3, prods3 = RXN3
     rxn_info1 = inf.rxn.from_dct(reacs1, prods1, SPC_DCT, rxn_mul='low')
+    rxn_info1rev = inf.rxn.from_dct(reacs1rev, prods1rev, SPC_DCT, rxn_mul='low')
     rxn_info2 = inf.rxn.from_dct(reacs2, prods2, SPC_DCT, rxn_mul='high')
     rxn_info3 = inf.rxn.from_dct(reacs3, prods3, SPC_DCT, rxn_mul='low')
 
@@ -220,6 +223,7 @@ def test__rxn():
 
     # Check other values
     assert inf.rxn.radrad(rxn_info1)
+    assert inf.rxn.radrad(rxn_info1rev)
     assert inf.rxn.radrad(rxn_info2)
     assert not inf.rxn.radrad(rxn_info3)
 

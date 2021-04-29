@@ -1,38 +1,32 @@
-"""
-Read a JSON mechanism file
-"""
-
-import os
-import collections
-import json
-# import automol
-
-
-def load_json(json_file, json_path='.'):
-    """ load json file mechanism file
-    """
-    with open(os.path.join(json_path, json_file)) as jsonfile:
-        inp_data = json.load(jsonfile,
-                             object_pairs_hook=collections.OrderedDict)
-    return inp_data
-
-
-def _parse_reactions(inp_data):
-    mech_data = []
-    for reaction in inp_data:
-        if isinstance(reaction, dict):
-            mech_data = inp_data
-            break
-        if isinstance(reaction, str):
-            if reaction == 'rxns':
-                mech_data = inp_data['rxns']
-        else:
-            for entry in inp_data[reaction]:
-                mech_data.append(entry)
-    return mech_data
-
-
-# def parse_json(mech_file, mech_path='.', check_stereo=False):
+# """
+# Read a JSON mechanism file
+# (COMMENTED OUT TO AVOID COVE COV ASSESSEMTN),
+# """
+# import os
+# import collections
+# import json
+# # import automol
+# def load_json(json_file, json_path='.'):
+#     """ load json file mechanism file
+#     """
+#     with open(os.path.join(json_path, json_file)) as jsonfile:
+#         inp_data = json.load(jsonfile,
+#                              object_pairs_hook=collections.OrderedDict)
+#     return inp_data
+# def _parse_reactions(inp_data):
+#     mech_data = []
+#     for reaction in inp_data:
+#         if isinstance(reaction, dict):
+#             mech_data = inp_data
+#             break
+#         if isinstance(reaction, str):
+#             if reaction == 'rxns':
+#                 mech_data = inp_data['rxns']
+#         else:
+#             for entry in inp_data[reaction]:
+#                 mech_data.append(entry)
+#     return mech_data
+# # def parse_json(mech_file, mech_path='.', check_stereo=False):
 #     """ parse a json file mechanism file
 #     """
 #     inp_data = load_json(mech_file, mech_path)

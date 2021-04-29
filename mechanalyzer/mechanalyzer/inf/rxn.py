@@ -2,7 +2,7 @@
   Reaction info objects
 """
 
-import autofile
+from autofile.schema import sort_together
 from mechanalyzer import par
 from mechanalyzer.inf import spc
 
@@ -54,13 +54,12 @@ def value(inf_obj, val):
     return inf_obj[RXN_PROPS.index(val)]
 
 
-# write ts mult and charge getter functions
 def ts_info(inf_obj):
     """ Build a spc info object for the transisiton state for the reaction
     """
 
     _chg = ts_chg(inf_obj)
-    _mul = value(inf_obj, par.SPC.TSMULT)  # wrong
+    _mul = value(inf_obj, par.SPC.TSMULT)
 
     return ('', _chg, _mul)
 
@@ -107,7 +106,7 @@ def sort(inf_obj, scheme='autofile'):
     rxn_ichs, rxn_chgs, rxn_muls, ts_mul = inf_obj
 
     if scheme == 'autofile':
-        rxn_ichs, rxn_chgs, rxn_muls = autofile.schema.sort_together(
+        rxn_ichs, rxn_chgs, rxn_muls = sort_together(
             rxn_ichs, rxn_chgs, rxn_muls)
 
     sort_inf_obj = (rxn_ichs, rxn_chgs, rxn_muls, ts_mul)
