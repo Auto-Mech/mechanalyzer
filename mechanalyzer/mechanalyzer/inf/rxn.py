@@ -2,7 +2,7 @@
   Reaction info objects
 """
 
-import autofile
+from autofile.schema import sort_together
 from mechanalyzer import par
 from mechanalyzer.inf import spc
 
@@ -16,8 +16,9 @@ RXN_PROPS = [
 
 
 def from_dct(reacs, prods, spc_dct, rxn_mul='low'):
-    """ prepare rxn info and reverse the reactants and products
-        if reaction is endothermic
+    """ Build a reaction info object using a species dictionary and names
+        Add the names to the info object?
+        Have a way to get a dict object {(rctnames, prdnames) = rxn_info}
     """
 
     # Build the tuples of the reacs+prods infos
@@ -53,13 +54,12 @@ def value(inf_obj, val):
     return inf_obj[RXN_PROPS.index(val)]
 
 
-# write ts mult and charge getter functions
 def ts_info(inf_obj):
     """ Build a spc info object for the transisiton state for the reaction
     """
 
     _chg = ts_chg(inf_obj)
-    _mul = value(inf_obj, par.SPC.TSMULT)  # wrong
+    _mul = value(inf_obj, par.SPC.TSMULT)
 
     return ('', _chg, _mul)
 
@@ -86,7 +86,7 @@ def rgt_info(inf_obj, rgt):
     assert rgt in ('reacs', 'prods')
 
     rxn_ichs, rxn_chgs, rxn_muls, _ = inf_obj
-    if rgt == 'reac':
+    if rgt == 'reacs':
         rgt_ichs, rgt_chgs, rgt_muls = rxn_ichs[0], rxn_chgs[0], rxn_muls[0]
     else:
         rgt_ichs, rgt_chgs, rgt_muls = rxn_ichs[1], rxn_chgs[1], rxn_muls[1]
@@ -98,12 +98,6 @@ def rgt_info(inf_obj, rgt):
     return _rgt_info
 
 
-def replace(inf_obj, val):
-    """ Replace some value of the info object
-    """
-    raise NotImplementedError
-
-
 def sort(inf_obj, scheme='autofile'):
     """ Resort the reacs and prods based on some scheme,
         currently just autofile
@@ -112,7 +106,7 @@ def sort(inf_obj, scheme='autofile'):
     rxn_ichs, rxn_chgs, rxn_muls, ts_mul = inf_obj
 
     if scheme == 'autofile':
-        rxn_ichs, rxn_chgs, rxn_muls = autofile.schema.sort_together(
+        rxn_ichs, rxn_chgs, rxn_muls = sort_together(
             rxn_ichs, rxn_chgs, rxn_muls)
 
     sort_inf_obj = (rxn_ichs, rxn_chgs, rxn_muls, ts_mul)

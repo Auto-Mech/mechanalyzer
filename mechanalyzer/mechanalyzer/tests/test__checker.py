@@ -1,10 +1,17 @@
-""" Test the checker.py functions
+""" test mechanalyzer.builder.checker
 """
 
-from mechanalyzer.builder import checker
+import os
+import tempfile
 import numpy as np
+from mechanalyzer.builder import checker
 
-TEMPS = np.array([500,1000,1500])
+TMP_DIR = tempfile.mkdtemp()
+CHECK_OUTFILE = os.path.join(TMP_DIR, 'mech_check.txt')
+print('Temp Run Dir:', TMP_DIR)
+
+
+TEMPS = np.array([500, 1000, 1500])
 GOOD_KTS = ([1e9, 1e10, 1e10])
 NEGATIVE_KTS = np.array([-1.5, -1.8, -1.9])
 LARGE_UNIMOLEC_KTS = np.array([1e12, 1e12, 1e12])
@@ -36,68 +43,99 @@ RXN_PARAM_DCT2 = {
 
 # For testing negative rates
 RXN_KTP_DCT1 = {
-    (('H2', 'O'), ('OH', 'H'), (None,)): {1: (TEMPS, GOOD_KTS), 10: (TEMPS, GOOD_KTS)},
-    (('H', 'O2'), ('OH', 'O'), (None,)): {1: (TEMPS, NEGATIVE_KTS), 10: (TEMPS, GOOD_KTS)},
+    (('H2', 'O'), ('OH', 'H'), (None,)): {
+        1: (TEMPS, GOOD_KTS), 10: (TEMPS, GOOD_KTS)},
+    (('H', 'O2'), ('OH', 'O'), (None,)): {
+        1: (TEMPS, NEGATIVE_KTS), 10: (TEMPS, GOOD_KTS)}
 }
 
 # For testing large rates
 RXN_KTP_DCT2 = {
-    (('OH',), ('H', 'O'), (None,)): {1: (TEMPS, GOOD_KTS), 10: (TEMPS, LARGE_UNIMOLEC_KTS)},
-    (('HO2',), ('HO', 'O'), (None,)): {1: (TEMPS, GOOD_KTS), 10: (TEMPS, GOOD_KTS)},
-    (('H2', 'O'), ('OH', 'H'), (None,)): {1: (TEMPS, GOOD_KTS), 10: (TEMPS, LARGE_BIMOLEC_KTS)},
-    (('H2', 'O'), ('OH', 'OH'), (None,)): {1: (TEMPS, GOOD_KTS), 10: (TEMPS, GOOD_KTS)},
-    (('H', 'O'), ('OH',), ('+O(S)',)): {1: (TEMPS, GOOD_KTS), 10: (TEMPS, LARGE_TERMOLEC_KTS)},
-    (('H', 'O'), ('OH',), ('+M',)): {1: (TEMPS, GOOD_KTS), 10: (TEMPS, GOOD_KTS)},
+    (('OH',), ('H', 'O'), (None,)): {
+        1: (TEMPS, GOOD_KTS), 10: (TEMPS, LARGE_UNIMOLEC_KTS)},
+    (('HO2',), ('HO', 'O'), (None,)): {
+        1: (TEMPS, GOOD_KTS), 10: (TEMPS, GOOD_KTS)},
+    (('H2', 'O'), ('OH', 'H'), (None,)): {
+        1: (TEMPS, GOOD_KTS), 10: (TEMPS, LARGE_BIMOLEC_KTS)},
+    (('H2', 'O'), ('OH', 'OH'), (None,)): {
+        1: (TEMPS, GOOD_KTS), 10: (TEMPS, GOOD_KTS)},
+    (('H', 'O'), ('OH',), ('+O(S)',)): {
+        1: (TEMPS, GOOD_KTS), 10: (TEMPS, LARGE_TERMOLEC_KTS)},
+    (('H', 'O'), ('OH',), ('+M',)): {
+        1: (TEMPS, GOOD_KTS), 10: (TEMPS, GOOD_KTS)}
 }
 
 # For testing large rates
 RXN_KTP_DCT3 = {
-    (('OH',), ('H', 'O'), (None,)): {1: (TEMPS, GOOD_KTS), 10: (TEMPS, LARGE_UNIMOLEC_KTS)},
-    (('HO2',), ('HO', 'O'), (None,)): {1: (TEMPS, GOOD_KTS), 10: (TEMPS, GOOD_KTS)},
+    (('OH',), ('H', 'O'), (None,)): {
+        1: (TEMPS, GOOD_KTS), 10: (TEMPS, LARGE_UNIMOLEC_KTS)},
+    (('HO2',), ('HO', 'O'), (None,)): {
+        1: (TEMPS, GOOD_KTS), 10: (TEMPS, GOOD_KTS)},
 }
 
-CORRECT_NEGATIVE_KTS_STR = '\nNEGATIVE RATE CONSTANTS\n\nH+O2=OH+O\nPressure: 1 atm\n' + \
-              '    Temperature (K)\n    500.0       1000.0      1500.0      \n' + \
-              '    Rate constant\n    -1.500E+00  -1.800E+00  -1.900E+00  \n\n\n'
+CORRECT_NEGATIVE_KTS_STR = (
+    '\nNEGATIVE RATE CONSTANTS\n\nH+O2=OH+O\nPressure: 1 atm\n' +
+    '    Temperature (K)\n    500.0       1000.0      1500.0      \n' +
+    '    Rate constant\n    -1.500E+00  -1.800E+00  -1.900E+00  \n\n\n'
+)
 
-CORRECT_LARGE_KTS_STR = '\nLARGE RATE CONSTANTS\n\nUnimolecular threshold: 1.0E+11 s^-1\n' + \
-    'Bimolecular threshold: 1.0E+15 cm^3 mol^-1 s^-1\n' + \
-    'Termolecular threshold: 1.0E+22 cm^6 mol^-2 s^-1\n\n' + \
-    'Unimolecular rate constants that exceed 1.0E+11 s^-1\n\n' + \
-    'OH=H+O\nPressure: 10 atm\n' + \
-    '    Temperature (K)\n    500.0       1000.0      1500.0      \n' + \
-    '    Rate constant\n    1.000E+12   1.000E+12   1.000E+12   \n\n\n' + \
-    'No bimolecular reactions exceed 1.0E+15 cm^3 mol^-1 s^-1\n\n' + \
+CORRECT_LARGE_KTS_STR = (
+    '\nLARGE RATE CONSTANTS\n\nUnimolecular threshold: 1.0E+11 s^-1\n' +
+    'Bimolecular threshold: 1.0E+15 cm^3 mol^-1 s^-1\n' +
+    'Termolecular threshold: 1.0E+22 cm^6 mol^-2 s^-1\n\n' +
+    'Unimolecular rate constants that exceed 1.0E+11 s^-1\n\n' +
+    'OH=H+O\nPressure: 10 atm\n' +
+    '    Temperature (K)\n    500.0       1000.0      1500.0      \n' +
+    '    Rate constant\n    1.000E+12   1.000E+12   1.000E+12   \n\n\n' +
+    'No bimolecular reactions exceed 1.0E+15 cm^3 mol^-1 s^-1\n\n' +
     'No termolecular reactions exceed 1.0E+22 cm^6 mol^-2 s^-1\n\n'
+)
 
-CORRECT_LONE_SPCS_STR = '\nLONE SPECIES\n\nThese species appear in 2 or less reactions\n\n' +\
-    'Species  Reactions\nO2       H+O2=OH+O, H2+O2=HO2+H\nO(S)     H2+O(S)=OH+O\nHO2      ' +\
+CORRECT_LONE_SPCS_STR = (
+    '\nLONE SPECIES\n\n' +
+    'These species appear in 2 or less reactions\n\n' +
+    'Species  Reactions\nO2       H+O2=OH+O, H2+O2=HO2+H\n' +
+    'O(S)     H2+O(S)=OH+O\nHO2      ' +
     'H2+O2=HO2+H\n\n\n'
-
-CORRECT_SOURCE_SINK_STR1 = '\nSOURCE AND SINK SPECIES\n\nThese species only appear as ' +\
-    'reactants:\nSpecies    Reactions\nH2         H2+O=OH+H, H2+O=OH+OH, H2+O(S)=OH+O, ' +\
-    'H2+O2=HO2+H\nO(S)       H2+O(S)=OH+O\nO2         H+O2=OH+O, H2+O2=HO2+H\n\n' +\
-    'These species only appear as products:\nSpecies   Reactions\nHO2       H2+O2=HO2+H' +\
-    '\nOH        H2+O=OH+H, H+O2=OH+O, H2+O=OH+OH, H+O=OH, H+O(+M)=OH(+M), ' +\
+)
+CORRECT_SOURCE_SINK_STR1 = (
+    '\nSOURCE AND SINK SPECIES\n\nThese species only appear as ' +
+    'reactants:\nSpecies    Reactions' +
+    '\nH2         H2+O=OH+H, H2+O=OH+OH, H2+O(S)=OH+O, ' +
+    'H2+O2=HO2+H\nO(S)       H2+O(S)=OH+O\nO2         ' +
+    'H+O2=OH+O, H2+O2=HO2+H\n\n' +
+    'These species only appear as products:' +
+    '\nSpecies   Reactions\nHO2       H2+O2=HO2+H' +
+    '\nOH        H2+O=OH+H, H+O2=OH+O, H2+O=OH+OH, H+O=OH, H+O(+M)=OH(+M), ' +
     'H+O+O(S)=OH+O(S), H2+O(S)=OH+O\n\n\n'
-
-CORRECT_SOURCE_SINK_STR2 = '\nSOURCE AND SINK SPECIES\n\nThese species only appear as ' +\
-    'reactants:\nNo source species found\n\nThese species only appear as products:\n' +\
+)
+CORRECT_SOURCE_SINK_STR2 = (
+    '\nSOURCE AND SINK SPECIES\n\nThese species only appear as ' +
+    'reactants:\nNo source species found\n\n' +
+    'These species only appear as products:\n' +
     'No sink species found\n\n\n'
-
-CORRECT_DUPLICATES_STR1 = '\nDUPLICATE REACTIONS\n\nThese reactions have more than 2 ' +\
-    'rate expressions:\n(Number of rate expressions given in parentheses)\n\n' +\
+)
+CORRECT_DUPLICATES_STR1 = (
+    '\nDUPLICATE REACTIONS\n\nThese reactions have more than 2 ' +
+    'rate expressions:\n' +
+    '(Number of rate expressions given in parentheses)\n\n' +
     'H2+O=OH+H     (3)\n\n\n'
-
-CORRECT_DUPLICATES_STR2 = '\nDUPLICATE REACTIONS\n\nThese reactions have more than 2 ' +\
-    'rate expressions:\n(Number of rate expressions given in parentheses)\n\n' +\
+)
+CORRECT_DUPLICATES_STR2 = (
+    '\nDUPLICATE REACTIONS\n\nThese reactions have more than 2 ' +
+    'rate expressions:' +
+    '\n(Number of rate expressions given in parentheses)\n\n' +
     'No reactions with more than 2 expressions found\n\n\n'
-
-CORRECT_MISMATCHES_STR1 = '\nMISMATCHED REACTIONS\n\nThe following reactions have ' +\
+)
+CORRECT_MISMATCHES_STR1 = (
+    '\nMISMATCHED REACTIONS\n\nThe following reactions have ' +
     'mismatched rate expressions\nH+O2=OH+O: Arrhenius, PLOG\n\n\n'
+)
 
-CORRECT_MISMATCHES_STR2 = '\nMISMATCHED REACTIONS\n\nNo reactions with mismatching ' +\
+CORRECT_MISMATCHES_STR2 = (
+    '\nMISMATCHED REACTIONS\n\nNo reactions with mismatching ' +
     'rate expressions found\n\n\n'
+)
 
 
 def test__all_checks():
@@ -106,8 +144,8 @@ def test__all_checks():
     k_thresholds = [1e11, 1e15, 1e22]
     rxn_num_threshold = 2
     _ = checker.run_all_checks(RXN_PARAM_DCT1, RXN_KTP_DCT1, k_thresholds,
-                                       rxn_num_threshold,
-                                       filename='mech_check.txt')
+                               rxn_num_threshold,
+                               filename=CHECK_OUTFILE)
 
 
 def test__sources_and_sinks():
@@ -131,9 +169,12 @@ def test__negative_rates():
     """ Test the get_negative_kts and write_negative_kts functions
     """
     # Test the get_negative_kts function
+    reac = (('H', 'O2'), ('OH', 'O'), (None,))
+
     negative_rxn_ktp_dct = checker.get_negative_kts(RXN_KTP_DCT1)
-    assert tuple(negative_rxn_ktp_dct.keys()) == ((('H', 'O2'), ('OH', 'O'), (None,)),)
-    assert tuple(negative_rxn_ktp_dct[(('H', 'O2'), ('OH', 'O'), (None,))].keys()) == (1,)
+    assert tuple(negative_rxn_ktp_dct.keys()) == (
+        (('H', 'O2'), ('OH', 'O'), (None,)),)
+    assert tuple(negative_rxn_ktp_dct[reac].keys()) == (1,)
 
     # Test the write_negative_kts function
     negative_kts_str = checker.write_negative_kts(negative_rxn_ktp_dct)
@@ -146,9 +187,12 @@ def test__large_rates():
     # Test the get_large_kts function
     thresholds = [1e11, 1e15, 1e22]
     large_rxn_ktp_dcts2 = checker.get_large_kts(RXN_KTP_DCT2, thresholds)
-    assert tuple(large_rxn_ktp_dcts2[0].keys()) == ((('OH',), ('H', 'O'), (None,)),)
-    assert tuple(large_rxn_ktp_dcts2[1].keys()) == ((('H2', 'O'), ('OH', 'H'), (None,)),)
-    assert tuple(large_rxn_ktp_dcts2[2].keys()) == ((('H', 'O'), ('OH',), ('+O(S)',)),)
+    assert tuple(large_rxn_ktp_dcts2[0].keys()) == (
+        (('OH',), ('H', 'O'), (None,)),)
+    assert tuple(large_rxn_ktp_dcts2[1].keys()) == (
+        (('H2', 'O'), ('OH', 'H'), (None,)),)
+    assert tuple(large_rxn_ktp_dcts2[2].keys()) == (
+        (('H', 'O'), ('OH',), ('+O(S)',)),)
 
     # Test the write_large_kts function
     large_rxn_ktp_dcts3 = checker.get_large_kts(RXN_KTP_DCT3, thresholds)
@@ -175,7 +219,8 @@ def test__duplicates():
     # Test the get_duplicates function
     duplicate_rxns1 = checker.get_duplicates(RXN_PARAM_DCT1)
     duplicate_rxns2 = checker.get_duplicates(RXN_PARAM_DCT2)
-    assert tuple(duplicate_rxns1.keys()) == ((('H2', 'O'), ('OH', 'H'), (None,)),)
+    assert tuple(duplicate_rxns1.keys()) == (
+        (('H2', 'O'), ('OH', 'H'), (None,)),)
     assert tuple(duplicate_rxns1.values()) == (3,)
     assert duplicate_rxns2 == {}
 
@@ -192,7 +237,8 @@ def test__mismatches():
     # Test the get_mismatches function
     mismatched_rxns1 = checker.get_mismatches(RXN_PARAM_DCT1)
     mismatched_rxns2 = checker.get_mismatches(RXN_PARAM_DCT2)
-    assert tuple(mismatched_rxns1.keys()) == ((('H', 'O2'), ('OH', 'O'), (None,)),)
+    assert tuple(mismatched_rxns1.keys()) == (
+        (('H', 'O2'), ('OH', 'O'), (None,)),)
     assert tuple(mismatched_rxns1.values())[0][1] == ['Arrhenius', 'PLOG']
     assert mismatched_rxns2 == {}
 

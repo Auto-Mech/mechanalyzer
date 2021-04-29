@@ -31,8 +31,10 @@ TEMPS = numpy.array(
     [300., 600., 900., 1200., 1500.,
      1800., 2100., 2400., 2700., 3000.])
 T_REF = 1.0
-A1, N1, EA1 = 7.015e+4, 2.053, -0.3557
-A2, N2, EA2 = 5.757e+12, -0.664, 0.3318
+A1, N1, EA1 = 7.015e+4, 2.053, -3557
+A2, N2, EA2 = 5.757e+12, -0.664, 3318
+# A1, N1, EA1 = 7.015e+4, 2.053, -0.3557
+# A2, N2, EA2 = 5.757e+12, -0.664, 0.3318
 
 numpy.set_printoptions(precision=15)
 
@@ -41,12 +43,11 @@ def test__single_arrhenius():
     """ test ratefit.fxns.single_arrhenius
     """
 
-    calc_ks = ratefit.calc.single_arrhenius(
-        A1, N1, EA1,
-        T_REF, TEMPS)
-
     ref_calc_ks = ARR_K_DATA.SingleArr.values
 
+    calc_ks = ratefit.calc.single_arrhenius(A1, N1, EA1, T_REF, TEMPS)
+    print(calc_ks)
+    print(ref_calc_ks)
     assert numpy.allclose(calc_ks, ref_calc_ks, atol=0.01)
 
 
@@ -55,9 +56,7 @@ def test__double_arrhenius():
     """
 
     calc_ks = ratefit.calc.double_arrhenius(
-        A1, N1, EA1,
-        A2, N2, EA2,
-        T_REF, TEMPS)
+        A1, N1, EA1, A2, N2, EA2, T_REF, TEMPS)
 
     ref_calc_ks = ARR_K_DATA.DoubleArr.values
 

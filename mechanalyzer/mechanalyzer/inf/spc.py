@@ -48,18 +48,13 @@ def value(inf_obj, val):
     return inf_obj[SPC_PROPS.index(val)]
 
 
-def combine(inf_obj1, inf_obj2, mval='max'):
+def combine(inf_obj1, inf_obj2):
     """ Created a spc info for two species where charge and mult
         have been combined
     """
 
-    assert mval in ('max', 'min')
-
     ich = (inf_obj1[0], inf_obj2[0])
     chg = inf_obj1[1] + inf_obj2[1]
-    if mval == 'max':
-        mult = max([inf_obj1[2], inf_obj2[2]])
-    else:
-        mult = min([inf_obj1[2], inf_obj2[2]])
+    mult = max([inf_obj1[2], inf_obj2[2]])  # Taking max, assuming a complex
 
     return (ich, chg, mult)

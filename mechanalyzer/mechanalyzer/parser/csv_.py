@@ -9,7 +9,6 @@ from automol.smiles import inchi as _inchi
 from automol.inchi import smiles as _smiles
 from automol.inchi import formula as _fml_inchi
 from automol.inchi import low_spin_multiplicity as _low_spin_mult
-from automol.formula import string2 as _fml_str2
 
 
 # What columns are allowed in the CSV file
@@ -189,8 +188,10 @@ def _read_csv_mult(data, idxs):
                 # if inchis appears twice in the list:
                 # look for (S) in the species name or in the smiles
                 # otherwise set as triplet
-                if (ichs_lst.count(ichs) == 1 and (
-                        '(S)' not in ichs and 'singlet' not in smiles_dct[ichs])):
+                _ich_count = ichs_lst.count(ichs)
+                _not_sing = ('(S)' not in ichs and
+                             'singlet' not in smiles_dct[ichs])
+                if _ich_count == 1 and _not_sing:
                     mult_ich = 3
             mult.append(mult_ich)
         spc_dct = dict(zip(idxs, mult))

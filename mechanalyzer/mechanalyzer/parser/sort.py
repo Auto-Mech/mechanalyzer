@@ -12,10 +12,12 @@ import copy
 import pandas as pd
 import numpy as np
 import automol
-from mechanalyzer.parser import ckin_ as ckin
 from mechanalyzer.parser import submech
-from mechanalyzer.parser import util
 from mechanalyzer.parser import pes
+from mechanalyzer.parser._util import count_atoms
+from mechanalyzer.parser._util import order_rct_bystoich
+from mechanalyzer.parser._util import extract_spc
+from mechanalyzer.parser._util import get_mult
 
 
 class SortMech:
@@ -33,29 +35,38 @@ class SortMech:
                     self.mech_df: dataframe with mech info
                     self.spc_dct: species dictionary
         """
-        # extract data from mech info
+
+        # Extract data from mech info
         [formula_dct_lst, formulas, rct_names_lst,
             prd_names_lst, thrdbdy_lst, rxn_name_lst, param_vals] = mech_info
 
         rxn_index = list(zip(rxn_name_lst, thrdbdy_lst))
-        # set dataframe: extract useful info
-        pes_lst = util.count_atoms(formula_dct_lst)
+
+        # Set dataframe: extract useful info
+        pes_lst = count_atoms(formula_dct_lst)
         isthrdbdy = np.array(
-            [(t[0] is not None and '(' not in t[0]) for t in thrdbdy_lst], dtype=int)
+            [(t[0] is not None and '(' not in t[0]) for t in thrdbdy_lst],
+            dtype=int)
         molecularity = np.array(
             list(map(len, rct_names_lst)), dtype=int) + isthrdbdy
         n_of_prods = list(map(len, prd_names_lst))
-        rct_names_lst_ordered = util.order_rct_bystoich(
+        rct_names_lst_ordered = order_rct_bystoich(
             rct_names_lst, spc_dct=spc_dct)  # put heavier reactant first
-        prd_names_lst_ordered = util.order_rct_bystoich(
+        prd_names_lst_ordered = order_rct_bystoich(
             prd_names_lst, spc_dct=spc_dct)  # put heavier product first
-        rct_1, rct_2 = util.get_S1S2(rct_names_lst_ordered)
-        data = np.array([rct_names_lst, prd_names_lst, rct_names_lst_ordered, prd_names_lst_ordered,
-                         rct_1, rct_2, molecularity, n_of_prods, pes_lst, formulas, thrdbdy_lst, param_vals], dtype=object).T
-        self.mech_df = pd.DataFrame(data, index=rxn_index, columns=[
-                                    'rct_names_lst', 'prd_names_lst', 'rct_names_lst_ord',
-                                    'prd_names_lst_ord', 'r1', 'r2', 'molecularity',
-                                    'N_of_prods', 'pes', 'formulas', 'thrdbdy', 'param_vals'])
+        rct_1, rct_2 = extract_spc(rct_names_lst_ordered)
+        data = np.array(
+            [rct_names_lst, prd_names_lst,
+             rct_names_lst_ordered, prd_names_lst_ordered,
+             rct_1, rct_2, molecularity, n_of_prods, pes_lst, formulas,
+             thrdbdy_lst, param_vals],
+            dtype=object).T
+        self.mech_df = pd.DataFrame(
+            data, index=rxn_index,
+            columns=['rct_names_lst', 'prd_names_lst', 'rct_names_lst_ord',
+                     'prd_names_lst_ord', 'r1', 'r2', 'molecularity',
+                     'N_of_prods', 'pes', 'formulas',
+                     'thrdbdy', 'param_vals'])
 
         self.spc_dct = spc_dct  # set for later use
         # empty list for initialization (otherwise pylint warning)
@@ -69,17 +80,22 @@ class SortMech:
         :param self.mech_df: dataframe with mech info (contains all reactions)
         :param self.spc_dct: species dictionary
         :param hierarchy: list of hierarchical criteria for mech organization
-                            ['..','..','N']: N is the N of criteria to use for headers
-                            all the other criteria are written as inline comments
+            ['..','..','N']: N is the N of criteria to use for headers
+            all the other criteria are written as inline comments
         :param species_list: list of species subset; may be empty
-                            if ['onename','submech']: extracts fuel submechanism
+            if ['onename','submech']: extracts fuel submechanism
         :returns: None. updates self
         """
         # set labels for all the possible criteria
-        criteria_all = ['molecularity', 'N_of_prods', 'species', 'pes', 'subpes', 'submech',
-                        'r1', 'mult', 'rxn_class_broad', 'rxn_class_graph', 'rxn_max_vals', 'rxn_max_ratio']
-        labels_all = ['NR', 'N_of_prods', 'SPECIES', 'N_COH_PES', 'N_COH.subpes', 'SUBMECH',
-                      'Heavier rct', 'Total multiplicity', 'rxn type', 'rxn class', 'max val', 'max ratio']
+        criteria_all = ['molecularity', 'N_of_prods', 'species',
+                        'pes', 'subpes', 'submech',
+                        'r1', 'mult',
+                        'rxn_class_broad', 'rxn_class_graph',
+                        'rxn_max_vals', 'rxn_max_ratio']
+        labels_all = ['NR', 'N_of_prods', 'SPECIES',
+                      'N_COH_PES', 'N_COH.subpes', 'SUBMECH',
+                      'Heavier rct', 'Total multiplicity',
+                      'rxn type', 'rxn class', 'max val', 'max ratio']
         # series: ascending/descending values
         asc_val = [True]*len(criteria_all)
         asc_val[-2:] = [False, False]
@@ -88,20 +104,21 @@ class SortMech:
         # if species_list is not empty: pre-process the mechanism
         if len(species_list) > 0:
             if len(species_list) == 1 and 'submech' in hierarchy:
-                # select a subset of species appropriately according to the stoichiometries
+                # Select subset of species according to stoichiometries
                 # specified in submech.py
                 species_list, species_subset_df = submech.species_subset(
                     species_list[0], self.spc_dct)
                 self.species_subset_df = species_subset_df
             elif len(species_list) > 1 and 'submech' in hierarchy:
-                print('Error: pyr/ox submech extraction available for only 1 species')
+                print('Error: pyr/ox submech extraction available ',
+                      'for only 1 species')
                 sys.exit()
 
             self.mech_df, self.spc_dct = self.filter_byspecies(species_list)
             self.species_list = species_list
 
-        # 0. look for keywords and sort accordingly
-        # list of available sorting options with specific sorting functions
+        # 0. Look for keywords and sort accordingly
+        # List of available sorting options with specific sorting functions
         sort_optns_dct = {
             'species': self.group_species,
             'subpes': self.conn_chn,
@@ -114,26 +131,26 @@ class SortMech:
         }
 
         for optn, fun_name in sort_optns_dct.items():
-            # call sorting function
+            # Call sorting function
             if any(optn == inp_crt for inp_crt in hierarchy):
-                # generate corresponding dataframe
+                # Generate corresponding dataframe
                 df_optn = pd.DataFrame(
                     index=self.mech_df.index, columns=[optn])
                 df_optn = fun_name(df_optn)
-                # concaFtenate the new portion of dataframe
+                # Concatenate the new portion of dataframe
                 self.mech_df = pd.concat([self.mech_df, df_optn], axis=1)
 
-        # 1. sort
+        # 1. Sort
         try:
             self.mech_df = self.mech_df.sort_values(
                 by=hierarchy[:-1], ascending=list(asc_series[hierarchy[:-1]].values))
         except KeyError as err:
             print(
-                'WARNING: Reactions not sorted according to all criteria: missing {}'.format(err))
+                'WARNING: Reactions not sorted according ',
+                'to all criteria: missing {}'.format(err))
             sys.exit()
 
         # 2. assign class headers
-
         labels = pd.Series(labels_all, index=criteria_all)
         self.class_headers(hierarchy, labels)
 
@@ -153,19 +170,21 @@ class SortMech:
         mech_df = copy.deepcopy(self.mech_df)
         # check that all species selected are in the species dictionary
         if any(i not in self.spc_dct.keys() for i in species_list):
-            print('Error in ISOLATE_SPECIES: not all species are in the species list ')
+            print('Error in ISOLATE_SPECIES: ',
+                  'not all species are in the species list ')
             sys.exit()
 
         spc_list = []
-        # for all reactions in the dataframe: check if you have the species of the selected list.
+        # For all reactions in dataframe: check if species in selected list.
         # Otherwise remove the reaction
         for rxn in mech_df.index:
             rcts = list(mech_df['rct_names_lst'][rxn])
             prds = list(mech_df['prd_names_lst'][rxn])
-            # check if one of the species in the list is among reactants or products
+            # Check if one species in the list is among reactants or products
             # of the reaction considered
-            if (not any(rct == species for species in species_list for rct in rcts)
-                    and not any(prd == species for species in species_list for prd in prds)):
+            _rchk = any(rct == _spc for _spc in species_list for rct in rcts)
+            _pchk = any(prd == _spc for _spc in species_list for prd in prds)
+            if not _rchk and not _pchk:
                 mech_df = mech_df.drop(index=[rxn])
             else:
                 # append all species to the list
@@ -191,8 +210,10 @@ class SortMech:
         :rtype: dataframe[int][tuple]
         """
         pes_index = 0
-        pes_dct_df = pd.DataFrame(index=self.mech_df.index, columns=[
-                                  'pes_dct'], dtype=object)
+        pes_dct_df = pd.DataFrame(
+            index=self.mech_df.index,
+            columns=['pes_dct'],
+            dtype=object)
         for fml, peslist in self.mech_df.groupby('pes'):
             # print(peslist)
             # Set the names lists for the rxns and species needed below
@@ -218,7 +239,7 @@ class SortMech:
         return conn_chn_df
 
     def group_species(self, reac_sp_df):
-        """ Checks if the reactions in self.mech_df contain any species 
+        """ Checks if the reactions in self.mech_df contain any species
             of self.species_list and if so it marks the species.
             Assignment is hierarchical: the first species of species_list
             found determines the label of the reaction being checked
@@ -232,14 +253,15 @@ class SortMech:
         :rtype: dataframe[str][tuple]
         """
 
-        # if species list is not found: do nothing - species entry will remain empty
+        # if species list is not found: do nothing, species entry remain empty
         if len(self.species_list) > 0:
             for rxn in reac_sp_df.index:
                 rcts = list(self.mech_df['rct_names_lst'][rxn])
                 prds = list(self.mech_df['prd_names_lst'][rxn])
                 # check species hierarchically
                 for sp_i in self.species_list:
-                    if ((any(sp_i == rct for rct in rcts) or any(sp_i == prd for prd in prds))
+                    if ((any(sp_i == rct for rct in rcts) or
+                         any(sp_i == prd for prd in prds))
                             and isinstance(reac_sp_df['species'][rxn], float)):
                         reac_sp_df['species'][rxn] = sp_i
         return reac_sp_df
@@ -251,11 +273,12 @@ class SortMech:
 
         :param self.mech_df: dataframe with mech info (contains all reactions)
         :param self.species_list: list of subset of species considered
-        :param self.species_subset_df: dataframe with species assigned to a 
+        :param self.species_subset_df: dataframe with species assigned to a
                                         certain type (fuel, fuel radical..)
         :param submech_df: empty dataframe index=rxns, column: 'submech'
 
-        :returns: submech_df dataframe with reactants mult dataframe[submech][rxn]
+        :returns: submech_df dataframe with reactants
+            mult dataframe[submech][rxn]
         :rtype: dataframe[str][tuple]
         """
 
@@ -264,8 +287,10 @@ class SortMech:
             prds = list(self.mech_df['prd_names_lst'][rxn])
             # check species hierarchically (hierarchy fixed in species list)
             for sp_i in self.species_list:
-                if ((any(sp_i == rct for rct in rcts) or any(sp_i == prd for prd in prds))
-                        and isinstance(submech_df['submech'][rxn], float)):
+                _rchk = any(sp_i == rct for rct in rcts)
+                _pchk = any(sp_i == prd for prd in prds)
+                _isfloat = isinstance(submech_df['submech'][rxn], float)
+                if (_rchk or _pchk) and _isfloat:
                     submech_df['submech'][rxn] = self.species_subset_df[sp_i]
         return submech_df
 
@@ -277,14 +302,15 @@ class SortMech:
         :param self.spc_dct: species dictionary
         :param rxncl_mult_df: empty dataframe index=rxns, column: 'mult'
 
-        :returns: reac_mult_df dataframe with reactants mult dataframe[mult][rxn]
+        :returns: reac_mult_df dataframe with reactants mult
+            dataframe[mult][rxn]
         :rtype: dataframe[str][tuple]
         """
         # assign multiplicity values to each reactant
         for rxn in reac_mult_df.index:
             mult = 1
             rcts = self.mech_df['rct_names_lst'][rxn]
-            mult = util.get_mult(rcts, self.spc_dct)
+            mult = get_mult(rcts, self.spc_dct)
             reac_mult_df['mult'][rxn] = str(mult)
 
         return reac_mult_df
@@ -294,16 +320,23 @@ class SortMech:
 
         :param self.mech_df: dataframe with mech info (contains all reactions)
         :param self.spc_dct: species dictionary
-        :param rxncl_broad_df: empty dataframe index=rxns, column: 'rxn_class_broad'
+        :param rxncl_broad_df: empty dataframe
+            index=rxns, column: 'rxn_class_broad'
 
-        :returns: rxncl_broad_df dataframe with reaction classes dataframe[class][rxn]
+        :returns: rxncl_broad_df dataframe with reaction classes
+            dataframe[class][rxn]
         :rtype: dataframe[str][tuple]
         """
         for rxn in rxncl_broad_df.index:
             rcts = self.mech_df['rct_names_lst_ord'][rxn]
             prds = self.mech_df['prd_names_lst_ord'][rxn]
-            if (self.mech_df['molecularity'][rxn] == 1 or
-                    (self.mech_df['molecularity'][rxn] == 1 and self.mech_df['thrdbdy'][rxn][0] is not None)):
+            _smol = (self.mech_df['molecularity'][rxn] == 1)
+            _tbody = (self.mech_df['thrdbdy'][rxn][0] is not None)
+            if _smol and _tbody:
+                # odd logic below? match above?
+                # if (self.mech_df['molecularity'][rxn] == 1 or
+                #         (self.mech_df['molecularity'][rxn] == 1 and
+                #          self.mech_df['thrdbdy'][rxn][0] is not None)):
                 # unimolecular reaction classification
                 rxn_class_broad = submech.classify_unimol(
                     rcts, prds, self.spc_dct)
@@ -316,18 +349,21 @@ class SortMech:
         return rxncl_broad_df
 
     def rxnclass_graph(self, rxncl_graph_df):
-        """ assigns reaction classes using graph approach to all reactions 
+        """ assigns reaction classes using graph approach to all reactions
             first subdivides the mech into subpeses; then classifies all rxn
             within the subpes, including wellskipping channels
 
         :param self.mech_df: dataframe with mech info (contains all reactions)
-        :param rxncl_graph_df: empty dataframe index=rxns, column: 'rxn_class_graph'
+        :param rxncl_graph_df: empty dataframe
+            index=rxns, column: 'rxn_class_graph'
 
-        :returns: rxncl_graph_df dataframe with reaction classes dataframe[class][rxn]
+        :returns: rxncl_graph_df dataframe with reaction classes
+            dataframe[class][rxn]
         :rtype: dataframe[str][tuple]
         """
-        # 1. group by subpes
-        # check that SUBPES is present in indexes, otherwise generate corresponding dataframe
+
+        # 1. Group by subpes
+        # Check SUBPES present in idxs, otherwise make corresponding dataframe
         if 'subpes' not in self.mech_df.columns:
             df_optn = pd.DataFrame(
                 index=self.mech_df.index, columns=['subpes'])
@@ -335,20 +371,25 @@ class SortMech:
             # concatenate the new portion of dataframe
             self.mech_df = pd.concat([self.mech_df, df_optn], axis=1)
 
-        # 2. graph classification or each subpes
+        # 2. Graph classification or each subpes
         for _, subpes_df in self.mech_df.groupby('subpes'):
             # sort by molecularity: analyze first unimolecular isomerizations,
             # unimolecular decompositions, and then bimolecular reactions
             subpes_df = subpes_df.sort_values(
                 by=['molecularity', 'N_of_prods'])
-            # REFER TO REORDERED SPECIES NAMES, OTHERWISE YOU MAY HAVE INCONSISTENT SPECIES NAMING
+            # REFER TO REORDERED SPECIES NAMES,
+            # OTHERWISE YOU MAY HAVE INCONSISTENT SPECIES NAMING
             # subpes species list
-            species_subpes = list(set(list(
-                subpes_df['rct_names_lst_ord'].values)+list(subpes_df['prd_names_lst_ord'].values)))
+            species_subpes = list(set(
+                list(subpes_df['rct_names_lst_ord'].values) +
+                list(subpes_df['prd_names_lst_ord'].values)))
 
             # build dataframe: elementary reactivity matrix
-            elem_reac_df = pd.DataFrame(np.zeros((len(species_subpes), len(
-                species_subpes)), dtype='<U32'), index=species_subpes, columns=species_subpes)
+            _nsubpes = len(species_subpes)
+            elem_reac_df = pd.DataFrame(
+                np.zeros((_nsubpes, _nsubpes), dtype='<U32'),
+                index=species_subpes,
+                columns=species_subpes)
 
             # graph classification
             for rxn in subpes_df.index:
@@ -356,7 +397,7 @@ class SortMech:
                 prd_names = subpes_df['prd_names_lst'][rxn]
                 rct_names_ord = subpes_df['rct_names_lst_ord'][rxn]
                 prd_names_ord = subpes_df['prd_names_lst_ord'][rxn]
-                # exclude all reactions with more than 2 reactants or products (not elementary!)
+                # Exclude rxns with more than 2 rcts or prds (not elementary!)
                 if len(rct_names) < 3 and len(prd_names) < 3:
 
                     rclass = classify_graph(
@@ -366,7 +407,7 @@ class SortMech:
                         if (subpes_df['molecularity'][rxn] == 1
                                 and subpes_df['N_of_prods'][rxn] == 1):
                             rclass = 'isomerization'
-                            # TEMPORARY - BEFORE ALL ISOMERIZATION TYPES ARE ANALYZED
+                            # TEMP: BEFORE ALL ISOMERIZATION TYPES ANALYZED
                         else:
                             rclass = 'unclassified'
                 else:
@@ -395,8 +436,10 @@ class SortMech:
         return rxncl_graph_df
 
     def rxn_max_vals(self, rxn_maxvals_df):
-        """ determines the maximum value of the rates in ktp dictionary
-        :param rxn_maxvals_df: empty dataframe index=rxns, column: 'rxn_max_vals'
+        """ Determines the maximum value of the rates in ktp dictionary.
+
+        :param rxn_maxvals_df:
+            empty dataframe index=rxns, column: 'rxn_max_vals'
 
         :returns: rxn_maxvals_df dataframe with overall max value of the rate
         :rtype: dataframe[float][tuple]
@@ -410,8 +453,11 @@ class SortMech:
         return rxn_maxvals_df
 
     def rxn_max_ratio(self, rxn_maxratio_df):
-        """ determines the maximum value of the ratios between different rates of ktp dct
-        :param rxn_maxratio_df: empty dataframe index=rxns, column: 'rxn_max_ratio'
+        """ Determines the maximum value of the ratios between
+            different rates of ktp dct.
+
+        :param rxn_maxratio_df:
+            empty dataframe index=rxns, column: 'rxn_max_ratio'
 
         :returns: rxn_max_ratio dataframe with overall max value of the ratio
         :rtype: dataframe[float][tuple]
@@ -426,22 +472,22 @@ class SortMech:
 
         return rxn_maxratio_df
 
-    ################## ASSIGN HEADERS ###################################################
+    # ASSIGN HEADERS #
 
     def class_headers(self, hierarchy, labels):
         """ assigns class headers based on the hierarchy provided in the input
 
 
         :param self.mech_df: dataframe with mech info
-        :param hierarchy: list of strings with hierarchical order of sorting criteria
-                            ['..','..','N']: N is the N of criteria to use for headers
-                            all the other criteria are written as inline comments
+        :param hierarchy: list of strings with hierarchical order
+            of sorting criteria ['..','..','N']: N is of criteria for headers
+            all the other criteria are written as inline comments
         :param labels: labels corresponding to all possible sorting criteria
                         labels are then written as comments
 
         :returns: None. updates self.mech_df['cmts_top','cmts_inline']
                     'cmts_top': comments to write as header for a reaction
-                    'cmts_inline': comments to write on the same line of the reaction
+                    'cmts_inline': comments to write on same line of reaction
         """
 
         # df for comments_top and comments_inline
@@ -455,43 +501,48 @@ class SortMech:
             n_headers = int(hierarchy[-1])
         except ValueError:
             print(
-                '*ERROR: Last line of sorting options is the N of criteria to use for class headers')
+                '*ERROR: Last line of sorting options is the N ',
+                'of criteria to use for class headers')
             sys.exit()
-        ####### write topheader comments ######
+
+        # Write topheader comments
         if n_headers > 0:
-            for name, rxndf in self.mech_df.groupby(hierarchy[:n_headers]):
-                # write rxn class as top header comments
+            for name, rdf in self.mech_df.groupby(hierarchy[:n_headers]):
+                # Write rxn class as top header comments
                 rxnclass = cmts_string(
                     name, labels[hierarchy[:n_headers]], 'class_head')
-                idx0 = rxndf.index[0]
+                idx0 = rdf.index[0]
                 df_cmts_top['cmts_top'][idx0] = rxnclass
 
-                ##### write inline comments if necessary #########
+                # Write inline comments if necessary
                 if n_headers < len(hierarchy)-1:
-                    for name2, rxndf2 in rxndf.groupby(hierarchy[n_headers:-1]):
+                    for name2, rdf2 in rdf.groupby(hierarchy[n_headers:-1]):
                         rxnclass = cmts_string(
                             name2, labels[hierarchy[n_headers:-1]], 'subclass')
-                        df_cmts_inline['cmts_inline'][rxndf2.index] = rxnclass
+                        df_cmts_inline['cmts_inline'][rdf2.index] = rxnclass
         else:
-            # write only inline comments
-            for name, rxndf in self.mech_df.groupby(hierarchy[n_headers:-1]):
+            # Write only inline comments
+            for name, rdf in self.mech_df.groupby(hierarchy[n_headers:-1]):
                 rxnclass = cmts_string(
                     name, labels[hierarchy[n_headers:-1]], 'class')
-                df_cmts_inline['cmts_inline'][rxndf.index] = rxnclass
+                df_cmts_inline['cmts_inline'][rdf.index] = rxnclass
 
-        # concatenate DFs
+        # Concatenate DFs
         self.mech_df = pd.concat(
             [self.mech_df, df_cmts_top, df_cmts_inline], axis=1)
-    ###################################### output dataframe ##############################
 
+    # OUTPUT DATAFRAMES and DICTIONARIES #
     def return_mech_df(self):
-        """ provides sorted rxn indices and associated comments, sorted species dictionary
+        """ Provides sorted rxn indices and associated comments, as well as
+            sorted species dictionary.
 
         :param self.mech_df: dataframe with mech info
-        :param self.spc_dct: species dictionary for the reactions of the sorted mech
+        :param self.spc_dct: species dictionary for reactions of sorted mech
 
         :returns: sorted reaction names, comments, sorted species dictionary
-        :rtype: list[tuple], dict{tuple(r1, r2, ): {cmts_top: str, cmts_inline: str}, ...}, dict
+        :rtype: list[tuple],
+                dict{tuple(r1, r2,): {cmts_top: str, cmts_inline: str}, ...},
+                dict
         """
 
         rct_names = self.mech_df['rct_names_lst'].values
@@ -499,8 +550,10 @@ class SortMech:
         thrdbdy = self.mech_df['thrdbdy'].values
         new_idx = list(zip(rct_names, prd_names, thrdbdy))
         # store comments in dct
-        cmts_df = pd.DataFrame(self.mech_df[['cmts_top', 'cmts_inline']].values, index=new_idx,
-                               columns=['cmts_top', 'cmts_inline'])
+        cmts_df = pd.DataFrame(
+            self.mech_df[['cmts_top', 'cmts_inline']].values,
+            index=new_idx,
+            columns=['cmts_top', 'cmts_inline'])
         cmts = cmts_df.to_dict('index')
 
         return new_idx, cmts, self.spc_dct
@@ -508,10 +561,13 @@ class SortMech:
     def return_pes_dct(self):
         """ returns a PES dictionary
 
-        :returns: pes_dct: {('fml', n_pes, n_subpes): (rcts, prds), ...}
+            chn idx is set to to OVERALL PES, not the SUB_PES
+
+        :returns: pes_dct: {('fml', n_pes, n_subpes): (chn_idx, (rcts, prds)), ...}
         :rtype: dct{tuple: tuple}
         """
-        # check that SUBPES is present in indexes, otherwise generate corresponding dataframe
+
+        # Check SUBPES present in idxs, otherwise make corresponding dataframe
         if 'subpes' not in self.mech_df.columns:
             df_optn = pd.DataFrame(
                 index=self.mech_df.index, columns=['subpes'])
@@ -521,21 +577,39 @@ class SortMech:
 
         # get the pes dictionary
         pes_dct = {}
+        prev_idx = -1
         for _, pes_dct_df in self.mech_df.groupby('subpes'):
+
+            # Get the ('fml', n_pes, n_subpes) for dict key
             pes_dct_key = pes_dct_df['pes_dct'].values[0]
+
+            # Get the names of the reaction reagents
             rct_names = pes_dct_df['rct_names_lst'].values
             prd_names = pes_dct_df['prd_names_lst'].values
-            #thrdbdy = pes_dct_df['thrdbdy'].values
-            #new_idx = list(zip(rct_names, prd_names, thrdbdy))
-            new_idx = list(zip(rct_names, prd_names))
+            # thrdbdy = pes_dct_df['thrdbdy'].values
+            # new_idx = list(zip(rct_names, prd_names, thrdbdy))
+            rxn_names = tuple(zip(rct_names, prd_names))
+        
+            # Count number of channels on the previous SUB-PES (if there is one)
+            # Used to increment the channel idxs on the current SUB-PES
+            # Checks the idx to see if it has changed from previous
+            _, pidx, _ = pes_dct_key
+            if pidx == prev_idx:
+                nchnls += len(rxn_names)
+            else:
+                nchnls = 0
+            prev_idx = pidx
 
-            pes_dct[pes_dct_key] = tuple(new_idx)
+            # Build the full channel list for the SUB-PES
+            chnl_lst = tuple((idx+nchnls, rxn)
+                             for idx, rxn in enumerate(rxn_names))
+
+            pes_dct[pes_dct_key] = chnl_lst
 
         return pes_dct
 
-######### functions specific for the sorter - non specific functions are in util ###########
 
-########## functions for rxn graph classification ####################
+# FUNCTIONS FOR RXN GRAPH CLASSIFICATION #
 
 
 def classify_graph(spc_dct, rct_names, prd_names):
@@ -561,10 +635,10 @@ def classify_graph(spc_dct, rct_names, prd_names):
         prd_ichs = tuple(spc_dct[spc]['inchi'] for spc in prd_names)
 
         if automol.formula.reac.is_valid_reaction(rct_fmls, prd_fmls):
-            # print(rct_names,prd_names,rct_ichs,prd_ichs)
             try:
-                rxn_classes = automol.reac._find.find_from_inchis(
+                rxn_objs = automol.reac.rxn_objs_from_inchi(
                     rct_ichs, prd_ichs)
+                rxn_classes = tuple(obj[0].class_ for obj in rxn_objs)
             except AssertionError:
                 rxn_classes = ['AssertionError', '2']
 
@@ -576,8 +650,7 @@ def classify_graph(spc_dct, rct_names, prd_names):
 
         else:
             rclass = 'unclassified - Wrong Stoichiometry'
-        # check stereo compatibility - I am not sure about this input
-        # ret = automol.graph.trans.is_stereo_compatible(rclass, rct_graph, prd_graph)
+
     return rclass
 
 
@@ -586,7 +659,7 @@ def classify_ws(subpes_df, elem_reac_df, species_subpes, rxn):
         WARNING: STILL UNDER CONSTRUCTION - SOME TEMPORARY FEATURES
 
     :param subpes_df: dataframe with subpes info
-    :param elem_reac_df: dataframe with elementary reaction channels of the subpes
+    :param elem_reac_df: dataframe with elementary reaction channels of subpes
     :param species_subpes: list of subpes species
     :param rxn: string with rxn belonging to the subpes
 
@@ -612,9 +685,9 @@ def classify_ws(subpes_df, elem_reac_df, species_subpes, rxn):
     rxn_types_2 = rxn_types[rxn_types != '']
 
     try:
-        # TEMPORARY: SHOULD RECONSTRUCT THE FULL PATH FROM REACTANTS TO PRODUCTS
+        # TEMPORARY: SHOULD RECONSTRUCT FULL PATH FROM REACTANTS TO PRODUCTS
         rxn_type_1 = rxn_types_1[0]
-        # TEMPORARY: SHOULD RECONSTRUCT THE FULL PATH FROM REACTANTS TO PRODUCTS
+        # TEMPORARY: SHOULD RECONSTRUCT FULL PATH FROM REACTANTS TO PRODUCTS
         rxn_type_2 = rxn_types_2[0]
 
         # WRITE THE REACTION TYPE STRING
@@ -624,8 +697,8 @@ def classify_ws(subpes_df, elem_reac_df, species_subpes, rxn):
     except IndexError:
         return None
 
-######### functions for comments - called by the sorter ###############
 
+# FUNCTIONS FOR COMMENTS - CALLED BY THE SORTER #
 
 def cmts_string(name, label, cltype):
     """ assign comment strings based on reaction class
@@ -659,35 +732,37 @@ def cmts_string(name, label, cltype):
 
     return rxnclass
 
-######################## functions working with ktp dictionaries #################
 
+# FUNCTIONS WORKING WITH KTP DICTIONARIES #
 
 def get_aligned_rxn_ratio_dct(aligned_rxn_dct_entry):
     """ converts the entry of the aligned_rxn_ktp_dictionary to the ratios
         between the reference rate and the given rate
 
     :param aligned_rxn_dct_entry: entry of aligned_rxn_ktp/ratio_dct
-    :type aligned_rxn_dct_entry: list[dct{pressure: np.array(temps), np.array(values)}]
+    :type aligned_rxn_dct_entry:
+        list[dct{pressure: np.array(temps), np.array(values)}]
     :return aligned_ratio_dct_entry: aligned dictionary entry
     :rtype: list(dct)
     """
+
     ref_ktp_dct = aligned_rxn_dct_entry[0]
     ratio_dct_entry = []
     for mech_idx, ktp_dct in enumerate(aligned_rxn_dct_entry):
-        # If (1) on the first ktp_dct, (2) the ref_ktp_dct is None, or (3) the current_ktp_dct
-        # is None, set the ratio_dct to None
+        # If (1) on the first ktp_dct, (2) the ref_ktp_dct is None,
+        # or (3) the current_ktp_dct is None, set the ratio_dct to None
         if mech_idx == 0 or ref_ktp_dct is None or ktp_dct is None:
             ratio_dct = None
         # Otherwise, calculate the ratio_dct
         else:
             ratio_dct = {}
             for pressure, (temps, kts) in ktp_dct.items():
-                # If the pressure is defined in the ref ktp_dct, calculate and store the ratio
+                # If pressure defined in ref ktp_dct: calculate and store ratio
                 if pressure in ref_ktp_dct.keys():
                     _, ref_kts = ref_ktp_dct[pressure]
                     ratios = kts / ref_kts
                     ratio_dct[pressure] = (temps, ratios)
-            if ratio_dct == {}:  # account for the case when no pressures contain ratios
+            if ratio_dct == {}:  # account for when no pressures contain ratios
                 ratio_dct = None
 
         # Append the current ratio_dct
@@ -701,10 +776,12 @@ def get_max_aligned_values(aligned_rxn_dct_entry):
         either an aligned_rxn_ktp_dct or an aligned_rxn_ratio_dct
 
     :param aligned_rxn_dct_entry: entry of aligned_rxn_ktp/ratio_dct
-    :type aligned_rxn_dct_entry: list[dct{pressure: np.array(temps), np.array(values)}]
+    :type aligned_rxn_dct_entry:
+        list[dct{pressure: np.array(temps), np.array(values)}]
     :return max_val: max value
     :rtype: float
     """
+
     max_val = 0
     for single_dct in aligned_rxn_dct_entry:
         if single_dct is not None:
@@ -713,88 +790,3 @@ def get_max_aligned_values(aligned_rxn_dct_entry):
                     max_val = max(values)
 
     return max_val
-
-######################## Archived Functions ######################
-
-
-def classify_graph_old(spc_dct, rct_names, prd_names):
-    """ graph classification based on the first possible reaction class identified
-    :param spc_dct: species dictionary
-    :param rct_names: names of reactants (r1, r2, )
-    :param prd_names: names of products (p1, p2, )
-
-    :returns: reaction class
-    :rtype: str
-    """
-    if len(prd_names) >= 3:
-        rclass = 'unclassified - lumped'
-    else:
-        rct_graph = get_graph(spc_dct, rct_names)
-        rct_gras = format_graph(rct_graph)
-
-        prd_graph = get_graph(spc_dct, prd_names)
-        prd_gras = format_graph(prd_graph)
-        print('rct:', rct_gras, '\nprd:', prd_gras, '\n')
-        # ID reaction
-        rct_fmls = list(spc_dct[rct]['fml']
-                        for rct in rct_names)
-        prd_fmls = list(spc_dct[prd]['fml']
-                        for prd in prd_names)
-
-        if automol.formula.reac.is_valid_reaction(rct_fmls, prd_fmls):
-
-            rxn_info = automol.reac._find.find(
-                rct_gras, prd_gras)
-
-            if rxn_info:
-                # save only the first possible reaction type
-                rclass = rxn_info[0].class_
-            else:
-                rclass = 'unclassified'
-
-        else:
-            rclass = 'unclassified - Wrong Stoichiometry'
-        # check stereo compatibility - I am not sure about this input
-        # ret = automol.graph.trans.is_stereo_compatible(rclass, rct_graph, prd_graph)
-    return rclass
-
-
-def get_graph(spc_dct, names):
-    """ converst a list of species to a list of graphs
-    :param spc_dct: species dictionary
-    :param names: species names list [s1, s2, ]
-
-    :returns: list of graphs
-    :rtype: list[graph]
-    """
-    # Get the inchis and graphs
-    spc_ichs = list(spc_dct[spc]['inchi']
-                    for spc in names)
-    graph_list = list(map(automol.inchi.graph, spc_ichs))
-
-    return graph_list
-
-
-def format_graph(gra):
-    """ formats a list of graphs appropriately for rxn classification processing
-        : no explicit hydrogens, no stereo, unique keys
-    :param gra: list of graphs
-
-    :returns: list of graphs suitable for classifier processing
-    :rtype: list[graph]
-    """
-    '''
-    gra: sequence of graphs
-    returns: gra = sequence of graphs with appropriate format for the classifier
-    - explicit hydrogens
-    - no stereo parities
-    - unique keys    
-    '''
-    gra_explicit = list(
-        map(automol.graph._graph.explicit, gra))
-    gra_nostereo = list(
-        map(automol.graph._graph.without_stereo_parities, gra_explicit))
-    gra_std_keys, _ = automol.graph._graph.standard_keys_for_sequence(
-        gra_nostereo)
-
-    return gra_std_keys

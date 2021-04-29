@@ -1,6 +1,7 @@
 """
   Take data dictionaries from mechanisms and combine them under a common index
 """
+
 import copy
 import itertools
 import numpy as np
