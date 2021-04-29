@@ -87,7 +87,7 @@ def rgt_info(inf_obj, rgt):
     assert rgt in ('reacs', 'prods')
 
     rxn_ichs, rxn_chgs, rxn_muls, _ = inf_obj
-    if rgt == 'reac':
+    if rgt == 'reacs':
         rgt_ichs, rgt_chgs, rgt_muls = rxn_ichs[0], rxn_chgs[0], rxn_muls[0]
     else:
         rgt_ichs, rgt_chgs, rgt_muls = rxn_ichs[1], rxn_chgs[1], rxn_muls[1]
@@ -97,12 +97,6 @@ def rgt_info(inf_obj, rgt):
         _rgt_info += (spc.from_data(rgt_ich, rgt_chg, rgt_mul),)
 
     return _rgt_info
-
-
-def replace(inf_obj, val):
-    """ Replace some value of the info object
-    """
-    raise NotImplementedError
 
 
 def sort(inf_obj, scheme='autofile'):

@@ -14,7 +14,7 @@ from ratefit.fit._pdep import pressure_dependent_ktp_dct
 
 
 DEFAULT_PDEP_DCT = {
-    'temps': (500, 1000),
+    'temps': (500.0, 1000.0),
     'tol': 20.0,
     'pval': 1.0,
     'plow': None,
@@ -168,13 +168,7 @@ def read_rates(mess_out_str, pdep_dct, rct_lab, prd_lab,
                 print(
                     '\nUser requested to assess pressure dependence',
                     'of reaction.')
-                ktp_dct = pressure_dependent_ktp_dct(
-                    filt_ktp_dct,
-                    tolerance=pdep_dct['tol'],
-                    pdep_temps=pdep_dct['temps'],
-                    plow=pdep_dct['plow'],
-                    phigh=pdep_dct['phigh'],
-                    no_pdep_pval=DEFAULT_PDEP_DCT['pval'])
+                ktp_dct = pressure_dependent_ktp_dct(filt_ktp_dct, **pdep_dct)
             else:
                 ktp_dct = copy.deepcopy(filt_ktp_dct)
 

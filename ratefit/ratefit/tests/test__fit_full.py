@@ -9,12 +9,11 @@ import ratefit
 
 # Set path to data files
 PATH = os.path.dirname(os.path.realpath(__file__))
-MESS_OUT_FILE = os.path.join(PATH, 'data', 'rate.out')
-# MESS_PATH = os.path.join(tempfile.mkdtemp(), 'rate.out')
-MESS_PATH = tempfile.mkdtemp()
-print('MESS PATH', MESS_PATH)
+MESS_OUT_FILE = os.path.join(PATH, 'data', 'c4h9o3_rate.out')
+TMP_DIR = tempfile.mkdtemp()
+print('Temp Run Dir:', TMP_DIR)
 
-shutil.copy(MESS_OUT_FILE, MESS_PATH)
+shutil.copy(MESS_OUT_FILE, os.path.join(TMP_DIR, 'rate.out'))
 
 # Data
 PES_FORMULA = 'CH4'
@@ -44,25 +43,15 @@ def test__full_arrfit():
     """ test ratefit.fit.ktp_dct
     """
 
-    # arrfit_dct = ratefit.fit.fit_ktp_dct(
-    #     MESS_PATH, PES_FORMULA, FIT_METHOD1, label_dct=LABEL_DCT)
-    # print('\n\n\n-------\n\n\n')
-    # print('CHEMKIN STR\n\n')
-    # arrfit_str = ''
-    # for key, val in arrfit_dct.items():
-    #     arrfit_str += val
-    #     arrfit_str += '\n\n'
-    # print(arrfit_str)
-    
-    chebfit_dct = ratefit.fit.fit_ktp_dct(
-        MESS_PATH, PES_FORMULA, FIT_METHOD1, label_dct=LABEL_DCT)
+    arrfit_dct = ratefit.fit.fit_ktp_dct(
+        TMP_DIR, FIT_METHOD1, label_dct=LABEL_DCT)
     print('\n\n\n-------\n\n\n')
     print('CHEMKIN STR\n\n')
-    chebfit_str = ''
-    for key, val in chebfit_dct.items():
-        chebfit_str += val
-        chebfit_str += '\n\n'
-    print(chebfit_str)
+    arrfit_str = ''
+    for key, val in arrfit_dct.items():
+        arrfit_str += val
+        arrfit_str += '\n\n'
+    print(arrfit_str)
 
 
 def test__full_chebfit():
@@ -70,7 +59,7 @@ def test__full_chebfit():
     """
 
     chebfit_dct = ratefit.fit.fit_ktp_dct(
-        MESS_PATH, PES_FORMULA, FIT_METHOD2, label_dct=LABEL_DCT)
+        TMP_DIR, FIT_METHOD2, label_dct=LABEL_DCT)
     print('\n\n\n-------\n\n\n')
     print('CHEMKIN STR\n\n')
     chebfit_str = ''

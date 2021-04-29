@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from mechanalyzer.parser._util import order_rct_bystoich
 
+
 # functions working with dictionaries
 # FUNTIONS FOR THE PES DICT OBJECTS CONTAINING INFO FOR THE REACTIONS ON PES
 def connected_channels_dct(pes_dct):
@@ -109,23 +110,10 @@ def find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
 
 
 # ORIGINALLY IN MECHDRIVER
-# FUNTIONS FOR THE PES DICT OBJECTS CONTAINING INFO FOR THE REACTIONS ON PES
-def build_pes_idx_dct(pes_dct):
-    """ build a dct relating index to formulas
-    """
-    idx_dct = {}
-    form_dct = {}
-    for pes_idx, formula in enumerate(pes_dct):
-        idx_dct[pes_idx+1] = formula
-        form_dct[formula] = pes_idx+1
-
-    return idx_dct, form_dct
-
-
 def print_pes_channels(pes_dct):
     """ Print the PES
     """
-    
+
     for (form, pidx, sidx), chnls in pes_dct.items():
         print('! PES:', pidx+1, sidx+1, form)
         for chnl in chnls:

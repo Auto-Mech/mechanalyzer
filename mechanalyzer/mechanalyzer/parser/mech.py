@@ -71,6 +71,7 @@ def sorted_pes_dct(srt_mch):
     pes_dct = srt_mch.return_pes_dct()
     return pes_dct
 
+
 # I/O
 def parse_mechanism(mech_str, mech_type, spc_dct):
     """ Get the reactions and species from the mechanism input

@@ -19,17 +19,18 @@ def fitting_errors(calc_ks, fit_ks):
         :return max_abs_err: Maximum absoulte error from fit
         :rtype: float
     """
-    # assert len(calc_ks) == len(fit_ks)
+
+    assert len(calc_ks) == len(fit_ks)
 
     abs_err = []
-    if len(calc_ks) > 2:
-        for calc_k, fit_k in zip(calc_ks, fit_ks):
-            abs_err.append(np.abs((calc_k - fit_k) / calc_k))
-        abs_err = np.array(abs_err, dtype=np.float64)
-        mean_abs_err = np.mean(abs_err) * 100.0
-        max_abs_err = np.max(abs_err) * 100.0
-    else:
-        mean_abs_err = 0.0
-        max_abs_err = 0.0
+    # if len(calc_ks) > 2:  # error SHOULD be zero for one ktp, but will run
+    for calc_k, fit_k in zip(calc_ks, fit_ks):
+        abs_err.append(np.abs((calc_k - fit_k) / calc_k))
+    abs_err = np.array(abs_err, dtype=np.float64)
+    mean_abs_err = np.mean(abs_err) * 100.0
+    max_abs_err = np.max(abs_err) * 100.0
+    # else:
+    #     mean_abs_err = 0.0
+    #     max_abs_err = 0.0
 
     return mean_abs_err, max_abs_err

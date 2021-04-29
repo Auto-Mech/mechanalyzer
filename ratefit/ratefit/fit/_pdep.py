@@ -7,20 +7,20 @@ import numpy as np
 
 
 INI_PDEP_DCT = {
-    'pdep_temps': (500, 100),
-    'pdep_tol': 20.0,
-    'no_pdep_pval': 1.0,
+    'temps': (500.0, 1000.0),
+    'tol': 20.0,
+    'pval': 1.0,
     'plow': None,
     'phigh': None
 }
 
 
 def pressure_dependent_ktp_dct(inp_ktp_dct,
-                               tolerance=INI_PDEP_DCT['pdep_tol'],
-                               pdep_temps=INI_PDEP_DCT['pdep_temps'],
+                               tol=INI_PDEP_DCT['tol'],
+                               temps=INI_PDEP_DCT['temps'],
+                               pval=INI_PDEP_DCT['pval'],
                                plow=INI_PDEP_DCT['plow'],
-                               phigh=INI_PDEP_DCT['phigh'],
-                               no_pdep_pval=INI_PDEP_DCT['no_pdep_pval']):
+                               phigh=INI_PDEP_DCT['phigh']):
     """ Takes a full ktp dictionary, assesses if there is significant
         pressure dependnce in the rate constants.
 
@@ -34,14 +34,15 @@ def pressure_dependent_ktp_dct(inp_ktp_dct,
     # Assess the pressure dependence of the rate constants
     rxn_is_pdependent = assess_pressure_dependence(
         inp_ktp_dct,
-        tolerance=tolerance,
-        assess_pdep_temps=pdep_temps,
+        tolerance=tol,
+        assess_pdep_temps=temps,
         plow=plow,
         phigh=phigh)
 
     # Build the rate constants
 
-    # no pdep_dct is amde if no pdependence found and no_pdep_pval not in filtered ktp dct
+    # no pdep_dct is amde if no pdependence found and
+    # no_pdep_pval not in filtered ktp dct
     # no high may be in there because rates may be undefined
     # pdependecne check could fail if assess temp ranges not big enough
     # pdep check lowest/highest temp
@@ -53,11 +54,11 @@ def pressure_dependent_ktp_dct(inp_ktp_dct,
         pdep_ktp_dct = copy.deepcopy(inp_ktp_dct)
     else:
         print('No pressure dependence detected.',
-              'Grabbing k(T)s at {} atm'.format(no_pdep_pval))
+              'Grabbing k(T)s at {} atm'.format(pval))
         # print('pval', no_pdep_pval)
         # print('ktpdct\n', inp_ktp_dct)
-        if no_pdep_pval in inp_ktp_dct:
-            pdep_ktp_dct = {'high': inp_ktp_dct[no_pdep_pval]}
+        if pval in inp_ktp_dct:
+            pdep_ktp_dct = {'high': inp_ktp_dct[pval]}
         else:
             pdep_ktp_dct = None
 

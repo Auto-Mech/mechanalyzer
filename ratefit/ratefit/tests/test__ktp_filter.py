@@ -82,6 +82,16 @@ def test__valid_tk_with_rates():
     assert numpy.allclose(calc_ks, ref_calc_ks)
 
 
+def test__min_max_range():
+    """ test ratefit.fit.util.get_valid_tk
+    """
+
+    # Tests when min, max out of range
+    # Test when negative kt at max of range
+    temps, calc_ks = ratefit.fit.get_valid_tk(
+        TEMPS, RATEKS, tmin=TMIN, tmax=TMAX, bimol=False)
+
+
 if __name__ == '__main__':
     test__valid_tk_no_rates()
     test__valid_tk_with_rates()

@@ -1,0 +1,366 @@
+------------------------------------------------
+
+Reading and Fitting Rates for WELL1=WELL2
+
+Reading k(T,P)s from MESS output...
+
+Removing invalid k(T,P)s from MESS output that are either:
+   (1) negative, (2) undefined [***], or (3) below 10**(-21) if reaction is bimolecular
+
+User requested to assess pressure dependence of reaction.
+No pressure dependence detected. Grabbing k(T)s at 1.0 atm
+
+Fitting k(T,P)s to PLOG/Arrhenius Form....
+
+Successful fit to Single Arrhenius at all T, P
+Single fit errors acceptable: Using single fits
+
+Final Fitting Parameters in CHEMKIN Format: WELL1=WELL2                                       4.711E+03     1.910    12946
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-600 K,  MeanAbsErr:   2.7%,  MaxErr:   4.5%
+
+------------------------------------------------
+
+Reading and Fitting Rates for WELL1=WELL3
+
+Reading k(T,P)s from MESS output...
+
+Removing invalid k(T,P)s from MESS output that are either:
+   (1) negative, (2) undefined [***], or (3) below 10**(-21) if reaction is bimolecular
+
+User requested to assess pressure dependence of reaction.
+No pressure dependence detected. Grabbing k(T)s at 1.0 atm
+
+Fitting k(T,P)s to PLOG/Arrhenius Form....
+
+Successful fit to Single Arrhenius at all T, P
+Single fit errors acceptable: Using single fits
+
+Final Fitting Parameters in CHEMKIN Format: WELL1=WELL3                                       1.874E+04     1.576    18502
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:    300-800 K,  MeanAbsErr:   8.2%,  MaxErr:  13.2%
+
+------------------------------------------------
+
+Reading and Fitting Rates for WELL1=WELL4
+
+Reading k(T,P)s from MESS output...
+
+Removing invalid k(T,P)s from MESS output that are either:
+   (1) negative, (2) undefined [***], or (3) below 10**(-21) if reaction is bimolecular
+
+User requested to assess pressure dependence of reaction.
+Reaction found to be pressure dependent. Fitting all k(T)s from all pressures found in MESS.
+
+Fitting k(T,P)s to PLOG/Arrhenius Form....
+
+Successful fit to Single Arrhenius at all T, P
+Not enough temperatures for a double fit:  Using single fits
+
+Final Fitting Parameters in CHEMKIN Format: WELL1=WELL4                                       1.983E-08     5.220    22192   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   7.546E+05     0.000    23069 /
+    PLOG /                            1.000E-01   2.642E+00     2.220    23119 /
+    PLOG /                            1.000E+00   1.983E-08     5.220    22192 /
+    PLOG /                            1.000E+01   5.197E-15     7.582    21227 /
+    PLOG /                            1.000E+02   7.537E+00     2.859    26180 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-500 K,  MeanAbsErr:   4.2%,  MaxErr:   6.1%
+! Pressure: 0.100     Temps:    300-600 K,  MeanAbsErr:   4.3%,  MaxErr:   7.1%
+! Pressure: 1.000     Temps:    300-700 K,  MeanAbsErr:  14.1%,  MaxErr:  23.7%
+! Pressure: 10.000    Temps:    300-800 K,  MeanAbsErr:  20.7%,  MaxErr:  41.8%
+! Pressure: 100.000   Temps:   300-1200 K,  MeanAbsErr:  42.4%,  MaxErr: 105.6%
+! Pressure: High      Temps:   300-2000 K,  MeanAbsErr:  29.6%,  MaxErr: 104.2%
+
+------------------------------------------------
+
+Reading and Fitting Rates for WELL1=BIMOL1
+
+Reading k(T,P)s from MESS output...
+
+Removing invalid k(T,P)s from MESS output that are either:
+   (1) negative, (2) undefined [***], or (3) below 10**(-21) if reaction is bimolecular
+
+User requested to assess pressure dependence of reaction.
+Reaction found to be pressure dependent. Fitting all k(T)s from all pressures found in MESS.
+
+Fitting k(T,P)s to PLOG/Arrhenius Form....
+
+Successful fit to Single Arrhenius at all T, P
+Single fit errs too large & double fit possible:  Trying double fit
+Successful fit to double Arrhenius at all T, P
+Writing fitting parameters and errors from  single arrhenius fit for comparison
+WELL1=BIMOL1                                      2.508E+34    -7.375    34209   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   3.411E+47   -12.127    36075 /
+    PLOG /                            1.000E-01   9.327E+40    -9.664    35421 /
+    PLOG /                            1.000E+00   2.508E+34    -7.375    34209 /
+    PLOG /                            1.000E+01   2.966E+27    -5.050    32618 /
+    PLOG /                            1.000E+02   1.008E+23    -3.550    31605 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:   6.7%,  MaxErr:  14.5%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:  13.3%,  MaxErr:  28.4%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr:  18.0%,  MaxErr:  35.2%
+! Pressure: 10.000    Temps:   300-1100 K,  MeanAbsErr:  18.7%,  MaxErr:  33.5%
+! Pressure: 100.000   Temps:   300-1300 K,  MeanAbsErr:  19.6%,  MaxErr:  37.2%
+! Pressure: High      Temps:   300-2000 K,  MeanAbsErr:   0.4%,  MaxErr:   1.7%
+
+
+Final Fitting Parameters in CHEMKIN Format: WELL1=BIMOL1                                      1.670E+69   -17.920    49574   ! Duplicates exist at 1 atm (see below); only single 1-atm fit is written
+    PLOG /                            1.000E-02   1.151E+59   -15.712    40301 /
+    PLOG /                            1.000E-02   5.837E+40   -11.061    30646 /
+    PLOG /                            1.000E-01   9.646E+82   -22.608    52443 /
+    PLOG /                            1.000E-01   9.545E+36    -8.603    33490 /
+    PLOG /                            1.000E+00   1.670E+69   -17.920    49574 /
+    PLOG /                            1.000E+00   1.138E+39    -9.265    34083 /
+    PLOG /                            1.000E+01   2.401E+62   -15.519    49055 /
+    PLOG /                            1.000E+01   5.259E+31    -6.744    32585 /
+    PLOG /                            1.000E+02   3.018E+52   -12.250    47049 /
+    PLOG /                            1.000E+02   8.952E+26    -5.105    31617 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:   0.5%,  MaxErr:   1.2%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:   0.1%,  MaxErr:   0.3%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr:   0.7%,  MaxErr:   1.9%
+! Pressure: 10.000    Temps:   300-1100 K,  MeanAbsErr:   1.7%,  MaxErr:   3.5%
+! Pressure: 100.000   Temps:   300-1300 K,  MeanAbsErr:   2.5%,  MaxErr:   5.3%
+! Pressure: High      Temps:   300-2000 K,  MeanAbsErr:   0.2%,  MaxErr:   0.5%
+
+------------------------------------------------
+
+Reading and Fitting Rates for WELL1=BIMOL2
+
+Reading k(T,P)s from MESS output...
+
+Removing invalid k(T,P)s from MESS output that are either:
+   (1) negative, (2) undefined [***], or (3) below 10**(-21) if reaction is bimolecular
+
+User requested to assess pressure dependence of reaction.
+Reaction found to be pressure dependent. Fitting all k(T)s from all pressures found in MESS.
+
+Fitting k(T,P)s to PLOG/Arrhenius Form....
+
+Successful fit to Single Arrhenius at all T, P
+Single fit errs too large & double fit possible:  Trying double fit
+Successful fit to double Arrhenius at all T, P
+Writing fitting parameters and errors from  single arrhenius fit for comparison
+WELL1=BIMOL2                                      2.350E+22    -3.279    41723   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   6.517E+54   -14.820    47030 /
+    PLOG /                            1.000E-01   7.152E+48   -12.052    47578 /
+    PLOG /                            1.000E+00   2.350E+22    -3.279    41723 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:   2.9%,  MaxErr:   6.0%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:   7.1%,  MaxErr:  16.0%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr: 144.2%,  MaxErr: 930.1%
+
+
+Final Fitting Parameters in CHEMKIN Format: WELL1=BIMOL2                                      2.677E+07     1.243    35182   ! Duplicates exist at 1 atm (see below); only single 1-atm fit is written
+    PLOG /                            1.000E-02   2.606E+58   -15.944    48313 /
+    PLOG /                            1.000E-02   4.275E+43   -16.355    27279 /
+    PLOG /                            1.000E-01   2.566E+80   -21.633    61872 /
+    PLOG /                            1.000E-01   3.204E+54   -14.072    48437 /
+    PLOG /                            1.000E+00   2.677E+07     1.243    35182 /
+    PLOG /                            1.000E+00   -3.241E+20   -3.647    36562 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:   1.2%,  MaxErr:   3.1%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:   3.4%,  MaxErr:   8.5%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr: 130.5%,  MaxErr: 831.9%
+
+------------------------------------------------
+
+Reading and Fitting Rates for WELL1=BIMOL3
+
+Reading k(T,P)s from MESS output...
+
+Removing invalid k(T,P)s from MESS output that are either:
+   (1) negative, (2) undefined [***], or (3) below 10**(-21) if reaction is bimolecular
+
+User requested to assess pressure dependence of reaction.
+Reaction found to be pressure dependent. Fitting all k(T)s from all pressures found in MESS.
+
+Fitting k(T,P)s to PLOG/Arrhenius Form....
+
+Successful fit to Single Arrhenius at all T, P
+Single fit errs too large & double fit possible:  Trying double fit
+Successful fit to double Arrhenius at all T, P
+Writing fitting parameters and errors from  single arrhenius fit for comparison
+WELL1=BIMOL3                                      3.304E+36    -7.799    29773   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   4.471E+41    -9.886    28296 /
+    PLOG /                            1.000E-01   5.009E+38    -8.707    28657 /
+    PLOG /                            1.000E+00   3.304E+36    -7.799    29773 /
+    PLOG /                            1.000E+01   4.274E+24    -3.927    27920 /
+    PLOG /                            1.000E+02   2.568E+10     0.492    24754 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:   6.5%,  MaxErr:  13.6%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:   9.5%,  MaxErr:  15.2%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr:  15.0%,  MaxErr:  27.6%
+! Pressure: 10.000    Temps:   300-1100 K,  MeanAbsErr:  14.5%,  MaxErr:  36.4%
+! Pressure: 100.000   Temps:   300-1300 K,  MeanAbsErr:  20.8%,  MaxErr:  69.7%
+
+
+Final Fitting Parameters in CHEMKIN Format: WELL1=BIMOL3                                      3.768E+153  -43.326    81698   ! Duplicates exist at 1 atm (see below); only single 1-atm fit is written
+    PLOG /                            1.000E-02   1.240E+55   -14.056    33387 /
+    PLOG /                            1.000E-02   6.279E+35    -8.663    24557 /
+    PLOG /                            1.000E-01   2.100E+65   -16.809    40300 /
+    PLOG /                            1.000E-01   3.367E+45   -11.229    29420 /
+    PLOG /                            1.000E+00   3.768E+153  -43.326    81698 /
+    PLOG /                            1.000E+00   1.618E+35    -7.475    29015 /
+    PLOG /                            1.000E+01   2.824E+50   -11.637    40699 /
+    PLOG /                            1.000E+01   5.346E+30    -6.145    28689 /
+    PLOG /                            1.000E+02   1.979E+150  -42.885    79304 /
+    PLOG /                            1.000E+02   3.001E+07     1.385    23736 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:   0.4%,  MaxErr:   0.9%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:   1.6%,  MaxErr:   3.6%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr:   4.1%,  MaxErr:   7.5%
+! Pressure: 10.000    Temps:   300-1100 K,  MeanAbsErr:  11.0%,  MaxErr:  26.9%
+! Pressure: 100.000   Temps:   300-1300 K,  MeanAbsErr:  17.0%,  MaxErr:  59.4%
+
+------------------------------------------------
+
+Reading and Fitting Rates for WELL1=BIMOL4
+
+Reading k(T,P)s from MESS output...
+
+Removing invalid k(T,P)s from MESS output that are either:
+   (1) negative, (2) undefined [***], or (3) below 10**(-21) if reaction is bimolecular
+
+User requested to assess pressure dependence of reaction.
+Reaction found to be pressure dependent. Fitting all k(T)s from all pressures found in MESS.
+
+Fitting k(T,P)s to PLOG/Arrhenius Form....
+
+Successful fit to Single Arrhenius at all T, P
+Single fit errs too large & double fit possible:  Trying double fit
+Successful fit to double Arrhenius at all T, P
+Writing fitting parameters and errors from  single arrhenius fit for comparison
+WELL1=BIMOL4                                      1.336E+30    -6.424    37874   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   5.054E+30    -7.592    34654 /
+    PLOG /                            1.000E-01   3.006E+34    -8.178    37826 /
+    PLOG /                            1.000E+00   1.336E+30    -6.424    37874 /
+    PLOG /                            1.000E+01   1.610E+22    -3.666    36435 /
+    PLOG /                            1.000E+02   1.640E+17    -1.928    35554 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:  17.2%,  MaxErr:  39.7%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:  24.8%,  MaxErr:  70.5%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr:  35.2%,  MaxErr: 103.0%
+! Pressure: 10.000    Temps:   300-1100 K,  MeanAbsErr:  41.2%,  MaxErr: 116.4%
+! Pressure: 100.000   Temps:   300-1300 K,  MeanAbsErr:  42.1%,  MaxErr: 120.0%
+! Pressure: High      Temps:   300-2000 K,  MeanAbsErr:  17.9%,  MaxErr:  77.9%
+
+
+Final Fitting Parameters in CHEMKIN Format: WELL1=BIMOL4                                      4.883E+71   -19.087    55107   ! Duplicates exist at 1 atm (see below); only single 1-atm fit is written
+    PLOG /                            1.000E-02   5.518E+57   -16.008    44466 /
+    PLOG /                            1.000E-02   6.703E+23    -6.540    28782 /
+    PLOG /                            1.000E-01   -3.570E+39  -10.205    35872 /
+    PLOG /                            1.000E-01   5.955E+28    -6.552    33476 /
+    PLOG /                            1.000E+00   4.883E+71   -19.087    55107 /
+    PLOG /                            1.000E+00   1.810E+27    -6.243    34357 /
+    PLOG /                            1.000E+01   1.566E+64   -16.343    54821 /
+    PLOG /                            1.000E+01   1.364E+21    -4.059    33375 /
+    PLOG /                            1.000E+02   1.274E+51   -12.011    51781 /
+    PLOG /                            1.000E+02   2.983E+14    -1.755    32070 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:   0.6%,  MaxErr:   1.3%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:  14.4%,  MaxErr:  41.1%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr:   0.8%,  MaxErr:   2.2%
+! Pressure: 10.000    Temps:   300-1100 K,  MeanAbsErr:   2.4%,  MaxErr:   6.5%
+! Pressure: 100.000   Temps:   300-1300 K,  MeanAbsErr:   5.5%,  MaxErr:  10.5%
+! Pressure: High      Temps:   300-2000 K,  MeanAbsErr:   0.7%,  MaxErr:   1.7%
+
+------------------------------------------------
+
+Reading and Fitting Rates for WELL1=BIMOL5
+
+Reading k(T,P)s from MESS output...
+
+Removing invalid k(T,P)s from MESS output that are either:
+   (1) negative, (2) undefined [***], or (3) below 10**(-21) if reaction is bimolecular
+
+User requested to assess pressure dependence of reaction.
+Reaction found to be pressure dependent. Fitting all k(T)s from all pressures found in MESS.
+
+Fitting k(T,P)s to PLOG/Arrhenius Form....
+
+Successful fit to Single Arrhenius at all T, P
+Single fit errs too large & double fit possible:  Trying double fit
+Successful fit to double Arrhenius at all T, P
+Writing fitting parameters and errors from  single arrhenius fit for comparison
+WELL1=BIMOL5                                      5.020E+39    -9.333    36431   ! Arrhenius parameters at 1 atm
+    PLOG /                            1.000E-02   2.795E+46   -12.099    35774 /
+    PLOG /                            1.000E-01   2.448E+41   -10.133    35529 /
+    PLOG /                            1.000E+00   5.020E+39    -9.333    36431 /
+    PLOG /                            1.000E+01   6.511E+31    -6.608    36010 /
+    PLOG /                            1.000E+02   4.732E+16    -1.793    32928 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:   7.4%,  MaxErr:  16.0%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:  12.5%,  MaxErr:  26.7%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr:  14.7%,  MaxErr:  27.1%
+! Pressure: 10.000    Temps:   300-1100 K,  MeanAbsErr:  16.3%,  MaxErr:  34.1%
+! Pressure: 100.000   Temps:   300-1300 K,  MeanAbsErr:  19.4%,  MaxErr:  43.6%
+
+
+Final Fitting Parameters in CHEMKIN Format: WELL1=BIMOL5                                      2.438E+77   -20.755    53270   ! Duplicates exist at 1 atm (see below); only single 1-atm fit is written
+    PLOG /                            1.000E-02   6.348E+58   -15.943    40290 /
+    PLOG /                            1.000E-02   3.791E+39   -11.056    30106 /
+    PLOG /                            1.000E-01   5.896E+84   -23.515    53046 /
+    PLOG /                            1.000E-01   1.573E+37    -8.985    33620 /
+    PLOG /                            1.000E+00   2.438E+77   -20.755    53270 /
+    PLOG /                            1.000E+00   9.454E+40    -9.997    35847 /
+    PLOG /                            1.000E+01   7.202E+56   -14.120    47776 /
+    PLOG /                            1.000E+01   2.209E+37    -8.779    36129 /
+    PLOG /                            1.000E+02   5.146E+22    -3.597    35696 /
+    PLOG /                            1.000E+02   1.640E+152  -48.558    60100 /
+
+! Info Regarding Rate Constant Fits
+! Pressure: 0.010     Temps:    300-800 K,  MeanAbsErr:   0.5%,  MaxErr:   1.2%
+! Pressure: 0.100     Temps:    300-900 K,  MeanAbsErr:   0.1%,  MaxErr:   0.2%
+! Pressure: 1.000     Temps:   300-1000 K,  MeanAbsErr:   1.6%,  MaxErr:   4.4%
+! Pressure: 10.000    Temps:   300-1100 K,  MeanAbsErr:   5.5%,  MaxErr:  15.9%
+! Pressure: 100.000   Temps:   300-1300 K,  MeanAbsErr:  13.4%,  MaxErr:  50.3%
+
+------------------------------------------------
+
+Reading and Fitting Rates for WELL1=BIMOL6
+
+Reading k(T,P)s from MESS output...
+
+Removing invalid k(T,P)s from MESS output that are either:
+   (1) negative, (2) undefined [***], or (3) below 10**(-21) if reaction is bimolecular
+
+User requested to assess pressure dependence of reaction.
+No pressure dependence detected. Grabbing k(T)s at 1.0 atm
+
+Fitting k(T,P)s to PLOG/Arrhenius Form....
+
+Successful fit to Single Arrhenius at all T, P
+Single fit errs too large & double fit possible:  Trying double fit
+Successful fit to double Arrhenius at all T, P
+Writing fitting parameters and errors from  single arrhenius fit for comparison
+WELL1=BIMOL6                                      7.275E+14    -1.442    33473
+
+! Info Regarding Rate Constant Fits
+! Pressure: High      Temps:   300-1000 K,  MeanAbsErr:  59.7%,  MaxErr: 314.2%
+
+arrtest [6.04127e+43, -10.8023, 41495.2095655309, 1.22393e+154, -41.3605, 121551.52160870952]
+Traceback (most recent call last):
+  File "test__fit_full.py", line 72, in <module>
+    test__full_arrfit()
+  File "test__fit_full.py", line 46, in test__full_arrfit
+    TMP_DIR, FIT_METHOD1, label_dct=LABEL_DCT)
+  File "/lcrc/project/CMRP/amech/mechanalyzer/ratefit/ratefit/fit/_fit.py", line 82, in fit_ktp_dct
+    ktp_dct, reaction, mess_path, **arrfit_dct)
+  File "/lcrc/project/CMRP/amech/mechanalyzer/ratefit/ratefit/fit/arrhenius/_fitdct.py", line 121, in pes
+    reaction, doub_highp)
+  File "/lcrc/project/CMRP/amech/autoio/autoio/chemkin_io/writer/reaction.py", line 234, in arrhenius
+    f'Arrh params should be 3 but is {len(high_params)} for {reaction}'
+AssertionError: Arrh params should be 3 but is 6 for WELL1=BIMOL6
