@@ -9,6 +9,8 @@ import sys
 mech_filenames = ['Danilack_v33_no_stereo_short_names.ckin', 'Tran_MECH.ckin']
 thermo_filenames = ['Danilack_v33_no_stereo_short_names.ckin', 'Tran_THERM.ckin']
 spc_csv_filenames = ['Danilack_species_short_names.csv', 'Tran_species.csv']  
+
+output_filename = 'dan_vs_tran_no_loners.pdf'
 mech_nicknames = ['Danilack', 'Tran']  # for plotting
 
 # Conditions
@@ -18,7 +20,7 @@ pressures = np.array([1, 10, 100])
 # options
 sort_method = 'ratios' # sorting; either 'rates', 'ratios', or None
 rev_rates = True
-remove_loners = False
+remove_loners = True
 write_file = False
 
 
@@ -53,4 +55,6 @@ else:
 
 # Run the plotter    
 plot_rates.build_plots(aligned_rxn_ktp_dct, path=JOB_PATH, 
+                       filename=output_filename,
                        mech_names=mech_nicknames, ratio_sort=ratio_sort)
+
