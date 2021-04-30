@@ -17,18 +17,18 @@ def filter_ktp_dct(inp_ktp_dct, bimol, tmin=None, tmax=None):
         filt_temps, filt_kts = get_valid_tk(
             temps, kts, bimol, tmin=tmin, tmax=tmax)
         if filt_kts.size > 0:
-            filt_ktp_dct[pressure] = [filt_temps, filt_kts]
+            filt_ktp_dct[pressure] = (filt_temps, filt_kts)
 
     return filt_ktp_dct
 
 
 def get_valid_tk(temps, rate_constants, bimol,
-                 tmin=None, tmax=None):
+                 tmin=None, tmax=None, bimolthresh=1.0e-24):
     """ Takes in lists of temperature-rate constant pairs [T,k(T)]
         and removes invalid pairs for which
            (1) k(T) < 0
-           (2) k(T) is undefined from Master Equation (i.e. k(T) == '***')
-           (3) k(T) < 1.0e-21 for a bimolecular reaction, or
+           (2) k(T) is undefined from Master Equation (i.e. k(T) is None)
+           (3) k(T) < 1.0e-24 for a bimolecular reaction, or
            (4) T is outside the cutoff
         :param temps: Temperatures (K)
         :type temps: list(float)
@@ -54,11 +54,6 @@ def get_valid_tk(temps, rate_constants, bimol,
     else:
         assert tmax in temps, ('{} not in temps: {}'.format(tmax, temps))
 
-    # print(rate_constants)
-    # print(temps)
-    # print(tmax)
-    # print(tmin)
-
     # Set min temperature to user input, if none use either
     # min of input temperatures or
     # if negative kts are found, set min temp to be just above highest neg.
@@ -66,7 +61,7 @@ def get_valid_tk(temps, rate_constants, bimol,
         max_neg_idx = None
         for kt_idx, rate_constant in enumerate(rate_constants):
             # find idx for max temperature for which kt is negative, if any
-            if rate_constant == '***':
+            if rate_constant is None:
                 frate_constant = 1.
             else:
                 frate_constant = float(rate_constant)
@@ -87,9 +82,9 @@ def get_valid_tk(temps, rate_constants, bimol,
     valid_t, valid_k = [], []
     if tmin is not None and tmax is not None:
         for temp, rate_constant in zip(temps, rate_constants):
-            if rate_constant == '***':
+            if rate_constant is None:
                 continue
-            kthresh = 0.0 if not bimol else 1.0e-24
+            kthresh = 0.0 if not bimol else bimolthresh
             if float(rate_constant) > kthresh and tmin <= temp <= tmax:
                 valid_t.append(temp)
                 valid_k.append(rate_constant)
@@ -98,13 +93,10 @@ def get_valid_tk(temps, rate_constants, bimol,
     valid_t = np.array(valid_t, dtype=np.float64)
     valid_k = np.array(valid_k, dtype=np.float64)
 
-    # if not np.isclose(tmin, tmax):
-    #     for temp, rate_constant in zip(temps, rate_constants):
-
     return valid_t, valid_k
 
 
-def flip_ktp_dct(ktp_dct):
+def invert_ktp_dct(ktp_dct):
     """ Invert the keys and values of a k(T,P) dictionary
         such that the dct changes it index from pressures to temperatures:
             ktp[temp] = [[p1, k1], ... , [pn, kn]]
@@ -123,13 +115,13 @@ def flip_ktp_dct(ktp_dct):
         for temp, rate in zip(temps, rate_constants):
             if temp not in inv_ktp_dct:
                 # Set new temperature lst in dct
-                inv_ktp_dct[temp] = [[pressure], [rate]]
+                inv_ktp_dct[temp] = ((pressure,), (rate,))
             else:
                 # Add pressure & rate k to lsts for temp in dct
-                [p_arr, k_arr] = inv_ktp_dct[temp]
-                p_arr.append(pressure)
-                k_arr.append(rate)
-                inv_ktp_dct[temp] = [p_arr, k_arr]
+                p_arr, k_arr = inv_ktp_dct[temp]
+                p_arr += (pressure,)
+                k_arr += (rate,)
+                inv_ktp_dct[temp] = (p_arr, k_arr)
 
     return inv_ktp_dct
 

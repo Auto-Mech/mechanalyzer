@@ -86,9 +86,9 @@ def double(temps, rate_constants, t_ref, method,
         fit_params = _dsarrfit(
             temps, rate_constants, arr1_guess, arr2_guess,
             'double', dsarrfit_path, a_conv_factor)
-    # elif method == 'python':
-    #     fit_params = _double_arrhenius_scipy(
-    #         temps, rate_constants, t_ref, a_guess, n_guess, ea_guess)
+    elif method == 'python':
+        fit_params = _double_arrhenius_scipy(
+            temps, rate_constants, t_ref, arr1_guess)
     else:
         raise NotImplementedError
 
@@ -157,8 +157,7 @@ def _single_arrhenius_numpy(temps, rate_constants, t_ref, a_conv_factor=1.):
     return fit_params
 
 
-def _double_arrhenius_scipy(temps, rate_constants, t_ref,
-                            sgl_a, sgl_n, sgl_ea):
+def _double_arrhenius_scipy(temps, rate_constants, t_ref, arr1_guess):
     """ Fit a set of T-dependent rate constants to a double Arrhenius
         functional expression using scipy.
 
@@ -177,6 +176,7 @@ def _double_arrhenius_scipy(temps, rate_constants, t_ref,
     """
 
     # Build a guess vector
+    sgl_a, sgl_n, sgl_ea = arr1_guess
     guess_params = [(sgl_a / 2.0), (sgl_n + 0.1), sgl_ea,
                     (sgl_a / 2.0), (sgl_n - 0.1), sgl_ea]
 
