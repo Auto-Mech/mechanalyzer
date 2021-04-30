@@ -6,18 +6,27 @@ import sys
 
 # INPUTS
 # Filenames
-mech_filenames = ['chomech_v13dCLEANEDUP.txt', 'chomech_v11a_ascii_cleaned.inp']
-thermo_filenames = ['therm_v11c_ascii_cleaned.dat', 'therm_v11c_ascii_cleaned.dat']
-spc_csv_filenames = ['species_stereo2.csv', 'species_stereo2.csv']  
+mech_filenames = ['Danilack_v33_no_stereo_short_names.ckin', 'Tran_MECH.ckin']
+thermo_filenames = ['Danilack_v33_no_stereo_short_names.ckin', 'Tran_THERM.ckin']
+spc_csv_filenames = ['Danilack_species_short_names.csv', 'Tran_species.csv']  
+mech_nicknames = ['Danilack', 'Tran']  # for plotting
 
 # Conditions
-temps = np.linspace(300, 3000, 28)
+temps = np.linspace(300, 2000, 18)
 pressures = np.array([1, 10, 100])
 
-# Sorting; either 'rates', 'ratios', or None
-sort_method = 'ratios'
+# options
+sort_method = 'ratios' # sorting; either 'rates', 'ratios', or None
+rev_rates = True
+remove_loners = False
+write_file = False
 
+
+# RUN FUNCTIONS
 # Load dcts
+assert len(sys.argv) == 2, (
+    'There should be one input specified on the command line, namely the job path'
+)
 JOB_PATH = sys.argv[1]
 rxn_ktp_dcts = compare.load_rxn_ktp_dcts_chemkin(mech_filenames, JOB_PATH, temps, pressures)
 spc_thermo_dcts = compare.load_spc_thermo_dcts_chemkin(thermo_filenames, JOB_PATH, temps)
@@ -25,16 +34,16 @@ spc_ident_dcts = compare.load_spc_ident_dcts(spc_csv_filenames, JOB_PATH)
 
 # Get the aligned_rxn_ktp_dct 
 aligned_rxn_ktp_dct = compare.get_aligned_rxn_ktp_dct(
-    rxn_ktp_dcts, spc_thermo_dcts, spc_ident_dcts, temps, rev_rates=True,
-    remove_loners=False, write_file=True
+    rxn_ktp_dcts, spc_thermo_dcts, spc_ident_dcts, temps, rev_rates=rev_rates,
+    remove_loners=remove_loners, write_file=write_file
 )
 
 # Sort as indicated in the inputs
 if sort_method == 'rates':
     SORT_STR = ['molecularity', 'rxn_max_vals', 'rxn_max_ratio', 'rxn_class_broad', 0]
-    ISOLATE_SPECIES = []
+    ISOLATE_SPCS = []
     mech_info = mech_parser.build_dct(spc_ident_dcts[0], aligned_rxn_ktp_dct)
-    sorted_idx, _, _ = mech_parser.sort_mechanism(mech_info, spc_dct_full, SORT_STR, ISOLATE_SPECIES)
+    sorted_idx, _, _ = mech_parser.sort_mechanism(mech_info, spc_dct_full, SORT_STR, ISOLATE_SPCS)
     aligned_rxn_ktp_dct = mech_parser.reordered_mech(aligned_rxn_ktp_dct, sorted_idx)
     ratio_sort = False
 elif sort_method == 'ratios':
@@ -43,5 +52,5 @@ else:
     ratio_sort = False
 
 # Run the plotter    
-plot_rates.build_plots(aligned_rxn_ktp_dct, mech_names=['v13', 'v11'], ratio_sort=ratio_sort)
-
+plot_rates.build_plots(aligned_rxn_ktp_dct, path=JOB_PATH, 
+                       mech_names=mech_nicknames, ratio_sort=ratio_sort)
