@@ -11,7 +11,7 @@ from ratefit.fit._pdep import assess_pressure_dependence
 from ratefit.fit._err import fitting_errors
 from ratefit.fit._util import get_valid_tk
 from ratefit.fit._util import filter_ktp_dct
-from ratefit.fit._util import flip_ktp_dct
+from ratefit.fit._util import invert_ktp_dct
 
 
 __all__ = [
@@ -24,5 +24,5 @@ __all__ = [
     'fitting_errors',
     'get_valid_tk',
     'filter_ktp_dct',
-    'flip_ktp_dct',
+    'invert_ktp_dct',
 ]
