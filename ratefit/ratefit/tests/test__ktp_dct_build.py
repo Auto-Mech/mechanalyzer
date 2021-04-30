@@ -53,15 +53,6 @@ KTP_DCT4 = {
              (1.0e+10, 2.0e+10, 3.0e+10, 4.0e+10, 5.0e+10, 6.0e+10))
 }
 
-dct = {
-    200.: ((1.0, 10.0, 'high'), (1.0e+5, 1.0e+6, 1.0e+10)),
-    400.: ((1.0, 10.0, 'high'), (2.0e+5, 2.0e+6, 2.0e+10)),
-    600.: ((1.0, 10.0, 'high'), (3.0e+5, 3.0e+6, 3.0e+10)),
-    800.: ((1.0, 10.0, 'high'), (4.0e+5, 4.0e+6, 4.0e+10)),
-    1000.0: ((1.0, 10.0, 'high'), (5.0e+5, 5.0e+6, 5.0e+10)),
-    1200.0: ((1.0, 10.0, 'high'), (6.0e+5, 6.0e+6, 6.0e+10))
-}
-
 
 def test__filter_ktp():
     """ test ratefit.fit.util.get_valid_tk for no rates
@@ -135,7 +126,18 @@ def test__invert():
     """ test ratefit.fit.invert_ktp_dct
     """
 
-    invert_ktp_dct(ktp_dct):
+    ref_inv_ktp_dct = {
+        200.: ((1.0, 10.0, 'high'), (1.0e+5, 1.0e+6, 1.0e+10)),
+        400.: ((1.0, 10.0, 'high'), (2.0e+5, 2.0e+6, 2.0e+10)),
+        600.: ((1.0, 10.0, 'high'), (3.0e+5, 3.0e+6, 3.0e+10)),
+        800.: ((1.0, 10.0, 'high'), (4.0e+5, 4.0e+6, 4.0e+10)),
+        1000.0: ((1.0, 10.0, 'high'), (5.0e+5, 5.0e+6, 5.0e+10)),
+        1200.0: ((1.0, 10.0, 'high'), (6.0e+5, 6.0e+6, 6.0e+10))
+    }
+
+    inv_ktp_dct = ratefit.fit.invert_ktp_dct(KTP_DCT4)
+
+    assert inv_ktp_dct == ref_inv_ktp_dct
 
 
 def test__pull_highp():
@@ -146,3 +148,4 @@ def test__pull_highp():
 
 if __name__ == '__main__':
     test__filter_ktp()
+    test__invert()
