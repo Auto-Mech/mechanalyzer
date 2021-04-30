@@ -89,7 +89,7 @@ def write_basis_csv(spc_str, outname='species_hof_basis.csv',
     for ref_scheme in ref_schemes:
         formula_dct = {}
         _, uniref_dct = basis.prepare_refs(
-            ref_scheme, init_dct, spc_queue, repeats=True, parallel=parallel)
+            ref_scheme, init_dct, spc_queue, '', '', repeats=True, parallel=parallel)
         for name in uniref_dct:
             spc_str += ref_scheme + '_'
             smiles = automol.inchi.smiles(uniref_dct[name]['inchi'])
@@ -117,7 +117,7 @@ def write_basis_csv(spc_str, outname='species_hof_basis.csv',
     new_names = []
     for ref_scheme in ref_schemes:
         _, uniref_dct = basis.prepare_refs(
-            ref_scheme, init_dct, spc_queue, repeats=False, parallel=parallel)
+            ref_scheme, init_dct, spc_queue, '', '', repeats=False, parallel=parallel)
         for newn in list(uniref_dct.keys()):
             tempn_smiles = automol.inchi.smiles(uniref_dct[newn]['inchi'])
             tempn = ref_scheme + '_' + tempn_smiles
