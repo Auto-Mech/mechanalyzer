@@ -331,12 +331,9 @@ class SortMech:
             rcts = self.mech_df['rct_names_lst_ord'][rxn]
             prds = self.mech_df['prd_names_lst_ord'][rxn]
             _smol = (self.mech_df['molecularity'][rxn] == 1)
-            _tbody = (self.mech_df['thrdbdy'][rxn][0] is not None)
-            if _smol and _tbody:
-                # odd logic below? match above?
-                # if (self.mech_df['molecularity'][rxn] == 1 or
-                #         (self.mech_df['molecularity'][rxn] == 1 and
-                #          self.mech_df['thrdbdy'][rxn][0] is not None)):
+            _tbody = (self.mech_df['molecularity'][rxn] == 2
+                      and self.mech_df['thrdbdy'][rxn][0] is not None)
+            if _smol or _tbody:
                 # unimolecular reaction classification
                 rxn_class_broad = submech.classify_unimol(
                     rcts, prds, self.spc_dct)
@@ -589,7 +586,7 @@ class SortMech:
             # thrdbdy = pes_dct_df['thrdbdy'].values
             # new_idx = list(zip(rct_names, prd_names, thrdbdy))
             rxn_names = tuple(zip(rct_names, prd_names))
-        
+
             # Count number of channels on the previous SUB-PES (if there is one)
             # Used to increment the channel idxs on the current SUB-PES
             # Checks the idx to see if it has changed from previous
