@@ -41,6 +41,19 @@ def sorted_mech(srt_mch):
     return sorted_idx, cmts_dct, spc_dct
 
 
+def sorted_pes_dct(srt_mch):
+    """ sort mech info according to the desired criteria and
+        get a sorted pes dictionary
+    :param srt_mch: sorted mechanism
+    :type srt_mch: objectria
+    :type sort_str: list(str)
+    :return pes_dct: sorted pes dictionary
+    :rtype: dct
+    """
+    pes_dct = srt_mch.return_pes_dct()
+    return pes_dct
+
+
 def reordered_mech(rxn_param_dct, sorted_idx):
     """ Sort the reaction parameter dcitionary using the indices from
         sort functions.
@@ -58,21 +71,9 @@ def reordered_mech(rxn_param_dct, sorted_idx):
 
     return rxn_param_dct_sorted
 
-
-def sorted_pes_dct(srt_mch):
-    """ sort mech info according to the desired criteria and
-        get a sorted pes dictionary
-    :param srt_mch: sorted mechanism
-    :type srt_mch: objectria
-    :type sort_str: list(str)
-    :return pes_dct: sorted pes dictionary
-    :rtype: dct
-    """
-    pes_dct = srt_mch.return_pes_dct()
-    return pes_dct
-
-
 # I/O
+
+
 def parse_mechanism(mech_str, mech_type, spc_dct):
     """ Get the reactions and species from the mechanism input
     """
