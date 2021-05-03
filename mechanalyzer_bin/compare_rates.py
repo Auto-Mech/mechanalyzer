@@ -6,11 +6,11 @@ import sys
 
 # INPUTS
 # Filenames
-mech_filenames = ['Danilack_v33_no_stereo_short_names.ckin', 'Tran_MECH.ckin']
-thermo_filenames = ['Danilack_v33_no_stereo_short_names.ckin', 'Tran_THERM.ckin']
+mech_filenames = ['Danilack_v33_no_stereo_short_names_only_calcs.ckin', 'Tran_MECH.ckin']
+thermo_filenames = ['Danilack_v33_no_stereo_short_names_only_calcs.ckin', 'Tran_THERM.ckin']
 spc_csv_filenames = ['Danilack_species_short_names.csv', 'Tran_species.csv']  
 
-output_filename = 'dan_vs_tran_no_loners.pdf'
+output_filename = 'dan_vs_tran_only_calcs.pdf'
 mech_nicknames = ['Danilack', 'Tran']  # for plotting
 
 # Conditions
