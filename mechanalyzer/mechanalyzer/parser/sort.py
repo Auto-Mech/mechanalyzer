@@ -399,17 +399,13 @@ class SortMech:
 
                     rclass = classify_graph(
                         self.spc_dct, rct_names, prd_names)
-
-                    if rclass is None:
+                    
+                    if rclass == 'unclassified':
                         if (subpes_df['molecularity'][rxn] == 1
                                 and subpes_df['N_of_prods'][rxn] == 1):
                             rclass = 'isomerization'
-                            # TEMP: BEFORE ALL ISOMERIZATION TYPES ANALYZED
-                        else:
-                            rclass = 'unclassified'
                 else:
                     rclass = 'unclassified - lumped'
-
                 rxncl_graph_df['rxn_class_graph'][rxn] = rclass
 
                 # store values in the elementary reactivity matrix
@@ -641,7 +637,8 @@ def classify_graph(spc_dct, rct_names, prd_names):
 
             if rxn_classes:
                 # save only the first possible reaction type
-                rclass = rxn_classes[0]
+                # rclass = rxn_classes[0]
+                rclass = '/'.join(set(rxn_classes))
             else:
                 rclass = 'unclassified'
 
