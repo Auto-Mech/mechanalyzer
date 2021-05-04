@@ -189,12 +189,11 @@ def test__sortby_rxnclass():
         prior to rxn class, the mech is also subdivided into PESs
     """
 
-    spc_name = os.path.join(CWD, 'data', 'C10H10_species.csv')
-    mech_name = os.path.join(CWD, 'data', 'C10H10_HP_mech.dat')
-    # mech_name = os.path.join(CWD, 'data', 'C10H10_Pdep_mech.dat') # WARNING VERY SLOW
-    mech_rest_name = os.path.join(TMP_OUT, 'C10H10_mech_rest.txt')
+    spc_name = os.path.join(CWD, 'data', 'LLNL_species.csv')
+    mech_name = os.path.join(CWD, 'data', 'LLNL_IC8_red_classes.dat')
+    mech_rest_name = os.path.join(TMP_OUT, 'IC8_class_rest.txt')
     sortmech_name = os.path.join(
-        TMP_OUT, 'C10H10_test_sortby_rxnclass.txt')
+        TMP_OUT, 'IC8_test_sortby_rxnclass.txt')
     isolate_species = []
     print(sortmech_name)
     # HEADER INDICATING THE REACTION CLASS
@@ -302,9 +301,8 @@ def test__sort_ktp():
     # MODIFY THIS SECTION WITH INPUT NAMES AND SORTING OPTIONS
 
     spc_names = ['data/spc2.csv', 'data/spc1B.csv']
-    mech_names = ['data/mech2.txt', 'data/mech1.txt']
-    sortmech_name = os.path.join(
-        TMP_OUT, 'sorted.txt')
+    # mech_names = ['data/mech2.txt', 'data/mech1.txt'] 
+    # if you want sorted rxn param dct: also read mechs
     isolate_species = []
     sort_str = ['molecularity', 'rxn_max_vals',
                 'rxn_max_ratio', 'rxn_class_broad', 0]
@@ -312,14 +310,11 @@ def test__sort_ktp():
     ############ input reading ####################
 
     # READ FILE# READ FILE AND BUILD DICTIONARIES
-    for i, spc_name in enumerate(spc_names):
-        # Read the files
-        with open(spc_name, 'r') as spc_obj:
-            spc_str = spc_obj.read()
-        with open(mech_names[i], 'r') as mech_obj:
-            mech_str = mech_obj.read()
-        # Build mech information
-        spc_dct_full = sparser.build_spc_dct(spc_str, SPC_TYPE)
+    with open(spc_names[1], 'r') as spc_obj:
+        spc_str = spc_obj.read()
+
+    # Build mech information
+    spc_dct_full = sparser.build_spc_dct(spc_str, SPC_TYPE)
 
     # BUILD  MECH INFORMATION
     mech_info = mparser._mech_info(AL_KTP_DCT, spc_dct_full)
@@ -420,7 +415,7 @@ if __name__ == '__main__':
     # test__sortby_submech()
     # test__sortby_mult()
     # test__sortby_molec_r1()
-    #test__sortby_rxnclass()
+    test__sortby_rxnclass()
     # test__sortby_submech_class()
     # test__sort_ktp()
     # test__sort_with_input()
