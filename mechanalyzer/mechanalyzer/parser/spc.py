@@ -61,6 +61,53 @@ def order_species_by_atomcount(spc_dct):
     return spc_dct_ordered
 
 
+def _get_smiles_from_dct(dct, name):
+    return automol.inchi.smiles(dct[name]['inchi'])
+    
+
+def _get_formula_from_dct(dct, name):
+    return automol.inchi.formula_string(dct[name]['inchi'])
+
+
+def _assign_unique_name(formula_dct, formula):
+    if formula in formula_dct:
+        formula_dct[formula] += 1
+        formula = formula + '({})'.format(formula_dct[formula])
+    else:
+        formula_dct[formula] = 0
+    return formula, formula_dct
+
+
+def _species_row_string(uniref_dct, formula_dct, name, new_headers):
+    smiles = _get_smiles_from_dct(uniref_dct, name)
+    formula = _get_formula_from_dct(uniref_dct, name)
+    uniref_dct[name]['smiles'] = smiles
+    formula, formula_dct = _assign_unique_name(formula, formula_dct)
+    spc_str = formula + ','
+    for idx, header in enumerate(new_headers):
+        val = uniref_dct[name][header]
+        if isinstance(val, str):
+            val = "'{}'".format(val)
+        spc_str += str(val)
+        if idx+1 < len(new_headers):
+            spc_str += ','
+    spc_str += '\n'
+    return spc_str, formula_dct
+
+
+def _add_unique_references_to_dct(new_names, init_dct, uniref_dct, ref_scheme):
+    new_dct = {}
+    for newn in list(uniref_dct.keys()):
+        tempn_smiles = automol.inchi.smiles(uniref_dct[newn]['inchi'])
+        tempn = ref_scheme + '_' + tempn_smiles
+        if tempn not in new_names:
+            new_names.append(tempn)
+            new_dct[tempn] = uniref_dct[newn]
+            new_dct[tempn]['smiles'] = tempn_smiles
+            new_dct.update(init_dct)
+            init_dct = new_dct
+    return new_names, init_dct, uniref_dct
+
 def write_basis_csv(spc_str, outname='species_hof_basis.csv',
                     path='.', parallel=False):
     """ Read the species file in a .csv format and write a new one
@@ -74,6 +121,7 @@ def write_basis_csv(spc_str, outname='species_hof_basis.csv',
     headers_noich = [header for header in headers
                      if header not in ('inchi', 'inchikey')]
     new_headers = ['inchi', 'inchikey'] + headers_noich
+    csv_str = ','.join(['name'] + new_headers) + '\n'
     # Read in the initial CSV information (deal with mult stereo)
     init_dct = csv_dct(spc_str, values=headers, key='name')
     # Build a new dict
@@ -81,69 +129,39 @@ def write_basis_csv(spc_str, outname='species_hof_basis.csv',
     spc_queue = []
     for name in names:
         spc_queue.append([name, ''])
-    new_dct = {}
-    # Get the hof basis molecules
+
+    # Find all references
     ref_schemes = ['cbh0', 'cbh1', 'cbh2']
-    ref_dct = {}
-    spc_str = ','.join(['name'] + new_headers) + '\n'
     for ref_scheme in ref_schemes:
         formula_dct = {}
         _, uniref_dct = basis.prepare_refs(
             ref_scheme, init_dct, spc_queue, '', '', repeats=True, parallel=parallel)
         for name in uniref_dct:
-            spc_str += ref_scheme + '_'
-            smiles = automol.inchi.smiles(uniref_dct[name]['inchi'])
-            uniref_dct[name]['smiles'] = smiles
-            formula = automol.inchi.formula_string(uniref_dct[name]['inchi'])
-            if formula in formula_dct:
-                formula_dct[formula] += 1
-                formula = formula + '({})'.format(formula_dct[formula])
-            else:
-                formula_dct[formula] = 0
-            spc_str += formula + ','
-            for idx, header in enumerate(new_headers):
-                val = uniref_dct[name][header]
-                if isinstance(val, str):
-                    val = "'{}'".format(val)
-                spc_str += str(val)
-                if idx+1 < len(new_headers):
-                    spc_str += ','
-            spc_str += '\n'
-
+            spc_str, formula_dct = _species_row_string(uniref_dct, formula_dct, name, new_headers)
+            csv_str += ref_scheme + '_' + spc_str
     basis_file = os.path.join(path, outname + '_basis')
     with open(basis_file, 'w') as file_obj:
         file_obj.write(spc_str)
 
+    # Find only the unique references
     new_names = []
     for ref_scheme in ref_schemes:
         _, uniref_dct = basis.prepare_refs(
-            ref_scheme, init_dct, spc_queue, '', '', repeats=False, parallel=parallel)
-        for newn in list(uniref_dct.keys()):
-            tempn_smiles = automol.inchi.smiles(uniref_dct[newn]['inchi'])
-            tempn = ref_scheme + '_' + tempn_smiles
-            if tempn not in new_names:
-                new_names.append(tempn)
-                new_dct[tempn] = uniref_dct[newn]
-                new_dct[tempn]['smiles'] = tempn_smiles
-                ref_dct.update(new_dct)
-                new_dct.update(init_dct)
-                init_dct = new_dct
-    # Writer string
+            ref_scheme, init_dct, spc_queue,
+            '', '', repeats=False, parallel=parallel)
+    new_names, init_dct, uniref_dct = _add_unique_references_to_dct(
+        new_names, init_dct, uniref_dct, ref_scheme)
     spc_str = ','.join(['name'] + new_headers) + '\n'
+    formula_dct = {}
     for name in init_dct:
-        formula_dct = {}
         if 'cbh' in name:
             namelabel = name.split('_')[0]
             if namelabel not in formula_dct:
                 formula_dct[namelabel] = {}
             frmdct = formula_dct[namelabel]
             spc_str += namelabel + '_'
-            formula = automol.inchi.formula_string(init_dct[name]['inchi'])
-            if formula in frmdct:
-                frmdct[formula] += 1
-                formula = formula + '({})'.format(frmdct[formula])
-            else:
-                frmdct[formula] = 0
+            formula = _get_formula_from_dct(init_dct, name)
+            formula, frmdct = _assign_unique_name(frmdct, formula)
             spc_str += formula + ','
         else:
             spc_str += '{},'.format(name)
