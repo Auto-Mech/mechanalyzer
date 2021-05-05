@@ -22,7 +22,7 @@ except IndexError:
     sys.exit()
 
 sort_str = pathtools.read_file(CWD, sort_inp, remove_comments='#')
-isolate_species, sort_list = mparser.read_sort_section(sort_str)
+isolate_species, sort_list = mparser.parse_sort(sort_str)
 sortmech_name = os.path.join(TMP_OUT, 'sorted_mech.txt')
 mech_rest_name = os.path.join(TMP_OUT, 'rest_mech.txt')
 sorter._sort_main(spc_name, mech_name, sortmech_name,

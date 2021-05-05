@@ -133,20 +133,23 @@ AL_KTP_DCT = {
 def test__sort_with_input():
     """ sort by using the auxlilary input files to specify parameters
     """
-    # use data/LLNL_species.csv, data/LLNL_mech.dat, data/sort.dat
-    try:
-        spc_name = os.path.join(CWD, sys.argv[1])
-        mech_name = os.path.join(CWD, sys.argv[2])
-        sort_inp = os.path.join(CWD, sys.argv[3])
-    except IndexError:
-        print('*ERROR: input files missing - put species, mechanism, and sort.dat files')
-        sys.exit()
 
-    sort_str = pathtools.read_file(CWD, sort_inp, remove_comments='#')
-    isolate_species, sort_list = mparser.read_sort_section(sort_str)
+    # mech inp/out files
+    spc_name = os.path.join(CWD, 'data', 'NUIG_species.csv')
+    mech_name = os.path.join(CWD, 'data', 'NUIG_mechred.dat')
+    mech_rest_name = os.path.join(TMP_OUT, 'NUIG_mech_rest.txt')
+
     sortmech_name = os.path.join(TMP_OUT, 'sorted_mech.txt')
-    print(sortmech_name)
     mech_rest_name = os.path.join(TMP_OUT, 'rest_mech.txt')
+    print(sortmech_name)
+
+    # sort inp files
+    sort_inp_path = os.path.join(CWD, 'data', 'sort.dat')
+    with open(sort_inp_path) as fobj:
+        sort_str = fobj.read()
+
+    # Sort mech
+    isolate_species, sort_list = mparser.parse_sort(sort_str)
     sorter._sort_main(spc_name, mech_name, sortmech_name,
                       mech_rest_name, isolate_species, sort_list)
 
@@ -316,14 +319,17 @@ def test__sort_ktp():
     # al_ktp_dct_sorted = mechparser.reordered_mech(AL_KTP_DCT, sortd_idx)
     # MODIFY THIS SECTION WITH INPUT NAMES AND SORTING OPTIONS
 
-    spc_names = ['data/spc2.csv', 'data/spc1B.csv']
+    spc_names = [
+        os.path.join(CWD, 'data', 'spc2.csv'),
+        os.path.join(CWD, 'data', 'spc1B.csv')]
     # mech_names = ['data/mech2.txt', 'data/mech1.txt']
     # if you want sorted rxn param dct: also read mechs
+
     isolate_species = []
     sort_str = ['molecularity', 'rxn_max_vals',
                 'rxn_max_ratio', 'rxn_class_broad', 0]
 
-    ############ input reading ####################
+    # input reading #
 
     # READ FILE# READ FILE AND BUILD DICTIONARIES
     with open(spc_names[1], 'r') as spc_obj:
