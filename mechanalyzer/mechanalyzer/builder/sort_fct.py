@@ -12,7 +12,7 @@ import copy
 import pandas as pd
 import numpy as np
 import automol
-from mechanalyzer.parser import submech
+from mechanalyzer.builder import submech
 from mechanalyzer.parser import pes
 from mechanalyzer.parser._util import count_atoms
 from mechanalyzer.parser._util import order_rct_bystoich

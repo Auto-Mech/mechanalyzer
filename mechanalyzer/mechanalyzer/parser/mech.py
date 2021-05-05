@@ -1,77 +1,14 @@
 """
 Functions for mechanism reading and sorting
-Making script mechanalyzer/bin/mech.py more compact
 """
 
 import mechanalyzer
 from mechanalyzer.parser import ckin_ as ckin
 from mechanalyzer.parser._util import get_ich_dct, get_fml
+from ioformat import ptt
+import autoparse.find as apf
 
-
-# OPERATIONS ON MECHANISM OBJECTS
-def sorting(mech_info, spc_dct, sort_str, isolate_species):
-    """ Uses the SortMech class to sort mechanism info and
-        returns the sorted indices and the corresponding comments.
-
-    :param mech_info: formulas, reaction names
-    :param spc_dct: species dictionary
-    :param sort_str: list with sorting criteria
-    :param isolate_species: species you want to isolate in the final mechanism
-    :type isolate_species: list()
-
-    calls sorting functions in mechanalyzer/pes
-    returns the rxn indices associated with the comments about sorting
-    """
-
-    srt_mch = mechanalyzer.parser.sort.SortMech(mech_info, spc_dct)
-    srt_mch.sort(sort_str, isolate_species)
-
-    return srt_mch
-
-
-def sorted_mech(srt_mch):
-    """ get sorted indexes and comments for a sorted mech object
-    :param srt_mch: sorted mechanism
-    :type srt_mch: object
-    :return sortex_idx, cmts_dct, spc_dct:
-        sorted indexes, dct with comments, species dct
-    :rtype: list, dct:str, dct
-    """
-    sorted_idx, cmts_dct, spc_dct = srt_mch.return_mech_df()
-    return sorted_idx, cmts_dct, spc_dct
-
-
-def sorted_pes_dct(srt_mch):
-    """ sort mech info according to the desired criteria and
-        get a sorted pes dictionary
-    :param srt_mch: sorted mechanism
-    :type srt_mch: objectria
-    :type sort_str: list(str)
-    :return pes_dct: sorted pes dictionary
-    :rtype: dct
-    """
-    pes_dct = srt_mch.return_pes_dct()
-    return pes_dct
-
-
-def reordered_mech(rxn_param_dct, sorted_idx):
-    """ Sort the reaction parameter dcitionary using the indices from
-        sort functions.
-
-        :param rxn_param_dct: non-sorted reaction parameter dictionary
-        :type rxn_param_dct: dct
-        :param sorted_idx: indices of the rxn_param_dct in the desired order
-        :type sorted_idx: list
-        :return rxn_param_dct_sorted: sorted reaction parameter dictionary
-        :rtype: dct
-    """
-
-    sorted_val = list(map(rxn_param_dct.get, sorted_idx))
-    rxn_param_dct_sorted = dict(zip(sorted_idx, sorted_val))
-
-    return rxn_param_dct_sorted
-
-# I/O
+# inputs to the sorter
 
 
 def parse_mechanism(mech_str, mech_type, spc_dct):
@@ -127,3 +64,41 @@ def _mech_info(rxn_param_dct, spc_dct):
     return [formula_dct, formula_str,
             rct_names, prd_names, thrdbdy_lst,
             rxn_name, list(rxn_param_dct.values())]
+
+
+def read_sort_section(sort_str):
+    """ reads the options for sorting from a file
+
+        :param sort_str: string of sorting file w/o comments
+        :type sort_str: str
+        :return isolate_species: species to include (if []: all)
+        :rtype isolate_species: list
+        :return sort_list: sorting criteria
+        :rtype sort_list: list
+    """
+
+    submech_section = apf.all_captures(
+        ptt.end_block_ptt('isolate_submech'), sort_str)
+
+    if submech_section is None:
+        # empty section
+        isolate_species = []
+    else:
+        # format the section
+        species = apf.first_capture(
+            ptt.paren_section('species'), submech_section[0])
+        isolate_species = ptt.build_keyword_lst(species)
+
+    sortmech_section = apf.all_captures(
+        ptt.end_section('sort_mech'), sort_str)
+    # this section is mandatory
+    if sortmech_section is None:
+        print('*ERROR: sort_mech section is not defined')
+    else:
+        criteria = apf.first_capture(
+            ptt.paren_section('criteria'), sortmech_section[0])
+        n_criteria = apf.first_capture(
+            ptt.keyword_pattern('n_criteria_headers'), sortmech_section[0])
+        sort_list = ptt.build_keyword_lst(criteria+n_criteria)
+
+    return isolate_species, sort_list
