@@ -22,7 +22,7 @@ def filter_ktp_dct(inp_ktp_dct, bimol, tmin=None, tmax=None):
     return filt_ktp_dct
 
 
-def get_valid_tk(temps, rate_constants, bimol,
+def get_valid_tk(temps, rate_kts, bimol,
                  tmin=None, tmax=None, bimolthresh=1.0e-24):
     """ Takes in lists of temperature-rate constant pairs [T,k(T)]
         and removes invalid pairs for which
@@ -30,10 +30,11 @@ def get_valid_tk(temps, rate_constants, bimol,
            (2) k(T) is undefined from Master Equation (i.e. k(T) is None)
            (3) k(T) < 1.0e-24 for a bimolecular reaction, or
            (4) T is outside the cutoff
+
         :param temps: Temperatures (K)
         :type temps: list(float)
-        :param rate_constants: rate constants (s-1 or cm^3.s-1)
-        :type rate constants: list(str, float)
+        :param rate_kts: rate constants (s-1 or cm^3.s-1)
+        :type rate_kts: list(str, float)
         :param numpy.ndarray temps: temps
         :param numpy.ndarray rate_constants: rate constants
         :param bool bimol: Parameter indicating bimolecular reation
@@ -59,18 +60,15 @@ def get_valid_tk(temps, rate_constants, bimol,
     # if negative kts are found, set min temp to be just above highest neg.
     if tmin is None:
         max_neg_idx = None
-        for kt_idx, rate_constant in enumerate(rate_constants):
+        for kt_idx, rate_kt in enumerate(rate_kts):
             # find idx for max temperature for which kt is negative, if any
-            if rate_constant is None:
-                frate_constant = 1.
-            else:
-                frate_constant = float(rate_constant)
-            if frate_constant < 0.0:
+            frate_kt = float(rate_kt) if rate_kt is not None else 1.0
+            if frate_kt < 0.0:
                 max_neg_idx = kt_idx
-        # If a negative kt is found use temp+1
-        # If idx greater than num_temps: highest T is negative
+        # Set tmin to highest T where k(T) is non-negative
+        # Set tmin to None (return no valid T,k(T)) if highest T has neg. k(T)
         if max_neg_idx is not None:
-            if max_neg_idx+1 > len(temps):
+            if max_neg_idx+1 < len(temps):
                 tmin = temps[max_neg_idx+1]
         else:
             tmin = min(temps)
@@ -81,13 +79,13 @@ def get_valid_tk(temps, rate_constants, bimol,
     # temp > 0, temp within tmin and tmax, rate constant defined (not ***)
     valid_t, valid_k = [], []
     if tmin is not None and tmax is not None:
-        for temp, rate_constant in zip(temps, rate_constants):
-            if rate_constant is None:
+        for temp, rate_kt in zip(temps, rate_kts):
+            if rate_kt is None:
                 continue
             kthresh = 0.0 if not bimol else bimolthresh
-            if float(rate_constant) > kthresh and tmin <= temp <= tmax:
+            if float(rate_kt) > kthresh and tmin <= temp <= tmax:
                 valid_t.append(temp)
-                valid_k.append(rate_constant)
+                valid_k.append(rate_kt)
 
     # Convert the lists to numpy arrays
     valid_t = np.array(valid_t, dtype=np.float64)

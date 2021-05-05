@@ -6,8 +6,8 @@
 from statistics import mean
 import chemkin_io
 from ratefit.fit import arrhenius as arrfit
+from ratefit.fit import fitting_error_dct
 from ratefit import calc as ratecalc
-from ratefit.fit._err import fitting_errors
 from ratefit.fit._util import pull_highp_from_dct
 from ratefit.fit._util import set_a_conversion_factor
 
@@ -290,31 +290,6 @@ def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',
         fit_k_dct[pressure] = fit_ks / a_conv_factor
 
     # Calculute the error between the calc and fit ks
-    for pressure, fit_ks in fit_k_dct.items():
-
-        calc_ks = ktp_dct[pressure][1]
-
-        # Assess the errors using some subset of the rate constants
-        test_calc_ks, test_fit_ks = _gen_err_set(
-            calc_ks, fit_ks, err_set=err_set)
-        mean_avg_err, max_avg_err = fitting_errors(
-            test_calc_ks, test_fit_ks)
-
-        # Store in a dictionary
-        fit_err_dct[pressure] = [mean_avg_err, max_avg_err]
+    fit_err_dct = fitting_error_dct(ktp_dct, fit_k_dct, err_set=err_set)
 
     return fit_err_dct
-
-
-def _gen_err_set(calc_ks, fit_ks, err_set='all'):
-    """ look at err ranges
-    """
-
-    if err_set == 'skip':
-        test_calc_ks = calc_ks[1:-2]
-        test_fit_ks = fit_ks[1:-2]
-    else:
-        test_calc_ks = calc_ks
-        test_fit_ks = fit_ks
-
-    return test_calc_ks, test_fit_ks

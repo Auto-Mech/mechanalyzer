@@ -20,7 +20,7 @@ PES_FORMULA = 'CH4'
 FIT_METHOD1 = 'arrhenius'
 FIT_METHOD2 = 'chebyshev'
 
-# influences the direction of the reactions obtained from MESS if forw and rev not taken
+# influences direction of reactions from MESS if forw and rev not taken
 # no explicit control inside of mechdriver
 LABEL_DCT = {
     'WELL1': 'w1',
@@ -48,27 +48,11 @@ def test__full_arrfit():
     print('\n\n\n-------\n\n\n')
     print('CHEMKIN STR\n\n')
     arrfit_str = ''
-    for key, val in arrfit_dct.items():
+    for _, val in arrfit_dct.items():
         arrfit_str += val
         arrfit_str += '\n\n'
     print(arrfit_str)
 
 
-def test__full_chebfit():
-    """ test ratefit.fit.ktp_dct
-    """
-
-    chebfit_dct = ratefit.fit.fit_ktp_dct(
-        TMP_DIR, FIT_METHOD2, label_dct=LABEL_DCT)
-    print('\n\n\n-------\n\n\n')
-    print('CHEMKIN STR\n\n')
-    chebfit_str = ''
-    for key, val in chebfit_dct.items():
-        chebfit_str += val
-        chebfit_str += '\n\n'
-    print(chebfit_str)
-
-
 if __name__ == '__main__':
     test__full_arrfit()
-    # test__full_chebfit()
