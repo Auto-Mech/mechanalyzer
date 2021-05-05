@@ -399,7 +399,7 @@ class SortMech:
 
                     rclass = classify_graph(
                         self.spc_dct, rct_names, prd_names)
-                    
+
                     if rclass == 'unclassified':
                         if (subpes_df['molecularity'][rxn] == 1
                                 and subpes_df['N_of_prods'][rxn] == 1):
@@ -633,7 +633,11 @@ def classify_graph(spc_dct, rct_names, prd_names):
                     rct_ichs, prd_ichs)
                 rxn_classes = tuple(obj[0].class_ for obj in rxn_objs)
             except AssertionError:
-                rxn_classes = ['AssertionError', '2']
+                rxn_classes = ('AssertionError', )
+            except TypeError:
+                print('geoms of rxn classifier fail for rxn: {} = {}'.format(
+                    rct_ichs, prd_ichs))
+                rxn_classes = ('TypeError', )
 
             if rxn_classes:
                 # save only the first possible reaction type
