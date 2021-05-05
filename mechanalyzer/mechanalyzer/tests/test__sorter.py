@@ -300,7 +300,7 @@ def test__sortby_submech_class():
 
     sortmech_name = os.path.join(
         TMP_OUT, 'LLNL_test_sortby_submech_class_IC8.txt')
-    isolate_species = ['IC8', 'submech']
+    isolate_species = ['IC8']
     # NO HEADER
     sort_str = ['submech', 'rxn_class_broad', 'rxn_class_graph', 1]
 
@@ -365,8 +365,8 @@ if __name__ == '__main__':
     # test__sortby_mult()
     # test__sortby_molec_r1()
     # test__sortby_rxnclass()
-    # test__sortby_submech_class()
+    test__sortby_submech_class()
     # test__sort_ktp()
-    test__sort_with_input()
+    # test__sort_with_input()
     # test__build_sorted_pesdct()
     # test__readwrite_thirdbody()
