@@ -287,7 +287,7 @@ def assess_arr_fit_err(fit_param_dct, ktp_dct, fit_type='single',
                 t_ref, temps)
 
         # Store the fitting parameters in a dictionary
-        fit_k_dct[pressure] = fit_ks / a_conv_factor
+        fit_k_dct[pressure] = (temps, fit_ks / a_conv_factor)
 
     # Calculute the error between the calc and fit ks
     fit_err_dct = fitting_error_dct(ktp_dct, fit_k_dct, err_set=err_set)

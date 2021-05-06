@@ -17,6 +17,9 @@ def fitting_error_dct(calc_ktp_dct, fit_ktp_dct, err_set='all'):
         :rtype: dict[float: (float, float)]
     """
 
+    print(calc_ktp_dct)
+    print(fit_ktp_dct)
+
     assert set(calc_ktp_dct.keys()) == set(fit_ktp_dct.keys()), (
         'pressures of two k(T,P) dcts are not the same')
     assert all(len(calc_ktp_dct[p][0]) == len(fit_ktp_dct[p][0])

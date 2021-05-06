@@ -2,10 +2,8 @@
 Functions for mechanism reading and sorting
 """
 
-import autoparse.find as apf
 import autoparse.pattern as app
-from ioformat import ptt
-import mechanalyzer
+import ioformat.ptt
 from mechanalyzer.parser import ckin_ as ckin
 from mechanalyzer.parser._util import get_ich_dct, get_fml
 
@@ -22,12 +20,12 @@ def parse_mechanism(mech_str, mech_type, spc_dct):
         raise NotImplementedError
 
     # Build mech_info object to pass along to various functions
-    mech_info = _mech_info(rxn_param_dct, spc_dct)
+    _mech_info = mech_info(rxn_param_dct, spc_dct)
 
-    return rxn_param_dct, mech_info, elem_tuple
+    return rxn_param_dct, _mech_info, elem_tuple
 
 
-def _mech_info(rxn_param_dct, spc_dct):
+def mech_info(rxn_param_dct, spc_dct):
     """ Build mech_info object for mech sorting
 
         :param spc_dct: species dictionary
