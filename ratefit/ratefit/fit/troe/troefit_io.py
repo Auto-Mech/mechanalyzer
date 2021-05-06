@@ -13,9 +13,10 @@ RC2 = 0.0820573660809596 * 1000.0  # Gas Constant in cm^3.atm/mol.K
 SRC_PATH = os.path.dirname(os.path.realpath(__file__))
 
 
-def write_input(kpt_dct, troe_param_fit_lst,
-                highp_a=8.1e-11, highp_n=-0.01, highp_ea=1000.0,
-                lowp_a=8.1e-11, lowp_n=-0.01, lowp_ea=1000.0,
+def write_input(kpt_dct,
+                troe_param_fit_lst=('ts1', 'ts2', 'ts3', 'alpha'),
+                highp_guess=(8.1e-11, -0.01, 1000.0),
+                lowp_guess=(8.1e-11, -0.01, 1000.0),
                 alpha=0.19, ts1=590.0, ts2=1.0e6, ts3=6.0e4, rval=RC2,
                 fit_tol1=1.0e-8, fit_tol2=1.0e-8):
     """ Write the troefit input file.
@@ -24,18 +25,10 @@ def write_input(kpt_dct, troe_param_fit_lst,
         :type kpt_dct: dict[pressure:temps]
         :param troe_param_fit_lst: Troe parameters to include in fitting
         :param troe_param_fit_lst: list(str)
-        :param float highp_a: seed guess value for A parameters at high-P
-        :type highp_a: float
-        :param float highp_n: seed guess value for n parameters at high-P
-        :type highp_n: float
-        :param float highp_ea: seed guess value for Ea parameters at high-P
-        :type highp_ea: float
-        :param float lowp_a: seed guess value for A parameters at low-P
-        :type lowp_a: float
-        :param float lowp_n: seed guess value for n parameters at low-P
-        :type lowp_n: float
-        :param float lowp_ea: seed guess value for Ea parameters at low-P
-        :type lowp_ea: float
+        :param highp_guess: A, n, Ea Arrhenius params for high-P limit
+        :type higp_guess: list(float)
+        :param lowp_guess: A, n, Ea Arrhenius params for low-P limit
+        :type higp_guess: list(float)
         :param alpha: Troe alpha parameter
         :type alpha: float
         :param ts3: Troe T3 parameter
@@ -62,9 +55,9 @@ def write_input(kpt_dct, troe_param_fit_lst,
 
     # Write the parameters strings
     highp_params_str = '{0:>8.5E} {1:>8.5E} {2:>8.5E}'.format(
-        highp_a, highp_n, highp_ea)
+        *highp_guess)
     lowp_params_str = '{0:>8.5E} {1:>8.5E} {2:>8.5E}'.format(
-        lowp_a, lowp_n, lowp_ea)
+        *lowp_guess)
     troe_params_str = '{0:>8.5E} {1:>8.5E} {2:>8.5E} {3:>8.5E}'.format(
         alpha, ts1, ts2, ts3)
 
@@ -75,8 +68,9 @@ def write_input(kpt_dct, troe_param_fit_lst,
         [pressures, rate_constants] = pk_arr
         kpt_str += '{0:<8.2f}{1:<4d}\n'.format(temp, len(pressures))
         for pressure, rate in zip(pressures, rate_constants):
-            density = pressure / (rval / temp)
-            kpt_str += '{0:<14.5E}{1:<14.5f}\n'.format(density, rate)
+            # use p_to_m function from calc/_rates.py  at some point
+            density = pressure / (rval * temp)
+            kpt_str += '{0:<14.5E}{1:<14.8E}\n'.format(density, rate)
 
     # Build the fill value dictionary
     fit_keys = {

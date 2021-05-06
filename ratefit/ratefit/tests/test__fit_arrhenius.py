@@ -71,7 +71,7 @@ def test__arrhenius_fit_dsarrfit():
 
     assert numpy.allclose(dbl_fit_params, ref_dbl_fit_params)
 
-    # Run a fit that should die to test for error setting (should be double I think)
+    # Run fit that should die to test error setting (should be double I think)
     # runner
 
 
@@ -83,7 +83,8 @@ def test__arrhenius_fit_python():
     sgl_fit_params = ratefit.fit.arrhenius.single(
         TEMPS, RATEKS, T_REF, 'python')
 
-    ref_sgl_fit_params = (23339999.999677252, 2.0840000000019057, 11103.999999999936)
+    ref_sgl_fit_params = (
+        23339999.999677252, 2.0840000000019057, 11103.999999999936)
 
     assert numpy.allclose(sgl_fit_params, ref_sgl_fit_params)
 
@@ -91,8 +92,9 @@ def test__arrhenius_fit_python():
     dbl_fit_params = ratefit.fit.arrhenius.double(
         TEMPS, RATEKS, T_REF, 'python', arr1_guess=sgl_fit_params)
 
-    ref_dbl_fit_params = (18070230.266769655, 2.0840017657840666, 11103.99642254344,
-                          5269769.7413749155, 2.083993944680211, 11104.012268002933)
+    ref_dbl_fit_params = (
+        18070230.266769655, 2.0840017657840666, 11103.99642254344,
+        5269769.7413749155, 2.083993944680211, 11104.012268002933)
 
     assert numpy.allclose(dbl_fit_params, ref_dbl_fit_params)
 

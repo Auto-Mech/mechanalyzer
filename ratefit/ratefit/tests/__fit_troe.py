@@ -1,98 +1,64 @@
 """
-Test an Arrhenius fit of T, k(T,P) rates to a single Arrhenius function
-where the fits are performed using Python and dsarrfit
+Test an Arrhenius fit of T, k(T,P) rates to a Troe function
 """
 
-import os
 import tempfile
 import numpy
-import pandas
 import ratefit
 
 
-def _read_csv(filename):
-    """ read csv values from arrhenius.csv
-    """
-    csv_file = open(filename, 'r')
-    data = pandas.read_csv(csv_file, comment='!', quotechar="'")
-    csv_file.close()
-
-    return data
-
-
-# Set path to data files
-PATH = os.path.dirname(os.path.realpath(__file__))
-DATA_PATH = os.path.join(PATH, 'data')
-RATEK_FILE_NAME = 'rateks.csv'
-
-# Read csv file for data
-RATEK_DATA = _read_csv(
-    os.path.join(DATA_PATH, RATEK_FILE_NAME))
-
-# Set the rate constant data
-TEMPS = RATEK_DATA.temps.values
-RATEKS = RATEK_DATA.rateks.values
-
-# Set NA and the T0 value in the (T/T0)^n term in the Arrhenius expr.
-NA = 6.0221409e23
-NA_INV = (1.0 / NA)
-T_REF = 1.0
-TMIN = None
-TMAX = None
-
 # Set paths to run the dsarrfit code
-DSARRFIT_PATH = tempfile.mkdtemp()
+TROEFIT_PATH = tempfile.mkdtemp()
+print('TROEFIT PATH', TROEFIT_PATH)
+
+# Rate Constants
+TEMPS = numpy.arange(300.0, 3300.0, 300.0)
+KTP_DCT = {
+    0.1: (TEMPS,
+          numpy.array(
+            [9.10804237e+12, 1.32381727e+12, 4.08085808e+11, 1.72813491e+11,
+             8.71750733e+10, 4.93305843e+10, 3.03035430e+10, 1.97990317e+10,
+             1.35713589e+10, 9.66617670e+09])),
+    2.0: (TEMPS,
+          numpy.array(
+            [5.49814978e+13, 1.69633215e+13, 6.60737791e+12, 3.07653037e+12,
+             1.62249315e+12, 9.39965627e+11, 5.85382158e+11, 3.85776465e+11,
+             2.65960784e+11, 1.90195810e+11])),
+    5.0: (TEMPS,
+          numpy.array(
+            [8.42788325e+13, 3.22567471e+13, 1.45617858e+13, 7.20296797e+12,
+             3.90278656e+12, 2.29203205e+12, 1.43833189e+12, 9.52289745e+11,
+             6.58503695e+11, 4.71883493e+11])),
+    10.0: (TEMPS,
+           numpy.array(
+            [1.14711507e+14, 4.91180769e+13, 2.54925292e+13, 1.34565982e+13,
+             7.50640433e+12, 4.47219704e+12, 2.82864928e+12, 1.88160867e+12,
+             1.30503129e+12, 9.37076153e+11]))
+}
+
+# PARAMS
+TROE_PARAM_FIT_LST = ('ts1', 'ts2', 'ts3', 'alpha')
+HIGHP_GUESS = (8.1e-11, -0.01, 1000.0)
+LOWP_GUESS = (8.1e-11, -0.01, 1000.0)
+
+ALPHA, TS1, TS2, TS3 = 0.19, 590.0, 1.0e6, 6.0e4
+FIT_TOL1, FIT_TOL2 = 1.0e-8, 1.0e-8
 
 
 def test__troe_fit():
     """ test ratefit.fit.troe.std
     """
 
-    # Run a single Arrhenius fit
-    inv_ktp_dct = ratefit.fit.flip_ktp_dct(new_dct)
-    fit_params = ratefit.fit.troe.std_form(
-        inv_ktp_dct, troe_param_fit_lst, mess_path,
-        highp_a=8.1e-11, highp_n=-0.01, highp_ea=1000.0,
-        lowp_a=8.1e-11, lowp_n=-0.01, lowp_ea=1000.0,
-        alpha=0.19, ts1=590, ts2=1.e6, ts3=6.e4,
-        fit_tol1=1.0e-8, fit_tol2=1.0e-8,
+    fit_params = ratefit.fit.troe.reaction(
+        KTP_DCT, TROEFIT_PATH,
+        troe_param_fit_lst=TROE_PARAM_FIT_LST,
+        highp_guess=HIGHP_GUESS,
+        lowp_guess=LOWP_GUESS,
+        alpha=ALPHA, ts1=TS1, ts2=TS2, ts3=TS3,
+        fit_tol1=FIT_TOL1, fit_tol2=FIT_TOL2,
         a_conv_factor=1.0)
 
-    fit_params = ratefit.fit.arrhenius.single(
-        TEMPS, RATEKS, T_REF, 'python')
-
-    ref_fit_params = [30559230.626540944,
-                      1.3816123272407292,
-                      25.773337886526104]
-
-    assert numpy.allclose(fit_params, ref_fit_params)
-
-    # Calculate fitted rate constants using the fitted parameters
-    fit_ks = ratefit.calc.single_arrhenius(
-        fit_params[0], fit_params[1], fit_params[2],
-        T_REF, TEMPS)
-
-    ref_fit_ks = [
-        8.62436E+01, 2.34060E+03, 2.85285E+04, 2.03360E+05,
-        9.93878E+05, 3.68621E+06, 1.11047E+07, 2.84839E+07,
-        6.43507E+07, 1.31272E+08, 2.46371E+08, 4.31568E+08,
-        7.13541E+08, 1.12346E+09, 1.69654E+09, 2.47143E+09,
-        3.48964E+09, 4.79480E+09, 6.43203E+09, 8.44734E+09,
-        1.08870E+10, 1.37972E+10, 1.72234E+10, 2.12101E+10,
-        2.58005E+10
-    ]
-
-    assert numpy.allclose(fit_ks, ref_fit_ks)
-
-    # Calculate the sum-of-square errors and mean-average-errors
-    mean_avg_err, max_avg_err = ratefit.calc.fitting_errors(
-        RATEKS, fit_ks)
-
-    ref_mean_avg_err = 2.504321595549729
-    ref_max_avg_err = 7.827700474963309
-
-    assert numpy.allclose(mean_avg_err, ref_mean_avg_err)
-    assert numpy.allclose(max_avg_err, ref_max_avg_err)
+    print('fit_params', fit_params)
 
 
 if __name__ == '__main__':

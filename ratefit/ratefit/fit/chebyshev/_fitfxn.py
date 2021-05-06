@@ -5,26 +5,23 @@ import numpy as np
 from scipy.special import eval_chebyt
 
 
-# RC = 1.98720425864083e-3  # Gas Constant in kcal/mol.K
 RCOND = -1 if int(np.__version__.split('.')[1]) < 14 else None
 
 
-def reaction(temps, ktp_dct, tdeg=6, pdeg=4, a_conv_factor=1):
+def reaction(ktp_dct, temps, tdeg=6, pdeg=4, a_conv_factor=1.0):
     """ Fits T,P-dependent rate constants [k(T,P)]s to a
         a Chebyshev functional expression.
 
-        :param alpha: Chebyshev coefficient matrix
-        :type alpha: np.ndarray
+        :param ktp_dct: k(T,P)s
+        :type ktp_dct: k(T,P) dictionary
+        :param temps: Temps used to calculate high- and low-k(T)s
+        :type temps: np.ndarray
         :param tdeg: degree of the temp component of Chebyshev polynomial
         :type tdeg: int
         :param pdeg: degree of the pressure component of Chebyshev polynomial
         :type pdeg: int
-        :param temps: Temps used to calculate high- and low-k(T)s
-        :type temps: np.ndarray
-        :param pressure: Pressure used to calculate k(T,P)s
-        :type pressure: float
-        :return alpha: alpha fitting coefficients
-        :rtype np.ndarray
+        :return alpha, trange, prange fitting parameterhs
+        :rtype (np.ndarray, tuple(float), tuple(float))
     """
 
     # Get the pressures from the ktp_dct
@@ -55,45 +52,47 @@ def reaction(temps, ktp_dct, tdeg=6, pdeg=4, a_conv_factor=1):
     ktps = conv_dct_to_array(ktp_dct, temps, a_conv_factor=a_conv_factor)
 
     # Create matrices for fits
-    A = np.zeros((tnum * pnum, tdeg * pdeg), np.float64)
-    b = np.zeros((tnum * pnum), np.float64)
+    amat = np.zeros((tnum * pnum, tdeg * pdeg), np.float64)
+    bvec = np.zeros((tnum * pnum), np.float64)
     nzero = 0
-    for t1, T in enumerate(tred):
-        for p1, P in enumerate(pred):
-            for t2 in range(tdeg):
-                for p2 in range(pdeg):
-                    idx1, idx2 = (p1 * tnum + t1), (p2 * tdeg + t2)
-                    A[idx1, idx2] = eval_chebyt(t2, T) * eval_chebyt(p2, P)
-            if ktps[t1, p1] is not None:
-                b[idx1] = np.log10(ktps[t1, p1])
+    for tidx1, temp in enumerate(tred):
+        for pidx1, press in enumerate(pred):
+            for tidx2 in range(tdeg):
+                for pidx2 in range(pdeg):
+                    idx1 = (pidx1 * tnum + tidx1)
+                    idx2 = (pidx2 * tdeg + tidx2)
+                    amat[idx1, idx2] = (
+                        eval_chebyt(tidx2, temp) * eval_chebyt(pidx2, press)
+                    )
+            if ktps[tidx1, pidx1] is not None:
+                bvec[idx1] = np.log10(ktps[tidx1, pidx1])
             else:
-                b[idx1] = None
+                bvec[idx1] = None
                 nzero += 1
 
     nnonzero = tnum * pnum - nzero
     idxp = -1
-    Ap = np.zeros((nnonzero, tdeg * pdeg), np.float64)
-    bp = np.zeros((nnonzero), np.float64)
+    amatp = np.zeros((nnonzero, tdeg * pdeg), np.float64)
+    bvecp = np.zeros((nnonzero), np.float64)
     for idx in range(tnum*pnum):
-        if not np.isnan(b[idx]):
+        if not np.isnan(bvec[idx]):
             idxp += 1
-            bp[idxp] = b[idx]
+            bvecp[idxp] = bvec[idx]
             for idx2 in range(tdeg*pdeg):
-                Ap[idxp,idx2] = A[idx,idx2]
+                amatp[idxp, idx2] = amat[idx, idx2]
 
-        
     # Perform least-squares fit to get alpha coefficients
-    theta = np.linalg.lstsq(Ap, bp, rcond=RCOND)[0]
+    theta = np.linalg.lstsq(amatp, bvecp, rcond=RCOND)[0]
 
     alpha = np.zeros((tdeg, pdeg), np.float64)
-    for t2 in range(tdeg):
-        for p2 in range(pdeg):
-            alpha[t2, p2] = theta[p2 * tdeg + t2]
+    for tidx2 in range(tdeg):
+        for pidx2 in range(pdeg):
+            alpha[tidx2, pidx2] = theta[pidx2 * tdeg + tidx2]
 
     return alpha, (tmin, tmax), (pmin, pmax)
 
 
-def conv_dct_to_array(ktp_dct, temps, a_conv_factor=1):
+def conv_dct_to_array(ktp_dct, temps, a_conv_factor=1.0):
     """ Convert a numpy
     """
 
