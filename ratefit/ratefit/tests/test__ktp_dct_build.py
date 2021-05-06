@@ -167,9 +167,3 @@ def test__aconv():
 
     assert numpy.isclose(aconv1, ref_aconv1)
     assert numpy.isclose(aconv2, ref_aconv2)
-
-
-if __name__ == '__main__':
-    test__filter_ktp()
-    test__invert()
-    test__aconv()

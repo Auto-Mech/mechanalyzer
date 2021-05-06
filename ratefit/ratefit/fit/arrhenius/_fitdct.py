@@ -116,7 +116,6 @@ def pes(ktp_dct, reaction, mess_path,
                 chemkin_str += chemkin_io.writer.reaction.plog(
                     reaction, doub_plog_dct)
             else:  # if Arrhenius
-                print('arrtest', doub_highp)
                 chemkin_str = chemkin_io.writer.reaction.arrhenius(
                     reaction, doub_highp)
 

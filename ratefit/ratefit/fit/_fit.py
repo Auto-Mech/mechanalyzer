@@ -185,8 +185,7 @@ def _assess_fit_method(ktp_dct, inp_fit_method):
     """
 
     if ktp_dct:
-        pressures = list(ktp_dct.keys())
-        npressures = len(pressures)
+        npressures = len(list(ktp_dct.keys()))
         if npressures == 1 or (npressures == 2 and 'high' in pressures):
             fit_method = 'arrhenius'
         else:

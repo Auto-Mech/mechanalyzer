@@ -41,17 +41,20 @@ DATA = numpy.array([
     [2.519556223651740E+13, 2.519405297926480E+13],
     [3.011038339418150E+13, 3.011531294245150E+13]
 ])
-REF_ARR_KTS = pandas.DataFrame(data=DATA, index=TEMPS, columns=('Single', 'Double'))
+REF_ARR_KTS = pandas.DataFrame(
+    data=DATA, index=TEMPS, columns=('Single', 'Double'))
 
 
 def test__single_arrhenius():
     """ test ratefit.calc._rates.arrhenius
         test ratefit.calc._rates.single_arrhenius
     """
+
     calc_ks1 = ratefit.calc.arrhenius(
         ((SGL_A1, SGL_N1, SGL_EA1),), T_REF, TEMPS)
     calc_ks2 = ratefit.calc.single_arrhenius(
         SGL_A1, SGL_N1, SGL_EA1, T_REF, TEMPS)
+
     assert numpy.allclose(calc_ks1, REF_ARR_KTS['Single'], atol=0.01)
     assert numpy.allclose(calc_ks2, REF_ARR_KTS['Single'], atol=0.01)
 
@@ -60,14 +63,11 @@ def test__double_arrhenius():
     """ test ratefit.calc._rates.arrhenius
         test ratefit.calc._rates.double_arrhenius
     """
+
     calc_ks1 = ratefit.calc.arrhenius(
         ((DBL_A1, DBL_N1, DBL_EA1), (DBL_A2, DBL_N2, DBL_EA2)), T_REF, TEMPS)
     calc_ks2 = ratefit.calc.double_arrhenius(
         DBL_A1, DBL_N1, DBL_EA1, DBL_A2, DBL_N2, DBL_EA2, T_REF, TEMPS)
+
     assert numpy.allclose(calc_ks1, REF_ARR_KTS['Double'], atol=0.01)
     assert numpy.allclose(calc_ks2, REF_ARR_KTS['Double'], atol=0.01)
-
-
-if __name__ == '__main__':
-    test__single_arrhenius()
-    test__double_arrhenius()

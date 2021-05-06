@@ -1,4 +1,6 @@
 """ Test read MESS and fit rates
+
+    NEED TO MAKE A REAL TEST
 """
 
 import os
@@ -16,9 +18,7 @@ print('Temp Run Dir:', TMP_DIR)
 shutil.copy(MESS_OUT_FILE, os.path.join(TMP_DIR, 'rate.out'))
 
 # Data
-PES_FORMULA = 'CH4'
 FIT_METHOD1 = 'arrhenius'
-FIT_METHOD2 = 'chebyshev'
 
 # influences direction of reactions from MESS if forw and rev not taken
 # no explicit control inside of mechdriver

@@ -308,18 +308,6 @@ def _check_csv(data):
     # Check validity of inchi and multiplicity combinations (and chg?)
     # assert _is_valid_inchi_multiplicity(ich, mul)
 
-    # Add check to see for equivalence of columns
-    # if proper:
-    #     num_rows = len(data.name)
-    #     print(num_rows)
-    #     print(data)
-    #     for col in data.columns:
-    #         print(col)
-    #         print(len(col))
-    #         if len(col) != num_rows:
-    #             proper = False
-    # print('proper3', proper)
-
     return proper
 
 

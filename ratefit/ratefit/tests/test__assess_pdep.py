@@ -31,7 +31,3 @@ def test__assess_pdep():
     assert pressure_dependent_ktp_dct(KTP_DCT) == ref_ktp_dct1
     assert pressure_dependent_ktp_dct(KTP_DCT, temps=TEMPS) == ref_ktp_dct2
     assert pressure_dependent_ktp_dct(KTP_DCT, temps=TEMPS, pval=PVAL) is None
-
-
-if __name__ == '__main__':
-    test__assess_pdep()

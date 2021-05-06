@@ -324,8 +324,6 @@ def plog_one_pressure(plog_dct, t_ref, temps, pressure):
             plog_params = plog_dct[plog_pressure]
 
     # If pressure equals value use, arrhenius expression
-    # pressure_defined = False
-    # print('def', pressure_defined)
     if pressure_defined:
         ktps = arrhenius(plog_params, t_ref, temps)
     else:

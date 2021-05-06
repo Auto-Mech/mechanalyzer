@@ -140,6 +140,7 @@ def test__sort_with_input():
 
     # Sort mechanism
     isolate_spc, sort_lst = mparser.parse_sort(sort_str)
+
     param_dct_sort, _, _, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
     print(param_dct_sort)
@@ -400,13 +401,4 @@ def _read_files(spc_path, mech_path, sort_path):
 
 
 if __name__ == '__main__':
-    test__sortby_species_subpes()
-    test__sortby_submech()
-    test__sortby_mult()
-    test__sortby_molec_r1()
-    test__sortby_rxnclass()
-    test__sortby_submech_class()
-    test__sort_ktp()
     test__sort_with_input()
-    test__build_sorted_pesdct()
-    test__readwrite_thirdbody()

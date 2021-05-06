@@ -19,7 +19,7 @@ LOWP_KTS = numpy.array(
 PRESSURES = numpy.array([0.5, 1.0, 2.0, 5.0, 10.0])
 TEMPS = numpy.arange(300.0, 3300.0, 300.0)
 
-REF_LOWP_LIM_KTPS = {
+REF_LOWP_KTPS = {
     0.5: numpy.array(
         [1.00693247e+14, 1.02654267e+13, 2.69691795e+12, 1.04439755e+12,
          5.00311362e+11, 2.74195694e+11, 1.64900047e+11, 1.06147744e+11,
@@ -48,12 +48,12 @@ def test__calc():
         test ratefit.calc.rate.lowp_limit_one_pressure
     """
 
-    lowp_lim_ktps = ratefit.calc.lowp_limit(LOWP_KTS, TEMPS, PRESSURES)
+    lowp_ktps = ratefit.calc.lowp_limit(LOWP_KTS, TEMPS, PRESSURES)
 
-    assert numpy.allclose(tuple(lowp_lim_ktps.keys()), PRESSURES)
+    assert numpy.allclose(tuple(lowp_ktps.keys()), PRESSURES)
 
-    assert numpy.allclose(lowp_lim_ktps[0.5], REF_LOWP_LIM_KTPS[0.5], atol=0.01)
-    assert numpy.allclose(lowp_lim_ktps[1.0], REF_LOWP_LIM_KTPS[1.0], atol=0.01)
-    assert numpy.allclose(lowp_lim_ktps[2.0], REF_LOWP_LIM_KTPS[2.0], atol=0.01)
-    assert numpy.allclose(lowp_lim_ktps[5.0], REF_LOWP_LIM_KTPS[5.0], atol=0.01)
-    assert numpy.allclose(lowp_lim_ktps[10.0], REF_LOWP_LIM_KTPS[10.0], atol=0.01)
+    assert numpy.allclose(lowp_ktps[0.5], REF_LOWP_KTPS[0.5], atol=0.01)
+    assert numpy.allclose(lowp_ktps[1.0], REF_LOWP_KTPS[1.0], atol=0.01)
+    assert numpy.allclose(lowp_ktps[2.0], REF_LOWP_KTPS[2.0], atol=0.01)
+    assert numpy.allclose(lowp_ktps[5.0], REF_LOWP_KTPS[5.0], atol=0.01)
+    assert numpy.allclose(lowp_ktps[10.0], REF_LOWP_KTPS[10.0], atol=0.01)

@@ -55,8 +55,6 @@ def pressure_dependent_ktp_dct(inp_ktp_dct,
     else:
         print('No pressure dependence detected.',
               'Grabbing k(T)s at {} atm'.format(pval))
-        # print('pval', no_pdep_pval)
-        # print('ktpdct\n', inp_ktp_dct)
         if pval in inp_ktp_dct:
             pdep_ktp_dct = {'high': inp_ktp_dct[pval]}
         else:
