@@ -6,7 +6,7 @@ jobs:
         working_directory: ~/ratefit
         steps:
             - checkout  # checkout the code
-            - run: 
+            - run:
                 name: Create conda environment
                 command: |
                     apt-get update --yes
@@ -24,7 +24,7 @@ jobs:
                     source activate ratefit-env
                     cd ratefit/external/dsarrfit
                     bash build.sh
-            -run:
+            - run:
                 name: Build/install troefit
                 command: |
                     source activate ratefit-env
@@ -34,13 +34,14 @@ jobs:
                 name: Build/install ratefit
                 command: |
                     source activate ratefit-env
+                    cd ratefit
                     python setup.py install
             - run:
                 name: Test ratefit
                 command: |
                     source activate ratefit-env
                     cd ratefit
-                    pytest -v
+                    pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs ratefit
                     flake8 --exit-zero ratefit
                     pylint --rcfile=../.pylintrc ratefit
 workflows:
