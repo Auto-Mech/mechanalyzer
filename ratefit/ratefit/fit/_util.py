@@ -124,6 +124,18 @@ def invert_ktp_dct(ktp_dct):
     return inv_ktp_dct
 
 
+def fitting_temperatures_dct(ktp_dct):
+    """ Build a fit temp dct
+    """
+
+    _dct = {}
+    for pressure, tk_arr in ktp_dct.items():
+        temps = tk_arr[0]
+        _dct[pressure] = (min(temps), max(temps))
+
+    return _dct
+
+
 def pull_highp_from_dct(param_dct):
     """ seperate the high pressure rates from the param
     """

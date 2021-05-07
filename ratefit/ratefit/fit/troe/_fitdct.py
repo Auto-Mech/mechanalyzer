@@ -3,42 +3,40 @@
   Troe expressions
 """
 
-import ratefit
 import chemkin_io
+import ratefit
+# from ratefit.fit import fitting_temperatures_dct
+from ratefit.fit import fitting_error_dct
+from ratefit.fit import set_a_conversion_factor
 
 
-def perform_troe_fits(ktp_dct, reaction, mess_path,
-                      troe_param_fit_lst, a_conv_factor, err_thresh):
+def pes(ktp_dct, reaction, mess_path, params, tol):
     """ Fit rate constants to Troe parameters
     """
 
+    # Initialize the a conversion factor
+    a_conv_factor = set_a_conversion_factor(reaction)
+
     # Dictionaries to store info; indexed by pressure (given in fit_ps)
     fit_param_dct = {}
-    fit_temp_dct = {}
+    # fit_temp_dct = {}
 
     # Calculate the fitting parameters from the filtered T,k lists
-    new_dct = {}
-    for key, val in ktp_dct.items():
-        if key != 'high':
-            new_dct[key] = val
-    inv_ktp_dct = ratefit.fit.flip_ktp_dct(new_dct)
-    fit_params = ratefit.fit.troe.std_form(
-        inv_ktp_dct, troe_param_fit_lst, mess_path,
-        highp_a=8.1e-11, highp_n=-0.01, highp_ea=1000.0,
-        lowp_a=8.1e-11, lowp_n=-0.01, lowp_ea=1000.0,
+    fit_params = ratefit.fit.troe.reaction(
+        ktp_dct, mess_path,
+        troe_param_fit_lst=params,
+        highp_guess=(8.1e-11, -0.01, 1000.0),
+        lowp_guess=(8.1e-11, -0.01, 1000.0),
         alpha=0.19, ts1=590, ts2=1.e6, ts3=6.e4,
         fit_tol1=1.0e-8, fit_tol2=1.0e-8,
-        a_conv_factor=1.0)
+        a_conv_factor=a_conv_factor)
 
     # Store the parameters in the fit dct
-    for pressure, tk_arr in ktp_dct.items():
-
-        # Store the fitting parameters in a dictionary
+    for pressure in ktp_dct:
         fit_param_dct[pressure] = fit_params
 
-        # Store the temperatures used to fit in a dictionary
-        temps = tk_arr[0]
-        fit_temp_dct[pressure] = [min(temps), max(temps)]
+    # Build fit temp dct
+    # fit_temp_dct = fitting_temperatures_dct(fit_param_dct)
 
     # Check if the desired fits were successful at each pressure
     fit_success = all(params for params in fit_param_dct.values())
@@ -47,7 +45,7 @@ def perform_troe_fits(ktp_dct, reaction, mess_path,
     if fit_success:
         fit_err_dct = assess_troe_fit_err(
             fit_param_dct, ktp_dct, t_ref=1.0, a_conv_factor=a_conv_factor)
-        fit_good = max((vals[1] for vals in fit_err_dct.values())) < err_thresh
+        fit_good = max((vals[1] for vals in fit_err_dct.values())) < tol
         if fit_good:
             chemkin_str = chemkin_io.writer.reaction.troe(
                 reaction,
@@ -90,16 +88,9 @@ def assess_troe_fit_err(fit_param_dct, ktp_dct, t_ref=1.0, a_conv_factor=1.0):
             params[6], params[8], params[7], ts2=params[9])
 
         # Store the fitting parameters in a dictionary
-        fit_k_dct[pressure] = fit_ks / a_conv_factor
+        fit_k_dct[pressure] = (temps, fit_ks / a_conv_factor)
 
     # Calculute the error between the calc and fit ks
-    for pressure, fit_ks in fit_k_dct.items():
-
-        calc_ks = ktp_dct[pressure][1]
-        mean_avg_err, max_avg_err = ratefit.calc.fitting_errors(
-            calc_ks, fit_ks)
-
-        # Store in a dictionary
-        fit_err_dct[pressure] = [mean_avg_err, max_avg_err]
+    fit_err_dct = fitting_error_dct(ktp_dct, fit_k_dct)
 
     return fit_err_dct

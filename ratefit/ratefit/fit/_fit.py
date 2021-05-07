@@ -8,7 +8,7 @@ import mess_io
 import ioformat
 from ratefit.fit import arrhenius as arrfit
 from ratefit.fit import chebyshev as chebfit
-# from ratefit.fit import troe as troefit
+from ratefit.fit import troe as troefit
 from ratefit.fit._util import filter_ktp_dct
 from ratefit.fit._pdep import pressure_dependent_ktp_dct
 
@@ -25,7 +25,8 @@ DEFAULT_ARRFIT_DCT = {
     'dblcheck': 'max'
 }
 DEFAULT_TROE_DCT = {
-    'params': ('ts1', 'ts2', 'ts3', 'alpha')
+    'params': ('ts1', 'ts2', 'ts3', 'alpha'),
+    'tol': 20.0
 }
 DEFAULT_CHEB_DCT = {
     'tdeg': 6,
@@ -35,10 +36,10 @@ DEFAULT_CHEB_DCT = {
 
 
 def fit_ktp_dct(mess_path, inp_fit_method,
-                pdep_dct=DEFAULT_PDEP_DCT,
-                arrfit_dct=DEFAULT_ARRFIT_DCT,
-                chebfit_dct=DEFAULT_CHEB_DCT,
-                troefit_dct=DEFAULT_TROE_DCT,
+                pdep_dct=None,
+                arrfit_dct=None,
+                chebfit_dct=None,
+                troefit_dct=None,
                 label_dct=None,
                 fit_temps=None, fit_pressures=None,
                 fit_tunit='K', fit_punit='atm'):
@@ -49,14 +50,19 @@ def fit_ktp_dct(mess_path, inp_fit_method,
     # Read the mess input and output strings using the path
     mess_out_str = ioformat.pathtools.read_file(mess_path, 'rate.out')
 
-    # Read the label dct from the MESS file if unprovided
+    # Set dictionaries if they are unprovided
+    pdep_dct = pdep_dct or DEFAULT_PDEP_DCT
+    arrfit_dct = arrfit_dct or DEFAULT_ARRFIT_DCT
+    chebfit_dct = chebfit_dct or DEFAULT_CHEB_DCT
+    troefit_dct = troefit_dct or DEFAULT_TROE_DCT
+
     if label_dct is None:
         labels = mess_io.reader.rates.labels(mess_out_str, read_fake=False)
         label_dct = dict(zip(labels, labels))
-    rxn_pairs = gen_reaction_pairs(label_dct)
 
     # Loop through reactions, fit rates, and write ckin strings
     chemkin_str_dct = {}
+    rxn_pairs = gen_reaction_pairs(label_dct)
     for (name_i, lab_i), (name_j, lab_j) in rxn_pairs:
 
         # Set the name and A conversion factor
@@ -87,9 +93,9 @@ def fit_ktp_dct(mess_path, inp_fit_method,
             if not chemkin_str:
                 chemkin_str = arrfit.pes(
                     ktp_dct, reaction, mess_path, **arrfit_dct)
-        # elif fit_method == 'troe':
-        #     chemkin_str += troefit.pes(
-        #         ktp_dct, reaction, mess_path, **troefit_dct)
+        elif fit_method == 'troe':
+            chemkin_str += troefit.pes(
+                ktp_dct, reaction, mess_path, **troefit_dct)
 
         # Update the chemkin string dct {PES FORMULA: [PES CKIN STRS]}
         print('\nFinal Fitting Parameters in CHEMKIN Format:', chemkin_str)
@@ -185,7 +191,8 @@ def _assess_fit_method(ktp_dct, inp_fit_method):
     """
 
     if ktp_dct:
-        npressures = len(list(ktp_dct.keys()))
+        pressures = list(ktp_dct.keys())
+        npressures = len(pressures)
         if npressures == 1 or (npressures == 2 and 'high' in pressures):
             fit_method = 'arrhenius'
         else:

@@ -9,6 +9,7 @@ from ratefit.fit._err import fitting_errors
 from ratefit.fit._util import get_valid_tk
 from ratefit.fit._util import filter_ktp_dct
 from ratefit.fit._util import invert_ktp_dct
+from ratefit.fit._util import pull_highp_from_dct
 from ratefit.fit._util import set_a_conversion_factor
 
 from ratefit.fit._fit import fit_ktp_dct
@@ -27,6 +28,7 @@ __all__ = [
     'get_valid_tk',
     'filter_ktp_dct',
     'invert_ktp_dct',
+    'pull_highp_from_dct',
     'set_a_conversion_factor',
     'fit_ktp_dct',
     'arrhenius',

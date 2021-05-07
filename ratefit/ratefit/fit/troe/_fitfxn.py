@@ -4,6 +4,7 @@
 import os
 from ratefit.fit.troe import troefit_io
 from ratefit.fit import invert_ktp_dct
+from ratefit.fit import pull_highp_from_dct
 
 
 RC = 1.98720425864083e-3  # Gas Constant in kcal/mol.K
@@ -47,8 +48,11 @@ def reaction(ktp_dct, troefit_path,
         :rtype: list
     """
 
+    # Pull high pressures out
+    _, num_ktp_dct, _ = pull_highp_from_dct(ktp_dct)
+
     # Invert the k(T,P) dct to k(P,T) dct
-    kpt_dct = invert_ktp_dct(ktp_dct)
+    kpt_dct = invert_ktp_dct(num_ktp_dct)
 
     # Write the input file for the ratefit code
     ratefit_inp_str = troefit_io.write_input(
