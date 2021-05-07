@@ -1,7 +1,6 @@
 name: mechanalyzer-env
 
 channels:
-    - kevinmooreiii
     - auto-mech
     - psi4
     - rdkit
@@ -21,10 +20,11 @@ dependencies:
     - future
     - flake8
     - pylint
-    - kevinmooreiii::autoio
-    - kevinmooreiii::automol
-    - kevinmooreiii::autoparse
-    - kevinmooreiii::ratefit
+    - auto-mech::autoio
+    - auto-mech::automol
+    - auto-mech::autoparse
+    - auto-mech::ratefit
+    - auto-mech::elstruct
     - auto-mech::x2z
     - psi4::psi4
     - rdkit::rdkit

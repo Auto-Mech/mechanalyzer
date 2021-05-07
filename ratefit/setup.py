@@ -5,16 +5,24 @@
 from distutils.core import setup
 
 
-setup(name="ratefit",
-      version="0.1.0",
-      packages=[
+setup(
+    name="ratefit",
+    version="0.1.0",
+    packages=[
         'ratefit',
         'ratefit.calc',
         'ratefit.fit',
         'ratefit.fit.arrhenius',
         'ratefit.fit.chebyshev',
         'ratefit.fit.troe'],
-      package_data={
+    package_dir={
+        'ratefit': 'ratefit',
+        'calc': 'calc',
+        'fit': 'fit'
+    },
+    package_data={
         'ratefit': ['tests/data/*',
                     'fit/arrhenius/dsarrfit.mako',
-                    'fit/troe/troefit.mako']})
+                    'fit/troe/troefit.mako']
+    }
+)

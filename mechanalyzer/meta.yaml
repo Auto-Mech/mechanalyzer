@@ -1,4 +1,4 @@
-# cmd: conda build . -c kevinmooreiii -c auto-mech -c psi4 -c rdkit -c openbabel -c conda-forge
+# cmd: conda build . -c auto-mech -c psi4 -c rdkit -c openbabel -c conda-forge
 package:
     name: mechanalyzer
     version: "0.1.0"
@@ -26,8 +26,8 @@ requirements:
         - openbabel::openbabel
         - conda-forge::qcelemental
         - psi4::psi4
-        - kevinmooreiii::autoio
-        - kevinmooreiii::automol
-        - kevinmooreiii::autoparse
-        - kevinmooreiii:ratefit
+        - auto-mechiii::autoio
+        - auto-mechiii::automol
+        - auto-mechiii::autoparse
+        - auto-mechiii:ratefit
         - auto-mech::x2z
