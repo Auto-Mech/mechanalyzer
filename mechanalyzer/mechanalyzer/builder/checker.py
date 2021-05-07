@@ -5,19 +5,23 @@ from collections import Counter as counter
 from chemkin_io.writer._util import format_rxn_name
 
 
-def run_all_checks(rxn_param_dct, rxn_ktp_dct, k_thresholds, rxn_num_threshold, filename=None):
-    """ Run all the mechanism checks and output a string describing the results. Optionally write a
-        text file with the string.
+def run_all_checks(rxn_param_dct, rxn_ktp_dct, k_thresholds,
+                   rxn_num_threshold, filename=None):
+    """ Run all mechanism checks and output a string describing the results.
+        Optionally write a text file with the string.
 
         :param rxn_param_dct: rate constant parameters for a mechanism
-        :type rxn_param_dct: dct {rxn1: (param_tuple1, param_tuple2, ...), rxn2: ...}
+        :type rxn_param_dct: dct
+            {rxn1: (param_tuple1, param_tuple2, ...), rxn2: ...}
         :param rxn_ktp_dct: rate constant values for a mechanism
         :type rxn_ktp_dct: dct {rxn1: ktp_dct1, rxn2: ...}
-        :param k_thresholds: rate constant thresholds for uni-, bi-, and ter-molecular reactions
-        :type k_thresholds: list [unimolec_threshold, bimolec_threshold, termolec_threshold]
-        :param rxn_num_threshold: # of reactions at and below which a species is considered "lone"
+        :param k_thresholds: rate constant thresholds
+            for uni-, bi-, and ter-molecular reactions
+        :type k_thresholds: list [float, float, float]
+        :param rxn_num_threshold: # of reactions at and below
+            which a species is considered "lone"
         :type rxn_num_threshold: int
-        :param filename: filename for output file; if None, no file will be written
+        :param filename: filename for output file; if None, no file written
         :type filename: str
         :return total_str: description of all the checks performed
         :rtype: str
@@ -68,24 +72,30 @@ def run_all_checks(rxn_param_dct, rxn_ktp_dct, k_thresholds, rxn_num_threshold, 
 
 
 def get_sources_and_sinks(rxn_param_dct):
-    """ Get species that only appear as reactants (sources) or only appear as products (sinks).
-        Output sources and sinks and the reaction keys for all reactions in which each species
+    """ Get species that only appear as reactants (sources) or
+        only appear as products (sinks). Output sources and sinks and
+        the reaction keys for all reactions in which each species
         participates.
 
         :param rxn_param_dct: rate constant parameters for a mechanism
-        :type rxn_param_dct: dct {rxn1: (param_tuple1, param_tuple2, ...), rxn2: ...}
-        :return source_species: species that only appear as reactants and associated reactions
+        :type rxn_param_dct: dct
+            {rxn1: (param_tuple1, param_tuple2, ...), rxn2: ...}
+        :return source_species: species that only appear
+            as reactants and associated reactions
         :rtype: dct {spc1: [rxn1, rxn2, ...], spc2: ...}
-        :return sink_species: species that only appear as products and associated reactions
+        :return sink_species: species that only appear
+            as products and associated reactions
         :rtype: dct {spc1: [rxn1, rxn2, ...], spc2: ...}
     """
+
     # Get lists of source and sink species
+    # Sorted to make the writer test succeed
     all_rcts, all_prds = _get_rcts_prds(rxn_param_dct)
-    sources = sorted(list(set(all_rcts) - set(all_prds)))  # sorted to make the writer test succeed
+    sources = sorted(list(set(all_rcts) - set(all_prds)))
     sinks = sorted(list(set(all_prds) - set(all_rcts)))
 
     # Store the reaction name(s) for each source or sink species
-    source_spcs = {spc: [] for spc in sources}  # dct with empty lists as values
+    source_spcs = {spc: [] for spc in sources}
     sink_spcs = {spc: [] for spc in sinks}
     for spc in sources:
         for rxn in rxn_param_dct.keys():
@@ -100,17 +110,20 @@ def get_sources_and_sinks(rxn_param_dct):
 
 
 def get_large_kts(rxn_ktp_dct, thresholds):
-    """ Get the reactions and k(T,P) values for rate constants that exceed molecularity-specific
-        thresholds
+    """ Get the reactions and k(T,P) values for rate constants
+        that exceed molecularity-specific thresholds
 
         :param rxn_ktp_dct: rate constant values for a mechanism
         :type rxn_ktp_dct: dct {rxn1: ktp_dct1, rxn2: ...}
-        :param thresholds: rate constant thresholds for uni-, bi-, and ter-molecular reactions
-        :type thresholds: list [unimolec_threshold, bimolec_threshold, termolec_threshold]
-        :return large_rxn_ktp_dcts: list of rxn_ktp_dcts containing reactions that exceed the
+        :param thresholds: rate constant thresholds for
+            uni-, bi-, and ter-molecular reactions
+        :type thresholds: list [float, float, float]
+        :return large_rxn_ktp_dcts: list of rxn_ktp_dcts containing
+            reactions that exceed the
             unimolecular, bimolecular, and termolecular thresholds
-        :rtype: lst [unimolecular_rxn_ktp_dct, bimolecular_rxn_ktp_dct, termolecular_rxn_ktp_dct]
+        :rtype: list(dict[], dict[], dict[])
     """
+
     unimolec_rxn_ktp_dct = {}
     bimolec_rxn_ktp_dct = {}
     termolec_rxn_ktp_dct = {}
@@ -141,12 +154,14 @@ def get_large_kts(rxn_ktp_dct, thresholds):
 
 
 def get_negative_kts(rxn_ktp_dct):
-    """ Finds any pressures within a mechanism that contain negative rate constant and outputs
-        all rate constants at that pressure (including any neighboring positive values)
+    """ Finds any pressures within a mechanism that contain
+        negative rate constant and outputs all rate constants at that pressure
+        (including any neighboring positive values).
 
         :param rxn_ktp_dct: rate constant values for a mechanism
         :type rxn_ktp_dct: dct {rxn1: ktp_dct1, rxn2: ...}
-        :return negative_rxn_ktp_dct: k(T)s at every pressure with one or more negative k(T)
+        :return negative_rxn_ktp_dct: k(T)s at every pressure with
+            one or more negative k(T)
         :rtype: dct {rxn1: ktp_dct1, rxn2: ...}
     """
     negative_rxn_ktp_dct = {}
@@ -163,16 +178,21 @@ def get_negative_kts(rxn_ktp_dct):
 
 
 def get_lone_spcs(rxn_param_dct, threshold):
-    """ Get species that are considered "lone" species based on only being included in a
-        small number of reactions (the cutoff for which is set by threshold). Output each
-        lone species and the reaction keys for all reactions in which each lone species
-        participates.
+    """ Get species that are considered "lone" species based on only
+        being included in a small number of reactions
+        (the cutoff for which is set by threshold).
+
+        Output each lone species and the reaction keys for
+        all reactions in which each lone species participates.
 
         :param rxn_param_dct: rate constant parameters for a mechanism
-        :type rxn_param_dct: dct {rxn1: (param_tuple1, param_tuple2, ...), rxn2: ...}
-        :param threshold: number of reactions at and below which a species is considered "lone"
+        :type rxn_param_dct: dct
+            {rxn1: (param_tuple1, param_tuple2, ...), rxn2: ...}
+        :param threshold: number of reactions at and below which
+            a species is considered "lone"
         :type threshold: int
-        :return lone_spcs: dictionary containing each lone species and its reactions
+        :return lone_spcs: dictionary containing
+            each lone species and its reactions
         :rtype: dct {lone_spc1: [rxn1, rxn2, ...], lone_spc2: ...}
 
     """
@@ -187,9 +207,9 @@ def get_lone_spcs(rxn_param_dct, threshold):
             lone_spcs[spc] = []
 
     # Store the reaction name(s) for each lone species
-    for spc in lone_spcs.keys():
+    for spc in lone_spcs:
         for rxn in rxn_param_dct.keys():
-            if spc in rxn[0] or spc in rxn[1]:  # whether the spc shows up in prds or rcts
+            if spc in rxn[0] or spc in rxn[1]:  # whether spc in prds or rcts
                 lone_spcs[spc].append(rxn)
 
     return lone_spcs
@@ -199,8 +219,9 @@ def get_duplicates(rxn_param_dct):
     """ Get reactions that have more than 2 rate expressions
 
         :param rxn_param_dct: rate constant parameters for a mechanism
-        :type rxn_param_dct: dct {rxn1: (param_tuple1, param_tuple2, ...), rxn2: ...}
-        :return duplicate_rxns: duplicate reactions and the number of expressions
+        :type rxn_param_dct: dct
+            {rxn1: (param_tuple1, param_tuple2, ...), rxn2: ...}
+        :return duplicate_rxns: duplicate reactions and number of expressions
         :rtype: dct {rxn1: num_of_expressions1, rxn2: ...}
     """
     duplicate_rxns = {}
@@ -212,13 +233,18 @@ def get_duplicates(rxn_param_dct):
 
 
 def get_mismatches(rxn_param_dct):
-    """ Get reactions that have mismatching rate expressions (e.g., PLOG and Arrhenius)
+    """ Get reactions that have mismatching rate expressions
+        (e.g., PLOG and Arrhenius).
 
         :param rxn_param_dct: rate constant parameters for a mechanism
-        :type rxn_param_dct: dct {rxn1: (param_tuple1, param_tuple2, ...), rxn2: ...}
-        :return mismatched_rxns: list of mismatched reactions with params and types of expressions
-        :rtype: dct {rxn1: ((param_tuple1, param_tuple2, ...), [type1, type2, ...], rxn2: ...}
+        :type rxn_param_dct: dct
+            {rxn1: (param_tuple1, param_tuple2, ...), rxn2: ...}
+        :return mismatched_rxns: list of mismatched reactions with
+            params and types of expressions
+        :rtype: dct {rxn1: ((param_tuple1, param_tuple2, ...),
+                            [type1, type2, ...], rxn2: ...}
     """
+
     def classify_rate(param):
         """ Classify a rate based on the contents of the param
         """
@@ -251,16 +277,19 @@ def get_mismatches(rxn_param_dct):
 
 
 def write_sources_and_sinks(source_spcs, sink_spcs):
-    """ Write any species that occur as only sources or sinks, along with their associated
-        reactions, to a string
+    """ Write any species that occur as only sources or sinks,
+        along with their associated reactions, to a string.
 
-        :param source_spcs: species that only appear as reactants and associated reactions
+        :param source_spcs: species that only appear as
+            reactants and associated reactions
         :type source_spcs: dct {spc1: [rxn1, rxn2, ...], spc2: ...}
-        :param sink_spcs: species that only appear as products and associated reactions
+        :param sink_spcs: species that only appear as
+            products and associated reactions
         :type sink_spcs: dct {spc1: [rxn1, rxn2, ...], spc2: ...}
-        :return source_sink_str: string containing info on source and sink species
+        :return source_sink_str: string with info on source and sink species
         :rtype: str
     """
+
     def write_dct(spc_dct, max_spc_len, buffer=7):
         """ Write either a source_spcs or sink_spcs dct to a string
         """
@@ -268,7 +297,7 @@ def write_sources_and_sinks(source_spcs, sink_spcs):
         for spc, rxns in spc_dct.items():
             new_str += ('{0:<' + str(max_spc_len + buffer) + 's}').format(spc)
             for rxn_idx, rxn in enumerate(rxns):
-                if rxn_idx != 0:  # don't a comma and space before the first rxn
+                if rxn_idx != 0:  # don't add comma/space before first rxn
                     new_str += ', '
                 new_str += format_rxn_name(rxn)
             new_str += '\n'
@@ -276,17 +305,20 @@ def write_sources_and_sinks(source_spcs, sink_spcs):
 
         return new_str
 
-    source_sink_str = '\nSOURCE AND SINK SPECIES\n\nThese species only appear as reactants:\n'
+    source_sink_str = (
+        '\nSOURCE AND SINK SPECIES\n\n' +
+        'These species only appear as reactants:\n'
+    )
 
-    if source_spcs != {}:
-        max_source_spc_len = max(map(len, list(source_spcs.keys())))  # longest spc name
-        source_sink_str += write_dct(source_spcs, max_source_spc_len)
+    if source_spcs:
+        longest_source_name = max(map(len, list(source_spcs.keys())))
+        source_sink_str += write_dct(source_spcs, longest_source_name)
     else:  # if source_spcs is empty
         source_sink_str += 'No source species found\n\n'
     source_sink_str += 'These species only appear as products:\n'
-    if sink_spcs != {}:
-        max_sink_spc_len = max(map(len, list(sink_spcs.keys())))  # longest spc name
-        source_sink_str += write_dct(sink_spcs, max_sink_spc_len)
+    if sink_spcs:
+        longest_sink_name = max(map(len, list(sink_spcs.keys())))
+        source_sink_str += write_dct(sink_spcs, longest_sink_name)
     else:  # if sink_spcs is empty
         source_sink_str += 'No sink species found\n\n'
     source_sink_str += '\n'
@@ -295,51 +327,65 @@ def write_sources_and_sinks(source_spcs, sink_spcs):
 
 
 def write_large_kts(large_rxn_ktp_dcts, thresholds):
-    """ Write the reactions and k(T,P) values for rate constants that exceed molecularity-specific
-        thresholds
+    """ Write the reactions and k(T,P) values for rate constants
+        that exceed molecularity-specific thresholds.
 
-        :param large_rxn_ktp_dcts: list of rxn_ktp_dcts containing reactions that exceed the
+        :param large_rxn_ktp_dcts: list of rxn_ktp_dcts containing
+            reactions that exceed the
             unimolecular, bimolecular, and termolecular thresholds
-        :type: lst [unimolecular_rxn_ktp_dct, bimolecular_rxn_ktp_dct, termolecular_rxn_ktp_dct]
-        :param thresholds: rate constant thresholds for uni-, bi-, and ter-molecular reactions
-        :type thresholds: list [unimolec_threshold, bimolec_threshold, termolec_threshold]
+        :type: lst [dict[], dict[], dict[]]
+        :param thresholds: rate constant thresholds for
+            uni-, bi-, and ter-molecular reactions
+        :type thresholds: list [float, float, float]
         :return large_kts_str: string describing the large rate constants
         :rtype: str
     """
-    unimolec_rxn_ktp_dct, bimolec_rxn_ktp_dct, termolec_rxn_ktp_dct = large_rxn_ktp_dcts
+
+    unimolec_dct, bimolec_dct, termolec_dct = large_rxn_ktp_dcts
 
     # Header
     large_kts_str = '\nLARGE RATE CONSTANTS\n\n'
-    large_kts_str += f'Unimolecular threshold: {thresholds[0]:0.1E} s^-1\n'
-    large_kts_str += f'Bimolecular threshold: {thresholds[1]:0.1E} cm^3 mol^-1 s^-1\n'
-    large_kts_str += f'Termolecular threshold: {thresholds[2]:0.1E} cm^6 mol^-2 s^-1\n\n'
+    large_kts_str += (
+        f'Unimolecular threshold: {thresholds[0]:0.1E} s^-1\n' +
+        f'Bimolecular threshold: {thresholds[1]:0.1E} cm^3 mol^-1 s^-1\n' +
+        f'Termolecular threshold: {thresholds[2]:0.1E} cm^6 mol^-2 s^-1\n\n'
+    )
 
     # Unimolecular
-    if unimolec_rxn_ktp_dct == {}:
-        large_kts_str += f'No unimolecular reactions exceed {thresholds[0]:0.1E} s^-1\n\n'
+    if not unimolec_dct:
+        large_kts_str += (
+            'No unimolecular reactions exceed ' +
+            f'{thresholds[0]:0.1E} s^-1\n\n')
     else:
-        large_kts_str += f'Unimolecular rate constants that exceed {thresholds[0]:0.1E} s^-1\n\n'
-        large_kts_str += _write_rxn_ktp_dct(unimolec_rxn_ktp_dct)
+        large_kts_str += (
+            'Unimolecular rate constants that exceed ' +
+            f'{thresholds[0]:0.1E} s^-1\n\n')
+        large_kts_str += _write_rxn_ktp_dct(unimolec_dct)
 
     # Bimolecular
-    if bimolec_rxn_ktp_dct == {}:
-        large_kts_str +=f'No bimolecular reactions exceed {thresholds[1]:0.1E} cm^3 mol^-1 s^-1\n\n'
+    if not bimolec_dct:
+        large_kts_str += (
+            'No bimolecular reactions exceed ' +
+            f'{thresholds[1]:0.1E} cm^3 mol^-1 s^-1\n\n')
     else:
         large_kts_str += (
-            f'Bimolecular rate constants that exceed {thresholds[1]:0.1E} cm^3 mol^-1 s^-1\n\n'
+            'Bimolecular rate constants that exceed ' +
+            f'{thresholds[1]:0.1E} cm^3 mol^-1 s^-1\n\n'
         )
-        large_kts_str += _write_rxn_ktp_dct(bimolec_rxn_ktp_dct)
+        large_kts_str += _write_rxn_ktp_dct(bimolec_dct)
 
     # Termolecular
-    if termolec_rxn_ktp_dct == {}:
+    if not termolec_dct:
         large_kts_str += (
-            f'No termolecular reactions exceed {thresholds[2]:0.1E} cm^6 mol^-2 s^-1\n\n'
+            'No termolecular reactions exceed ' +
+            f'{thresholds[2]:0.1E} cm^6 mol^-2 s^-1\n\n'
         )
     else:
         large_kts_str += (
-            f'Termolecular rate constants that exceed {thresholds[2]:0.1E} cm^6 mol^-2 s^-1\n\n'
+            'Termolecular rate constants that exceed ' +
+            f'{thresholds[2]:0.1E} cm^6 mol^-2 s^-1\n\n'
         )
-        large_kts_str += _write_rxn_ktp_dct(bimolec_rxn_ktp_dct)
+        large_kts_str += _write_rxn_ktp_dct(bimolec_dct)
 
     return large_kts_str
 
@@ -347,11 +393,13 @@ def write_large_kts(large_rxn_ktp_dcts, thresholds):
 def write_negative_kts(negative_rxn_ktp_dct):
     """ Write the rxn_ktp_dct containing negative rate constants to a string
 
-    :param negative_rxn_ktp_dct: a dictionary containing any ktp_dcts with negative values
+    :param negative_rxn_ktp_dct: a dictionary containing
+        any ktp_dcts with negative values
     :type negative_rxn_ktp_dct: dct {rxn1: ktp_dct1, rxn2: ...}
     :return negative_kts_str: string describing the negative_rxn_ktp_dct
     :rtype: str
     """
+
     negative_kts_str = '\nNEGATIVE RATE CONSTANTS\n\n'
     if negative_rxn_ktp_dct == {}:
         negative_kts_str += 'No reactions have negative rate constants\n\n\n'
@@ -362,24 +410,31 @@ def write_negative_kts(negative_rxn_ktp_dct):
 
 
 def write_lone_spcs(lone_spcs, threshold):
-    """ Write the lone species and the reactions in which they participate to a string
+    """ Write lone species and reactions in which they participate to a string.
 
-        :param lone_spcs: dictionary containing each lone species and its reactions
+        :param lone_spcs: dictionary containing
+            each lone species and its reactions
         :type: dct {lone_spc1: [rxn1, rxn2, ...], lone_spc2: ...}
-        :param threshold: number of reactions at and below which a species is considered "lone"
+        :param threshold: number of reactions at and below which
+            a species is considered "lone"
         :type threshold: int
-        :return lone_spcs_str: string describing the lone species and their reactions
+        :return lone_spcs_str: string with lone species and their reactions
         :rtype: str
     """
-    lone_spcs_str = f'\nLONE SPECIES\n\nThese species appear in {threshold} or less reactions\n\n'
-    if lone_spcs != {}:
-        max_spc_len = max(map(len, list(lone_spcs.keys())))  # longest species name
+    lone_spcs_str = (
+        f'\nLONE SPECIES\n\nThese species appear in {threshold}' +
+        'or less reactions\n\n'
+    )
+    if lone_spcs:
+        max_spc_len = max(map(len, list(lone_spcs.keys())))  # longest spc name
         buffer = 5
-        lone_spcs_str += 'Species' + ' ' * (max_spc_len - 7 + buffer) + 'Reactions\n'
+        lone_spcs_str += (
+            'Species' + ' ' * (max_spc_len - 7 + buffer) + 'Reactions\n')
         for spc, rxns in lone_spcs.items():
-            lone_spcs_str += ('{0:<' + str(max_spc_len + buffer) + 's}').format(spc)
+            lone_spcs_str += (
+                '{0:<' + str(max_spc_len + buffer) + 's}').format(spc)
             for rxn_idx, rxn in enumerate(rxns):
-                if rxn_idx != 0:  # don't a comma and space before the first rxn
+                if rxn_idx != 0:  # don't add comma/space before first rxn
                     lone_spcs_str += ', '
                 lone_spcs_str += format_rxn_name(rxn)
             lone_spcs_str += '\n'
@@ -393,14 +448,17 @@ def write_lone_spcs(lone_spcs, threshold):
 def write_duplicates(duplicate_rxns):
     """ Write reactions with more than 2 duplicate expressions to a string
 
-        :param duplicate_rxns: duplicate reactions and the number of expressions
+        :param duplicate_rxns: duplicate reactions and number of expressions
         :type: dct {rxn1: num_of_expressions1, rxn2: ...}
         :return dups_str: description of the duplicate reactions
         :rtype: str
     """
 
-    dups_str = '\nDUPLICATE REACTIONS\n\nThese reactions have more than 2 rate expressions:\n' +\
-               '(Number of rate expressions given in parentheses)\n\n'
+    dups_str = (
+        '\nDUPLICATE REACTIONS\n\n' +
+        'These reactions have more than 2 rate expressions:\n' +
+        '(Number of rate expressions given in parentheses)\n\n'
+    )
 
     if duplicate_rxns != {}:
         for rxn, num_dups in duplicate_rxns.items():
@@ -416,8 +474,10 @@ def write_duplicates(duplicate_rxns):
 def write_mismatches(mismatched_rxns):
     """ Write reactions with mismatching rate expressions to a string
 
-        :param mismatched_rxns: list of mismatched reactions with params and types of expressions
-        :type: dct {rxn1: ((param_tuple1, param_tuple2, ...), [type1, type2, ...], rxn2: ...}
+        :param mismatched_rxns: list of mismatched reactions with
+            params and types of expressions
+        :type: dct {rxn1: ((param_tuple1, param_tuple2, ...),
+                           [type1, type2, ...], rxn2: ...}
         :return mismatch_str: description of the mismatching reactions
         :rtype: str
     """
@@ -425,7 +485,8 @@ def write_mismatches(mismatched_rxns):
     mismatch_str = '\nMISMATCHED REACTIONS\n\n'
 
     if mismatched_rxns != {}:
-        mismatch_str += 'The following reactions have mismatched rate expressions\n'
+        mismatch_str += (
+            'The following reactions have mismatched rate expressions\n')
         for rxn, (_, rxn_types) in mismatched_rxns.items():
             rxn_name = format_rxn_name(rxn)
             mismatch_str += rxn_name + ': '
@@ -436,7 +497,8 @@ def write_mismatches(mismatched_rxns):
             mismatch_str += '\n'
         mismatch_str += '\n\n'
     else:
-        mismatch_str += 'No reactions with mismatching rate expressions found\n\n\n'
+        mismatch_str += (
+            'No reactions with mismatching rate expressions found\n\n\n')
 
     return mismatch_str
 
@@ -444,7 +506,7 @@ def write_mismatches(mismatched_rxns):
 def _write_rxn_ktp_dct(rxn_ktp_dct):
     """ Write a rxn_ktp_dct in an easily readable string
 
-    :param rxn_ktp_dct: a dictionary containing k(T,P) values for various reactions
+    :param rxn_ktp_dct: dictionary containing k(T,P) values for reactions
     :type rxn_ktp_dct: dct {rxn1: ktp_dct1, rxn2: ...}
     :return output_str: string describing the rxn_ktp_dct
     :rtype: str
@@ -466,7 +528,8 @@ def _write_rxn_ktp_dct(rxn_ktp_dct):
 
 
 def _get_rcts_prds(rxn_param_dct):
-    """ Gets lists of all reactants and products in a mechanism (both lists may contain duplicates)
+    """ Gets lists of all reactants and products in a mechanism
+        (both lists may contain duplicates)
 
     :param rxn_param_dct: rate constant parameters for a mechanism
     :return all_rcts: all reactants in the mechanism
@@ -491,16 +554,18 @@ def get_molecularity(rxn):
 
     :param rxn:
     :type rxn:
-    :return molecularity: the molecularity of the reaction; 1 = unimolec., 2 = bimolec., etc.
+    :return molecularity: molecularity of reaction; 1=unimol, 2=bimol, etc.
     :rtype: int
     """
+
     rcts, _, third_bods = rxn
     num_rcts = len(rcts)
     third_bod = third_bods[0]
     if third_bod is not None:
-        if third_bod[0:2] == '(+':  # if the third body does not count toward molecularity
+        # Check if the third body counts toward molecularity
+        if third_bod[0:2] == '(+':
             molecularity = num_rcts
-        else:  # if the third body counts as another species
+        else:
             molecularity = num_rcts + 1
     # If no third body
     else:

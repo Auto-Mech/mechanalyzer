@@ -90,8 +90,10 @@ def parse_sort(sort_str):
     # Read and format information from the sort_mech block
     isol_block = ioformat.ptt.end_block(sort_str, 'sort_mech')
 
-    crit_block = ioformat.ptt.paren_blocks(isol_block, key='criteria')
-    head_block = ioformat.ptt.keyword_value_blocks(isol_block, key='n_criteria_headers')
+    crit_block = ioformat.ptt.paren_blocks(
+        isol_block, key='criteria')
+    head_block = ioformat.ptt.keyword_value_blocks(
+        isol_block, key='n_criteria_headers')
 
     if crit_block:
         crit_lst = ioformat.ptt.values_from_block(
@@ -101,7 +103,7 @@ def parse_sort(sort_str):
     nhead = int(head_block[0][1]) if head_block is not None else 0
 
     sort_lst = crit_lst + (nhead,)
-    
+
     # Print an error message for an isol block
     if isol_block is None:
         print('*ERROR: sort_mech section is not defined')

@@ -11,10 +11,9 @@ jobs:
                     apt-get update --yes
                     apt-get install --yes libxrender-dev build-essential
                     conda env create -f environment.yml
-            - run:
-                name: Build/install autoio
+                name: Build/install ratefit
                 command: |
-                    source activate autoio-env
+                    source activate ratefit-env
                     python setup.py install
             - run:
                 name: Build/install dsarrfit

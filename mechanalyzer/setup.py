@@ -3,15 +3,17 @@
 
 from distutils.core import setup
 
+
 setup(name="mechanalyzer",
-      version="0.1.1",
-      packages=['plotter',
-        'builder',
-        'calculator',
-        'parser',
-        'plotter',
-        'par',
-        'inf'],
+      version="0.1.0",
+      packages=[
+            'plotter',
+            'builder',
+            'calculator',
+            'parser',
+            'plotter',
+            'par',
+            'inf'],
       package_dir={
           'plotter': 'plotter',
           'builder': 'builder',

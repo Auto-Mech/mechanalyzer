@@ -153,7 +153,7 @@ def sort_by_max_ratio(aligned_rxn_ratio_dct, aligned_rxn_ktp_dct):
         max_ratio = -0.5  # this value keeps rxns without ratio_dcts behind rxns with them
         for ratio_dct in ratio_dcts:
             if ratio_dct is not None:
-                for pressure, (temps, ratios) in ratio_dct.items():
+                for (_, ratios) in ratio_dct.values():
                     if max(abs(np.log10(ratios))) > max_ratio:  # abs considers negative ratios
                         max_ratio = max(abs(np.log10(ratios)))
         # If no ratio_dcts were found, check if the rxn is missing in some mechs; order accordingly
@@ -168,8 +168,11 @@ def sort_by_max_ratio(aligned_rxn_ratio_dct, aligned_rxn_ktp_dct):
         max_ratios[rxn] = max_ratio
 
     # Sort rxn keys by max values
-    sorted_dct = {rxn: max_ratio for rxn, max_ratio in sorted(max_ratios.items(),
-                                                          key=lambda item: item[1], reverse=True)}
+    sorted_dct = {}
+    for rxn, max_ratio in sorted(max_ratios.items(),
+                                 key=lambda item: item[1],
+                                 reverse=True):
+        sorted_dct[rxn] = max_ratio
     # Reorder the aligned_rxn_ratio_dct and aligned_rxn_ktp_dct
     sorted_rxn_ratio_dct = {}
     sorted_rxn_ktp_dct = {}
@@ -187,7 +190,7 @@ def get_aligned_rxn_ratio_dct(aligned_rxn_ktp_dct):
 
         :param aligned_rxn_ktp_dct: aligned dct containing rates for each mech
         :type aligned_rxn_ktp_dct: dct {rxn1: [ratio_dct_mech1, ratio_dct_mech2, ...], rxn2: ...}
-        :return: aligned_rxn_ratio_dct: aligned dct containing ratios of rates relative to a ref mech
+        :return: aligned_rxn_ratio_dct: aligned dct containing ratios of rates relative to ref mech
         :rtype: dct {rxn1: [ratio_dct_mech1, ratio_dct_mech2, ...], rxn2: ...}
     """
     aligned_rxn_ratio_dct = {}
@@ -274,7 +277,7 @@ def get_format_dct(pressures):
     if len(pressures) <= 6:
         colors = ['r', 'b', 'g', 'm', 'c', 'y']
     else:  # account for unlikely case where there are more than 6 pressures
-        colors = cm.rainbow(np.linspace(0, 1, len(pressures)))
+        colors = cm.get_cmap('rainbow')(np.linspace(0, 1, len(pressures)))
     format_dct = {}
     for idx, pressure in enumerate(pressures):
         format_dct[pressure] = (colors[idx], str(pressure) + ' atm')

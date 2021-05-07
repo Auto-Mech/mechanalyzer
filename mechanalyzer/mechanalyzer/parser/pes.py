@@ -18,6 +18,7 @@ def connected_channels_dct(pes_dct):
             connected to each other
         For efficiency we only determine channels for PESs we wish to run.
     """
+
     conn_chn_dct = {}
     for _, formula in enumerate(pes_dct):
         # Set the names lists for the rxns and species needed below
@@ -42,6 +43,7 @@ def find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
     connchnls = {0: [0,1,2] , 1:[3,4,5]}...
     corresponding to each subpes
     '''
+
     # preprocessing:
     # order (bimol) reactants and products in the same fashion
     # example if you have A+B and B+A they will be ordered in the same way
@@ -117,7 +119,7 @@ def print_pes_channels(pes_dct):
     for (form, pidx, sidx), chnls in pes_dct.items():
         print('! PES:', pidx+1, sidx+1, form)
         for chnl in chnls:
-            cidx, rxn = chnl
+            _, rxn = chnl
             print('  {} = {}   1.0 0.0 0.0'.format(
                 ' + '.join(rxn[0]),
                 ' + '.join(rxn[1])))

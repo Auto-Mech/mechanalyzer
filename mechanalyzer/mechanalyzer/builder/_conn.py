@@ -125,19 +125,12 @@ def _sort_connected_pes(msurf_wells, wells, bimols):
                 surf_bimols = bimols[surf]
                 if well in surf_bimols:
                     loc = 'bimol'
-            locs.append((well,loc))
-    
+            msurf_well_wtyp[well] = ((well, loc))
+
     # Now figure out how the idxs should be lists
     # For a given well:
     # (1) find pes idx1 where it is a well
     # (2) find pes idx2 where it is in a bimol (where idx1 != idx2)
     # (3) order indices to that idx1 comes first
 
-    return conn_lst
-
-
-def _check_conns(msurf_wells):
-    """ For wells in the dct see if they are connected
-    """
-
-
+    return msurf_well_wtyp

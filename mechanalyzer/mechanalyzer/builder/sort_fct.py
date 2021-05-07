@@ -70,7 +70,8 @@ class SortMech:
 
         self.spc_dct = spc_dct  # set for later use
         # empty list for initialization (otherwise pylint warning)
-        self.species_list = []
+        self.species_subset_df = ()
+        self.species_list = ()
 
     def sort(self, hierarchy, species_list):
         """ Main flow of the sorter: takes a set of reactions and classifies
@@ -143,7 +144,8 @@ class SortMech:
         # 1. Sort
         try:
             self.mech_df = self.mech_df.sort_values(
-                by=hierarchy[:-1], ascending=list(asc_series[hierarchy[:-1]].values))
+                by=hierarchy[:-1],
+                ascending=list(asc_series[hierarchy[:-1]].values))
         except KeyError as err:
             print(
                 'WARNING: Reactions not sorted according ',
@@ -215,14 +217,13 @@ class SortMech:
             columns=['pes_dct'],
             dtype=object)
         for fml, peslist in self.mech_df.groupby('pes'):
-            # print(peslist)
             # Set the names lists for the rxns and species needed below
             pes_rct_names_lst = peslist['rct_names_lst'].values
             pes_prd_names_lst = peslist['prd_names_lst'].values
             pes_rxn_name_lst = peslist.index
             connchnls = pes.find_conn_chnls(
                 pes_rct_names_lst, pes_prd_names_lst, pes_rxn_name_lst)
-            # write subpes in conn_chn_df
+            # Write subpes in conn_chn_df
             for key, value in connchnls.items():
                 rxns = peslist.iloc[value].index
                 fml_num = fml + key/100

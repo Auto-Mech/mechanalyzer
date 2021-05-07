@@ -1,7 +1,7 @@
-# cmd: conda build .
+# cmd: conda build . -c auto-mech
 package:
     name: ratefit
-    version: "0.2.0"
+    version: "0.1.0"
 
 source:
     path: .
@@ -23,3 +23,4 @@ requirements:
         - future
         - flake8
         - pylint
+        - auto-mech::autoio

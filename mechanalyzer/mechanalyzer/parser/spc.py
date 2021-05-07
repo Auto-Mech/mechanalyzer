@@ -5,16 +5,15 @@ Read the mechanism file
 import os
 import errno
 from functools import wraps
-import pandas
 import math
 import multiprocessing
 import random
 import signal
 import pandas as pd
 import automol
+from mechroutines.pf.thermo import basis
 from mechanalyzer.parser.csv_ import csv_dct
 from mechanalyzer.parser.csv_ import read_csv_headers
-from mechroutines.pf.thermo import basis
 
 
 # HACK FOR A MECHANISM
@@ -63,7 +62,7 @@ def order_species_by_atomcount(spc_dct):
 
 def _get_smiles_from_dct(dct, name):
     return automol.inchi.smiles(dct[name]['inchi'])
-    
+
 
 def _get_formula_from_dct(dct, name):
     return automol.inchi.formula_string(dct[name]['inchi'])
@@ -108,6 +107,7 @@ def _add_unique_references_to_dct(new_names, init_dct, uniref_dct, ref_scheme):
             init_dct = new_dct
     return new_names, init_dct, uniref_dct
 
+
 def write_basis_csv(spc_str, outname='species_hof_basis.csv',
                     path='.', parallel=False):
     """ Read the species file in a .csv format and write a new one
@@ -135,9 +135,11 @@ def write_basis_csv(spc_str, outname='species_hof_basis.csv',
     for ref_scheme in ref_schemes:
         formula_dct = {}
         _, uniref_dct = basis.prepare_refs(
-            ref_scheme, init_dct, spc_queue, '', '', repeats=True, parallel=parallel)
+            ref_scheme, init_dct, spc_queue, '', '',
+            repeats=True, parallel=parallel)
         for name in uniref_dct:
-            spc_str, formula_dct = _species_row_string(uniref_dct, formula_dct, name, new_headers)
+            spc_str, formula_dct = _species_row_string(
+                uniref_dct, formula_dct, name, new_headers)
             csv_str += ref_scheme + '_' + spc_str
     basis_file = os.path.join(path, outname + '_basis')
     with open(basis_file, 'w') as file_obj:
@@ -182,6 +184,8 @@ def write_basis_csv(spc_str, outname='species_hof_basis.csv',
 
 def write_stereo_csv(spc_str, outname='species_stereo.csv', path='.',
                      allstereo=False):
+    """ write the stereo CSV file
+    """
 
     # Build a stereochemical dictionary
     new_dct, new_headers, names_in_order = write_stereo_dct(
@@ -311,7 +315,7 @@ def _add_stereo_to_dct(queue, names, init_dct, headers_noich, allstereo):
 
 # HELPER FUNCTIONS
 def _set_headers(spc_str):
-    """
+    """ DEtermine headers of an output CSV file
     """
     headers = [header for header in read_csv_headers(spc_str)
                if header != 'name']
@@ -325,6 +329,9 @@ def _set_headers(spc_str):
 
 
 def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
+    """ check if process has died
+    """
+
     def decorator(func):
         def _handle_timeout(signum, frame):
             print(error_message)
