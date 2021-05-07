@@ -10,4 +10,4 @@ bash build.sh
 
 # Install Python Interfaces to RateFits and Other Functionality
 cd $TOPDIR
-$PYTHON setup.py install
+python setup.py install

@@ -8,25 +8,27 @@ channels:
     - conda-forge
 
 dependencies:
-    - gfortran_linux-64  # [linux]
     - python=3.7
+    - pybind11
+    - cmake
+    - gfortran_linux-64  # [linux]
     - numpy
     - scipy
+    - pandas
     - pyyaml
     - mako
-    - matplotlib
     - pytest
     - pytest-cov
     - future
     - flake8
     - pylint
-    - auto-mech::autoio
     - auto-mech::automol
     - auto-mech::autoparse
-    - auto-mech::ratefit
+    - auto-mech::autorun
+    - auto-mech::autoio
     - auto-mech::elstruct
     - auto-mech::x2z
     - psi4::psi4
     - rdkit::rdkit
     - openbabel::openbabel
-    - conda-forge::qcelemental
+    - conda-forge::qcelemental 

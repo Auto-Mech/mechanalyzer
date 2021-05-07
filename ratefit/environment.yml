@@ -2,7 +2,10 @@ name: ratefit-env
 
 channels:
     - auto-mech
-     # -conda_forge # may resolve package conflicts with autoio
+    - psi4
+    - rdkit
+    - openbabel
+    - conda-forge
 
 dependencies:
     - python=3.7
@@ -19,5 +22,13 @@ dependencies:
     - future
     - flake8
     - pylint
+    - auto-mech::automol
+    - auto-mech::autoparse
+    - auto-mech::autorun
     - auto-mech::autoio
-
+    - auto-mech::elstruct
+    - auto-mech::x2z
+    - psi4::psi4
+    - rdkit::rdkit
+    - openbabel::openbabel
+    - conda-forge::qcelemental 

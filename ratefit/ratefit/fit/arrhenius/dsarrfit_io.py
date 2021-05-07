@@ -84,7 +84,7 @@ def run_dsarrfit(path):
     os.chdir(path)
 
     # Run the executable
-    exe_cmd = 'dsarrfit.x_cfg'
+    exe_cmd = 'dsarrfit.x'
     try:
         fnull = open(os.devnull, 'w')
         subprocess.check_call([exe_cmd], stdout=fnull, stderr=fnull)
