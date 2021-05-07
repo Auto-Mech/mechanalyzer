@@ -24,7 +24,7 @@ jobs:
                     source activate ratefit-env
                     cd ratefit/external/dsarrfit
                     bash build.sh
-            -run:
+            - run:
                 name: Build/install troefit
                 command: |
                     source activate ratefit-env
