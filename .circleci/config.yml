@@ -1,8 +1,9 @@
 version: 2
 jobs:
-    build-debian:
+    build-debian1:
         docker:
             - image: continuumio/miniconda3
+        working_directory: ~/ratefit
         steps:
             - checkout  # checkout the code
             - run: 
@@ -10,16 +11,23 @@ jobs:
                 command: |
                     apt-get update --yes
                     apt-get install --yes libxrender-dev build-essential
-                    conda env create -f environment.yml
+                    conda env create -f ratefit/environment.yml
                 name: Build/install ratefit
                 command: |
                     source activate ratefit-env
+                    cd ratefit
                     python setup.py install
             - run:
                 name: Build/install dsarrfit
                 command: |
                     source activate ratefit-env
-                    cd external/dsarrfit
+                    cd ratefit/external/dsarrfit
+                    bash build.sh
+            -run:
+                name: Build/install troefit
+                command: |
+                    source activate ratefit-env
+                    cd ratefit/external/troefit
                     bash build.sh
             - run:
                 name: Build/install ratefit
@@ -30,9 +38,7 @@ jobs:
                 name: Test ratefit
                 command: |
                     source activate ratefit-env
-                    ls
                     cd ratefit
-                    ls tests
                     pytest -v
                     flake8 --exit-zero ratefit
                     pylint --rcfile=../.pylintrc ratefit
@@ -40,4 +46,4 @@ workflows:
     version: 2
     build-all:
         jobs:
-            - build-debian
+            - build-debian1
