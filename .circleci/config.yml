@@ -12,6 +12,7 @@ jobs:
                     apt-get update --yes
                     apt-get install --yes libxrender-dev build-essential
                     conda env create -f ratefit/environment.yml
+            - run:
                 name: Build/install ratefit
                 command: |
                     source activate ratefit-env
