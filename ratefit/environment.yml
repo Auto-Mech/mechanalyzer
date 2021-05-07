@@ -1,5 +1,8 @@
 name: ratefit-env
 
+channels:
+    - auto-mech
+
 dependencies:
     - python=3.7
     - pybind11
@@ -15,3 +18,5 @@ dependencies:
     - future
     - flake8
     - pylint
+    - auto-mech::autoio
+
