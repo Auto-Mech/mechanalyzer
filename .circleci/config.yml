@@ -1,6 +1,6 @@
 version: 2
 jobs:
-    build-debian1:
+    test-ratefit:
         docker:
             - image: continuumio/miniconda3
         working_directory: ~/ratefit
@@ -15,30 +15,30 @@ jobs:
             - run:
                 name: Build/install dsarrfit
                 command: |
-                    source activate ratefit-env
+                    conda activate ratefit-env
                     cd ratefit/external/dsarrfit
                     bash build.sh
             - run:
                 name: Build/install troefit
                 command: |
-                    source activate ratefit-env
+                    conda activate ratefit-env
                     cd ratefit/external/troefit
                     bash build.sh
             - run:
                 name: Build/install ratefit
                 command: |
-                    source activate ratefit-env
+                    conda activate ratefit-env
                     cd ratefit
                     python setup.py install
             - run:
                 name: Test ratefit
                 command: |
-                    source activate ratefit-env
+                    conda activate ratefit-env
                     cd ratefit
                     pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs ratefit
                     flake8 --exit-zero ratefit
                     pylint --rcfile=../.pylintrc ratefit
-    build-debian2:
+    test-mechanalyzer:
         docker:
             - image: continuumio/miniconda3
         working_directory: ~/mechanalyzer
@@ -53,13 +53,13 @@ jobs:
             - run:
                 name: Build/install mechanalyzer
                 command: |
-                    source activate mechanalyzer-env
+                    conda activate mechanalyzer-env
                     cd mechanalyzer
                     python setup.py install
             - run:
                 name: Test mechanalyzer
                 command: |
-                    source activate mechanalyzer-env
+                    conda activate mechanalyzer-env
                     cd mechanalyzer
                     pytest . -v --disable-pytest-warnings --cov=mechanalyzer --pyargs mechanalyzer
                     flake8 --exit-zero mechanalyzer
@@ -68,5 +68,5 @@ workflows:
     version: 2
     build-all:
         jobs:
-            - build-debian1
-            - build-debian2
+            - test-ratefit
+            - test-mechanalyzer

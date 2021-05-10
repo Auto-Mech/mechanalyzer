@@ -1,4 +1,4 @@
-# cmd: conda build . -c auto-mech
+# cmd: conda build . -c auto-mech -c psi4 -c rdkit -c openbabel -c conda-forge
 package:
     name: ratefit
     version: "0.1.0"
@@ -9,18 +9,26 @@ source:
 requirements:
     host:
         - python
-    build:
-        - {{ compiler('fortran') }}
-        - cmake
     run:
         - python
+        - {{ compiler('fortran') }}
         - numpy
         - scipy
-        - pandas
+        - pyyaml
         - mako
+        - matplotlib
         - pytest
         - pytest-cov
         - future
         - flake8
         - pylint
+        - rdkit::rdkit
+        - openbabel::openbabel
+        - conda-forge::qcelemental
+        - psi4::psi4
         - auto-mech::autoio
+        - auto-mech::automol
+        - auto-mech::autoparse
+        - auto-mech:ratefit
+        # - auto-mech::mechdriver 
+        - auto-mech::x2z

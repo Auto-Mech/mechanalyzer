@@ -212,7 +212,7 @@ def test__sortby_molec_r1():
     print(param_dct_sort)
 
 
-def __sortby_rxnclass():
+def test_sortby_rxnclass():
     """ test mechanalyzer.parser.sort
 
         sort by reaction class:
@@ -302,7 +302,7 @@ def test__sortby_submech():
     print(param_dct_sort)
 
 
-def __sortby_submech_class():
+def test_sortby_submech_class():
     """ test mechanalyzer.parser.sort
 
         sort by fuel submechanism: extract reactions of
@@ -326,7 +326,7 @@ def __sortby_submech_class():
     print(param_dct_sort)
 
 
-def __sort_ktp():
+def test_sort_ktp():
     """ test mechanalyzer.parser.sort
 
         sort ktp dictionary according to highest rate values/ratios
