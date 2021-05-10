@@ -8,7 +8,7 @@ setup(
     name="mechanalyzer",
     version="0.1.0",
     packages=[
-        'mechanlyzer',
+        'mechanalyzer',
         'mechanalyzer.builder',
         'mechanalyzer.calculator',
         'mechanalyzer.parser',
