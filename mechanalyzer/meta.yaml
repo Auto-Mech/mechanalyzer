@@ -26,8 +26,9 @@ requirements:
         - openbabel::openbabel
         - conda-forge::qcelemental
         - psi4::psi4
-        - auto-mechiii::autoio
-        - auto-mechiii::automol
-        - auto-mechiii::autoparse
-        - auto-mechiii:ratefit
+        - auto-mech::autoio
+        - auto-mech::automol
+        - auto-mech::autoparse
+        - auto-mech:ratefit
+        # - auto-mech::mechdriver 
         - auto-mech::x2z

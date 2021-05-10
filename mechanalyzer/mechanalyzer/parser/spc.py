@@ -11,7 +11,7 @@ import random
 import signal
 import pandas as pd
 import automol
-from mechroutines.pf.thermo import basis
+# from mechroutines.pf.thermo import basis
 from mechanalyzer.parser.csv_ import csv_dct
 from mechanalyzer.parser.csv_ import read_csv_headers
 

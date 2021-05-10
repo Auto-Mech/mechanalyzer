@@ -75,7 +75,7 @@ def test__arrhenius_fit_dsarrfit():
     # runner
 
 
-def test__arrhenius_fit_python():
+def __arrhenius_fit_python():
     """ test ratefit.fit.arrhenius.double
     """
 
@@ -101,4 +101,4 @@ def test__arrhenius_fit_python():
 
 if __name__ == '__main__':
     test__arrhenius_fit_dsarrfit()
-    test__arrhenius_fit_python()
+    __arrhenius_fit_python()

@@ -28,6 +28,7 @@ dependencies:
     - auto-mech::autoio
     - auto-mech::elstruct
     - auto-mech::x2z
+    # - auto-mech::mechdriver
     - psi4::psi4
     - rdkit::rdkit
     - openbabel::openbabel

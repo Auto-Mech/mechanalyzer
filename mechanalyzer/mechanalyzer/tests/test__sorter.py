@@ -127,7 +127,7 @@ AL_KTP_DCT = {
              np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+149]))}]}
 
 
-def test__sort_with_input():
+def __sort_with_input():
     """ sort by using the auxlilary input files to specify parameters
     """
 
@@ -212,7 +212,7 @@ def test__sortby_molec_r1():
     print(param_dct_sort)
 
 
-def test__sortby_rxnclass():
+def __sortby_rxnclass():
     """ test mechanalyzer.parser.sort
 
         sort by reaction class:
@@ -302,7 +302,7 @@ def test__sortby_submech():
     print(param_dct_sort)
 
 
-def test__sortby_submech_class():
+def __sortby_submech_class():
     """ test mechanalyzer.parser.sort
 
         sort by fuel submechanism: extract reactions of
@@ -326,7 +326,7 @@ def test__sortby_submech_class():
     print(param_dct_sort)
 
 
-def test__sort_ktp():
+def __sort_ktp():
     """ test mechanalyzer.parser.sort
 
         sort ktp dictionary according to highest rate values/ratios
@@ -398,7 +398,3 @@ def _read_files(spc_path, mech_path, sort_path):
             sort_str = fobj.read()
 
     return spc_str, mech_str, sort_str
-
-
-if __name__ == '__main__':
-    test__sort_with_input()

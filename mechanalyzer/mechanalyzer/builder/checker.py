@@ -422,7 +422,7 @@ def write_lone_spcs(lone_spcs, threshold):
         :rtype: str
     """
     lone_spcs_str = (
-        f'\nLONE SPECIES\n\nThese species appear in {threshold}' +
+        f'\nLONE SPECIES\n\nThese species appear in {threshold} ' +
         'or less reactions\n\n'
     )
     if lone_spcs:
