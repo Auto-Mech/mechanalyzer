@@ -15,25 +15,25 @@ jobs:
             - run:
                 name: Build/install dsarrfit
                 command: |
-                    conda activate ratefit-env
+                    source activate ratefit-env
                     cd ratefit/external/dsarrfit
                     bash build.sh
             - run:
                 name: Build/install troefit
                 command: |
-                    conda activate ratefit-env
+                    source activate ratefit-env
                     cd ratefit/external/troefit
                     bash build.sh
             - run:
                 name: Build/install ratefit
                 command: |
-                    conda activate ratefit-env
+                    source activate ratefit-env
                     cd ratefit
                     python setup.py install
             - run:
                 name: Test ratefit
                 command: |
-                    conda activate ratefit-env
+                    source activate ratefit-env
                     cd ratefit
                     pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs ratefit
                     flake8 --exit-zero ratefit
@@ -53,13 +53,13 @@ jobs:
             - run:
                 name: Build/install mechanalyzer
                 command: |
-                    conda activate mechanalyzer-env
+                    source activate mechanalyzer-env
                     cd mechanalyzer
                     python setup.py install
             - run:
                 name: Test mechanalyzer
                 command: |
-                    conda activate mechanalyzer-env
+                    source activate mechanalyzer-env
                     cd mechanalyzer
                     pytest . -v --disable-pytest-warnings --cov=mechanalyzer --pyargs mechanalyzer
                     flake8 --exit-zero mechanalyzer

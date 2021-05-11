@@ -9,9 +9,13 @@ source:
 requirements:
     host:
         - python
+    build:
+        - cmake
+        - gfortran_linux-64
     run:
+        - cmake
+        - gfortran_linux-64
         - python
-        - {{ compiler('fortran') }}
         - numpy
         - scipy
         - pyyaml
@@ -29,6 +33,5 @@ requirements:
         - auto-mech::autoio
         - auto-mech::automol
         - auto-mech::autoparse
-        - auto-mech:ratefit
         # - auto-mech::mechdriver 
         - auto-mech::x2z
