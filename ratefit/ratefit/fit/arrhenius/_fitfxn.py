@@ -4,8 +4,8 @@
 import os
 import numpy as np
 from scipy.optimize import leastsq
-from ratefit.fit.arrhenius import dsarrfit_io
 from phydat import phycon
+from ratefit.fit.arrhenius import dsarrfit_io
 
 
 RC = phycon.RC_cal  # universal gas constant in cal/mol-K
@@ -264,11 +264,14 @@ def _dsarrfit(temps, rate_constants, arr1_guess, arr2_guess,
     arrname = 'arrfit.out'
 
     dsarrfit_out_file = os.path.join(dsarrfit_path, arrname)
-    with open(dsarrfit_out_file, 'r') as arrfit_outfile:
-        arrfit_out_str = arrfit_outfile.read()
+    if os.path.exists(dsarrfit_out_file):
+        with open(dsarrfit_out_file, 'r') as arrfit_outfile:
+            arrfit_out_str = arrfit_outfile.read()
 
-    # Parse the ratefit files for the Arrhenius fit parameters
-    fit_params = dsarrfit_io.read_params(
-        arrfit_out_str, fit_type, a_conv_factor)
+        # Parse the ratefit files for the Arrhenius fit parameters
+        fit_params = dsarrfit_io.read_params(
+            arrfit_out_str, fit_type, a_conv_factor)
+    else:
+        fit_params = None
 
     return fit_params

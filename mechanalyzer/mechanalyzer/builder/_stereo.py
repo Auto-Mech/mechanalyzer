@@ -151,9 +151,9 @@ def _build_new(ste_rxn_set_lst, spc_dct, ich_dct):
                     # look up ich in non_ste ich
                     name = _generate_name
 
-    for x, y in new_spc_dct.items():
-        print(x)
-        print(y)
+    # for x, y in new_spc_dct.items():
+    #     print(x)
+    #     print(y)
 
     return new_spc_dct
 

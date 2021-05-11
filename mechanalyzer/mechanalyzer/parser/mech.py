@@ -2,15 +2,13 @@
 Functions for mechanism reading and sorting
 """
 
-import mechanalyzer
+import autoparse.pattern as app
+import ioformat.ptt
 from mechanalyzer.parser import ckin_ as ckin
 from mechanalyzer.parser._util import get_ich_dct, get_fml
-from ioformat import ptt
-import autoparse.find as apf
-
-# inputs to the sorter
 
 
+# Parse mechanism files
 def parse_mechanism(mech_str, mech_type, spc_dct):
     """ Get the reactions and species from the mechanism input
     """
@@ -22,12 +20,12 @@ def parse_mechanism(mech_str, mech_type, spc_dct):
         raise NotImplementedError
 
     # Build mech_info object to pass along to various functions
-    mech_info = _mech_info(rxn_param_dct, spc_dct)
+    _mech_info = mech_info(rxn_param_dct, spc_dct)
 
-    return rxn_param_dct, mech_info, elem_tuple
+    return rxn_param_dct, _mech_info, elem_tuple
 
 
-def _mech_info(rxn_param_dct, spc_dct):
+def mech_info(rxn_param_dct, spc_dct):
     """ Build mech_info object for mech sorting
 
         :param spc_dct: species dictionary
@@ -66,39 +64,48 @@ def _mech_info(rxn_param_dct, spc_dct):
             rxn_name, list(rxn_param_dct.values())]
 
 
-def read_sort_section(sort_str):
-    """ reads the options for sorting from a file
+# Parse the auxiliary file used to sort a mechanism
+def parse_sort(sort_str):
+    """ Parse the string from the sort.dat input file that contains various
+        parameters used to sort a mechanism.
 
-        :param sort_str: string of sorting file w/o comments
+        Returns the list of species to isolate from the mechanism as well
+        as the criteria used to sort the mechanism.
+
+        :param sort_str: string for the sort.dat file
         :type sort_str: str
-        :return isolate_species: species to include (if []: all)
-        :rtype isolate_species: list
-        :return sort_list: sorting criteria
-        :rtype sort_list: list
+        :rtype: (tuple(str), tuple(tuple(str), int)
     """
 
-    submech_section = apf.all_captures(
-        ptt.end_block_ptt('isolate_submech'), sort_str)
+    # Read and format information from the isolate_submech block
+    sort_block = ioformat.ptt.end_block(sort_str, 'isolate_submech')
+    spc_block = ioformat.ptt.paren_blocks(sort_block, key='species')
 
-    if submech_section is None:
-        # empty section
-        isolate_species = []
+    if spc_block:
+        spc_lst = ioformat.ptt.values_from_block(
+            spc_block[0][1], val_ptt=app.one_or_more(app.URLSAFE_CHAR))
     else:
-        # format the section
-        species = apf.first_capture(
-            ptt.paren_section('species'), submech_section[0])
-        isolate_species = ptt.build_keyword_lst(species)
+        spc_lst = ()
 
-    sortmech_section = apf.all_captures(
-        ptt.end_section('sort_mech'), sort_str)
-    # this section is mandatory
-    if sortmech_section is None:
+    # Read and format information from the sort_mech block
+    isol_block = ioformat.ptt.end_block(sort_str, 'sort_mech')
+
+    crit_block = ioformat.ptt.paren_blocks(
+        isol_block, key='criteria')
+    head_block = ioformat.ptt.keyword_value_blocks(
+        isol_block, key='n_criteria_headers')
+
+    if crit_block:
+        crit_lst = ioformat.ptt.values_from_block(
+            crit_block[0][1], val_ptt=app.one_or_more(app.URLSAFE_CHAR))
+    else:
+        crit_lst = ()
+    nhead = int(head_block[0][1]) if head_block is not None else 0
+
+    sort_lst = crit_lst + (nhead,)
+
+    # Print an error message for an isol block
+    if isol_block is None:
         print('*ERROR: sort_mech section is not defined')
-    else:
-        criteria = apf.first_capture(
-            ptt.paren_section('criteria'), sortmech_section[0])
-        n_criteria = apf.first_capture(
-            ptt.keyword_pattern('n_criteria_headers'), sortmech_section[0])
-        sort_list = ptt.build_keyword_lst(criteria+n_criteria)
 
-    return isolate_species, sort_list
+    return spc_lst, sort_lst

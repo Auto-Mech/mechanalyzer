@@ -6,12 +6,12 @@ import copy
 import itertools
 import numpy as np
 import ioformat.pathtools as parser
-import ratefit
 from phydat import phycon
 from chemkin_io.parser import mechanism as parser_mech
 from chemkin_io.parser import thermo as parser_thermo
 from chemkin_io.parser import reaction as parser_rxn
 from chemkin_io.writer import _util as writer_util
+import ratefit
 from mechanalyzer.parser import spc as parser_spc
 from mechanalyzer.calculator import thermo as calc_thermo
 from mechanalyzer.calculator import rates as calc_rates

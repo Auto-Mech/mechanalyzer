@@ -1,16 +1,13 @@
 """ test mechanalyzer.parser.sort for different mechanisms in 'data/'
     using different sorting options
 """
-import sys
+
 import os
 import tempfile
 import numpy as np
-from automol.util.dict_ import filter_keys
-from chemkin_io.writer.mechanism import write_chemkin_file
 from mechanalyzer.builder import sorter
 from mechanalyzer.parser import mech as mparser
 from mechanalyzer.parser import spc as sparser
-from ioformat import pathtools
 
 
 # Set Paths to test/data directory and output directory
@@ -130,25 +127,24 @@ AL_KTP_DCT = {
              np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+149]))}]}
 
 
-def test__sort_with_input():
+def __sort_with_input():
     """ sort by using the auxlilary input files to specify parameters
     """
-    # use data/LLNL_species.csv, data/LLNL_mech.dat, data/sort.dat
-    try:
-        spc_name = os.path.join(CWD, sys.argv[1])
-        mech_name = os.path.join(CWD, sys.argv[2])
-        sort_inp = os.path.join(CWD, sys.argv[3])
-    except IndexError:
-        print('*ERROR: input files missing - put species, mechanism, and sort.dat files')
-        sys.exit()
 
-    sort_str = pathtools.read_file(CWD, sort_inp, remove_comments='#')
-    isolate_species, sort_list = mparser.read_sort_section(sort_str)
-    sortmech_name = os.path.join(TMP_OUT, 'sorted_mech.txt')
-    print(sortmech_name)
-    mech_rest_name = os.path.join(TMP_OUT, 'rest_mech.txt')
-    sorter._sort_main(spc_name, mech_name, sortmech_name,
-                      mech_rest_name, isolate_species, sort_list)
+    # Read the mechanism files into strings
+    spc_path = os.path.join(CWD, 'data', 'NUIG_species.csv')
+    mech_path = os.path.join(CWD, 'data', 'NUIG_mechred.dat')
+    sort_path = os.path.join(CWD, 'data', 'sort.dat')
+
+    spc_str, mech_str, sort_str = _read_files(spc_path, mech_path, sort_path)
+
+    # Sort mechanism
+    isolate_spc, sort_lst = mparser.parse_sort(sort_str)
+    print('parser test:', isolate_spc, sort_lst)
+
+    param_dct_sort, _, _, _, _ = sorter.sorted_mech(
+        spc_str, mech_str, isolate_spc, sort_lst)
+    print(param_dct_sort)
 
 
 def test__readwrite_thirdbody():
@@ -157,16 +153,20 @@ def test__readwrite_thirdbody():
         Checks read/write of a small set of rxns involving third bodies
     """
 
-    spc_name = os.path.join(CWD, 'data', 'NUIG_species.csv')
-    mech_name = os.path.join(CWD, 'data', 'NUIG_mechred.dat')
-    mech_rest_name = os.path.join(TMP_OUT, 'NUIG_mech_rest.txt')
-    sortmech_name = os.path.join(
-        TMP_OUT, 'NUIG_test_readwrite_thirdbody.txt')
-    isolate_species = []
-    sort_str = ['pes', 0]  # ARRANGE BY PES- NO HEADERS INCLUDED
+    # Read the mechanism files into strings
+    spc_path = os.path.join(CWD, 'data', 'NUIG_species.csv')
+    mech_path = os.path.join(CWD, 'data', 'NUIG_mechred.dat')
+    sort_path = None
 
-    sorter._sort_main(spc_name, mech_name, sortmech_name,
-                      mech_rest_name, isolate_species, sort_str)
+    spc_str, mech_str, _ = _read_files(spc_path, mech_path, sort_path)
+
+    # Sort mechanism by PES - No Headers Included
+    isolate_spc = []
+    sort_lst = ['pes', 0]
+
+    param_dct_sort, _, _, _, _ = sorter.sorted_mech(
+        spc_str, mech_str, isolate_spc, sort_lst)
+    print(param_dct_sort)
 
 
 def test__sortby_mult():
@@ -175,14 +175,20 @@ def test__sortby_mult():
         Sort by multiplicity of the reaction
     """
 
-    spc_name = os.path.join(CWD, 'data', 'C10H10_species.csv')
-    mech_name = os.path.join(CWD, 'data', 'C10H10_HP_mech.dat')
-    mech_rest_name = os.path.join(TMP_OUT, 'C10H10_mech_rest.txt')
-    sortmech_name = os.path.join(TMP_OUT, 'C10H10_test_sortby_mult.txt')
-    isolate_species = []
-    sort_str = ['mult', 0]  # NO HEADERS INCLUDED
-    sorter._sort_main(spc_name, mech_name, sortmech_name,
-                      mech_rest_name, isolate_species, sort_str)
+    # Read the mechanism files into strings
+    spc_path = os.path.join(CWD, 'data', 'C10H10_species.csv')
+    mech_path = os.path.join(CWD, 'data', 'C10H10_HP_mech.dat')
+    sort_path = None
+
+    spc_str, mech_str, _ = _read_files(spc_path, mech_path, sort_path)
+
+    # Sort mechanism by multiplicity - No Headers Included
+    isolate_spc = []
+    sort_lst = ['mult', 0]
+
+    param_dct_sort, _, _, _, _ = sorter.sorted_mech(
+        spc_str, mech_str, isolate_spc, sort_lst)
+    print(param_dct_sort)
 
 
 def test__sortby_molec_r1():
@@ -191,18 +197,23 @@ def test__sortby_molec_r1():
         Sort by first (heavier) reactant and molecularity of the reaction
     """
 
-    spc_name = os.path.join(CWD, 'data', 'C10H10_species.csv')
-    mech_name = os.path.join(CWD, 'data', 'C10H10_HP_mech.dat')
-    mech_rest_name = os.path.join(TMP_OUT, 'C10H10_mech_rest.txt')
-    sortmech_name = os.path.join(
-        TMP_OUT, 'C10H10_test_sortby_molec_R1.txt')
-    isolate_species = []
-    sort_str = ['r1', 'molecularity', 0]  # NO HEADERS INCLUDED
-    sorter._sort_main(spc_name, mech_name, sortmech_name,
-                      mech_rest_name, isolate_species, sort_str)
+    # Read mechanism files into strings
+    spc_path = os.path.join(CWD, 'data', 'C10H10_species.csv')
+    mech_path = os.path.join(CWD, 'data', 'C10H10_HP_mech.dat')
+    sort_path = None
+
+    spc_str, mech_str, _ = _read_files(spc_path, mech_path, sort_path)
+
+    # Sort mechanism by R1-molecularity - No Headers Included
+    isolate_spc = []
+    sort_lst = ['r1', 'molecularity', 0]  # NO HEADERS INCLUDED
+
+    param_dct_sort, _, _, _, _ = sorter.sorted_mech(
+        spc_str, mech_str, isolate_spc, sort_lst)
+    print(param_dct_sort)
 
 
-def test__sortby_rxnclass():
+def test_sortby_rxnclass():
     """ test mechanalyzer.parser.sort
 
         sort by reaction class:
@@ -211,18 +222,20 @@ def test__sortby_rxnclass():
         prior to rxn class, the mech is also subdivided into PESs
     """
 
-    spc_name = os.path.join(CWD, 'data', 'LLNL_species.csv')
-    mech_name = os.path.join(CWD, 'data', 'LLNL_IC8_red_classes.dat')
-    mech_rest_name = os.path.join(TMP_OUT, 'IC8_class_rest.txt')
-    sortmech_name = os.path.join(
-        TMP_OUT, 'IC8_test_sortby_rxnclass.txt')
-    isolate_species = []
-    print(sortmech_name)
-    # HEADER INDICATING THE REACTION CLASS
-    sort_str = ['pes', 'rxn_class_broad', 'rxn_class_graph', 1]
+    # Read mechanism files into strings
+    spc_path = os.path.join(CWD, 'data', 'LLNL_species.csv')
+    mech_path = os.path.join(CWD, 'data', 'LLNL_IC8_red_classes.dat')
+    sort_path = None
 
-    sorter._sort_main(spc_name, mech_name, sortmech_name,
-                      mech_rest_name, isolate_species, sort_str)
+    spc_str, mech_str, _ = _read_files(spc_path, mech_path, sort_path)
+
+    # Sort mechanism by reaction class
+    isolate_spc = []
+    sort_lst = ['pes', 'rxn_class_broad', 'rxn_class_graph', 1]
+
+    param_dct_sort, _, _, _, _ = sorter.sorted_mech(
+        spc_str, mech_str, isolate_spc, sort_lst)
+    print(param_dct_sort)
 
 
 def test__sortby_species_subpes():
@@ -234,24 +247,28 @@ def test__sortby_species_subpes():
         to subpes (or potentially any other criteria)
     """
 
-    spc_name = os.path.join(CWD, 'data', 'LLNL_species.csv')
-    mech_name = os.path.join(CWD, 'data', 'LLNL_mech.dat')
-    mech_rest_name = os.path.join(
-        TMP_OUT, 'LLNL_IC8_SPECIES_mech_rest.txt')
-    sortmech_name = os.path.join(
-        TMP_OUT, 'LLNL_test_sortby_species_subpes_IC8.txt')
-    isolate_species = ['IC8', 'IC8-1R', 'IC8-3R', 'IC8-4R', 'IC8-5R']
-    sort_str = ['species', 'subpes', 1]  # HEADER INDICATING THE SPECIES SUBSET
+    # Read mechanism files into strings
+    spc_path = os.path.join(CWD, 'data', 'LLNL_species.csv')
+    mech_path = os.path.join(CWD, 'data', 'LLNL_mech.dat')
+    sort_path = None
 
-    sorter._sort_main(spc_name, mech_name, sortmech_name,
-                      mech_rest_name, isolate_species, sort_str)
+    spc_str, mech_str, _ = _read_files(spc_path, mech_path, sort_path)
 
-    # NOW ORDER JUST BY SUBPES
-    sortmech_name = os.path.join(
-        TMP_OUT, 'LLNL_test_sortby_subpes_IC8.txt')
-    sort_str = ['subpes', 0]  # NO HEADER
-    sorter._sort_main(spc_name, mech_name, sortmech_name,
-                      mech_rest_name, isolate_species, sort_str)
+    # Sort mechanism by subpes with Headers for specues subset
+    isolate_spc = ['IC8', 'IC8-1R', 'IC8-3R', 'IC8-4R', 'IC8-5R']
+    sort_lst = ['species', 'subpes', 1]
+
+    param_dct_sort, _, _, _, _ = sorter.sorted_mech(
+        spc_str, mech_str, isolate_spc, sort_lst)
+    print(param_dct_sort)
+
+    # Now sort mechanism by subpes no header
+    isolate_spc = ['IC8', 'IC8-1R', 'IC8-3R', 'IC8-4R', 'IC8-5R']
+    sort_lst = ['subpes', 0]
+
+    param_dct_sort, _, _, _, _ = sorter.sorted_mech(
+        spc_str, mech_str, isolate_spc, sort_lst)
+    print(param_dct_sort)
 
 
 def test__sortby_submech():
@@ -262,30 +279,31 @@ def test__sortby_submech():
         then order by subpes
     """
 
-    spc_name = os.path.join(CWD, 'data', 'LLNL_species.csv')
-    mech_name = os.path.join(CWD, 'data', 'LLNL_mech.dat')
-    mech_rest_name = os.path.join(
-        TMP_OUT, 'LLNL_IC8_submech_mech_rest.txt')
+    # Read mechanism files into strings
+    spc_path = os.path.join(CWD, 'data', 'LLNL_species.csv')
+    mech_path = os.path.join(CWD, 'data', 'LLNL_mech.dat')
+    sort_path = None
 
-    sortmech_name = os.path.join(
-        TMP_OUT, 'LLNL_test_sortby_submech_IC8.txt')
-    isolate_species = ['IC8']
-    sort_str = ['submech', 1]  # HEADER INDICATING THE SPECIES SUBSET
+    spc_str, mech_str, _ = _read_files(spc_path, mech_path, sort_path)
 
-    sorter._sort_main(spc_name, mech_name, sortmech_name,
-                      mech_rest_name, isolate_species, sort_str)
+    # Sort with headers for species subset
+    isolate_spc = ['IC8']
+    sort_lst = ['submech', 1]
 
-    # NOW ORDER JUST BY SUBPES
-    sortmech_name = os.path.join(
-        TMP_OUT, 'LLNL_test_sortby_submech_subpes_broadclass_IC8.txt')
-    # NO HEADER
-    sort_str = ['submech', 'subpes', 'rxn_class_broad', 1]
+    param_dct_sort, _, _, _, _ = sorter.sorted_mech(
+        spc_str, mech_str, isolate_spc, sort_lst)
+    print(param_dct_sort)
 
-    sorter._sort_main(spc_name, mech_name, sortmech_name,
-                      mech_rest_name, isolate_species, sort_str)
+    # Sort again
+    isolate_spc = ['IC8']
+    sort_lst = ['submech', 'subpes', 'rxn_class_broad', 1]
+
+    param_dct_sort, _, _, _, _ = sorter.sorted_mech(
+        spc_str, mech_str, isolate_spc, sort_lst)
+    print(param_dct_sort)
 
 
-def test__sortby_submech_class():
+def test_sortby_submech_class():
     """ test mechanalyzer.parser.sort
 
         sort by fuel submechanism: extract reactions of
@@ -293,80 +311,91 @@ def test__sortby_submech_class():
         then order by subpes
     """
 
-    spc_name = os.path.join(CWD, 'data', 'LLNL_species.csv')
-    mech_name = os.path.join(CWD, 'data', 'LLNL_IC8_red_mech.dat')
-    mech_rest_name = os.path.join(
-        TMP_OUT, 'LLNL_IC8_submech_class_mech_rest.txt')
+    # Read mechanism files into strings
+    spc_path = os.path.join(CWD, 'data', 'LLNL_species.csv')
+    mech_path = os.path.join(CWD, 'data', 'LLNL_IC8_red_mech.dat')
+    sort_path = None
 
-    sortmech_name = os.path.join(
-        TMP_OUT, 'LLNL_test_sortby_submech_class_IC8.txt')
-    isolate_species = ['IC8']
-    # NO HEADER
-    sort_str = ['submech', 'rxn_class_broad', 'rxn_class_graph', 1]
+    spc_str, mech_str, _ = _read_files(spc_path, mech_path, sort_path)
 
-    sorter._sort_main(spc_name, mech_name, sortmech_name,
-                      mech_rest_name, isolate_species, sort_str)
+    # Sort mechanism
+    isolate_spc = ['IC8']
+    sort_lst = ['submech', 'rxn_class_broad', 'rxn_class_graph', 1]
+
+    param_dct_sort, _, _, _, _ = sorter.sorted_mech(
+        spc_str, mech_str, isolate_spc, sort_lst)
+    print(param_dct_sort)
 
 
-def test__sort_ktp():
+def test_sort_ktp():
     """ test mechanalyzer.parser.sort
 
         sort ktp dictionary according to highest rate values/ratios
     """
-    # al_ktp_dct_sorted = mechparser.reordered_mech(AL_KTP_DCT, sortd_idx)
-    # MODIFY THIS SECTION WITH INPUT NAMES AND SORTING OPTIONS
 
-    spc_names = ['data/spc2.csv', 'data/spc1B.csv']
-    # mech_names = ['data/mech2.txt', 'data/mech1.txt']
-    # if you want sorted rxn param dct: also read mechs
-    isolate_species = []
-    sort_str = ['molecularity', 'rxn_max_vals',
+    # Read mechanism files into strings
+    spc_paths = [
+        os.path.join(CWD, 'data', 'spc2.csv'),
+        os.path.join(CWD, 'data', 'spc1B.csv')]
+    mech_path = None
+    sort_path = None
+
+    spc_str, _, _ = _read_files(spc_paths[1], mech_path, sort_path)
+
+    # Build spc and mech information
+    spc_dct_full = sparser.build_spc_dct(spc_str, SPC_TYPE)
+    mech_info = mparser.mech_info(AL_KTP_DCT, spc_dct_full)
+
+    # Sort the mechanism
+    isolate_spc = []
+    sort_lst = ['molecularity', 'rxn_max_vals',
                 'rxn_max_ratio', 'rxn_class_broad', 0]
 
-    ############ input reading ####################
-
-    # READ FILE# READ FILE AND BUILD DICTIONARIES
-    with open(spc_names[1], 'r') as spc_obj:
-        spc_str = spc_obj.read()
-
-    # Build mech information
-    spc_dct_full = sparser.build_spc_dct(spc_str, SPC_TYPE)
-
-    # BUILD  MECH INFORMATION
-    mech_info = mparser._mech_info(AL_KTP_DCT, spc_dct_full)
-
-    # SORTING: sort the mech and build the sorted rxn param dct
-    srt_mch = mparser.sorting(
-        mech_info, spc_dct_full, sort_str, isolate_species)
-
-    sorted_idx, _, _ = mparser.sorted_mech(srt_mch)
-    al_ktp_dct_sorted = mparser.reordered_mech(AL_KTP_DCT, sorted_idx)
+    srt_mch = sorter.sorting(
+        mech_info, spc_dct_full, sort_lst, isolate_spc)
+    sorted_idx, _, _ = srt_mch.return_mech_df()
+    al_ktp_dct_sorted = sorter.reordered_mech(AL_KTP_DCT, sorted_idx)
 
     print(al_ktp_dct_sorted)
 
 
 def test__build_sorted_pesdct():
-    """
-    sort by subpes for a subset of species and get the corresponding subpes dictionaries
+    """ sort by subpes for a subset of species and
+        get the corresponding subpes dictionaries
     """
 
-    spc_name = os.path.join(CWD, 'data', 'LLNL_species.csv')
-    mech_name = os.path.join(CWD, 'data', 'LLNL_mech.dat')
-    isolate_species = ['IC8', 'IC8-1R', 'IC8-3R', 'IC8-4R', 'IC8-5R']
-    sort_str = ['subpes', 0]  # HEADER INDICATING THE SPECIES SUBSET
-    pes_dct = sorter._sort_pes(spc_name, mech_name, isolate_species, sort_str)
+    # Read mechanism files into strings
+    spc_path = os.path.join(CWD, 'data', 'LLNL_species.csv')
+    mech_path = os.path.join(CWD, 'data', 'LLNL_mech.dat')
+    sort_path = None
+
+    spc_str, mech_str, _ = _read_files(spc_path, mech_path, sort_path)
+
+    # Sort mechanism and build pes
+    isolate_spc = ['IC8', 'IC8-1R', 'IC8-3R', 'IC8-4R', 'IC8-5R']
+    sort_lst = ['subpes', 0]
+
+    pes_dct = sorter.sorted_pes_dct(
+        spc_str, mech_str, isolate_spc, sort_lst)
 
     print(pes_dct)
 
 
-if __name__ == '__main__':
-    # test__sortby_species_subpes()
-    # test__sortby_submech()
-    # test__sortby_mult()
-    # test__sortby_molec_r1()
-    # test__sortby_rxnclass()
-    test__sortby_submech_class()
-    # test__sort_ktp()
-    # test__sort_with_input()
-    # test__build_sorted_pesdct()
-    # test__readwrite_thirdbody()
+# Helper function
+def _read_files(spc_path, mech_path, sort_path):
+    """ read file names
+    """
+
+    spc_str, mech_str, sort_str = '', '', ''
+
+    if spc_path is not None:
+        with open(spc_path) as fobj:
+            spc_str = fobj.read()
+    if mech_path is not None:
+        with open(mech_path) as fobj:
+            mech_str = fobj.read()
+    if sort_path is not None:
+        with open(sort_path) as fobj:
+            sort_str = fobj.read()
+
+    return spc_str, mech_str, sort_str

@@ -30,7 +30,7 @@ TEMPS = numpy.arange(300.0, 3300.0, 300.0)
 T_REF = 1.0
 
 # Set Reference Data for Comparison
-REF_TROE_3PAR_KTPS = {
+REF_TROE3P_KTPS = {
     0.1: numpy.array(
         [9.01050498e+12, 1.14424645e+12, 2.94814049e+11, 1.06633311e+11,
          4.65907324e+10, 2.29034703e+10, 1.21838431e+10, 6.85018641e+09,
@@ -48,7 +48,7 @@ REF_TROE_3PAR_KTPS = {
          2.25136399e+12, 1.08810396e+12, 5.60704044e+11, 3.02702223e+11,
          1.69142296e+11, 9.69910174e+10])
 }
-REF_TROE_4PAR_KTPS = {
+REF_TROE4P_KTPS = {
     0.1: numpy.array(
         [9.10804237e+12, 1.32381727e+12, 4.08085808e+11, 1.72813491e+11,
          8.71750733e+10, 4.93305843e+10, 3.03035430e+10, 1.97990317e+10,
@@ -72,34 +72,29 @@ def test__calc_three_param():
     """ test ratefit.calc._rates.troe
     """
 
-    troe_3par_ktps = ratefit.calc.troe(
+    troe3p_ktps = ratefit.calc.troe(
         HIGHP_KTS, LOWP_KTS, TEMPS, PRESSURES,
         TROE_ALPHA, TROE_T3, TROE_T1, ts2=None)
 
-    assert numpy.allclose(tuple(troe_3par_ktps.keys()), PRESSURES)
+    assert numpy.allclose(tuple(troe3p_ktps.keys()), PRESSURES)
 
-    assert numpy.allclose(troe_3par_ktps[0.1], REF_TROE_3PAR_KTPS[0.1], atol=0.01)
-    assert numpy.allclose(troe_3par_ktps[2.0], REF_TROE_3PAR_KTPS[2.0], atol=0.01)
-    assert numpy.allclose(troe_3par_ktps[5.0], REF_TROE_3PAR_KTPS[5.0], atol=0.01)
-    assert numpy.allclose(troe_3par_ktps[10.0], REF_TROE_3PAR_KTPS[10.0], atol=0.01)
+    assert numpy.allclose(troe3p_ktps[0.1], REF_TROE3P_KTPS[0.1], atol=0.01)
+    assert numpy.allclose(troe3p_ktps[2.0], REF_TROE3P_KTPS[2.0], atol=0.01)
+    assert numpy.allclose(troe3p_ktps[5.0], REF_TROE3P_KTPS[5.0], atol=0.01)
+    assert numpy.allclose(troe3p_ktps[10.0], REF_TROE3P_KTPS[10.0], atol=0.01)
 
 
 def test__calc_four_param():
     """ test ratefit.calc._rates.troe
     """
 
-    troe_4par_ktps = ratefit.calc.troe(
+    troe4p_ktps = ratefit.calc.troe(
         HIGHP_KTS, LOWP_KTS, TEMPS, PRESSURES,
         TROE_ALPHA, TROE_T3, TROE_T1, ts2=TROE_T2)
 
-    assert numpy.allclose(tuple(troe_4par_ktps.keys()), PRESSURES)
+    assert numpy.allclose(tuple(troe4p_ktps.keys()), PRESSURES)
 
-    assert numpy.allclose(troe_4par_ktps[0.1], REF_TROE_4PAR_KTPS[0.1], atol=0.01)
-    assert numpy.allclose(troe_4par_ktps[2.0], REF_TROE_4PAR_KTPS[2.0], atol=0.01)
-    assert numpy.allclose(troe_4par_ktps[5.0], REF_TROE_4PAR_KTPS[5.0], atol=0.01)
-    assert numpy.allclose(troe_4par_ktps[10.0], REF_TROE_4PAR_KTPS[10.0], atol=0.01)
-
-
-if __name__ == '__main__':
-    test__calc_three_param()
-    test__calc_four_param()
+    assert numpy.allclose(troe4p_ktps[0.1], REF_TROE4P_KTPS[0.1], atol=0.01)
+    assert numpy.allclose(troe4p_ktps[2.0], REF_TROE4P_KTPS[2.0], atol=0.01)
+    assert numpy.allclose(troe4p_ktps[5.0], REF_TROE4P_KTPS[5.0], atol=0.01)
+    assert numpy.allclose(troe4p_ktps[10.0], REF_TROE4P_KTPS[10.0], atol=0.01)

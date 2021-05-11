@@ -5,8 +5,8 @@
 
 
 import numpy
-import ratefit
 import chemkin_io
+import ratefit
 from ratefit.fit import arrhenius
 from ratefit.fit._util import set_a_conversion_factor
 
@@ -15,7 +15,7 @@ from ratefit.fit._util import set_a_conversion_factor
 def pes(ktp_dct, reaction, mess_path,
         fit_temps=None,
         t_ref=1.0, tdeg=6, pdeg=4,
-        fit_tolerance=20.0):
+        tol=20.0):
     """ Read the rates for each channel and perform the fits
     """
 
@@ -85,7 +85,7 @@ def pes(ktp_dct, reaction, mess_path,
             err_dct[pressure] = [mean_avg_err, max_avg_err]
 
         # look at err and same num k(T) at each P
-        if max((vals[1] for vals in err_dct.values())) > fit_tolerance:
+        if max((vals[1] for vals in err_dct.values())) > tol:
             print(
                 'Errors from Chebyshev fit too large (see string)...')
             fit_viable = False

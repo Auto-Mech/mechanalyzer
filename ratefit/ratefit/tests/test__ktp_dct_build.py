@@ -19,10 +19,10 @@ KTP_DCT1 = {
     # Positive k(T) and undefined k(T)s
     1.0: ((200., 400., 600., 800., 1000., 1200.),
           (1.0e5, 2.0e5, 3.0e5, None, None, None)),
-    # Positive k(T) and undefined k(T)s
+    # Positive k(T)s
     10.0: ((200., 400., 600., 800., 1000., 1200.),
            (1.0e6, 2.0e6, 3.0e6, 4.0e6, 5.0e6, 6.0e6)),
-    # Positive k(T) and undefined k(T)s
+    # Positive k(T)s
     100.0: ((200., 400., 600., 800., 1000., 1200.),
             (1.0e7, 2.0e7, 3.0e7, 4.0e7, 5.0e7, 6.0e7))
 }
@@ -60,6 +60,8 @@ def test__filter_ktp():
 
     # Check the temperatures and undefined (these are wrong)
     ref_dct1 = {
+        0.1: (numpy.array([400., 600.]),
+              numpy.array([2.0e4, 3.0e4])),
         1.0: (numpy.array([200., 400., 600.]),
               numpy.array([1.0e5, 2.0e5, 3.0e5])),
         10.0: (numpy.array([200.,  400.,  600.,  800., 1000., 1200.]),
@@ -72,32 +74,40 @@ def test__filter_ktp():
         0.01: (numpy.array([400.]),
                numpy.array([2.0e3])),
         0.1: (numpy.array([400., 600.]),
-              numpy.array([2.0e5, 3.0e5])),
+              numpy.array([2.0e4, 3.0e4])),
         1.0: (numpy.array([400., 600.]),
               numpy.array([2.0e5, 3.0e5])),
         10.0: (numpy.array([400., 600., 800.]),
-               numpy.array([2.0e5, 3.0e5, 4.0e5])),
+               numpy.array([2.0e6, 3.0e6, 4.0e6])),
         100.0: (numpy.array([400., 600., 800.]),
-                numpy.array([2.0e5, 3.0e5, 4.0e5]))}
+                numpy.array([2.0e7, 3.0e7, 4.0e7]))}
 
     filt_ktp_dct_temp1 = ratefit.fit.filter_ktp_dct(
         KTP_DCT1, bimol=False, tmin=None, tmax=None)
 
     filt_ktp_dct_temp2 = ratefit.fit.filter_ktp_dct(
         KTP_DCT1, bimol=False, tmin=400.0, tmax=800.0)
-    print(filt_ktp_dct_temp1)
-    print(filt_ktp_dct_temp2)
-    import sys
-    sys.exit()
-    assert filt_ktp_dct_temp1 == ref_dct1
-    assert filt_ktp_dct_temp2 == ref_dct2
+
+    for key1, key2 in zip(filt_ktp_dct_temp1.keys(), ref_dct1.keys()):
+        assert numpy.isclose(key1, key2)
+        assert numpy.allclose(filt_ktp_dct_temp1[key1][0], ref_dct1[key2][0])
+        assert numpy.allclose(filt_ktp_dct_temp1[key1][1], ref_dct1[key2][1])
+
+    for key1, key2 in zip(filt_ktp_dct_temp2.keys(), ref_dct2.keys()):
+        assert numpy.isclose(key1, key2)
+        assert numpy.allclose(filt_ktp_dct_temp2[key1][0], ref_dct2[key2][0])
+        assert numpy.allclose(filt_ktp_dct_temp2[key1][1], ref_dct2[key2][1])
 
     # Check for small rate constants (based on bimol flag)
     ref_dct3 = {
-        0.01: (numpy.array([200.,  400.,  600.,  800., 1000., 1200.]),
-               numpy.array([1.0e-25, 5.0e-25, 9.0e-24, 1.5e-23, 6.5e-22, 1.0e-20])),
-        1.0: (numpy.array([200.,  400.,  600.,  800., 1000., 1200.]),
-              numpy.array([8.0e-25, 3.0e-24, 2.0e-22, 6.0e-20, 2.5e-18, 5.0e-16]))}
+        0.01: (
+            numpy.array([200.,  400.,  600.,  800., 1000., 1200.]),
+            numpy.array([1.0e-25, 5.0e-25, 9.0e-24, 1.5e-23, 6.5e-22, 1.0e-20])
+        ),
+        1.0: (
+            numpy.array([200.,  400.,  600.,  800., 1000., 1200.]),
+            numpy.array([8.0e-25, 3.0e-24, 2.0e-22, 6.0e-20, 2.5e-18, 5.0e-16])
+        )}
 
     ref_dct4 = {
         0.01: (numpy.array([600.,  800., 1000., 1200.]),
@@ -110,16 +120,21 @@ def test__filter_ktp():
     filt_ktp_dct_smallk2 = ratefit.fit.filter_ktp_dct(
         KTP_DCT2, bimol=True, tmin=None, tmax=None)
 
-    assert filt_ktp_dct_smallk1 == ref_dct3
-    assert filt_ktp_dct_smallk2 == ref_dct4
+    for key1, key2 in zip(filt_ktp_dct_smallk1.keys(), ref_dct3.keys()):
+        assert numpy.isclose(key1, key2)
+        assert numpy.allclose(filt_ktp_dct_smallk1[key1][0], ref_dct3[key2][0])
+        assert numpy.allclose(filt_ktp_dct_smallk1[key1][1], ref_dct3[key2][1])
+
+    for key1, key2 in zip(filt_ktp_dct_smallk2.keys(), ref_dct4.keys()):
+        assert numpy.isclose(key1, key2)
+        assert numpy.allclose(filt_ktp_dct_smallk2[key1][0], ref_dct4[key2][0])
+        assert numpy.allclose(filt_ktp_dct_smallk2[key1][1], ref_dct4[key2][1])
 
     # Dict that should come back empty
-    ref_dct5 = {}
-
     filt_ktp_dct_emptyret = ratefit.fit.filter_ktp_dct(
         KTP_DCT3, bimol=False, tmin=None, tmax=None)
 
-    assert filt_ktp_dct_emptyret == ref_dct5
+    assert not filt_ktp_dct_emptyret
 
 
 def test__invert():
@@ -140,12 +155,15 @@ def test__invert():
     assert inv_ktp_dct == ref_inv_ktp_dct
 
 
-def test__pull_highp():
+def test__aconv():
+    """ test ratefit.fit._util.set_a_conversion_factor
     """
-    """
 
+    ref_aconv1 = 1.00
+    ref_aconv2 = 6.0221409e23  # Avogadro's Number
 
+    aconv1 = ratefit.fit.set_a_conversion_factor('W1=P2')
+    aconv2 = ratefit.fit.set_a_conversion_factor('P1=P2')
 
-if __name__ == '__main__':
-    test__filter_ktp()
-    test__invert()
+    assert numpy.isclose(aconv1, ref_aconv1)
+    assert numpy.isclose(aconv2, ref_aconv2)
