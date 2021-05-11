@@ -140,6 +140,7 @@ def __sort_with_input():
 
     # Sort mechanism
     isolate_spc, sort_lst = mparser.parse_sort(sort_str)
+    print('parser test:', isolate_spc, sort_lst)
 
     param_dct_sort, _, _, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)

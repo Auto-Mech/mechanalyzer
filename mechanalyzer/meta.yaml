@@ -1,4 +1,4 @@
-# cmd: conda build . -c auto-mech -c psi4 -c rdkit -c openbabel -c conda-forge
+# cmd: conda build . -c auto-mech -c psi4 -c rdkit -c openbabel -c cantera -c conda-forge
 package:
     name: mechanalyzer
     version: "0.1.0"
@@ -29,6 +29,10 @@ requirements:
         - rdkit::rdkit
         - openbabel::openbabel
         - conda-forge::qcelemental
+        - conda-forge::nglview
+        - conda-forge::pypdf2
+        - conda-forge::python-igraph
+        - cantera::cantera
         - psi4::psi4
         - auto-mech::autoio
         - auto-mech::automol
@@ -36,4 +40,3 @@ requirements:
         - auto-mech::elstruct
         - auto-mech::ratefit
         - auto-mech::x2z
-        # - auto-mech::mechdriver 

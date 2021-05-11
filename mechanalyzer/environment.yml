@@ -8,7 +8,7 @@ channels:
     - conda-forge
 
 dependencies:
-    - python=3.7
+    - python
     - pybind11
     - cmake
     - gfortran_linux-64  # [linux]
@@ -22,6 +22,14 @@ dependencies:
     - future
     - flake8
     - pylint
+    - psi4::psi4
+    - rdkit::rdkit
+    - openbabel::openbabel
+    - conda-forge::qcelemental 
+    - conda-forge::nglview
+    - conda-forge::pypdf2
+    - conda-forge::python-igraph
+    - cantera::cantera
     - auto-mech::automol
     - auto-mech::autoparse
     - auto-mech::autorun
@@ -29,8 +37,3 @@ dependencies:
     - auto-mech::elstruct
     - auto-mech::ratefit
     - auto-mech::x2z
-    # - auto-mech::mechdriver
-    - psi4::psi4
-    - rdkit::rdkit
-    - openbabel::openbabel
-    - conda-forge::qcelemental 
