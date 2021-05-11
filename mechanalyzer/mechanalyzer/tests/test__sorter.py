@@ -132,8 +132,8 @@ def __sort_with_input():
     """
 
     # Read the mechanism files into strings
-    spc_path = os.path.join(CWD, 'data', 'NUIG_species.csv')
-    mech_path = os.path.join(CWD, 'data', 'NUIG_mechred.dat')
+    spc_path = os.path.join(CWD, 'data', 'LLNL_species.csv')
+    mech_path = os.path.join(CWD, 'data', 'LLNL_IC8_red_classes.dat')
     sort_path = os.path.join(CWD, 'data', 'sort.dat')
 
     spc_str, mech_str, sort_str = _read_files(spc_path, mech_path, sort_path)
@@ -142,9 +142,11 @@ def __sort_with_input():
     isolate_spc, sort_lst = mparser.parse_sort(sort_str)
     print('parser test:', isolate_spc, sort_lst)
 
-    param_dct_sort, _, _, _, _ = sorter.sorted_mech(
+    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
-    print(param_dct_sort)
+    
+    for rxn, params in param_dct_sort.items():
+        print(rxn, params, cmts_dct[rxn]['cmts_inline'], '\n')
 
 
 def test__readwrite_thirdbody():
@@ -399,3 +401,15 @@ def _read_files(spc_path, mech_path, sort_path):
             sort_str = fobj.read()
 
     return spc_str, mech_str, sort_str
+
+if __name__ == '__main__':
+    __sort_with_input()
+    #test__readwrite_thirdbody()
+    #test__sortby_mult()
+    #test__sortby_molec_r1()
+    #test_sortby_rxnclass()
+    #test__sortby_species_subpes()
+    #test__sortby_submech()
+    #test_sortby_submech_class()
+    #test_sort_ktp()
+    #test__build_sorted_pesdct()
