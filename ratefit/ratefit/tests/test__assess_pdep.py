@@ -1,39 +1,33 @@
+""" test ratefit.fit._pdep
 """
-Test the ratefit pressure dependence checker
-"""
 
-import numpy as np
-import ratefit
+from ratefit.fit import pressure_dependent_ktp_dct
 
 
-TK_DCT = {
-    0.1:    [[1200.0, 1500.0], [1.020, 1.050]],
-    1.0:    [[1000.0, 1200.0, 1500.0], [1.0, 1.030, 1.060]],
-    10.0:   [[1200.0, 1500.0], [1.040, 2.080]],
-    100.0:  [[1200.0, 1300.0, 1500.0], [1.050, 1.50, 2.090]],
-    'high': [[1200.0, 1500.0], [1.060, 3.040]]
+KTP_DCT = {
+    0.1:    ((500.0, 1000.0), (1.020, 1.050)),
+    1.0:    ((300.0, 500.0, 1000.0), (1.0, 1.030, 1.060)),
+    10.0:   ((500.0, 1000.0), (1.040, 2.080)),
+    100.0:  ((500.0, 1300.0, 1000.0), (1.050, 1.50, 2.090)),
+    'high': ((500.0, 1000.0), (1.060, 3.040))
 }
-TEMP_COMPARE1 = [1200.0]
-TEMP_COMPARE2 = [1200.0, 1500.0]
-TOL = 20.0
-PLOW = None
-PHIGH = None
-
-np.set_printoptions(precision=15)
+TEMPS = (500.0,)
+PVAL = 2.0
 
 
-def test__assess_pressure_dependence():
-    """ test ratefit.err.assess_pressure_dependence
+def test__assess_pdep():
+    """ test ratefit.fit._pdep.pressure_dependent_ktp_dct
+        test ratefit.fit._pdep.assess_pressure_dependence
     """
 
-    is_pdependent1 = ratefit.calc.assess_pressure_dependence(
-        TK_DCT, TEMP_COMPARE1, tolerance=TOL, plow=PLOW, phigh=PHIGH)
-    is_pdependent2 = ratefit.calc.assess_pressure_dependence(
-        TK_DCT, TEMP_COMPARE2, tolerance=TOL, plow=PLOW, phigh=PHIGH)
+    ref_ktp_dct1 = {
+        0.1: ((500.0, 1000.0), (1.02, 1.05)),
+        1.0: ((300.0, 500.0, 1000.0), (1.0, 1.03, 1.06)),
+        10.0: ((500.0, 1000.0), (1.04, 2.08)),
+        100.0: ((500.0, 1300.0, 1000.0), (1.05, 1.5, 2.09)),
+        'high': ((500.0, 1000.0), (1.06, 3.04))}
+    ref_ktp_dct2 = {'high': ((300.0, 500.0, 1000.0), (1.0, 1.03, 1.06))}
 
-    assert not is_pdependent1
-    assert is_pdependent2
-
-
-if __name__ == '__main__':
-    test__assess_pressure_dependence()
+    assert pressure_dependent_ktp_dct(KTP_DCT) == ref_ktp_dct1
+    assert pressure_dependent_ktp_dct(KTP_DCT, temps=TEMPS) == ref_ktp_dct2
+    assert pressure_dependent_ktp_dct(KTP_DCT, temps=TEMPS, pval=PVAL) is None

@@ -3,13 +3,28 @@
 
 from distutils.core import setup
 
-setup(name="mechanalyzer",
-      version="0.1.0",
-      packages=['plotter',
-                'calculator'],
-      package_dir={
+
+setup(
+    name="mechanalyzer",
+    version="0.1.0",
+    packages=[
+        'mechanalyzer',
+        'mechanalyzer.builder',
+        'mechanalyzer.calculator',
+        'mechanalyzer.parser',
+        'mechanalyzer.plotter',
+        'mechanalyzer.inf'
+    ],
+    package_dir={
+          'builder': 'builder',
+          'calculator': 'calculator',
+          'parser': 'parser',
           'plotter': 'plotter',
-          'calculator': 'calculator'},
-      package_data={
-          'plotter': ['tests/data/*.txt', 'tests/data/*.csv'],
-          'chemkin': ['tests/data/*.txt', 'tests/data/*.csv']})
+          'inf': 'inf'
+    },
+    package_data={
+        'mechanalyzer': ['tests/data/*.txt',
+                         'tests/data/*.dat',
+                         'tests/data/*.csv']
+    }
+)

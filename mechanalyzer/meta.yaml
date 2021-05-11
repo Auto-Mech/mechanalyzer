@@ -1,17 +1,21 @@
-# cmd: conda build . -c kevinmooreiii -c auto-mech -c psi4 -c rdkit -c openbabel -c conda-forge
+# cmd: conda build . -c auto-mech -c psi4 -c rdkit -c openbabel -c cantera -c conda-forge
 package:
     name: mechanalyzer
-    version: "0.1.0"
+    version: "0.1.1"
 
 source:
     path: .
 
 requirements:
     host:
-        - python
+        - python=3.7
+    build:
+        - cmake
+        - gfortran_linux-64
     run:
-        - python
-        - {{ compiler('fortran') }}
+        - cmake
+        - gfortran_linux-64
+        - python=3.7
         - numpy
         - scipy
         - pyyaml
@@ -25,9 +29,14 @@ requirements:
         - rdkit::rdkit
         - openbabel::openbabel
         - conda-forge::qcelemental
+        - conda-forge::nglview
+        - conda-forge::pypdf2
+        - conda-forge::python-igraph
+        - cantera::cantera
         - psi4::psi4
-        - kevinmooreiii::autoio
-        - kevinmooreiii::automol
-        - kevinmooreiii::autoparse
-        - kevinmooreiii:ratefit
+        - auto-mech::autoio
+        - auto-mech::automol
+        - auto-mech::autoparse
+        - auto-mech::elstruct
+        - auto-mech::ratefit
         - auto-mech::x2z

@@ -2,52 +2,76 @@
 Test the ratefit rate constant calculators
 """
 
-import os
 import numpy
-import pandas
 import ratefit
 
 
-def _read_csv(filename):
-    """ read csv values
-    """
-    csv_file = open(filename, 'r')
-    data = pandas.read_csv(csv_file, comment='!', quotechar="'")
-    csv_file.close()
-    return data
+# Pressure and Temperature Range and Parameter Setting
+TMIN, TMAX = (290.0, 2500.0)
+PMIN, PMAX = (0.0050, 103.6270)
+TEMPS = numpy.arange(300.0, 2500, 100.0)
+PRESSURES = (0.1, 1.0, 5.0, 10.0, 20.0, 50.0, 100.0)
 
-
-# Set path to data files
-PATH = os.path.dirname(os.path.realpath(__file__))
-DATA_PATH = os.path.join(PATH, 'data')
-CHEB_FILE_NAME = 'chebyshev.csv'
-
-# Read csv file for data
-# CHEB_K_DATA = _read_csv(
-#     os.path.join(DATA_PATH, CHEB_FILE_NAME))
-
-# Set the data for the calculations
-# TEMPS = numpy.array(
-#     [300., 600., 900., 1200., 1500.,
-#      1800., 2100., 2400., 2700., 3000.])
-# PRESSURES = numpy.array([0.1, 0.9869, 2.0, 5.0])
-# T_REF = 1.0
-#
-# numpy.set_printoptions(precision=15)
-HIGH_PARAMS = [1.00, 0.00, 0.00]
-TMIN, TMAX = (300.000, 2200.000)
-PMIN, PMAX = (0.01, 20.0)
-# PMIN, PMAX = (0.010, 98.702)
-TEMPS = numpy.arange(TMIN, TMAX+100.0, 100.0)
-PRESSURES = (0.1, 1.0, 10.0, 20.0, 40.0, 80, 98.702)
 ALPHA = numpy.array([
-    [8.684e+00, 7.500e-01, -7.486e-02, 1.879e-15],
-    [-2.159e-01, 9.899e-02, 2.292e-02, 2.929e-17],
-    [-1.557e-15, -3.331e-16, 3.324e-17, -8.346e-31],
-    [2.159e-01, -9.899e-02, -2.292e-02, -2.929e-17],
-    [-2.684e+00, -7.500e-01, 7.486e-02, -1.879e-15],
-    [2.159e-01, -9.899e-02, -2.292e-02, -2.929e-17]
+   [1.31900, 0.753300, -0.113600, -0.00162400],
+   [7.50900, 1.25800, -0.140900, -0.0208600],
+   [-0.719500, 0.751500, -0.000179400, -0.0326600],
+   [-0.499400, 0.312200, 0.0701700, -0.0159100],
+   [-0.219600, 0.0609100, 0.0654200, 0.00777700],
+   [-0.0877400, -0.0289900, 0.0290900, 0.0199400]
 ])
+
+# Set Reference Data for Comparison
+REF_CHEB_KTPS = {
+    0.1: numpy.array(
+        [1.08450103e-06, 4.02056587e-02, 2.67879037e+01, 2.18532255e+03,
+         4.53398238e+04, 3.60139663e+05, 1.45018006e+06, 3.60988324e+06,
+         6.38901400e+06, 8.87215267e+06, 1.03634259e+07, 1.06987289e+07,
+         1.01130485e+07, 8.97902728e+06, 7.62804534e+06, 6.28500509e+06,
+         5.07244048e+06, 4.03946844e+06, 3.19135182e+06, 2.51133072e+06,
+         1.97421057e+06, 1.55376775e+06]),
+    1.0: numpy.array(
+        [1.05204297e-06, 4.37287193e-02, 2.68683407e+01, 2.33553171e+03,
+         6.11167966e+04, 6.64960593e+05, 3.74422528e+06, 1.28835884e+07,
+         3.07244837e+07, 5.57883099e+07, 8.26967252e+07, 1.05371941e+08,
+         1.19913201e+08, 1.25396286e+08, 1.23093791e+08, 1.15262582e+08,
+         1.04210676e+08, 9.18153940e+07, 7.93887558e+07, 6.77312296e+07,
+         5.72544387e+07, 4.81070825e+07]),
+    5.0: numpy.array(
+        [1.03195059e-06, 4.51888681e-02, 2.58346404e+01, 2.19539776e+03,
+         6.18976976e+04, 7.74446059e+05, 5.18193172e+06, 2.14400511e+07,
+         6.14663642e+07, 1.33290864e+08, 2.33700127e+08, 3.48414202e+08,
+         4.58824325e+08, 5.49334987e+08, 6.11221003e+08, 6.42712213e+08,
+         6.46985110e+08, 6.29740256e+08, 5.97285483e+08, 5.55368956e+08,
+         5.08649782e+08, 4.60589012e+08]),
+    10.0: numpy.array(
+        [1.02854867e-06, 4.54462673e-02, 2.55882776e+01, 2.14313125e+03,
+         6.09581958e+04, 7.87229443e+05, 5.52751500e+06, 2.42486903e+07,
+         7.41295252e+07, 1.71833810e+08, 3.22150011e+08, 5.13016160e+08,
+         7.20276630e+08, 9.17230565e+08, 1.08265014e+09, 1.20439945e+09,
+         1.27916208e+09, 1.31010944e+09, 1.30413070e+09, 1.26952728e+09,
+         1.21446106e+09, 1.14609891e+09]),
+    20.0: numpy.array(
+        [1.03006701e-06, 4.54387780e-02, 2.56341148e+01, 2.12010613e+03,
+         5.99626704e+04, 7.83171633e+05, 5.65725653e+06, 2.58820537e+07,
+         8.33172377e+07, 2.04648252e+08, 4.08031125e+08, 6.92217829e+08,
+         1.03569539e+09, 1.40463446e+09, 1.76350702e+09, 2.08321497e+09,
+         2.34488271e+09, 2.53997245e+09, 2.66829042e+09, 2.73529370e+09,
+         2.74957776e+09, 2.72093196e+09]),
+    50.0: numpy.array(
+        [1.04183916e-06, 4.49835129e-02, 2.63629986e+01, 2.16291378e+03,
+         5.93540953e+04, 7.59794305e+05, 5.50077721e+06, 2.58129437e+07,
+         8.69088124e+07, 2.26620973e+08, 4.84815568e+08, 8.88840854e+08,
+         1.44354631e+09, 2.13010602e+09, 2.91213575e+09, 3.74488944e+09,
+         4.58379302e+09, 5.39036895e+09, 6.13522323e+09, 6.79867258e+09,
+         7.36986370e+09, 7.84514937e+09]),
+    100.0: numpy.array(
+        [1.06001201e-06, 4.42811270e-02, 2.76274082e+01, 2.27730457e+03,
+         6.00191004e+04, 7.34814182e+05, 5.16987678e+06, 2.40869598e+07,
+         8.21693105e+07, 2.20782995e+08, 4.93093215e+08, 9.52892469e+08,
+         1.64235752e+09, 2.58362271e+09, 3.77615383e+09, 5.19915635e+09,
+         6.81694453e+09, 8.58518980e+09, 1.04565997e+10, 1.23853058e+10,
+         1.43297921e+10, 1.62545195e+10])}
 
 
 def test__chebyshev():
@@ -56,17 +80,14 @@ def test__chebyshev():
 
     cheb_ktps = ratefit.calc.chebyshev(
         ALPHA, TMIN, TMAX, PMIN, PMAX, TEMPS, PRESSURES)
-    print(cheb_ktps)
 
-    # cheb_ktps1 = cheb_ktps[0.1]
-    # cheb_ktps2 = cheb_ktps[0.9869]
-    # cheb_ktps3 = cheb_ktps[2.0]
-    # cheb_ktps4 = cheb_ktps[5.0]
+    assert numpy.allclose(tuple(cheb_ktps.keys()), PRESSURES)
 
-    # assertnumpy.allclose(cheb_ktps1,numpy.array(CHEB_K_DATA.ktp1), atol=0.01)
-    # assertnumpy.allclose(cheb_ktps2,numpy.array(CHEB_K_DATA.ktp2), atol=0.01)
-    # assertnumpy.allclose(cheb_ktps3,numpy.array(CHEB_K_DATA.ktp3), atol=0.01)
-    # assertnumpy.allclose(cheb_ktps4,numpy.array(CHEB_K_DATA.ktp4), atol=0.01)
+    assert numpy.allclose(cheb_ktps[0.1], REF_CHEB_KTPS[0.1], atol=0.01)
+    assert numpy.allclose(cheb_ktps[1.0], REF_CHEB_KTPS[1.0], atol=0.01)
+    assert numpy.allclose(cheb_ktps[5.0], REF_CHEB_KTPS[5.0], atol=0.01)
+    assert numpy.allclose(cheb_ktps[10.0], REF_CHEB_KTPS[10.0], atol=0.01)
+    assert numpy.allclose(cheb_ktps[20.0], REF_CHEB_KTPS[20.0], atol=0.01)
 
 
 if __name__ == '__main__':

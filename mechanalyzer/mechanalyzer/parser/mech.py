@@ -1,101 +1,112 @@
 """
 Functions for mechanism reading and sorting
-Making script mechanalyzer/bin/mech.py more compact
 """
 
-import os
-import sys
-import mechanalyzer
-import chemkin_io
-import pandas as pd
-import numpy as np
-import copy
-
-def readfiles(SPCFILE,MECHFILE):
-    '''
-    read the mechanism and the species files provided by the user
-    '''
-    with open(SPCFILE, 'r') as file_obj:
-        SPC_STR = file_obj.read() 
-
-    # Extract species dictionary
-    spc_dct = mechanalyzer.parser.spc.build_spc_dct(SPC_STR,'csv')
-
-    # Read input mechanism file
-    with open(MECHFILE, 'r') as file_obj:
-        MECH_STR = file_obj.read() 
-
-    # extract rxn block and build reaction parameter dictionary
-    units = chemkin_io.parser.mechanism.reaction_units(MECH_STR)
-    block_str = chemkin_io.parser.mechanism.reaction_block(MECH_STR)
-    rxn_param_dct = chemkin_io.parser.reaction.param_dct(block_str,units[0],units[1])
-    # extract elements
-    el_block = chemkin_io.parser.mechanism.element_block(MECH_STR)
-    elem_tuple = chemkin_io.parser.species.names(el_block)
-
-    return spc_dct, rxn_param_dct, elem_tuple
+import autoparse.pattern as app
+import ioformat.ptt
+from mechanalyzer.parser import ckin_ as ckin
+from mechanalyzer.parser._util import get_ich_dct, get_fml
 
 
-def build_dct(spc_dct,rxn_param_dct):
-    '''
-    Build required info for mech sorting
-    '''
-    # extract info from dictionary:
-    # reactants and products
-    rcts,prds=zip(*rxn_param_dct.keys())
-    rct_names_lst = list(rcts)
-    prd_names_lst = list(prds)
+# Parse mechanism files
+def parse_mechanism(mech_str, mech_type, spc_dct):
+    """ Get the reactions and species from the mechanism input
+    """
 
-    # inchis dictionary
-    ich_dct = mechanalyzer.parser.ckin_.get_ich_dct(spc_dct)
+    # Parse the info from the chemkin file
+    if mech_type == 'chemkin':
+        rxn_param_dct, elem_tuple = ckin.parse(mech_str)
+    else:
+        raise NotImplementedError
 
-    # formulas and reaction names
-    formula_dct, formula_str, rxn_name = mechanalyzer.parser.ckin_.mech_info(rct_names_lst,prd_names_lst,ich_dct)
+    # Build mech_info object to pass along to various functions
+    _mech_info = mech_info(rxn_param_dct, spc_dct)
 
-    mech_info = [formula_dct,formula_str, rct_names_lst, prd_names_lst, rxn_name]
-
-    return mech_info
+    return rxn_param_dct, _mech_info, elem_tuple
 
 
-def sort_mechanism(mech_info,spc_dct,SORT_STR,ISOLATE_SPECIES):
-    '''
-    mech_info: formulas, reaction names
-    spc_dct: species dictionary
-    SORT_STR: list with sorting criteria
-    ISOLATE_SPECIES: list of species you want to isolate in the final mechanism
+def mech_info(rxn_param_dct, spc_dct):
+    """ Build mech_info object for mech sorting
 
-    calls sorting functions in mechanalyzer/pes
-    returns the rxn indices associated with the comments about sorting
-    '''
-    # call the sorting class
-    srt_mch = mechanalyzer.parser.pes.SORT_MECH(mech_info,spc_dct)
-    # sort according to the desired criteria
-    srt_mch.sort(SORT_STR,ISOLATE_SPECIES)
-    # returns the sorted indices and the corresponding comments
-    sorted_idx,cmts_dct = srt_mch.return_mech_df()
-    return sorted_idx,cmts_dct
+        :param spc_dct: species dictionary
+        :type spc_dct: dict[?:?]
+        :param rxn_dct: parameter dictionary
+        :type rxn_dct: dict[?:?]
+        :return mech_info: objects with mech info
+        :rtype: list
+    """
+
+    def _inf(rct_names, prd_names, ich_dct):
+        """ Sort reactant and product name lists by formula to facilitate
+            multichannel, multiwell rate evaluations
+        """
+        rxn_name_lst, formula_str_lst, formula_dct_lst = [], [], []
+        for _rct_names, _prd_names in zip(rct_names, prd_names):
+            rxn_name = '='.join(['+'.join(_rct_names), '+'.join(_prd_names)])
+            rxn_name_lst.append(rxn_name)
+            rct_ichs = list(map(ich_dct.__getitem__, _rct_names))
+            formula_dct, formula_str = get_fml(rct_ichs)
+            formula_dct_lst.append(formula_dct)
+            formula_str_lst.append(formula_str)
+
+        return formula_dct_lst, formula_str_lst, rxn_name_lst
+
+    # Extract info from dictionary
+    rcts, prds, thrdbdy = zip(*rxn_param_dct.keys())
+    rct_names, prd_names, thrdbdy_lst = list(rcts), list(prds), list(thrdbdy)
+
+    # formulas and reaction names (repplace with the mech info from ckin
+    ich_dct = get_ich_dct(spc_dct)
+    formula_dct, formula_str, rxn_name = _inf(rct_names, prd_names, ich_dct)
+
+    return [formula_dct, formula_str,
+            rct_names, prd_names, thrdbdy_lst,
+            rxn_name, list(rxn_param_dct.values())]
 
 
-def reordered_mech(rxn_param_dct,sorted_idx,cmts_dct):
-    '''
-    rxn_param_dct: non-sorted reactions
-    sorted_idx: indices of the rxn_param_dct in the desired order
-    cmts_dct: comments related to new_idx containing the rxn class
-    '''
-    sorted_val = list(map(rxn_param_dct.get,sorted_idx))
-    rxn_param_dct_sorted = dict(zip(sorted_idx,sorted_val))
+# Parse the auxiliary file used to sort a mechanism
+def parse_sort(sort_str):
+    """ Parse the string from the sort.dat input file that contains various
+        parameters used to sort a mechanism.
 
-    return rxn_param_dct_sorted
+        Returns the list of species to isolate from the mechanism as well
+        as the criteria used to sort the mechanism.
 
+        :param sort_str: string for the sort.dat file
+        :type sort_str: str
+        :rtype: (list(str), list(str), int)
+    """
 
-def write_reordered_mech(elem_tuple,spc_dct,rxn_param_dct_sorted,cmts_dct,sortedmech_name):
-    '''
-    MECH_STR: full mech to extract elements name
-    spc_dct: species dictionary
-    rxn_param_dct_sorted: reaction parameters dictionary in the desired order
-    cmts_dct: comments dictionary associated with the sorted mechanism
-    sortedmech_name: name of the final mech
-    '''
+    # Read and format information from the isolate_submech block
+    sort_block = ioformat.ptt.end_block(sort_str, 'isolate_submech')
+    spc_block = ioformat.ptt.paren_blocks(sort_block, key='species')
 
-    # write
-    chemkin_io.writer.mechanism.write_chemkin_file(elem_tuple=elem_tuple,spc_dct=spc_dct,rxn_param_dct=rxn_param_dct_sorted,filename=sortedmech_name,comments=cmts_dct)
+    if spc_block:
+        spc_lst = list(ioformat.ptt.values_from_block(
+            spc_block[0][1], val_ptt=app.one_or_more(app.URLSAFE_CHAR)))
+    else:
+        spc_lst = []
+
+    # Read and format information from the sort_mech block
+    isol_block = ioformat.ptt.end_block(sort_str, 'sort_mech')
+
+    crit_block = ioformat.ptt.paren_blocks(
+        isol_block, key='criteria')
+    head_block = ioformat.ptt.keyword_value_blocks(
+        isol_block, key='n_criteria_headers')
+
+    if crit_block:
+        crit_tup = ioformat.ptt.values_from_block(
+            crit_block[0][1], val_ptt=app.one_or_more(app.URLSAFE_CHAR))
+    else:
+        crit_tup = ()
+    nhead = int(head_block[0][1]) if head_block is not None else 0
+
+    sort_tup = crit_tup + (nhead,)
+    sort_lst = list(sort_tup)
+
+    # Print an error message for an isol block
+    if isol_block is None:
+        print('*ERROR: sort_mech section is not defined')
+
+    return spc_lst, sort_lst

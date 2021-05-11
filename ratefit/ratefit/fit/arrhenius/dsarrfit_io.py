@@ -6,7 +6,8 @@ import subprocess
 from mako.template import Template
 
 
-RC = 1.98720425864083e-3  # Gas Constant in kcal/mol.K
+RC = 1.98720425864083  # Gas Constant in cal/mol.K
+# RC = 1.98720425864083e-3  # Gas Constant in kcal/mol.K
 
 # OBTAIN THE PATH TO THE DIRECTORY CONTAINING THE TEMPLATES #
 SRC_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -31,15 +32,10 @@ def write_input(temps, rate_constants, fit_type='single',
     """
 
     # Format the string to tell the code what to optimize
-    assert fit_type in ('single, double, single-double')
+    assert fit_type in ('single', 'double')
     if fit_type == 'single':
-        arr_runs = 's'
         opt_str = '1 1 1 0 0 0'
     elif fit_type == 'double':
-        arr_runs = 'd'
-        opt_str = '1 1 1 1 1 1'
-    else:
-        arr_runs = 'sd'
         opt_str = '1 1 1 1 1 1'
 
     # Set the param guess lines
@@ -59,7 +55,6 @@ def write_input(temps, rate_constants, fit_type='single',
 
     # Build the fill value dictionary
     fit_keys = {
-        'arr_runs': arr_runs,
         'arr_param_opt_idxs': opt_str,
         'num_param_lines': num_param_lines,
         'param_lines': param_lines,
@@ -89,9 +84,10 @@ def run_dsarrfit(path):
     os.chdir(path)
 
     # Run the executable
-    exe_cmd = 'dsarrfit.x_cfg'
+    exe_cmd = 'dsarrfit.x'
     try:
-        subprocess.check_call([exe_cmd])
+        fnull = open(os.devnull, 'w')
+        subprocess.check_call([exe_cmd], stdout=fnull, stderr=fnull)
     except subprocess.CalledProcessError:
         print('dsarrfit failed for', path)
 
@@ -117,13 +113,13 @@ def read_params(output_str, fit_type, a_conv_factor=1.000, ea_conv_factor=RC):
     lines.reverse()
     params_str = ''
     if fit_type == 'single':
-        for line in lines:
-            if line.startswith(' results for iteration'):
+        for line in reversed(lines):
+            if 'results for iteration' in line:
                 params_str = lines[lines.index(line)-3]
                 break
     elif fit_type == 'double':
         for line in lines:
-            if line.startswith(' results from sum of two modified arrhenius'):
+            if 'results from sum of two modified arrhenius' in line:
                 params_str = lines[lines.index(line)-3]
                 break
 

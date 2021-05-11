@@ -94,6 +94,9 @@ def _bimol(func, rct1_gra, rct2_gras):
         hydrogen abstractions for a given species
     """
 
+    rct_ich = automol.graph.inchi(rct1_gra)
+    rad_ich = ''  # wrong
+
     new_rxns = tuple()
     new_spc = tuple()
 
@@ -111,6 +114,8 @@ def _unimol(func, rct_gra):
     """ Generate the inchis for the reacs and prods for
         hydrogen abstractions for a given species
     """
+
+    rct_ich = automol.graph.inchi(rct_gra)
 
     new_rxns = tuple()
     new_spc = tuple()
@@ -130,28 +135,30 @@ def _unimol_to_unimol(func, rct_gra):
         hydrogen abstractions for a given species
     """
 
+    rct_ich = automol.graph.inchi(rct_gra)
+
     new_rxns = tuple()
     new_spc = tuple()
 
     for gra in func(rct_gra):
 
-        prod_ich = automol.graph.inchi(gra)
+        prd_ich = automol.graph.inchi(gra)
 
-        rxn_ichs += ((rct_ich,), (prod_ich,))
-        new_spc += ((prod_ich, gra))
+        new_rxns += ((rct_ich,), (prd_ich,))
+        new_spc += ((prd_ich, gra))
 
     return new_rxns, new_spc
 
 
 RXN_DCT = {
     'hydrogen_abstractions': functools.partial(
-        _bimol, automol.graph.reac.prod_hydrogen_abstraction),
+        _bimol, automol.reac.prod_hydrogen_abstraction),
     'homolytic_scissions': functools.partial(
-        _unimol, automol.graph.reac.prod_homolytic_scission),
+        _unimol, automol.reac.prod_homolytic_scission),
     'beta_scissions': functools.partial(
-        _unimol, automol.graph.reac.prod_beta_scission),
+        _unimol, automol.reac.prod_beta_scission),
     'hydrogen_migrations': functools.partial(
-        _unimol_to_unimol, automol.graph.reac.prod_hydrogen_migration)
+        _unimol_to_unimol, automol.reac.prod_hydrogen_migration)
 }
 
 

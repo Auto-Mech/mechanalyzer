@@ -2,15 +2,15 @@
 Calculates k(T, P) and using various functional forms
 """
 
-from ratefit.calc.rates import single_arrhenius
-from ratefit.calc.rates import double_arrhenius
-from ratefit.calc.rates import arrhenius
-from ratefit.calc.rates import lowp_limit
-from ratefit.calc.rates import lindemann
-from ratefit.calc.rates import troe
-from ratefit.calc.rates import plog
-from ratefit.calc.rates import chebyshev
-from ratefit.calc.rates import p_to_m
+from ratefit.calc._rates import single_arrhenius
+from ratefit.calc._rates import double_arrhenius
+from ratefit.calc._rates import arrhenius
+from ratefit.calc._rates import lowp_limit
+from ratefit.calc._rates import lindemann
+from ratefit.calc._rates import troe
+from ratefit.calc._rates import plog
+from ratefit.calc._rates import chebyshev
+from ratefit.calc._rates import p_to_m
 
 
 __all__ = [

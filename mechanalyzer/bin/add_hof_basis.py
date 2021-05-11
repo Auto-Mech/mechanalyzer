@@ -4,16 +4,16 @@
 
 import os
 import sys
-import mechanalyzer
 import time
+import mechanalyzer
 
 CWD = os.getcwd()
 INNAME = sys.argv[1]
 OUTNAME = sys.argv[2]
 PARALLEL = False
 if len(sys.argv) > 3:
-    if 'p' in sys.argv[3].lower() :
-        PARALLEL = True    
+    if 'p' in sys.argv[3].lower():
+        PARALLEL = True
 
 t0 = time.time()
 # Read input species file

@@ -12,7 +12,7 @@ class SPC():
     SMILES = 'smiles'
     CHARGE = 'charge'
     MULT = 'mult'
-    # MULT = 'multiplicity'
+    TSMULT = 'tsmult'
     SENS = 'sensitivity'
     ELECLVLS = 'electronic_levels'
 
@@ -24,17 +24,10 @@ class RXN():
     PRODS = 'prods'
 
 
-class TS():
-    """ Params for TSs
-    """
-    FRM_BND_KEYS = 'frm_bnd_keys'
-    BRK_BND_KEYS = 'brk_bnd_keys'
-
-
 class THY():
     """ Params for thy
     """
     PROGRAM = 'program'
     METHOD = 'method'
     BASIS = 'basis'
-    ORB_RESTRICT = 'orb_restrict'  # fix
+    ORB_RESTRICT = 'orb_res'

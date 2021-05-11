@@ -2,101 +2,120 @@
 Calculate rates with various fitting functions
 """
 
+import copy
 import numpy as np
 from scipy.special import eval_chebyt
-import ratefit.calc.rates as ratefit
 from phydat import phycon
 
+RC = phycon.RC_cal  # gas constant in cal/(mol.K)
+RC2 = phycon.RC_atm  # gas constant in cm^3.atm/(mol.K)
 
-RC = phycon.RC_cal  # gas constant in cal/(mol.K) 
-RC2 = phycon.RC_atm  # gas constant in cm^3.atm/(mol.K) 
-
-
-##################### SECTION 1 OF 4: TOP-LEVEL EVALUATION FUNCTIONS #####################
-
-# These functions receive a param_dct and decide which type of fit to use to evaluate
-# k(T,P) based on what is inside the param_dct.
- 
 
 def eval_rxn_param_dct(rxn_param_dct, pressures, temps):
     """ Loop through all rxns in a rxn_param_dct and get a ktp_dct for
-        each one. Use this to create a rxn_ktp_dct.
+        each one. Return a rxn_ktp_dct.
 
-
+        :param rxn_param_dct:
+        :type rxn_param_dct:
+        :param pressures:
+        :type pressures:
+        :param temps:
+        :type temps:
     """
+    def add_ktp_dcts(ktp_dct1, ktp_dct2):
+        """ Add the rates in two ktp_dcts. The input dcts should have identical P and T values.
+            However, this may not always be true if one is from PLOG and one is from an expression
+            with a pressure-independent rate.
+        """
+        if ktp_dct1 == {}:  # if the starting dct is empty, just copy the addition
+            added_dct = copy.deepcopy(ktp_dct2)
+        else:
+            added_dct = {}
+            for pressure, (temps, kts1) in ktp_dct1.items():
+                if pressure in ktp_dct2.keys():
+                    (_, kts2) = ktp_dct2[pressure]  # unpack ktp_dct2 values
+                else:  # if the pressure is not in ktp_dct2
+                    kts2 = np.zeros(np.shape(kts1))  # just use an array of zeros
+                added_kts = kts1 + kts2
+                added_dct[pressure] = (temps, added_kts)  # store the added values
+
+        return added_dct
+
+    check_p_t(pressures, temps)  # enforce formatting rules
     rxn_ktp_dct = {}
-    for reaction in rxn_param_dct:
-        param_dct = rxn_param_dct[reaction]
-        try: 
-            ktp_dct = eval_param_dct(param_dct,pressures, temps)
-        #except TypeError:
-        #    print(f'TypeError; something with the inputs to plog? Reaction name is {reaction}')
-        except AssertionError as ae:
-            print(f'Reaction {reaction} returned an assertion error: {ae}')
-        rxn_ktp_dct[reaction] = ktp_dct
+    for rxn, param_tups in rxn_param_dct.items():
+        ktp_dct = {}
+        for param_tup in param_tups:
+            new_ktp_dct = eval_param_tup(param_tup, pressures, temps)
+            ktp_dct = add_ktp_dcts(ktp_dct, new_ktp_dct)
+        rxn_ktp_dct[rxn] = ktp_dct
 
     return rxn_ktp_dct
 
 
-def eval_param_dct(param_dct,pressures,temps):
-    """ Look through a param_dct and decide how to evaluate k(T,P) based on
-        what's inside the param_dct. Then, call the correct method to evaluate
-        k(T,P) and create a ktp_dct.
-    """
-    if param_dct[3] is not None:  # Chebyshev
-        alpha = param_dct[3]['alpha_elm']
-        t_limits = param_dct[3]['t_limits']
-        p_limits = param_dct[3]['p_limits']
-        ktp_dct = chebyshev(alpha, t_limits[0], t_limits[1], p_limits[0], p_limits[1], temps, pressures)
-        #print('Reaction type is Chebyshev! Need to fix this.')
+def eval_param_tup(param_tup, pressures, temps):
+    """ Look through a param_tup and evaluate k(T,P) based on the contents. Return a ktp_dct.
 
-    elif param_dct[4] is not None:  # PLOG
-        plog_dct = param_dct[4]
+    :param param_tup:
+    :type param_tup:
+    :param pressures:
+    :type pressures:
+    :param temps:
+    :type temps:
+    :return ktp_dct: rate constant as a function of temp and pressure
+    :rtype: dct {pressure1: {temps1, kts1}, pressures2: ...}
+    """
+    if param_tup[3] is not None:  # Chebyshev
+        alpha = param_tup[3]['alpha_elm']
+        t_limits = param_tup[3]['t_limits']
+        p_limits = param_tup[3]['p_limits']
+        ktp_dct = chebyshev(alpha, t_limits[0], t_limits[1], p_limits[0], p_limits[1],
+                            temps, pressures)
+
+    elif param_tup[4] is not None:  # PLOG
+        plog_dct = param_tup[4]
         ktp_dct = plog(plog_dct, temps, pressures, t_ref=1.0)
 
-    elif param_dct[2] is not None:  # Troe
-        assert param_dct[0] is not None, (
+    elif param_tup[2] is not None:  # Troe
+        assert param_tup[0] is not None, (
             'Troe parameters are included, but the high-P parameters are absent'
             )
-        assert param_dct[1] is not None, (
+        assert param_tup[1] is not None, (
             'Troe and high-P parameters are included, but the low-P parameters are absent'
             )
-        highp_params = param_dct[0]
-        lowp_params = param_dct[1]
-        troe_params = param_dct[2]
+        highp_params = param_tup[0]
+        lowp_params = param_tup[1]
+        troe_params = param_tup[2]
         alpha = troe_params[0]
         ts3 = troe_params[1]  # T***
         ts1 = troe_params[2]  # T*
-        ts2 = troe_params[3]  # T**; this one is commonly omitted    
+        if len(troe_params) == 4:
+            ts2 = troe_params[3]  # T**; this one is commonly omitted
+        else:
+            ts2 = None
 
         ktp_dct = troe(highp_params, lowp_params, temps, pressures,
             alpha, ts3, ts1, ts2, collid_factor=1.0)
 
-    elif param_dct[1] is not None:  # Lindemann
-        assert param_dct[0] is not None, (
+    elif param_tup[1] is not None:  # Lindemann
+        assert param_tup[0] is not None, (
             'Low-P parameters are included, but the high-P parameters are absent'
             )
-        highp_params = param_dct[0]
-        lowp_params = param_dct[1]
-        ktp_dct = lindemann(highp_params, lowp_params, temps, pressures, collid_factor=1.0)        
+        highp_params = param_tup[0]
+        lowp_params = param_tup[1]
+        ktp_dct = lindemann(highp_params, lowp_params, temps, pressures, collid_factor=1.0)
 
-    else:  # Simple Arrhenius
-        assert param_dct[0] is not None, (
-            'The high-P parameters are absent. The param_dct does not seem to contain any useful information.'
+    else:  # Arrhenius
+        assert param_tup[0] is not None, (
+            'The param_tup does not seem to contain any useful information.'
             )
         # This case is unique as the kTP dictionary contains only one key/value pair
-        highp_params = param_dct[0]
+        highp_params = param_tup[0]
         kts = arrhenius(highp_params, temps, t_ref=1.0)
         ktp_dct = {}
         ktp_dct['high'] = (temps, kts)
 
     return ktp_dct
-
-
-##################### SECTION 2 OF 4: PRIMARY RATE CONSTANT FUNCTIONS #####################
-
-# This part deals with different evaluations of k depending on the type of fit. These are the 
-# functions that are called by eval_param_dct in Section 1.
 
 
 def chebyshev(alpha, tmin, tmax, pmin, pmax, temps, pressures):
@@ -121,26 +140,21 @@ def chebyshev(alpha, tmin, tmax, pmin, pmax, temps, pressures):
         :rtype: dict[pressure: temps]
     """
     kp_dct = {}
-#    print('inside chebyshev/mech', alpha,'\n',tmin, tmax, pmin, pmax, temps, pressures)
-    for index, pressure in enumerate(pressures):
+    for idx, pressure in enumerate(pressures):
         if np.ndim(temps) == 1:
-#            kp_dct[pressure] = chebyshev_one_pressure(
-            kp_dct[pressure] = ratefit.chebyshev_one_pressure(
-                alpha, tmin, tmax, pmin, pmax, temps, pressure)
-        else: 
-#            kp_dct[pressure] = chebyshev_one_pressure(
-            kp_dct[pressure] = ratefit.chebyshev_one_pressure(
-                alpha, tmin, tmax, pmin, pmax, temps[index], pressure)
+            kp_dct[pressure] = chebyshev_one_pressure(alpha, tmin, tmax, pmin, pmax, temps,
+                                                      pressure)
+        else:
+            kp_dct[pressure] = chebyshev_one_pressure(alpha, tmin, tmax, pmin, pmax, temps[idx],
+                                                      pressure)
 
-    # Create the ktp_dct
     ktp_dct = ktp(kp_dct, temps)
 
     return ktp_dct
 
 
 def plog(plog_dct, temps, pressures, t_ref=1.0):
-    """ Calculates T,P-dependent rate constants [k(T,P)]s using
-        a PLOG functional expression.
+    """ Calculate k(T,P) according to a PLOG  expression
 
         :param plog_dct: Arrhenius fitting parameters at several pressures
         :type plog_dct: dict[pressure: [Arr_params]]
@@ -161,12 +175,12 @@ def plog(plog_dct, temps, pressures, t_ref=1.0):
         if min(plog_pressures) <= pressure <= max(plog_pressures):
             if np.ndim(temps) == 1:
                 kp_dct[pressure] = plog_one_pressure(
-                    plog_dct, temps, pressure, t_ref) 
+                    plog_dct, temps, pressure, t_ref)
             else:
                 kp_dct[pressure] = plog_one_pressure(
                     plog_dct, temps[index], pressure, t_ref)
 
-    # Create the ktp_dct. Note: the high-P limit is not calculated since this does 
+    # Create the ktp_dct. Note: the high-P limit is not calculated since this does
     # not exist for PLOG
     ktp_dct = ktp(kp_dct, temps)
 
@@ -213,7 +227,7 @@ def troe(highp_params, lowp_params, temps, pressures,
             kp_dct[pressure] = troe_one_pressure(
                 highp_kts, lowp_kts, temps[index], pressure,
                 alpha, ts3, ts1, ts2, collid_factor=collid_factor)
-    
+
     # Create the ktp_dct; this will also add the high-P limit
     ktp_dct = ktp(kp_dct, temps, highp_params)
 
@@ -257,49 +271,33 @@ def lindemann(highp_params, lowp_params, temps, pressures, collid_factor=1.0, t_
 
 
 def arrhenius(params, temps, t_ref=1.0, rval=RC):
-    """ Calculates T-dependent rate constants [k(T)]s using
-         a either a single or double Arrhenius functional expression,
-         depending on the number of input fitting parameters.
+    """ Calculate T-dependent rate constants [k(T)]s using a single Arrhenius expression.
 
-         :param params: Arrhenius parameters
-         :type params: list(float); [A, n, Ea] for single Arrhenius or [A_1, n_1, Ea_1, A_2, n_2, Ea_2] for double Arrhenius
-         :param temps: List of Temperatures (K)
-         :type temps: numpy.ndarray
-         :param t_ref: Reference tempserature (K)
-         :type t_ref: float
-         :return kts: T-dependent rate constants
-         :rtype: numpy.ndarray
+        :param params: Arrhenius parameters
+        :type params: list(float); [A, n, Ea]
+        :param temps: List of temperatures (K)
+        :type temps: numpy.ndarray
+        :param t_ref: Reference temperature (K)
+        :type t_ref: float
+        :return kts: T-dependent rate constants
+        :rtype: numpy.ndarray
     """
-    assert len(params) in (3,6), (
-        f'Number of parameters is {len(params)}, but it should be 3 (single Arrhenius) or 6 (double Arrhenius)'
+    assert len(params) == 3, (
+        f'Number of parameters is {len(params)}, but it should be 3'
         )
 
-    if len(params) == 3:
-        a_par = params[0]  # pre-exponential A factor
-        n_par = params[1]  # temperature exponent
-        ea_par = params[2]  # activation energy (kcal/mol)
-        
-        kts = a_par * ((temps / t_ref)**n_par) * np.exp(-ea_par/(rval*temps))
-        
-    else:
-        a_par1 = params[0]
-        n_par1 = params[1]
-        ea_par1 = params[2]
-        a_par2 = params[3]
-        n_par2 = params[4]
-        ea_par2 = params[5]
+    a_par = params[0]  # pre-exponential A factor (molar basis)
+    n_par = params[1]  # temperature exponent
+    ea_par = params[2]  # activation energy (cal/mol)
 
-        kts = (
-            a_par1 * ((temps / t_ref)**n_par1) * np.exp(-ea_par1/(rval*temps)) +
-            a_par2 * ((temps / t_ref)**n_par2) * np.exp(-ea_par2/(rval*temps))
-            )
+    kts = a_par * ((temps / t_ref)**n_par) * np.exp(-ea_par/(rval*temps))
 
     return kts
 
 
 ##################### SECTION 3 OF 4: SECONDARY RATE CONSTANT FUNCTIONS #####################
 
-# These functions support the primary functions in Section 2. 
+# These functions support the primary functions in Section 2.
 
 
 def chebyshev_one_pressure(alpha, tmin, tmax, pmin, pmax, temps, pressure):
@@ -368,7 +366,6 @@ def plog_one_pressure(plog_dct, temps, pressure, t_ref):
         :return ktps: Set of k(T,P)s at given pressure
         :rtype numpy.ndarray
     """
-
     plog_pressures = list(plog_dct.keys())
 
     # Check if pressure is in plog dct; use plog pressure for numerical stab
@@ -378,7 +375,7 @@ def plog_one_pressure(plog_dct, temps, pressure, t_ref):
             pressure_defined = True
             plog_params = plog_dct[plog_pressure]
 
-    # If pressure equals value use, arrhenius expression
+    # If pressure equals value use arrhenius expression
     if pressure_defined:
         ktps = arrhenius(plog_params, temps, t_ref)
 
@@ -441,12 +438,8 @@ def troe_one_pressure(highp_kts, lowp_kts, temps, pressure,
         :return ktps: Set of k(T,P)s at given pressure
         :rtype: dict[pressure: temps]
     """
-
-    # Calculate the pr term and broadening factor
     pr_term = _pr_term(highp_kts, lowp_kts, temps, pressure, collid_factor)
     f_term = _f_broadening_term(pr_term, alpha, ts3, ts1, ts2, temps)
-
-    # Calculate Troe rate constants (collision factor could be wrong)
     ktps = highp_kts * (pr_term / (1.0 + pr_term)) * f_term
 
     return ktps
@@ -471,23 +464,14 @@ def lindemann_one_pressure(highp_kts, lowp_kts, temps, pressure,
         :return ktps: Set of k(T,P)s at given pressure
         :rtype numpy.ndarray
     """
-    # Calculate the pr term
     pr_terms = _pr_term(highp_kts, lowp_kts, temps, pressure,
                         collid_factor=collid_factor)
-
-    # Calculate Lindemann rate constants
     ktps = highp_kts * (pr_terms / (1.0 + pr_terms))
 
     return ktps
 
 
-##################### SECTION 4 OF 4: ANCILLARY FUNCTIONS #####################
-
-# These miscellaneous functions are called by the functions above
-
-
-def _pr_term(highp_rateks, lowp_rateks, temps, pressure,
-             collid_factor=1.0, rval=RC2):
+def _pr_term(highp_rateks, lowp_rateks, temps, pressure, collid_factor=1.0, rval=RC2):
     """ Calculates the reduced pressure term for a single pressure
         used for Lindemann and Troe P-dependent functional expressions.
 
@@ -501,7 +485,6 @@ def _pr_term(highp_rateks, lowp_rateks, temps, pressure,
         :type pressure: float
         :rtype: numpy.ndarray
     """
-
     pr_term = (
         (lowp_rateks / highp_rateks) *
         p_to_m(pressure, temps, rval=rval) *
@@ -556,7 +539,7 @@ def p_to_m(pressure, temps, rval=RC2):
 
         :param pressure: pressure of gas (in atm)
         :type pressure: float
-        :return mconc: concentration of gas (mol/cm^3)
+        :return: concentration of gas (mol/cm^3)
         :rtype: float
     """
     return pressure / (rval * temps)
@@ -565,15 +548,15 @@ def p_to_m(pressure, temps, rval=RC2):
 def ktp(kp_dct, temps, highp_params=None, t_ref=1.0):
     """ Creates a kTP dictionary from a kP dictionary and an
         array of temperatures
-        
+
         :param kp_dct: dct of the form {P:[k@T1, k@T2]}
         :type kp_dct: {float: np.array}
         :param temps: array of temperatures, either 1- or 2-D
         :type temps: np.ndarray
         :return ktp_dct:
-        :rtype: 
-                                   
-    """    
+        :rtype:
+
+    """
     ktp_dct = {}
     for index, pressure in enumerate(kp_dct):
         kts = kp_dct[pressure]
@@ -581,14 +564,14 @@ def ktp(kp_dct, temps, highp_params=None, t_ref=1.0):
             ktp_dct[pressure] = (temps,kts)
         else:  # if the dimensionality of temps is 2
             ktp_dct[pressure] = (temps[index],kts)
-    
+
     # Add the high-P k(T)s to the kTP dictionary if needed
     if highp_params:
         if np.ndim(temps) == 1:
             highp_kts = arrhenius(highp_params, temps, t_ref)
             ktp_dct['high'] = (temps,highp_kts)
         else:
-            highp_kts = arrhenius(highp_params, temps[-1], t_ref)  # use the last value in the temp array
+            highp_kts = arrhenius(highp_params, temps[-1], t_ref)  # use the last value in temps
             ktp_dct['high'] = (temps[-1],highp_kts)
 
     return ktp_dct
@@ -598,134 +581,20 @@ def check_p_t(pressures, temps):
     """ Enforces certain rules regarding the pressure and temperature arrays.
 
         :param pressures: array of pressures
-        :type pressures: numpy.ndarray    
+        :type pressures: numpy.ndarray
         :param temps: array of temps
         :type temps: numpy.ndarray
     """
     # Check that the dimensionality of the temps array is either 1 or 2
-    temp_dim = np.ndim(temps) 
+    temp_dim = np.ndim(temps)
     assert temp_dim in (1,2), (
         f'The dimensionality of temps is {temp_dim}; it should be either 1 or 2'
         )
 
-    # If temps is 2-D, enforce that the # of values in each individual temp array matches the # of pressures
+    # If temps is 2-D, enforce that the # of values in each temp array matches the # of pressures
     if temp_dim == 2:
         len_temps = np.shape(temps)[1]
         len_pressures = len(pressures)
         assert len_pressures ==  len_temps,(
-            f'Number of pressures is {len_pressures}, while number of temps in each array is {len_temps}'
+            f'# of pressures is {len_pressures}, while # of temps in each array is {len_temps}'
             )
-
-
-############################## ARCHIVED FUNCTIONS ###############################
-
-# None of these are called any longer; they can probably be deleted at some point
-
-
-def single_arrhenius(a_par, n_par, ea_par,
-                     temps, t_ref, rval=RC):
-    """ Calculates T-dependent rate constants [k(T)]s using
-        a single Arrhenius functional expression.
-
-        :param a_par: pre-exponential A parameter
-        :type a_par: float
-        :param n_par: temperature exponent n parameter
-        :type n_par: float
-        :param ea_par: activation energy Ea parameter (kcal.mol-1)
-        :type ea_par: float
-        :param t_ref: Reference temperature (K)
-         :type t_ref: float
-        :param temps: List of Temperatures (K)
-        :type temps: numpy.ndarray
-        :return kts: T-dependent rate constants
-        :rtype: numpy.ndarray
-    """
-    kts = a_par * ((temps / t_ref)**n_par) * np.exp(-ea_par/(rval*temps))
-    return kts
-
-
-def double_arrhenius(a_par1, n_par1, ea_par1,
-                     a_par2, n_par2, ea_par2,
-                     temps, t_ref, rval=RC):
-    """ Calculates T-dependent rate constants [k(T)]s using
-        a double Arrhenius functional expression.
-
-        :param a_par1: 1st pre-exponential A parameter
-        :type a_par1: float
-        :param n_par1: 1st temperature exponent n parameter
-        :type n_par1: float
-        :param ea_par1: 1st activation energy Ea parameter (kcal.mol-1)
-        :type ea_par1: float
-        :param a_par2: 2nd pre-exponential A parameter
-        :type a_par2: float
-        :param n_par2: 2nd temperature exponent n parameter
-        :type n_par2: float
-        :param ea_par2: 2nd activation energy Ea parameter (kcal.mol-1)
-        :type ea_par2: float
-        :param t_ref: Reference temperature (K)
-        :type t_ref: float
-        :param temps: List of Temperatures (K)
-        :type temps: numpy.ndarray
-        :return kts: T-dependent rate constants
-        :rtype: numpy.ndarray
-    """
-    kts = (
-        a_par1 * ((temps / t_ref)**n_par1) * np.exp(-ea_par1/(rval*temps)) +
-        a_par2 * ((temps / t_ref)**n_par2) * np.exp(-ea_par2/(rval*temps))
-    )
-    return kts
-
-
-def lowp_limit(lowp_params, temps, pressures, collid_factor=1.0, rval=RC2):
-    """ Calculates T,P-dependent rate constants [k(T,P)]s assuming
-        the reaction occurs in the low-pressure regime where the
-        rates are linear with pressure.
-
-        :param lowp_ks: k(T)s determined at low-pressure
-        :type lowp_ks: numpy.ndarray
-        :param temps: Temps used to calculate high- and low-k(T)s
-        :type temps: numpy.ndarray
-        :param pressures: Pressures used to calculate k(T,P)s
-        :type pressures: list(float)
-        :param collid_factor: Buffer enhancement collision factor
-        :type collid_factor: float
-        :return ktp_dct: k(T,Ps) at all temps and pressures
-        :rtype: dict[pressure: temps]
-    """
-    
-    kp_dct = {}
-    for index, pressure in enumerate(pressures):
-        if np.ndim(temps) == 1:    
-            kp_dct[pressure] = lowp_limit_one_pressure(
-                lowp_params, temps, pressure,
-                collid_factor=collid_factor, rval=rval)
-        else:
-            kp_dct[pressure] = lowp_limit_one_pressure(
-                lowp_params, temps[index], pressure,
-                collid_factor=collid_factor, rval=rval)               
-
-    ktp_dct = ktp(kp_dct,temps)
-
-    return ktp_dct
-
-
-def lowp_limit_one_pressure(lowp_params, temps, pressure,
-                            collid_factor=1.0, rval=RC2):
-    """ Calculates the reduced pressure term for a single pressure
-        used for Lindemann and Troe P-dependent functional expressions.
-
-        :param list lowp_ks: k(T)s determined at high-pressure
-        :type lowp_ks: numpy.ndarray
-        :param temps: Temps used to calculate high- and low-k(T)s
-        :temps: numpy.ndarray
-        :param pressure: Pressure used to calculate reduced pressure
-        :type pressure: float
-        :param collid_factor: Buffer enhancement collision factor
-        :type collid_factor: float
-        :return lowp_one_pressure: array of lowp_ks at one pressure
-        :rtype: numpy.ndarray
-    """
-    lowp_ks = arrhenius(lowp_params, temps, t_ref=1.0)
-    lowp_one_pressure = lowp_ks * p_to_m(pressure, temps, rval=rval) * collid_factor
-
-    return lowp_one_pressure
