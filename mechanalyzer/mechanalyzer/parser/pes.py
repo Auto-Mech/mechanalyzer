@@ -57,7 +57,7 @@ def find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
         index=np.arange(0, len(pes_rxn_name_lst)),
         columns=['rcts', 'prds', 'N_rcts_prds'])
     # order by total number of species (N of reactants + N of products)
-    pes_df = pes_df.sort_values(by='N_rcts_prds')
+    pes_df = pes_df.sort_values(by=['N_rcts_prds','rcts','prds'])
     # Split up channels into a connected sub-pes within a formula
     subpes_idx = 0
     conndct = {}
@@ -117,7 +117,10 @@ def print_pes_channels(pes_dct):
     """
 
     for (form, pidx, sidx), chnls in pes_dct.items():
-        print('! PES:', pidx+1, sidx+1, form)
+        pes_str = 'PES: {},'.format(pidx+1)
+        sub_pes_str = 'SUB-PES: {},'.format(sidx+1)
+        chnl_str = 'Channels: {}-{}'.format(chnls[0][0]+1, chnls[-1][0]+1)
+        print('!', form, pes_str, sub_pes_str, chnl_str)
         for chnl in chnls:
             _, rxn = chnl
             print('  {} = {}   1.0 0.0 0.0'.format(

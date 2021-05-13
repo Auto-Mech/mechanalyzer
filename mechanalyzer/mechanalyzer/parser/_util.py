@@ -38,6 +38,7 @@ def order_rct_bystoich(rct_names_lst, spc_dct=None):
                     rct_names_lst_ordered[key] = tuple(rct_names)
 
     else:
+        rct_names_lst_ordered.sort()
         for key, val in enumerate(rct_names_lst_ordered):
             rct_names = val
             if len(rct_names) == 2:

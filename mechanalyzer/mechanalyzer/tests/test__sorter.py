@@ -215,6 +215,33 @@ def test__sortby_molec_r1():
     print(param_dct_sort)
 
 
+def test_sortby_pes_subpes():
+    """ test mechanalyzer.parser.sort
+
+        sort by reaction class:
+    """
+
+    # Read mechanism files into strings
+    spc_path = os.path.join(CWD, 'data', 'LLNL_species.csv')
+    mech_path = os.path.join(CWD, 'data', 'LLNL_IC8_red_mech.dat')
+    sort_path = None
+
+    spc_str, mech_str, _ = _read_files(spc_path, mech_path, sort_path)
+
+    # Sort mechanism by reaction class
+    isolate_spc = []
+    sort_lst = ['pes', 'subpes', 0]
+
+    pes_dct = sorter.sorted_pes_dct(
+        spc_str, mech_str, isolate_spc, sort_lst)
+
+    for key, vals in pes_dct.items():
+        print('sub pes', key)
+        for val in vals:
+            print('channel', val)
+        print()
+
+
 def test_sortby_rxnclass():
     """ test mechanalyzer.parser.sort
 
@@ -403,10 +430,11 @@ def _read_files(spc_path, mech_path, sort_path):
     return spc_str, mech_str, sort_str
 
 if __name__ == '__main__':
-    __sort_with_input()
+    # __sort_with_input()
     #test__readwrite_thirdbody()
     #test__sortby_mult()
     #test__sortby_molec_r1()
+    test_sortby_pes_subpes()
     #test_sortby_rxnclass()
     #test__sortby_species_subpes()
     #test__sortby_submech()

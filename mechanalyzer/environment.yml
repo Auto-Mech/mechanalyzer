@@ -32,7 +32,7 @@ dependencies:
     - cantera::cantera
     - auto-mech::automol
     - auto-mech::autoparse
-    - auto-mech::autorun
+    - auto-mech::autorun>=0.1.2
     - auto-mech::autoio
     - auto-mech::elstruct
     - auto-mech::ratefit
