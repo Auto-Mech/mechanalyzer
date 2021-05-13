@@ -15,13 +15,13 @@ jobs:
             - run:
                 name: Build/install dsarrfit
                 command: |
-                    source activate mechanalzyer-env
+                    source activate mechanalyzer-env
                     cd external/dsarrfit
                     bash build.sh
             - run:
                 name: Build/install troefit
                 command: |
-                    source activate mechanalzyer-env
+                    source activate mechanalyzer-env
                     cd external/troefit
                     bash build.sh
             - run:
