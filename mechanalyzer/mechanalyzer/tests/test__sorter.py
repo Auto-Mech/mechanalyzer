@@ -234,6 +234,7 @@ def test_sortby_pes_subpes():
 
     pes_dct = sorter.sorted_pes_dct(
         spc_str, mech_str, isolate_spc, sort_lst)
+
     for key, vals in pes_dct.items():
         print('sub pes', key)
         for val in vals:

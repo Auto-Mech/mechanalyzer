@@ -57,7 +57,7 @@ def find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
         index=np.arange(0, len(pes_rxn_name_lst)),
         columns=['rcts', 'prds', 'N_rcts_prds'])
     # order by total number of species (N of reactants + N of products)
-    pes_df = pes_df.sort_values(by='N_rcts_prds')
+    pes_df = pes_df.sort_values(by=['N_rcts_prds','rcts','prds'])
     # Split up channels into a connected sub-pes within a formula
     subpes_idx = 0
     conndct = {}
