@@ -117,7 +117,10 @@ def print_pes_channels(pes_dct):
     """
 
     for (form, pidx, sidx), chnls in pes_dct.items():
-        print('! PES:', pidx+1, sidx+1, form)
+        pes_str = 'PES: {},'.format(pidx+1)
+        sub_pes_str = 'SUB-PES: {},'.format(sidx+1)
+        chnl_str = 'Channels: {}-{}'.format(chnls[0][0]+1, chnls[-1][0]+1)
+        print('!', form, pes_str, sub_pes_str, chnl_str)
         for chnl in chnls:
             _, rxn = chnl
             print('  {} = {}   1.0 0.0 0.0'.format(
