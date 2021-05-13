@@ -59,14 +59,14 @@ class SortMech:
             [rct_names_lst, prd_names_lst,
              rct_names_lst_ordered, prd_names_lst_ordered,
              rct_1, rct_2, molecularity, n_of_prods, pes_lst, formulas,
-             thrdbdy_lst, param_vals],
+             thrdbdy_lst, param_vals, rxn_name_lst],
             dtype=object).T
         self.mech_df = pd.DataFrame(
             data, index=rxn_index,
             columns=['rct_names_lst', 'prd_names_lst', 'rct_names_lst_ord',
                      'prd_names_lst_ord', 'r1', 'r2', 'molecularity',
                      'N_of_prods', 'pes', 'formulas',
-                     'thrdbdy', 'param_vals'])
+                     'thrdbdy', 'param_vals', 'rxn_names'])
 
         self.spc_dct = spc_dct  # set for later use
         # empty list for initialization (otherwise pylint warning)
@@ -97,10 +97,6 @@ class SortMech:
                       'N_COH_PES', 'N_COH.subpes', 'SUBMECH',
                       'Heavier rct', 'Total multiplicity',
                       'rxn type', 'rxn class', 'max val', 'max ratio']
-        # series: ascending/descending values
-        asc_val = [True]*len(criteria_all)
-        asc_val[-2:] = [False, False]
-        asc_series = pd.Series(asc_val, index=criteria_all)
 
         # if species_list is not empty: pre-process the mechanism
         if len(species_list) > 0:
@@ -142,10 +138,16 @@ class SortMech:
                 self.mech_df = pd.concat([self.mech_df, df_optn], axis=1)
 
         # 1. Sort
+        # series: ascending/descending values
+        asc_val = [True]*len(criteria_all + ['rxn_names'])
+        asc_val[-2:] = [False, False]
+        asc_series = pd.Series(asc_val, index=criteria_all + ['rxn_names'])
+
         try:
+            # last "stndard" criterion: rxn name
             self.mech_df = self.mech_df.sort_values(
-                by=hierarchy[:-1],
-                ascending=list(asc_series[hierarchy[:-1]].values))
+                by=hierarchy[:-1] + ['rxn_names'],
+                ascending=list(asc_series[hierarchy[:-1] + ['rxn_names']].values))
         except KeyError as err:
             print(
                 'WARNING: Reactions not sorted according ',
@@ -218,6 +220,7 @@ class SortMech:
             dtype=object)
         for fml, peslist in self.mech_df.groupby('pes'):
             # Set the names lists for the rxns and species needed below
+            peslist = peslist.sort_index()
             pes_rct_names_lst = peslist['rct_names_lst'].values
             pes_prd_names_lst = peslist['prd_names_lst'].values
             pes_rxn_name_lst = peslist.index
@@ -572,8 +575,9 @@ class SortMech:
         # get the pes dictionary
         pes_dct = {}
         prev_idx = -1
+        # self.mech_df.sort_values(
+        #        by=['pes', 'subpes'])
         for _, pes_dct_df in self.mech_df.groupby('subpes'):
-
             # Get the ('fml', n_pes, n_subpes) for dict key
             pes_dct_key = pes_dct_df['pes_dct'].values[0]
 
