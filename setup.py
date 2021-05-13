@@ -22,7 +22,7 @@ setup(
         'ratefit.fit.troe'],
     package_dir={
           'mechanalyzer': 'mechanalzyer',
-          'ratefit','ratefit'},
+          'ratefit': 'ratefit'},
     package_data={
         'mechanalyzer': ['tests/data/*.txt',
                          'tests/data/*.dat',
