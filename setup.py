@@ -6,7 +6,7 @@ from distutils.core import setup
 
 setup(
     name="mechanalyzer",
-    version="0.1.0",
+    version="0.2.0",
     packages=[
         'mechanalyzer',
         'mechanalyzer.builder',
@@ -14,17 +14,21 @@ setup(
         'mechanalyzer.parser',
         'mechanalyzer.plotter',
         'mechanalyzer.inf'
-    ],
+        'ratefit',
+        'ratefit.calc',
+        'ratefit.fit',
+        'ratefit.fit.arrhenius',
+        'ratefit.fit.chebyshev',
+        'ratefit.fit.troe'],
     package_dir={
-          'builder': 'builder',
-          'calculator': 'calculator',
-          'parser': 'parser',
-          'plotter': 'plotter',
-          'inf': 'inf'
-    },
+          'mechanalyzer': 'mechanalzyer',
+          'ratefit','ratefit'},
     package_data={
         'mechanalyzer': ['tests/data/*.txt',
                          'tests/data/*.dat',
-                         'tests/data/*.csv']
+                         'tests/data/*.csv'],
+        'ratefit': ['tests/data/*',
+                    'fit/arrhenius/dsarrfit.mako',
+                    'fit/troe/troefit.mako']
     }
 )
