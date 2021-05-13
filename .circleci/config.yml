@@ -1,6 +1,6 @@
 version: 2
 jobs:
-    test-ratefit:
+    test-mechanalyzer:
         docker:
             - image: continuumio/miniconda3
         working_directory: ~/ratefit
@@ -11,51 +11,32 @@ jobs:
                 command: |
                     apt-get update --yes
                     apt-get install --yes libxrender-dev build-essential
-                    conda env create -f ratefit/environment.yml
+                    conda env create -f environment.yml
             - run:
                 name: Build/install dsarrfit
                 command: |
-                    source activate ratefit-env
-                    cd ratefit/external/dsarrfit
+                    source activate mechanalzyer-env
+                    cd external/dsarrfit
                     bash build.sh
             - run:
                 name: Build/install troefit
                 command: |
-                    source activate ratefit-env
-                    cd ratefit/external/troefit
+                    source activate mechanalzyer-env
+                    cd external/troefit
                     bash build.sh
             - run:
-                name: Build/install ratefit
+                name: Build/install mechanalzyer
                 command: |
-                    source activate ratefit-env
-                    cd ratefit
+                    source activate mechanalyzer-env
                     python setup.py install
             - run:
                 name: Test ratefit
                 command: |
-                    source activate ratefit-env
+                    source activate mechanalyzer-env
                     cd ratefit
                     pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs ratefit
                     flake8 --exit-zero ratefit
-                    pylint --rcfile=../.pylintrc ratefit
-    test-mechanalyzer:
-        docker:
-            - image: continuumio/miniconda3
-        working_directory: ~/mechanalyzer
-        steps:
-            - checkout  # checkout the code
-            - run:
-                name: Create conda environment
-                command: |
-                    apt-get update --yes
-                    apt-get install --yes libxrender-dev build-essential
-                    conda env create -f mechanalyzer/environment.yml
-            - run:
-                name: Build/install mechanalyzer
-                command: |
-                    source activate mechanalyzer-env
-                    cd mechanalyzer
-                    python setup.py install
+                    pylint :--rcfile=../.pylintrc ratefit
             - run:
                 name: Test mechanalyzer
                 command: |
@@ -68,5 +49,4 @@ workflows:
     version: 2
     build-all:
         jobs:
-            - test-ratefit
             - test-mechanalyzer
