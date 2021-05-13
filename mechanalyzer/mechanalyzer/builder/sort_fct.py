@@ -557,7 +557,7 @@ class SortMech:
 
             chn idx is set to to OVERALL PES, not the SUB_PES
 
-        :returns: pes_dct: {('fml', n_pes, n_subpes): (chn_idx, (rcts, prds)), ...}
+        :returns: pes_dct: {(fml, n_pes, n_subpes): ((chn_idx, (rcts, prds)),)}
         :rtype: dct{tuple: tuple}
         """
 
@@ -584,7 +584,7 @@ class SortMech:
             # new_idx = list(zip(rct_names, prd_names, thrdbdy))
             rxn_names = tuple(zip(rct_names, prd_names))
 
-            # Count number of channels on the previous SUB-PES (if there is one)
+            # Count number of channels on previous SUB-PES (if there is one)
             # Used to increment the channel idxs on the current SUB-PES
             # Checks the idx to see if it has changed from previous
             _, pidx, _ = pes_dct_key
