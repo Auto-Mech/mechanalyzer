@@ -21,7 +21,7 @@ setup(
         'ratefit.fit.chebyshev',
         'ratefit.fit.troe'],
     package_dir={
-          'mechanalyzer': 'mechanalzyer',
+          'mechanalyzer': 'mechanalyzer',
           'ratefit': 'ratefit'},
     package_data={
         'mechanalyzer': ['tests/data/*.txt',
