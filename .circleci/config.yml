@@ -40,6 +40,7 @@ jobs:
                     pylint --rcfile=.pylintrc ratefit
             - run:
                 name: Test mechanalyzer
+                no_output_timeout: 60m
                 command: |
                     source activate mechanalyzer-env
                     cd mechanalyzer
