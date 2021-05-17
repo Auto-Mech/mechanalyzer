@@ -35,8 +35,9 @@ jobs:
                     source activate mechanalyzer-env
                     cd ratefit
                     pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs ratefit
+                    cd ..
                     flake8 --exit-zero ratefit
-                    pylint :--rcfile=../.pylintrc ratefit
+                    pylint --rcfile=.pylintrc ratefit
             - run:
                 name: Test mechanalyzer
                 command: |
