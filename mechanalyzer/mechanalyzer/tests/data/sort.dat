@@ -1,16 +1,15 @@
 isolate_submech # this section is not mandatory
     species = (
-        IC8
+        C2H4
     )
 end
 
 sort_mech
     criteria = (
-        submech
         subpes
         molecularity
         rxn_class_broad        
     )
-    n_criteria_headers = 1
+    n_criteria_headers = 0
 end
 
