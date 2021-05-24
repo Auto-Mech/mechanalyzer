@@ -59,13 +59,13 @@ class SortMech:
             [rct_names_lst, prd_names_lst,
              rct_names_lst_ordered, prd_names_lst_ordered,
              rct_1, rct_2, molecularity, n_of_prods, pes_lst, formulas,
-             thrdbdy_lst, param_vals, rxn_name_lst],
+             isthrdbdy, thrdbdy_lst, param_vals, rxn_name_lst],
             dtype=object).T
         self.mech_df = pd.DataFrame(
             data, index=rxn_index,
             columns=['rct_names_lst', 'prd_names_lst', 'rct_names_lst_ord',
                      'prd_names_lst_ord', 'r1', 'r2', 'molecularity',
-                     'N_of_prods', 'pes', 'formulas',
+                     'N_of_prods', 'pes', 'formulas', 'isthrdbdy',
                      'thrdbdy', 'param_vals', 'rxn_names'])
 
         self.spc_dct = spc_dct  # set for later use
@@ -140,7 +140,7 @@ class SortMech:
         # 1. Sort
         # series: ascending/descending values
         asc_val = [True]*len(criteria_all + ['rxn_names'])
-        asc_val[-2:] = [False, False]
+        asc_val[-3:] = [False, False, False] # rxn vals, ratio and names are descending
         asc_series = pd.Series(asc_val, index=criteria_all + ['rxn_names'])
 
         try:
@@ -220,7 +220,7 @@ class SortMech:
             dtype=object)
         for fml, peslist in self.mech_df.groupby('pes'):
             # Set the names lists for the rxns and species needed below
-            peslist = peslist.sort_index()
+            peslist = peslist.sort_values(by=['rxn_names'])
             pes_rct_names_lst = peslist['rct_names_lst'].values
             pes_prd_names_lst = peslist['prd_names_lst'].values
             pes_rxn_name_lst = peslist.index
@@ -336,7 +336,8 @@ class SortMech:
             prds = self.mech_df['prd_names_lst_ord'][rxn]
             _smol = (self.mech_df['molecularity'][rxn] == 1)
             _tbody = (self.mech_df['molecularity'][rxn] == 2
-                      and self.mech_df['thrdbdy'][rxn][0] is not None)
+                      and self.mech_df['isthrdbdy'][rxn] == 1)
+
             if _smol or _tbody:
                 # unimolecular reaction classification
                 rxn_class_broad = submech.classify_unimol(
@@ -404,10 +405,6 @@ class SortMech:
                     rclass = classify_graph(
                         self.spc_dct, rct_names, prd_names)
 
-                    if rclass == 'unclassified':
-                        if (subpes_df['molecularity'][rxn] == 1
-                                and subpes_df['N_of_prods'][rxn] == 1):
-                            rclass = 'isomerization'
                 else:
                     rclass = 'unclassified - lumped'
                 rxncl_graph_df['rxn_class_graph'][rxn] = rclass
@@ -574,35 +571,27 @@ class SortMech:
 
         # get the pes dictionary
         pes_dct = {}
-        prev_idx = -1
         # self.mech_df.sort_values(
         #        by=['pes', 'subpes'])
-        for _, pes_dct_df in self.mech_df.groupby('subpes'):
-            # Get the ('fml', n_pes, n_subpes) for dict key
-            pes_dct_key = pes_dct_df['pes_dct'].values[0]
+        for _, pes_all_df in self.mech_df.groupby('pes'):
+            idx_start = 0
+            for _, pes_dct_df in pes_all_df.groupby('subpes'):
+                # Get the ('fml', n_pes, n_subpes) for dict key
+                pes_dct_key = pes_dct_df['pes_dct'].values[0]
 
-            # Get the names of the reaction reagents
-            rct_names = pes_dct_df['rct_names_lst'].values
-            prd_names = pes_dct_df['prd_names_lst'].values
-            # thrdbdy = pes_dct_df['thrdbdy'].values
-            # new_idx = list(zip(rct_names, prd_names, thrdbdy))
-            rxn_names = tuple(zip(rct_names, prd_names))
+                # Get the names of the reaction reagents
+                rct_names = pes_dct_df['rct_names_lst'].values
+                prd_names = pes_dct_df['prd_names_lst'].values
 
-            # Count number of channels on previous SUB-PES (if there is one)
-            # Used to increment the channel idxs on the current SUB-PES
-            # Checks the idx to see if it has changed from previous
-            _, pidx, _ = pes_dct_key
-            if pidx == prev_idx:
-                nchnls += len(rxn_names)
-            else:
-                nchnls = 0
-            prev_idx = pidx
+                rxn_names = tuple(zip(rct_names, prd_names))
 
-            # Build the full channel list for the SUB-PES
-            chnl_lst = tuple((idx+nchnls, rxn)
-                             for idx, rxn in enumerate(rxn_names))
+                # Build the full channel list for the SUB-PES
+                chnl_lst = tuple((idx+idx_start, rxn)
+                                for idx, rxn in enumerate(rxn_names))
 
-            pes_dct[pes_dct_key] = chnl_lst
+                pes_dct[pes_dct_key] = chnl_lst
+                # update idx start
+                idx_start += len(chnl_lst)
 
         return pes_dct
 
