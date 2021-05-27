@@ -16,7 +16,7 @@ from mechanalyzer.parser import spc as parser_spc
 from mechanalyzer.calculator import thermo as calc_thermo
 from mechanalyzer.calculator import rates as calc_rates
 
-RC_CAL = phycon.RC_cal  # universal gas constant in cal/mol-K
+RC_CAL = phycon.RC_CAL  # universal gas constant in cal/mol-K
 
 
 def get_aligned_rxn_ktp_dct(rxn_ktp_dcts, spc_thermo_dcts, spc_ident_dcts, temps,
