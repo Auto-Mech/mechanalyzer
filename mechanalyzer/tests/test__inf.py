@@ -122,6 +122,7 @@ def test__thy():
         test mechanalyzer.inf.thy.from_data
         test mechanalyzer.inf.thy.modify_orb_label
         test mechanalyzer.inf.thy.value
+        test mechanalyzer.inf.thy.combine
     """
 
     # Build info objects
@@ -150,6 +151,15 @@ def test__thy():
     basis = inf.thy.value(thy_info1, par.THY.BASIS)
 
     assert basis == BASIS1
+
+    # Combine theory objects, handling orb label
+    comb_mod_thy_info1 = inf.thy.combine(mod_thy_info1, mod_thy_info3)
+    comb_mod_thy_info2 = inf.thy.combine(mod_thy_info1, mod_thy_info2)
+    comb_mod_thy_info3 = inf.thy.combine(mod_thy_info2, mod_thy_info1)
+
+    assert comb_mod_thy_info1 == (PROG1, METHOD1, BASIS1, 'R')
+    assert comb_mod_thy_info2 == (PROG1, METHOD1, BASIS1, 'U')
+    assert comb_mod_thy_info3 == (PROG1, METHOD1, BASIS1, 'U')
 
 
 def test__rxn():

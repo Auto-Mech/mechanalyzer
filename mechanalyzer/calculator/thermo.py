@@ -4,7 +4,7 @@
 import numpy as np
 from phydat import phycon
 
-RC = phycon.RC_cal  # gas constant in cal/(mol.K)
+RC = phycon.RC_CAL  # gas constant in cal/(mol.K)
 
 
 def create_spc_thermo_dct(spc_nasa7_dct, temps, rval=RC):

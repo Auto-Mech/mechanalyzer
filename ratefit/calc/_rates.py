@@ -7,8 +7,8 @@ from scipy.special import eval_chebyt
 from phydat import phycon
 
 
-RC = phycon.RC_cal  # gas constant in cal/(mol.K)
-RC2 = phycon.RC_atm  # gas constant in cm^3.atm/(mol.K)
+RC = phycon.RC_CAL  # gas constant in cal/(mol.K)
+RC2 = phycon.RC_ATM  # gas constant in cm^3.atm/(mol.K)
 
 
 def single_arrhenius(a_par, n_par, ea_par,
