@@ -1,5 +1,4 @@
-"""
-  Reaction info objects
+""" Constructs, Reads, and Builds Reaction Info Objects
 """
 
 from autofile.schema import sort_together
@@ -16,9 +15,18 @@ RXN_PROPS = [
 
 
 def from_dct(reacs, prods, spc_dct, rxn_mul='low'):
-    """ Build a reaction info object using a species dictionary and names
-        Add the names to the info object?
-        Have a way to get a dict object {(rctnames, prdnames) = rxn_info}
+    """ Construct a full reaction info object using the names of the
+        reactants and products, which are used to read a species dictionary for
+        the required physical information.
+
+        :param reacs: names of the reactants
+        :type reacs: tuple(str)
+        :param prods: names of the products
+        :type prods: tuple(str)
+        :param spc_dct:
+        :type spc_dct: dict[]
+        :param rxn_mul: multiplicity of reaction to store in object
+        :type rxn_mul: str
     """
 
     # Build the tuples of the reacs+prods infos
@@ -44,7 +52,13 @@ def from_dct(reacs, prods, spc_dct, rxn_mul='low'):
 
 
 def value(inf_obj, val):
-    """ obtain a value
+    """ Obtain a desired value from a reaction info object.
+        
+        :param inf_obj: reaction info object
+        :type inf_obj: mechanalyzer.inf.rxn object
+        :param val: value to obtain from info object
+        :type val: str
+        :rtype: str/int
     """
 
     assert val in RXN_PROPS, (
@@ -55,7 +69,11 @@ def value(inf_obj, val):
 
 
 def ts_info(inf_obj):
-    """ Build a spc info object for the transisiton state for the reaction
+    """ Construct a species info object for the reaction transisiton state.
+
+        :param inf_obj: reaction info object
+        :type inf_obj: mechanalyzer.inf.rxn object
+        :rtype: mechanalyzer.inf.spc object
     """
 
     _chg = ts_chg(inf_obj)
@@ -65,9 +83,12 @@ def ts_info(inf_obj):
 
 
 def rgts_info(inf_obj):
-    """ obtain all of the info of the rgt info
+    """ Construct species info objects for all of the species
+        that make up the reactants and products of the reaction.
 
-        get list of spc info objects from a rxn info
+        :param inf_obj: reaction info object
+        :type inf_obj: mechanalyzer.inf.rxn object
+        :rtype: tuple(tuple(mechanalyzer.inf.spc object))
     """
 
     _rgts_info = ()
@@ -78,9 +99,12 @@ def rgts_info(inf_obj):
 
 
 def rgt_info(inf_obj, rgt):
-    """ obtain all of the info of the rgt info
+    """ Construct species info objects for all of the species
+        that make up one side of the reaction
 
-        get list of spc info objects from a rxn info
+        :param inf_obj: reaction info object
+        :type inf_obj: mechanalyzer.inf.rxn object
+        :rtype: tuple(mechanalyzer.inf.spc object)
     """
 
     assert rgt in ('reacs', 'prods')
@@ -99,8 +123,18 @@ def rgt_info(inf_obj, rgt):
 
 
 def sort(inf_obj, scheme='autofile'):
-    """ Resort the reacs and prods based on some scheme,
-        currently just autofile
+    """ Construct a new reaction object where the reaction direction and
+        constituent reactants and products have been sorted according
+        to some requested scheme.
+
+        The default sorting corresponds to the autofile scheme used
+        for building filesystem paths.
+
+        :param inf_obj: reaction info object
+        :type inf_obj: mechanalyzer.inf.rxn object
+        :param scheme: sorting scheme
+        :type scheme: str
+        :rtype: mechanalyzer.inf.rxn object
     """
 
     rxn_ichs, rxn_chgs, rxn_muls, ts_mul = inf_obj
@@ -115,7 +149,12 @@ def sort(inf_obj, scheme='autofile'):
 
 
 def reverse(inf_obj):
-    """ Reverse the reactants and products in the info object
+    """ Construct a new reaction info object for the reverse reaction
+        where all of the reactant and product info has been flipped.
+
+        :param inf_obj: reaction info object
+        :type inf_obj: mechanalyzer.inf.rxn object
+        :rtype: mechanalyzer.inf.rxn object
     """
 
     rxn_ichs, rxn_chgs, rxn_muls, ts_mul = inf_obj
@@ -130,7 +169,12 @@ def reverse(inf_obj):
 
 
 def ts_chg(inf_obj):
-    """ Build the transition charge
+    """ Evaulate the electric charge of the transition state, i.e.,
+        net charge of the surface the reaction occurs on. Determines the value using the charges of the reactants and products.
+
+        :param inf_obj: reaction info object
+        :type inf_obj: mechanalyzer.inf.rxn object
+        :rtype: int
     """
 
     rxn_chgs = value(inf_obj, par.SPC.CHARGE)
@@ -143,8 +187,16 @@ def ts_chg(inf_obj):
 
 
 def ts_mult(inf_obj, rxn_mul='low'):
-    """ evaluate the ts multiplicity from the multiplicities
-        of the reactants and products
+    """ Evaulate the multilicity of the transition state, i.e.,
+        spin-state of the surface the reaction occurs on.
+    
+        Determines both the `low-spin` or `high-spin` value using
+        the multiplicities of the reactants and products. Then
+        returns the version that is requested.
+
+        :param inf_obj: reaction info object
+        :type inf_obj: mechanalyzer.inf.rxn object
+        :rtype: int
     """
 
     rxn_muls = value(inf_obj, par.SPC.MULT)
@@ -174,7 +226,12 @@ def ts_mult(inf_obj, rxn_mul='low'):
 
 
 def radrad(inf_obj):
-    """ check if rxn is a rad-rad rxn
+    """ Determine if a reaction can be classified as a recombination of
+        two radicals, either in the forward or reverse direction.
+
+        :param inf_obj: reaction info object
+        :type inf_obj: mechanalyzer.inf.rxn object
+        :rtype: bool
     """
 
     muls = value(inf_obj, par.SPC.MULT)

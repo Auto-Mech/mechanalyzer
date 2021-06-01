@@ -1,7 +1,6 @@
 """ Runs the sorter
 """
 
-# from automol.util.dict_ import filter_keys
 from mechanalyzer.parser import mech as mparser
 from mechanalyzer.parser import spc as sparser
 from mechanalyzer.builder import sort_fct

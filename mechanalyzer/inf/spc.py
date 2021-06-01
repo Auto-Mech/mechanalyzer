@@ -1,5 +1,4 @@
-"""
-  Handles data objects
+""" Constructs, Reads, and Builds Species Info Objects
 """
 
 from mechanalyzer import par
@@ -13,7 +12,15 @@ SPC_PROPS = [
 
 
 def from_data(inchi, charge, mult):
-    """ spc info data structure from necessary data
+    """ Construct a species info object from the constituent peieces of data.
+
+        :param inchi: InChI string for species
+        :type inchi: str
+        :param charge: electric charge for species
+        :type charge: int
+        :param mult: spin multiplicity for species
+        :type mult: int
+        :rtype: tuple(str, int, int)
     """
 
     # assert to put in a data for a real species
@@ -21,7 +28,12 @@ def from_data(inchi, charge, mult):
 
 
 def from_dct(dct):
-    """ spc info data structure from
+    """ Construct a species info object by reading the constituent data
+        from a dictionary containing the species data.
+
+        :param dct: information dictionary for species
+        :type dct: dict[str: obj]
+        :rtype: tuple(str, int, int)
     """
 
     assert set(SPC_PROPS) <= set(dct), (
@@ -37,7 +49,13 @@ def from_dct(dct):
 
 
 def value(inf_obj, val):
-    """ obtain a value
+    """ Obtain a desired value from a species info object.
+        
+        :param inf_obj: species info object
+        :type inf_obj: mechanalyzer.inf.spc object
+        :param val: value to obtain from info object
+        :type val: str
+        :rtype: str/int
     """
 
     assert val in SPC_PROPS, (

@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.ticker import FormatStrFormatter
 import matplotlib.backends.backend_pdf as plt_pdf
-import numpy as np
+import numpy
 from chemkin_io.writer import _util as writer
 
 
@@ -108,7 +108,7 @@ def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
 
                 # Plot the rate constants
                 axs[0].plot(1000 / temps,
-                            np.log10(kts), label=_label,
+                            numpy.log10(kts), label=_label,
                             color=_color,
                             linestyle=LINESTYLES[mech_idx])
 
@@ -120,7 +120,7 @@ def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
                         (_, ratios) = ratio_dcts[mech_idx][pressure]
                         ratios_plotted = True
                         axs[1].plot(1000 / temps,
-                                    np.log10(ratios), label=_label,
+                                    numpy.log10(ratios), label=_label,
                                     color=_color,
                                     linestyle=LINESTYLES[mech_idx])
     # Add legend
@@ -154,8 +154,8 @@ def sort_by_max_ratio(aligned_rxn_ratio_dct, aligned_rxn_ktp_dct):
         for ratio_dct in ratio_dcts:
             if ratio_dct is not None:
                 for (_, ratios) in ratio_dct.values():
-                    if max(abs(np.log10(ratios))) > max_ratio:  # abs considers negative ratios
-                        max_ratio = max(abs(np.log10(ratios)))
+                    if max(abs(numpy.log10(ratios))) > max_ratio:  # abs considers negative ratios
+                        max_ratio = max(abs(numpy.log10(ratios)))
         # If no ratio_dcts were found, check if the rxn is missing in some mechs; order accordingly
         if max_ratio == -0.5:
             if None not in aligned_rxn_ktp_dct[rxn]:  # if there are no Nones, leave max_ratio
@@ -277,7 +277,7 @@ def get_format_dct(pressures):
     if len(pressures) <= 6:
         colors = ['r', 'b', 'g', 'm', 'c', 'y']
     else:  # account for unlikely case where there are more than 6 pressures
-        colors = cm.get_cmap('rainbow')(np.linspace(0, 1, len(pressures)))
+        colors = cm.get_cmap('rainbow')(numpy.linspace(0, 1, len(pressures)))
     format_dct = {}
     for idx, pressure in enumerate(pressures):
         format_dct[pressure] = (colors[idx], str(pressure) + ' atm')
