@@ -10,7 +10,7 @@ Sorter module - sorting of the mechanism according to various options
 import sys
 import copy
 import pandas as pd
-import numpy as np
+import numpy
 import automol
 from mechanalyzer.builder import submech
 from mechanalyzer.parser import pes
@@ -44,10 +44,10 @@ class SortMech:
 
         # Set dataframe: extract useful info
         pes_lst = count_atoms(formula_dct_lst)
-        isthrdbdy = np.array(
+        isthrdbdy = numpy.array(
             [(t[0] is not None and '(' not in t[0]) for t in thrdbdy_lst],
             dtype=int)
-        molecularity = np.array(
+        molecularity = numpy.array(
             list(map(len, rct_names_lst)), dtype=int) + isthrdbdy
         n_of_prods = list(map(len, prd_names_lst))
         rct_names_lst_ordered = order_rct_bystoich(
@@ -55,7 +55,7 @@ class SortMech:
         prd_names_lst_ordered = order_rct_bystoich(
             prd_names_lst, spc_dct=spc_dct)  # put heavier product first
         rct_1, rct_2 = extract_spc(rct_names_lst_ordered)
-        data = np.array(
+        data = numpy.array(
             [rct_names_lst, prd_names_lst,
              rct_names_lst_ordered, prd_names_lst_ordered,
              rct_1, rct_2, molecularity, n_of_prods, pes_lst, formulas,
@@ -388,7 +388,7 @@ class SortMech:
             # build dataframe: elementary reactivity matrix
             _nsubpes = len(species_subpes)
             elem_reac_df = pd.DataFrame(
-                np.zeros((_nsubpes, _nsubpes), dtype='<U32'),
+                numpy.zeros((_nsubpes, _nsubpes), dtype='<U32'),
                 index=species_subpes,
                 columns=species_subpes)
 
@@ -488,7 +488,7 @@ class SortMech:
         """
 
         # df for comments_top and comments_inline
-        ept_df = np.zeros((len(self.mech_df.index), 1), dtype=str)
+        ept_df = numpy.zeros((len(self.mech_df.index), 1), dtype=str)
         df_cmts_top = pd.DataFrame(
             ept_df, index=self.mech_df.index, columns=['cmts_top'])
         df_cmts_inline = pd.DataFrame(
@@ -723,7 +723,7 @@ def cmts_string(name, label, cltype):
     elif isinstance(name, float):
         name = ['{:.2f}'.format(name)]
     else:
-        name = np.array(name, dtype=str)
+        name = numpy.array(name, dtype=str)
 
     if cltype == 'class_head':
         cmtlabel = '!       '+'_'.join(label)
@@ -744,7 +744,7 @@ def get_aligned_rxn_ratio_dct(aligned_rxn_dct_entry):
 
     :param aligned_rxn_dct_entry: entry of aligned_rxn_ktp/ratio_dct
     :type aligned_rxn_dct_entry:
-        list[dct{pressure: np.array(temps), np.array(values)}]
+        list[dct{pressure: numpy.array(temps), numpy.array(values)}]
     :return aligned_ratio_dct_entry: aligned dictionary entry
     :rtype: list(dct)
     """
@@ -780,7 +780,7 @@ def get_max_aligned_values(aligned_rxn_dct_entry):
 
     :param aligned_rxn_dct_entry: entry of aligned_rxn_ktp/ratio_dct
     :type aligned_rxn_dct_entry:
-        list[dct{pressure: np.array(temps), np.array(values)}]
+        list[dct{pressure: numpy.array(temps), numpy.array(values)}]
     :return max_val: max value
     :rtype: float
     """

@@ -3,7 +3,7 @@ Calculate rates with various fitting functions
 """
 
 import copy
-import numpy as np
+import numpy
 from scipy.special import eval_chebyt
 from phydat import phycon
 
@@ -35,7 +35,7 @@ def eval_rxn_param_dct(rxn_param_dct, pressures, temps):
                 if pressure in ktp_dct2.keys():
                     (_, kts2) = ktp_dct2[pressure]  # unpack ktp_dct2 values
                 else:  # if the pressure is not in ktp_dct2
-                    kts2 = np.zeros(np.shape(kts1))  # just use an array of zeros
+                    kts2 = numpy.zeros(numpy.shape(kts1))  # just use an array of zeros
                 added_kts = kts1 + kts2
                 added_dct[pressure] = (temps, added_kts)  # store the added values
 
@@ -141,7 +141,7 @@ def chebyshev(alpha, tmin, tmax, pmin, pmax, temps, pressures):
     """
     kp_dct = {}
     for idx, pressure in enumerate(pressures):
-        if np.ndim(temps) == 1:
+        if numpy.ndim(temps) == 1:
             kp_dct[pressure] = chebyshev_one_pressure(alpha, tmin, tmax, pmin, pmax, temps,
                                                       pressure)
         else:
@@ -173,7 +173,7 @@ def plog(plog_dct, temps, pressures, t_ref=1.0):
     kp_dct = {}
     for index, pressure in enumerate(pressures):
         if min(plog_pressures) <= pressure <= max(plog_pressures):
-            if np.ndim(temps) == 1:
+            if numpy.ndim(temps) == 1:
                 kp_dct[pressure] = plog_one_pressure(
                     plog_dct, temps, pressure, t_ref)
             else:
@@ -215,7 +215,7 @@ def troe(highp_params, lowp_params, temps, pressures,
     """
     kp_dct = {}
     for index, pressure in enumerate(pressures):
-        if np.ndim(temps) == 1:
+        if numpy.ndim(temps) == 1:
             highp_kts = arrhenius(highp_params, temps, t_ref)
             lowp_kts = arrhenius(lowp_params, temps, t_ref)
             kp_dct[pressure] = troe_one_pressure(
@@ -253,7 +253,7 @@ def lindemann(highp_params, lowp_params, temps, pressures, collid_factor=1.0, t_
     """
     kp_dct = {}
     for index, pressure in enumerate(pressures):
-        if np.ndim(temps) == 1:
+        if numpy.ndim(temps) == 1:
             highp_kts = arrhenius(highp_params, temps, t_ref)
             lowp_kts = arrhenius(lowp_params, temps, t_ref)
             kp_dct[pressure] = lindemann_one_pressure(
@@ -290,7 +290,7 @@ def arrhenius(params, temps, t_ref=1.0, rval=RC):
     n_par = params[1]  # temperature exponent
     ea_par = params[2]  # activation energy (cal/mol)
 
-    kts = a_par * ((temps / t_ref)**n_par) * np.exp(-ea_par/(rval*temps))
+    kts = a_par * ((temps / t_ref)**n_par) * numpy.exp(-ea_par/(rval*temps))
 
     return kts
 
@@ -325,15 +325,15 @@ def chebyshev_one_pressure(alpha, tmin, tmax, pmin, pmax, temps, pressure):
 
     alpha_nrows, alpha_ncols = alpha.shape
 
-    ktps = np.zeros(len(temps))
+    ktps = numpy.zeros(len(temps))
     for i, temp in enumerate(temps):
         ctemp = (
             (2.0 * 1/temp - 1/tmin - 1/tmax) /
             (1/tmax - 1/tmin)
         )
         cpress = (
-            (2.0 * np.log10(pressure) - np.log10(pmin) - np.log10(pmax)) /
-            (np.log10(pmax) - np.log10(pmin))
+            (2.0 * numpy.log10(pressure) - numpy.log10(pmin) - numpy.log10(pmax)) /
+            (numpy.log10(pmax) - numpy.log10(pmin))
         )
 
         logktp = 0.0
@@ -371,7 +371,7 @@ def plog_one_pressure(plog_dct, temps, pressure, t_ref):
     # Check if pressure is in plog dct; use plog pressure for numerical stab
     pressure_defined = False
     for plog_pressure in plog_pressures:
-        if np.isclose(pressure, plog_pressure, atol=1.0e-3):
+        if numpy.isclose(pressure, plog_pressure, atol=1.0e-3):
             pressure_defined = True
             plog_params = plog_dct[plog_pressure]
 
@@ -391,8 +391,8 @@ def plog_one_pressure(plog_dct, temps, pressure, t_ref):
                     phigh_params = plog_dct[phigh]
                     break
         pres_term = (
-            (np.log10(pressure) - np.log10(plow)) /
-            (np.log10(phigh) - np.log10(plow))
+            (numpy.log10(pressure) - numpy.log10(plow)) /
+            (numpy.log10(phigh) - numpy.log10(plow))
         )
 
         # Calculate k(T)s at high-P and low-P with Arrhenius expressions
@@ -401,8 +401,8 @@ def plog_one_pressure(plog_dct, temps, pressure, t_ref):
 
         # Calculate K(T,P)s with PLOG expression
         logkt = (
-            np.log10(kt_low) +
-            ((np.log10(kt_high) - np.log10(kt_low)) * pres_term)
+            numpy.log10(kt_low) +
+            ((numpy.log10(kt_high) - numpy.log10(kt_low)) * pres_term)
         )
         ktps = 10**(logkt)
 
@@ -514,18 +514,18 @@ def _f_broadening_term(pr_term, alpha, ts3, ts1, ts2, temp):
     """
 
     # Calculate Fcent term
-    f_cent = ((1.0 - alpha) * np.exp(-temp / ts3) +
-              alpha * np.exp(-temp / ts1))
+    f_cent = ((1.0 - alpha) * numpy.exp(-temp / ts3) +
+              alpha * numpy.exp(-temp / ts1))
     if ts2 is not None:
-        f_cent += np.exp(-ts2 / temp)
+        f_cent += numpy.exp(-ts2 / temp)
 
     # Calculate the Log F term
-    c_val = -0.4 - 0.67 * np.log10(f_cent)
-    n_val = 0.75 - 1.27 * np.log10(f_cent)
+    c_val = -0.4 - 0.67 * numpy.log10(f_cent)
+    n_val = 0.75 - 1.27 * numpy.log10(f_cent)
     d_val = 0.14
-    val = ((np.log10(pr_term) + c_val) /
-           (n_val - d_val * (np.log10(pr_term) + c_val)))**2
-    logf = (1.0 + val)**(-1) * np.log10(f_cent)
+    val = ((numpy.log10(pr_term) + c_val) /
+           (n_val - d_val * (numpy.log10(pr_term) + c_val)))**2
+    logf = (1.0 + val)**(-1) * numpy.log10(f_cent)
 
     # Calculate F broadening term
     f_term = 10**(logf)
@@ -550,9 +550,9 @@ def ktp(kp_dct, temps, highp_params=None, t_ref=1.0):
         array of temperatures
 
         :param kp_dct: dct of the form {P:[k@T1, k@T2]}
-        :type kp_dct: {float: np.array}
+        :type kp_dct: {float: numpy.array}
         :param temps: array of temperatures, either 1- or 2-D
-        :type temps: np.ndarray
+        :type temps: numpy.ndarray
         :return ktp_dct:
         :rtype:
 
@@ -560,14 +560,14 @@ def ktp(kp_dct, temps, highp_params=None, t_ref=1.0):
     ktp_dct = {}
     for index, pressure in enumerate(kp_dct):
         kts = kp_dct[pressure]
-        if np.ndim(temps) == 1:  # if the dimensionality of temps is 1
+        if numpy.ndim(temps) == 1:  # if the dimensionality of temps is 1
             ktp_dct[pressure] = (temps,kts)
         else:  # if the dimensionality of temps is 2
             ktp_dct[pressure] = (temps[index],kts)
 
     # Add the high-P k(T)s to the kTP dictionary if needed
     if highp_params:
-        if np.ndim(temps) == 1:
+        if numpy.ndim(temps) == 1:
             highp_kts = arrhenius(highp_params, temps, t_ref)
             ktp_dct['high'] = (temps,highp_kts)
         else:
@@ -586,14 +586,14 @@ def check_p_t(pressures, temps):
         :type temps: numpy.ndarray
     """
     # Check that the dimensionality of the temps array is either 1 or 2
-    temp_dim = np.ndim(temps)
+    temp_dim = numpy.ndim(temps)
     assert temp_dim in (1,2), (
         f'The dimensionality of temps is {temp_dim}; it should be either 1 or 2'
         )
 
     # If temps is 2-D, enforce that the # of values in each temp array matches the # of pressures
     if temp_dim == 2:
-        len_temps = np.shape(temps)[1]
+        len_temps = numpy.shape(temps)[1]
         len_pressures = len(pressures)
         assert len_pressures ==  len_temps,(
             f'# of pressures is {len_pressures}, while # of temps in each array is {len_temps}'

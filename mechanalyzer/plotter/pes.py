@@ -2,7 +2,7 @@
 Calls MatPlotLib functionality to create the plot
 """
 
-import numpy as np
+import numpy
 import matplotlib
 from matplotlib import pyplot as plt
 
@@ -142,7 +142,7 @@ def _build_axes(axes_obj, y_axis_tlim, y_axis_blim, tick_intvl=5.0):
         fontsize='24'
     )
 
-    y_ticks_range = np.arange(
+    y_ticks_range = numpy.arange(
         y_axis_blim, y_axis_tlim+tick_intvl, tick_intvl)
     print('tick range', y_ticks_range)
     axes_obj.set_ylim(bottom=y_axis_blim, top=y_axis_tlim)
