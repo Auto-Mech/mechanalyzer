@@ -22,7 +22,7 @@ def species_subset(fuel, spc_dct):
         - fuel radicals
         - main radical additions to fuel: fuel+H/OH/O2/O/HO2, R+O
         - low T mech: RO2, RO4, RO3-H
-    
+
         Returns all species with corresponding stoichiometries with
         subset identifiers: 'fuel', 'fuel_rad', 'fuel_add_H', ...
 
@@ -116,7 +116,7 @@ def classify_unimol(rcts, prds, spc_dct):
         - A=C+H/O/OH/O2/HO2/CH3: addition
         - A=C+D: decomposition
         - A=C+D+E.. : decomposition(lumped)
-            
+
         For recombination (depends on multiplicity of the products)
         it would be nice to distinguish type of bond that being broken
 
@@ -169,7 +169,7 @@ def classify_bimol(rcts, prds, spc_dct):
           ex. CH2+H=CH2(S)+H, C6H6+H=FULV+H)
         - A+B=C+D: addition-decomposition - branch/prop/term
         - A+B=C+D+E..: addition-decomposition(lumped) - branch/prop/term
-          
+
         For recombination (depends on the multiplicity of the reactants)
         with 2 products.
 
@@ -234,7 +234,7 @@ def classify_bimol(rcts, prds, spc_dct):
 def classify_isom_bim(rcts, prds, fml_df):
     """ Check if an A+B=C+D reaction is a bimolecular isomerization
         of the kind A+R=B+R by checking
-    
+
         if the reactants and the products both match
         - 1 couple of rct/prd must be the exact same species
         - the other couple of rct/prd must match the stoichiometry
@@ -277,9 +277,9 @@ def classify_habs(rcts, prds, fml_df, spc_dct):
         sys.exit()
 
     mult_rct = numpy.array([get_mult(rcts[0], spc_dct),
-                         get_mult(rcts[1], spc_dct)])
+                            get_mult(rcts[1], spc_dct)])
     mult_prd = numpy.array([get_mult(prds[0], spc_dct),
-                         get_mult(prds[1], spc_dct)])
+                            get_mult(prds[1], spc_dct)])
 
     if (any(mult_rct == 1) and any(mult_rct > 1) and
             any(mult_prd == 1) and any(mult_prd > 1)):
@@ -322,7 +322,7 @@ def set_flag_habs(spc_rct, spc_prd, fml_df, stoich_add):
         :type spc_rct:
         :param spc_prd:
         :type spc_prd:
-        :param fml_df: 
+        :param fml_df:
         :type fml_df:
         :param stoich_add:
         :type: stoich_add:
@@ -346,11 +346,11 @@ def bran_prop_term(rct_muls, prd_muls):
         :type prd_muls: tuple(int)
     """
 
-    if rct_mults == prd_muls:
+    if rct_muls == prd_muls:
         add = ' - propagation'
-    elif rct_mults > prd_muls:
+    elif rct_muls > prd_muls:
         add = ' - termination'
-    elif rct_mults < prd_muls:
+    elif rct_muls < prd_muls:
         add = ' - branching'
     else:
         add = ''

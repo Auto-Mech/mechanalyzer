@@ -50,7 +50,7 @@ def from_dct(dct):
 
 def value(inf_obj, val):
     """ Obtain a desired value from a species info object.
-        
+
         :param inf_obj: species info object
         :type inf_obj: mechanalyzer.inf.spc object
         :param val: value to obtain from info object

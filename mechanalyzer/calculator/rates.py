@@ -25,6 +25,7 @@ def eval_rxn_param_dct(rxn_param_dct, pressures, temps):
 
     def add_ktp_dcts(ktp_dct1, ktp_dct2):
         """ Add the rates in two ktp_dcts.
+
             The input dcts should have identical P and T values. May not always
             be true if one is from PLOG and one is from an expression
             with a pressure-independent rate.
@@ -58,14 +59,15 @@ def eval_rxn_param_dct(rxn_param_dct, pressures, temps):
 def eval_param_tup(param_tup, pressures, temps, t_ref=1.0):
     """ Look through a param_tup and evaluate k(T,P) based on the contents.
         Return a ktp_dct.
-    :param param_tup:
-    :type param_tup:
-    :param pressures:
-    :type pressures:
-    :param temps:
-    :type temps:
-    :return ktp_dct: rate constant as a function of temp and pressure
-    :rtype: dct {pressure1: {temps1, kts1}, pressures2: ...}
+
+        :param param_tup:
+        :type param_tup:
+        :param pressures:
+        :type pressures:
+        :param temps:
+        :type temps:
+        :return ktp_dct: rate constant as a function of temp and pressure
+        :rtype: dct {pressure1: {temps1, kts1}, pressures2: ...}
     """
     if param_tup[3] is not None:  # Chebyshev
         alpha = param_tup[3]['alpha_elm']

@@ -53,7 +53,7 @@ def from_dct(reacs, prods, spc_dct, rxn_mul='low'):
 
 def value(inf_obj, val):
     """ Obtain a desired value from a reaction info object.
-        
+
         :param inf_obj: reaction info object
         :type inf_obj: mechanalyzer.inf.rxn object
         :param val: value to obtain from info object
@@ -170,7 +170,9 @@ def reverse(inf_obj):
 
 def ts_chg(inf_obj):
     """ Evaulate the electric charge of the transition state, i.e.,
-        net charge of the surface the reaction occurs on. Determines the value using the charges of the reactants and products.
+        net charge of the surface the reaction occurs on.
+
+        Determines the value using the charges of the reactants and products.
 
         :param inf_obj: reaction info object
         :type inf_obj: mechanalyzer.inf.rxn object
@@ -189,7 +191,7 @@ def ts_chg(inf_obj):
 def ts_mult(inf_obj, rxn_mul='low'):
     """ Evaulate the multilicity of the transition state, i.e.,
         spin-state of the surface the reaction occurs on.
-    
+
         Determines both the `low-spin` or `high-spin` value using
         the multiplicities of the reactants and products. Then
         returns the version that is requested.

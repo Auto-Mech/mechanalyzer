@@ -18,7 +18,6 @@ def connected_channels_dct(pes_dct):
         connected to each other.
 
         For efficiency we only determine channels for PESs we wish to run.
-        
         :param pes_dct: Dictionary of PEss
         :type pes_dct:
         :rtype: dict[]
@@ -43,8 +42,8 @@ def connected_channels_dct(pes_dct):
 def find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
     """ Determine all of the connected reaction channels on a PES.
         Information compiled in SUB-PES dictionaries:
-    
-        conndct = {0: [['S1','S2'],['S3','S4'],[S5']], 1:[['S6','S7'],['S8','S9']]}
+        conndct = {0: [['S1','S2'],['S3','S4'],[S5']],
+                   1:[['S6','S7'],['S8','S9']]}
         connchnls = {0: [0,1,2] , 1:[3,4,5]}...
 
         :param pes_rct_lst:
@@ -64,7 +63,7 @@ def find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
         index=numpy.arange(0, len(pes_rxn_name_lst)),
         columns=['rcts', 'prds', 'N_rcts_prds'])
     # order by total number of species (N of reactants + N of products)
-    pes_df = pes_df.sort_values(by=['N_rcts_prds','rcts','prds'])
+    pes_df = pes_df.sort_values(by=['N_rcts_prds', 'rcts', 'prds'])
     # Split up channels into a connected sub-pes within a formula
     subpes_idx = 0
     conndct = {}
