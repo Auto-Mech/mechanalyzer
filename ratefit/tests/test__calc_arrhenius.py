@@ -51,7 +51,7 @@ def test__single_arrhenius():
     """
 
     calc_ks1 = ratefit.calc.arrhenius(
-        ((SGL_A1, SGL_N1, SGL_EA1),), T_REF, TEMPS)
+        (SGL_A1, SGL_N1, SGL_EA1), T_REF, TEMPS)
     calc_ks2 = ratefit.calc.single_arrhenius(
         SGL_A1, SGL_N1, SGL_EA1, T_REF, TEMPS)
 
@@ -65,7 +65,7 @@ def test__double_arrhenius():
     """
 
     calc_ks1 = ratefit.calc.arrhenius(
-        ((DBL_A1, DBL_N1, DBL_EA1), (DBL_A2, DBL_N2, DBL_EA2)), T_REF, TEMPS)
+        (DBL_A1, DBL_N1, DBL_EA1, DBL_A2, DBL_N2, DBL_EA2), T_REF, TEMPS)
     calc_ks2 = ratefit.calc.double_arrhenius(
         DBL_A1, DBL_N1, DBL_EA1, DBL_A2, DBL_N2, DBL_EA2, T_REF, TEMPS)
 

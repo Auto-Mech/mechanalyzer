@@ -4,7 +4,7 @@
 
 import copy
 import itertools
-import numpy as np
+import numpy
 import ioformat.pathtools as parser
 from phydat import phycon
 from chemkin_io.parser import mechanism as parser_mech
@@ -16,7 +16,7 @@ from mechanalyzer.parser import spc as parser_spc
 from mechanalyzer.calculator import thermo as calc_thermo
 from mechanalyzer.calculator import rates as calc_rates
 
-RC_CAL = phycon.RC_cal  # universal gas constant in cal/mol-K
+RC_CAL = phycon.RC_CAL  # universal gas constant in cal/mol-K
 
 
 def get_aligned_rxn_ktp_dct(rxn_ktp_dcts, spc_thermo_dcts, spc_ident_dcts, temps,
@@ -597,7 +597,7 @@ def _calculate_equilibrium_constant(spc_thermo_dct, rcts, prds, temps):
             prd_gibbs += spc_thermo_dct[prd][4][temp_idx]  # [4] accesses Gibbs
 
         rxn_gibbs = prd_gibbs - rct_gibbs
-        k_equils.append(np.exp(-rxn_gibbs / (RC_CAL * temp)))
+        k_equils.append(numpy.exp(-rxn_gibbs / (RC_CAL * temp)))
 
     return k_equils
 

@@ -3,12 +3,13 @@ Test the mechanalyzer.calculator.rates functions
 """
 
 import numpy as np
+import ratefit.ktpdct
 from mechanalyzer.calculator import rates
 
 
-PRESSURES = np.array([0.316, 1, 10, 100])
-TEMPS = np.array([1000, 1500, 2000])
-TEMPS2 = np.array([300, 500, 1000])  # only for Chebyshev test
+PRESSURES = np.array([0.316, 1.0, 10.0, 100.0])
+TEMPS = np.array([1000.0, 1500.0, 2000.0])
+TEMPS2 = np.array([300.0, 500.0, 1000.0])  # only for Chebyshev test
 LOW_P_RXN = (('N2O',), ('N2', 'O'), ('+M',))
 HIGH_P_RXN = (('N2O',), ('N2', 'O'), ('(+M)',))
 LOW_P_PARAMS = [1.04E+15, 0, 59810]
@@ -91,7 +92,7 @@ def test__arrhenius():
     """
     rxn_ktp_dct = rates.eval_rxn_param_dct(
         ARRHENIUS_RXN_PARAM_DCT, PRESSURES, TEMPS)
-    calc_rates = rxn_ktp_dct[LOW_P_RXN]['high'][1]  # [1] gets k values
+    calc_rates = ratefit.ktpdct.read(rxn_ktp_dct, LOW_P_RXN, 'high', 'rates')
     assert np.allclose(calc_rates, ARRHENIUS_KTS, rtol=1e-3)
 
 
@@ -100,7 +101,7 @@ def test__lindemann():
     """
     rxn_ktp_dct = rates.eval_rxn_param_dct(
         LINDEMANN_RXN_PARAM_DCT, PRESSURES, TEMPS)
-    calc_rates = rxn_ktp_dct[HIGH_P_RXN][10][1]  # test 10 atm rates
+    calc_rates = ratefit.ktpdct.read(rxn_ktp_dct, HIGH_P_RXN, 10.0, 'rates')
     assert np.allclose(calc_rates, LINDEMANN_10ATM_KTS, rtol=1e-3)
 
 
@@ -109,7 +110,7 @@ def test__troe():
     """
     rxn_ktp_dct = rates.eval_rxn_param_dct(
         TROE_RXN_PARAM_DCT, PRESSURES, TEMPS)
-    calc_rates = rxn_ktp_dct[HIGH_P_RXN][10][1]  # test 10 atm rates
+    calc_rates = ratefit.ktpdct.read(rxn_ktp_dct, HIGH_P_RXN, 10.0, 'rates')
     assert np.allclose(calc_rates, TROE_10ATM_KTS, rtol=1e-3)
 
 
@@ -118,7 +119,7 @@ def test__plog():
     """
     rxn_ktp_dct = rates.eval_rxn_param_dct(
         PLOG_RXN_PARAM_DCT, PRESSURES, TEMPS)
-    calc_rates = rxn_ktp_dct[HIGH_P_RXN][0.316][1]  # test 0.316 atm rates
+    calc_rates = ratefit.ktpdct.read(rxn_ktp_dct, HIGH_P_RXN, 0.316, 'rates')
     assert np.allclose(calc_rates, PLOG_10ATM_KTS, rtol=1e-3)
 
 
@@ -127,7 +128,7 @@ def test__chebyshev():
     """
     rxn_ktp_dct = rates.eval_rxn_param_dct(
         CHEBYSHEV_RXN_PARAM_DCT, PRESSURES, TEMPS2)
-    calc_rates = rxn_ktp_dct[HIGH_P_RXN][100][1]  # test 100 atm rates
+    calc_rates = ratefit.ktpdct.read(rxn_ktp_dct, HIGH_P_RXN, 100.0, 'rates')
     assert np.allclose(calc_rates, CHEBYSHEV_100ATM_KTS, rtol=1e-3)
 
 
@@ -136,7 +137,7 @@ def test__dup_arrhenius():
     """
     rxn_ktp_dct = rates.eval_rxn_param_dct(
         DUPLICATE_ARRHENIUS_RXN_PARAM_DCT, PRESSURES, TEMPS)
-    calc_rates = rxn_ktp_dct[LOW_P_RXN]['high'][1]
+    calc_rates = ratefit.ktpdct.read(rxn_ktp_dct, LOW_P_RXN, 'high', 'rates')
     assert np.allclose(calc_rates, 2*ARRHENIUS_KTS, rtol=1e-3)
 
 
@@ -145,7 +146,7 @@ def test__dup_plog():
     """
     rxn_ktp_dct = rates.eval_rxn_param_dct(
         DUPLICATE_PLOG_RXN_PARAM_DCT, PRESSURES, TEMPS)
-    calc_rates = rxn_ktp_dct[HIGH_P_RXN][0.316][1]  # test 0.316 atm rates
+    calc_rates = ratefit.ktpdct.read(rxn_ktp_dct, HIGH_P_RXN, 0.316, 'rates')
     assert np.allclose(calc_rates, 2*PLOG_10ATM_KTS, rtol=1e-3)
 
 

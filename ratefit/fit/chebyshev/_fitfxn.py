@@ -5,7 +5,8 @@ import numpy as np
 from scipy.special import eval_chebyt
 
 
-RCOND = -1 if int(np.__version__.split('.')[1]) < 14 else None
+RCOND = -1
+# RCOND = -1 if int(np.__version__.split('.')[1]) < 14 else None, break docs
 
 
 def reaction(ktp_dct, temps, tdeg=6, pdeg=4, a_conv_factor=1.0):
@@ -20,8 +21,7 @@ def reaction(ktp_dct, temps, tdeg=6, pdeg=4, a_conv_factor=1.0):
         :type tdeg: int
         :param pdeg: degree of the pressure component of Chebyshev polynomial
         :type pdeg: int
-        :return alpha, trange, prange fitting parameterhs
-        :rtype (np.ndarray, tuple(float), tuple(float))
+        :rtype: (np.ndarray, tuple(float), tuple(float))
     """
 
     # Get the pressures from the ktp_dct

@@ -333,7 +333,7 @@ def timeout(seconds=10, error_message=os.strerror(errno.ETIME)):
     """
 
     def decorator(func):
-        def _handle_timeout(signum, frame):
+        def _handle_timeout():
             print(error_message)
             raise TimeoutError(error_message)
 

@@ -1,7 +1,7 @@
 # cmd: conda build . -c auto-mech -c psi4 -c rdkit -c openbabel -c cantera -c conda-forge
 package:
     name: mechanalyzer
-    version: "0.1.1"
+    version: "0.2.3"
 
 source:
     path: .
@@ -22,6 +22,7 @@ requirements:
         - pandas
         - pyyaml
         - mako
+        - matplotlib
         - pytest
         - pytest-cov
         - future
@@ -30,17 +31,17 @@ requirements:
         - psi4::psi4
         - rdkit::rdkit
         - openbabel::openbabel
-        - conda-forge::qcelemental 
+        - conda-forge::qcelemental
         - conda-forge::nglview
         - conda-forge::pypdf2
         - conda-forge::python-igraph
         - cantera::cantera
-        - auto-mech::autoio-base
         - auto-mech::autochem
-        - auto-mech::autoio-interfaces
         - auto-mech::autofile
-        - auto-mech::x2z
+        - auto-mech::autoio-base
+        - auto-mech::autoio-interfaces
         - auto-mech::mess
-        - auto-mech::projrot
         - auto-mech::pac99
+        - auto-mech::projrot
         - auto-mech::thermp
+        - auto-mech::x2z

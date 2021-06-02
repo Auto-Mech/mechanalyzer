@@ -7,8 +7,8 @@ from scipy.special import eval_chebyt
 from phydat import phycon
 
 
-RC = phycon.RC_cal  # gas constant in cal/(mol.K)
-RC2 = phycon.RC_atm  # gas constant in cm^3.atm/(mol.K)
+RC = phycon.RC_CAL  # gas constant in cal/(mol.K)
+RC2 = phycon.RC_ATM  # gas constant in cm^3.atm/(mol.K)
 
 
 def single_arrhenius(a_par, n_par, ea_par,
@@ -80,30 +80,28 @@ def arrhenius(params, t_ref, temps):
          :rtype: numpy.ndarray
     """
 
-    assert len(params) in (1, 2)
-    for param_set in params:
-        assert len(param_set) == 3
+    assert len(params) in (3, 6)
 
-    if len(params) == 1:
+    if len(params) == 3:
         kts = single_arrhenius(
-            params[0][0], params[0][1], params[0][2],
+            params[0], params[1], params[2],
             t_ref, temps)
     else:
         kts = double_arrhenius(
-            params[0][0], params[0][1], params[0][2],
-            params[1][0], params[1][1], params[1][2],
+            params[0], params[1], params[2],
+            params[3], params[4], params[5],
             t_ref, temps)
 
     return kts
 
 
-def lowp_limit(highp_rateks, temps, pressures, collid_factor=1.0, rval=RC2):
+def lowp_limit(highp_kts, temps, pressures, collid_factor=1.0, rval=RC2):
     """ Calculates T,P-dependent rate constants [k(T,P)]s assuming
         the reaction occurs in the low-pressure regime where the
         rates are linear with pressure.
 
-        :param highp_ks: k(T)s determined at high-pressure
-        :type highp_ks: numpy.ndarray
+        :param highp_kts: k(T)s determined at high-pressure
+        :type highp_kts: numpy.ndarray
         :param temps: Temps used to calculate high- and low-k(T)s
         :type temps: numpy.ndarray
         :param pressures: Pressures used to calculate k(T,P)s
@@ -113,22 +111,24 @@ def lowp_limit(highp_rateks, temps, pressures, collid_factor=1.0, rval=RC2):
         :return ktp_dct: k(T,Ps) at all temps and pressures
         :rtype: dict[pressure: temps]
     """
-    ktp_dct = {}
+    kp_dct = {}
     for pressure in pressures:
-        ktp_dct[pressure] = lowp_limit_one_pressure(
-            highp_rateks, temps, pressure,
+        kp_dct[pressure] = lowp_limit_one_pressure(
+            highp_kts, temps, pressure,
             collid_factor=collid_factor, rval=rval)
+
+    ktp_dct = _ktp_dct(kp_dct, temps)
 
     return ktp_dct
 
 
-def lowp_limit_one_pressure(highp_rateks, temps, pressure,
+def lowp_limit_one_pressure(highp_kts, temps, pressure,
                             collid_factor=1.0, rval=RC2):
     """ Calculates the reduced pressure term for a single pressure
         used for Lindemann and Troe P-dependent functional expressions.
 
-        :param list highp_ks: k(T)s determined at high-pressure
-        :type highp_ks: numpy.ndarray
+        :param list highp_kts: k(T)s determined at high-pressure
+        :type highp_kts: numpy.ndarray
         :param temps: Temps used to calculate high- and low-k(T)s
         :temps: numpy.ndarray
         :param pressure: Pressure used to calculate reduced pressure
@@ -137,17 +137,17 @@ def lowp_limit_one_pressure(highp_rateks, temps, pressure,
         :type collid_factor: float
         :rtype: numpy.ndarray
     """
-    return highp_rateks * p_to_m(pressure, temps, rval=rval) * collid_factor
+    return highp_kts * p_to_m(pressure, temps, rval=rval) * collid_factor
 
 
-def lindemann(highp_ks, lowp_ks, temps, pressures, collid_factor=1.0):
+def lindemann(highp_kts, lowp_kts, temps, pressures, collid_factor=1.0):
     """ Calculates T,P-dependent rate constants [k(T,P)]s using
         a Lindemann functional expression.
 
-        :param highp_ks: k(T)s determined at high-pressure
-        :type highp_ks: numpy.ndarray
-        :param lowp_ks: k(T)s determined at low-pressure
-        :type lowp_ks: numpy.ndarray
+        :param highp_kts: k(T)s determined at high-pressure
+        :type highp_kts: numpy.ndarray
+        :param lowp_kts: k(T)s determined at low-pressure
+        :type lowp_kts: numpy.ndarray
         :param temps: Temps used to calculate high- and low-k(T)s
         :type temps: numpy.ndarray
         :param pressures: Pressures used to calculate k(T,P)s
@@ -157,24 +157,26 @@ def lindemann(highp_ks, lowp_ks, temps, pressures, collid_factor=1.0):
         :return ktp_dct: k(T,Ps) at all temps and pressures
         :rtype: dict[pressure: temps]
     """
-    ktp_dct = {}
+    kp_dct = {}
     for pressure in pressures:
-        ktp_dct[pressure] = lindemann_one_pressure(
-            highp_ks, lowp_ks, temps, pressure, collid_factor=collid_factor)
+        kp_dct[pressure] = lindemann_one_pressure(
+            highp_kts, lowp_kts, temps, pressure, collid_factor=collid_factor)
+
+    ktp_dct = _ktp_dct(kp_dct, temps, highp_kts=highp_kts)
 
     return ktp_dct
 
 
-def lindemann_one_pressure(highp_ks, lowp_ks, temps, pressure,
+def lindemann_one_pressure(highp_kts, lowp_kts, temps, pressure,
                            collid_factor=1.0):
     """ Calculates T,P-dependent rate constants [k(T,P)]s using
         a Lindemann functional expression, at a given pressure,
         across several temperatures.
 
-        :param highp_ks: k(T)s determined at high-pressure
-        :type highp_ks: numpy.ndarray
-        :param lowp_ks: k(T)s determined at low-pressure
-        :type lowp_ks: numpy.ndarray
+        :param highp_kts: k(T)s determined at high-pressure
+        :type highp_kts: numpy.ndarray
+        :param lowp_kts: k(T)s determined at low-pressure
+        :type lowp_kts: numpy.ndarray
         :param temps: Temps used to calculate high- and low-k(T)s
         :type temps: numpy.ndarray
         :param pressure: Pressure used to calculate k(T,P)s
@@ -185,24 +187,24 @@ def lindemann_one_pressure(highp_ks, lowp_ks, temps, pressure,
         :rtype numpy.ndarray
     """
     # Calculate the pr term
-    pr_terms = _pr_term(highp_ks, lowp_ks, temps, pressure,
+    pr_terms = _pr_term(highp_kts, lowp_kts, temps, pressure,
                         collid_factor=collid_factor)
 
     # Calculate Lindemann rate constants
-    ktps = highp_ks * (pr_terms / (1.0 + pr_terms))
+    ktps = highp_kts * (pr_terms / (1.0 + pr_terms))
 
     return ktps
 
 
-def troe(highp_ks, lowp_ks, temps, pressures,
+def troe(highp_kts, lowp_kts, temps, pressures,
          alpha, ts3, ts1, ts2=None, collid_factor=1.0):
     """ Calculates T,P-dependent rate constants [k(T,P)]s using
         a Troe functional expression.
 
-        :param highp_ks: k(T)s determined at high-pressure
-        :type highp_ks: numpy.ndarray
-        :param lowp_ks: k(T)s determined at low-pressure
-        :type lowp_ks: numpy.ndarray
+        :param highp_kts: k(T)s determined at high-pressure
+        :type highp_kts: numpy.ndarray
+        :param lowp_kts: k(T)s determined at low-pressure
+        :type lowp_kts: numpy.ndarray
         :param temps: Temps used to calculate high- and low-k(T)s
         :type temps: numpy.ndarray
         :param pressures: Pressures used to calculate k(T,P)s
@@ -220,11 +222,13 @@ def troe(highp_ks, lowp_ks, temps, pressures,
         :return ktp_dct: k(T,Ps) at all temps and pressures
         :rtype: dict[pressure: temps]
     """
-    ktp_dct = {}
+    kp_dct = {}
     for pressure in pressures:
-        ktp_dct[pressure] = troe_one_pressure(
-            highp_ks, lowp_ks, temps, pressure,
+        kp_dct[pressure] = troe_one_pressure(
+            highp_kts, lowp_kts, temps, pressure,
             alpha, ts3, ts1, ts2=ts2, collid_factor=collid_factor)
+
+    ktp_dct = _ktp_dct(kp_dct, temps, highp_kts=highp_kts)
 
     return ktp_dct
 
@@ -288,11 +292,20 @@ def plog(plog_dct, t_ref, temps, pressures):
     # Set the plog pressures to see if pressure is in range
     plog_pressures = list(plog_dct.keys())
 
-    ktp_dct = {}
+    kp_dct = {}
     for pressure in pressures:
         if min(plog_pressures) <= pressure <= max(plog_pressures):
-            ktp_dct[pressure] = plog_one_pressure(
+            kp_dct[pressure] = plog_one_pressure(
                 plog_dct, t_ref, temps, pressure)
+            # From mechanalyzer, might need fix
+            # if np.ndim(temps) == 1:
+            #     kp_dct[pressure] = plog_one_pressure(
+            #         plog_dct, temps, pressure, t_ref)
+            # else:
+            #     kp_dct[pressure] = plog_one_pressure(
+            #         plog_dct, temps[index], pressure, t_ref)
+
+    ktp_dct = _ktp_dct(kp_dct, temps)
 
     return ktp_dct
 
@@ -375,10 +388,12 @@ def chebyshev(alpha, tmin, tmax, pmin, pmax, temps, pressures):
         :return ktp_dct: k(T,Ps) at all temps and pressures
         :rtype: dict[pressure: temps]
     """
-    ktp_dct = {}
+    kp_dct = {}
     for pressure in pressures:
-        ktp_dct[pressure] = chebyshev_one_pressure(
+        kp_dct[pressure] = chebyshev_one_pressure(
             alpha, tmin, tmax, pmin, pmax, temps, pressure)
+
+    ktp_dct = _ktp_dct(kp_dct, temps)
 
     return ktp_dct
 
@@ -433,6 +448,7 @@ def chebyshev_one_pressure(alpha, tmin, tmax, pmin, pmax, temps, pressure):
     return ktps
 
 
+# Functions for calculating terms in certain P-dependent expressions
 def _pr_term(highp_rateks, lowp_rateks, temps, pressure,
              collid_factor=1.0, rval=RC2):
     """ Calculates the reduced pressure term for a single pressure
@@ -507,3 +523,35 @@ def p_to_m(pressure, temps, rval=RC2):
         :rtype: float
     """
     return pressure / (rval * temps)
+
+
+# Helper functions
+def _ktp_dct(kp_dct, temps, highp_kts=None):
+    """ Creates a kTP dictionary from a kP dictionary and an
+        array of temperatures
+
+        :param kp_dct: dct of the form {P:[k@T1, k@T2]}
+        :type kp_dct: {float: numpy.array}
+        :param temps: array of temperatures, either 1- or 2-D
+        :type temps: numpy.ndarray
+        :return ktp_dct:
+        :rtype:
+
+    """
+
+    ktp_dct = {}
+    for index, pressure in enumerate(kp_dct):
+        kts = kp_dct[pressure]
+        if np.ndim(temps) == 1:
+            ktp_dct[pressure] = (temps, kts)
+        else:
+            ktp_dct[pressure] = (temps[index], kts)
+
+    # Add the high-P k(T)s to the kTP dictionary if needed
+    if highp_kts is not None:
+        if np.ndim(temps) == 1:
+            ktp_dct['high'] = (temps, highp_kts)
+        else:
+            ktp_dct['high'] = (temps[-1], highp_kts)
+
+    return ktp_dct

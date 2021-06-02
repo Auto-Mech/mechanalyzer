@@ -84,3 +84,24 @@ def value(inf_obj, val):
     )
 
     return inf_obj[THY_PROPS.index(val)]
+
+
+def combine(mod_inf_obj1, mod_inf_obj2):
+    """ Combine two modified thy info objects.
+
+        :param mod_inf_obj1:
+    """
+
+    prog1, method1, basis1, orb_lbl1 = mod_inf_obj1
+    prog2, method2, basis2, orb_lbl2 = mod_inf_obj2
+
+    assert prog1 == prog2, ('program from info objs must be the same')
+    assert method1 == method2, ('method from info objs must be the same')
+    assert basis1 == basis2, ('basis from info objs must be the same')
+
+    if (orb_lbl1, orb_lbl2) == ('R', 'R'):
+        comb_orb_lbl = 'R'
+    elif (orb_lbl1, orb_lbl2) in (('R', 'U'), ('U', 'R')):
+        comb_orb_lbl = 'U'
+
+    return (prog1, method1, basis1, comb_orb_lbl)

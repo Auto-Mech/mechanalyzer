@@ -8,7 +8,7 @@ from phydat import phycon
 from ratefit.fit.arrhenius import dsarrfit_io
 
 
-RC = phycon.RC_cal  # universal gas constant in cal/mol-K
+RC = phycon.RC_CAL  # universal gas constant in cal/mol-K
 
 
 def single(temps, rate_constants, t_ref, method,

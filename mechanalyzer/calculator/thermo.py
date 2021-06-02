@@ -1,10 +1,10 @@
 """ Calculates thermodynamic quantities using standardized mechanism objects
 """
 
-import numpy as np
+import numpy
 from phydat import phycon
 
-RC = phycon.RC_cal  # gas constant in cal/(mol.K)
+RC = phycon.RC_CAL  # gas constant in cal/(mol.K)
 
 
 def create_spc_thermo_dct(spc_nasa7_dct, temps, rval=RC):
@@ -34,11 +34,11 @@ def create_spc_thermo_dct(spc_nasa7_dct, temps, rval=RC):
                 print(f'Failed to calculate thermo at {temp} K for {spc} due to an invalid temp.')
 
         # Convert to numpy arrays
-        temps = np.array(temps)
-        h_t = np.array(h_t)
-        cp_t = np.array(cp_t)
-        s_t = np.array(s_t)
-        g_t = np.array(g_t)
+        temps = numpy.array(temps)
+        h_t = numpy.array(h_t)
+        cp_t = numpy.array(cp_t)
+        s_t = numpy.array(s_t)
+        g_t = numpy.array(g_t)
 
         spc_thermo_dct[spc] = (temps, h_t, cp_t, s_t, g_t)
 
@@ -120,7 +120,7 @@ def entropy(nasa7_params, temp, rval=RC):
     cfts = coeffs_for_specific_temp(nasa7_params, temp)
     if cfts is not None:
         s_t = (
-            (cfts[0] * np.log(temp)) +
+            (cfts[0] * numpy.log(temp)) +
             (cfts[1] * temp) +
             ((cfts[2] * temp**2) / 2.0) +
             ((cfts[3] * temp**3) / 3.0) +

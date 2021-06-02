@@ -3,7 +3,7 @@ Extract PES and SUBPESs from a given mechanism
 """
 
 import pandas as pd
-import numpy as np
+import numpy
 from mechanalyzer.parser._util import order_rct_bystoich
 
 
@@ -12,11 +12,15 @@ from mechanalyzer.parser._util import order_rct_bystoich
 def connected_channels_dct(pes_dct):
     """ Determine all the connected reaction channels for each PES
         Build a dictionary for each PES with lists of connected channels:
-            dct[PES_FORMULA] = [ [SUB_PES_1], [SUB_PES_2], ... , [SUB_PES_N] ]
-            where each SUB_PES = [n1, n2, ... , nN],
-            where n1 to nN correspond to ixds for channels that are
-            connected to each other
+        dct[PES_FORMULA] = [ [SUB_PES_1], [SUB_PES_2], ... , [SUB_PES_N] ]
+        where each SUB_PES = [n1, n2, ... , nN],
+        where n1 to nN correspond to ixds for channels that are
+        connected to each other.
+
         For efficiency we only determine channels for PESs we wish to run.
+        :param pes_dct: Dictionary of PEss
+        :type pes_dct:
+        :rtype: dict[]
     """
 
     conn_chn_dct = {}
@@ -36,28 +40,30 @@ def connected_channels_dct(pes_dct):
 
 
 def find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
-    '''
-    Given rxn names, reactants, products belonging to 1 PES:
-    generate SUB PESs dictionaries
-    conndct = {0: [['S1','S2'],['S3','S4'],[S5']], 1:[['S6','S7'],['S8','S9']]}
-    connchnls = {0: [0,1,2] , 1:[3,4,5]}...
-    corresponding to each subpes
-    '''
+    """ Determine all of the connected reaction channels on a PES.
+        Information compiled in SUB-PES dictionaries:
+        conndct = {0: [['S1','S2'],['S3','S4'],[S5']],
+                   1:[['S6','S7'],['S8','S9']]}
+        connchnls = {0: [0,1,2] , 1:[3,4,5]}...
+
+        :param pes_rct_lst:
+    """
 
     # preprocessing:
     # order (bimol) reactants and products in the same fashion
     # example if you have A+B and B+A they will be ordered in the same way
     pes_rct_lst = order_rct_bystoich(pes_rct_lst)
     pes_prd_lst = order_rct_bystoich(pes_prd_lst)
+
     # put everything in a dataframe. indices are the numbers given by enumerate
-    len_rct_prd = np.array(list(map(len, pes_rct_lst))) + \
-        np.array(list(map(len, pes_prd_lst)))
+    len_rct_prd = numpy.array(list(map(len, pes_rct_lst))) + \
+        numpy.array(list(map(len, pes_prd_lst)))
     pes_df = pd.DataFrame(
-        np.array([pes_rct_lst, pes_prd_lst, len_rct_prd], dtype=object).T,
-        index=np.arange(0, len(pes_rxn_name_lst)),
+        numpy.array([pes_rct_lst, pes_prd_lst, len_rct_prd], dtype=object).T,
+        index=numpy.arange(0, len(pes_rxn_name_lst)),
         columns=['rcts', 'prds', 'N_rcts_prds'])
     # order by total number of species (N of reactants + N of products)
-    pes_df = pes_df.sort_values(by=['N_rcts_prds','rcts','prds'])
+    pes_df = pes_df.sort_values(by=['N_rcts_prds', 'rcts', 'prds'])
     # Split up channels into a connected sub-pes within a formula
     subpes_idx = 0
     conndct = {}
@@ -119,10 +125,10 @@ def print_pes_channels(pes_dct):
     for (form, pidx, sidx), chnls in pes_dct.items():
         pes_str = 'PES: {},'.format(pidx+1)
         sub_pes_str = 'SUB-PES: {},'.format(sidx+1)
-        chnl_str = 'Channels: {}-{}'.format(chnls[0][0]+1, chnls[-1][0]+1)
+        chnl_str = 'Channels: ' + ','.join(str(chnl[0]+1) for chnl in chnls)
         print('!', form, pes_str, sub_pes_str, chnl_str)
         for chnl in chnls:
             _, rxn = chnl
-            print('  {} = {}   1.0 0.0 0.0'.format(
+            print('  {} = {}'.format(
                 ' + '.join(rxn[0]),
                 ' + '.join(rxn[1])))
