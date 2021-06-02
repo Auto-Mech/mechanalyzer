@@ -10,6 +10,9 @@ source:
 requirements:
     host:
         - python=3.7
+    build:
+        - cmake
+        - gfortran_linux-64  # [linux]
     run:
         - gfortran_linux-64  # [linux]
         - python=3.7
