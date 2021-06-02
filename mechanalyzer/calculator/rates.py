@@ -43,10 +43,9 @@ def eval_rxn_param_dct(rxn_param_dct, pressures, temps):
                     kts2 = numpy.zeros(numpy.shape(kts1))
                 added_kts = kts1 + kts2
                 added_dct[pressure] = (temps, added_kts)  # store added values
-
         return added_dct
 
-    check_p_t(pressures, temps)  # enforce formatting rules
+    ratefit.ktpdct.check_p_t(pressures, temps)  # enforce formatting rules
     rxn_ktp_dct = {}
     for rxn, param_tups in rxn_param_dct.items():
         ktp_dct = {}
@@ -92,8 +91,6 @@ def eval_param_tup(param_tup, pressures, temps, t_ref=1.0):
             'Troe and high-P parameters are included,',
             'but the low-P parameters are absent'
             )
-        highp_params = param_tup[0]
-        lowp_params = param_tup[1]
         troe_params = param_tup[2]
         alpha = troe_params[0]
         ts3 = troe_params[1]  # T***
@@ -103,8 +100,10 @@ def eval_param_tup(param_tup, pressures, temps, t_ref=1.0):
         else:
             ts2 = None
 
+        highp_kts = ratefit.calc.arrhenius((param_tup[0],), t_ref, temps)
+        lowp_kts = ratefit.calc.arrhenius((param_tup[1],), t_ref, temps)
         ktp_dct = ratefit.calc.troe(
-            highp_params, lowp_params, temps, pressures,
+            highp_kts, lowp_kts, temps, pressures,
             alpha, ts3, ts1, ts2, collid_factor=1.0)
 
     elif param_tup[1] is not None:  # Lindemann
@@ -112,10 +111,10 @@ def eval_param_tup(param_tup, pressures, temps, t_ref=1.0):
             'Low-P parameters are included,',
             'but the high-P parameters are absent'
             )
-        highp_params = param_tup[0]
-        lowp_params = param_tup[1]
+        highp_kts = ratefit.calc.arrhenius((param_tup[0],), t_ref, temps)
+        lowp_kts = ratefit.calc.arrhenius((param_tup[1],), t_ref, temps)
         ktp_dct = ratefit.calc.lindemann(
-            highp_params, lowp_params,
+            highp_kts, lowp_kts,
             temps, pressures, collid_factor=1.0)
 
     else:  # Arrhenius
@@ -124,69 +123,9 @@ def eval_param_tup(param_tup, pressures, temps, t_ref=1.0):
             )
         # Case is unique as kTP dict contains only one key-value pair
         highp_params = param_tup[0]
-        kts = ratefit.calc.arrhenius(highp_params, t_ref, temps)
+
+        kts = ratefit.calc.arrhenius((highp_params,), t_ref, temps)
         ktp_dct = {}
         ktp_dct['high'] = (temps, kts)
 
     return ktp_dct
-
-
-def ktp(kp_dct, temps, highp_params=None, t_ref=1.0):
-    """ Creates a kTP dictionary from a kP dictionary and an
-        array of temperatures
-
-        :param kp_dct: dct of the form {P:[k@T1, k@T2]}
-        :type kp_dct: {float: numpy.array}
-        :param temps: array of temperatures, either 1- or 2-D
-        :type temps: numpy.ndarray
-        :return ktp_dct:
-        :rtype:
-
-    """
-
-    ktp_dct = {}
-    for index, pressure in enumerate(kp_dct):
-        kts = kp_dct[pressure]
-        if numpy.ndim(temps) == 1:
-            ktp_dct[pressure] = (temps, kts)
-        else:
-            ktp_dct[pressure] = (temps[index], kts)
-
-    # Add the high-P k(T)s to the kTP dictionary if needed
-    if highp_params:
-        if numpy.ndim(temps) == 1:
-            highp_kts = ratefit.calc.arrhenius(highp_params, temps, t_ref)
-            ktp_dct['high'] = (temps, highp_kts)
-        else:
-            highp_kts = ratefit.calc.arrhenius(
-                highp_params, temps[-1], t_ref)
-            ktp_dct['high'] = (temps[-1], highp_kts)
-
-    return ktp_dct
-
-
-def check_p_t(pressures, temps):
-    """ Enforces certain rules regarding the pressure and temperature arrays.
-
-        :param pressures: array of pressures
-        :type pressures: numpy.ndarray
-        :param temps: array of temps
-        :type temps: numpy.ndarray
-    """
-
-    # Check that the dimensionality of the temps array is either 1 or 2
-    temp_dim = numpy.ndim(temps)
-    assert temp_dim in (1, 2), (
-        f'The dimensionality of temps is {temp_dim};',
-        'it should be either 1 or 2'
-    )
-
-    # If temps is 2-D, enforce that the number of values in
-    # each temp array matches the number of pressures
-    if temp_dim == 2:
-        len_temps = numpy.shape(temps)[1]
-        len_pressures = len(pressures)
-        assert len_pressures == len_temps, (
-            f'# of pressures is {len_pressures},',
-            f'while # of temps in each array is {len_temps}'
-        )
