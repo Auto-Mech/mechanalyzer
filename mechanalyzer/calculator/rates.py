@@ -3,8 +3,7 @@ Calculate rates with various fitting functions
 """
 
 import copy
-import numpy as np
-from scipy.special import eval_chebyt
+import numpy
 from phydat import phycon
 import ratefit.calc
 
@@ -24,12 +23,16 @@ def eval_rxn_param_dct(rxn_param_dct, pressures, temps):
         :param temps:
         :type temps:
     """
+
     def add_ktp_dcts(ktp_dct1, ktp_dct2):
-        """ Add the rates in two ktp_dcts. The input dcts should have identical P and T values.
-            However, this may not always be true if one is from PLOG and one is from an expression
+        """ Add the rates in two ktp_dcts.
+
+            The input dcts should have identical P and T values. May not always
+            be true if one is from PLOG and one is from an expression
             with a pressure-independent rate.
         """
-        if ktp_dct1 == {}:  # if the starting dct is empty, just copy the addition
+
+        if not ktp_dct1:  # if starting dct is empty, copy the addition
             added_dct = copy.deepcopy(ktp_dct2)
         else:
             added_dct = {}
@@ -37,7 +40,7 @@ def eval_rxn_param_dct(rxn_param_dct, pressures, temps):
                 if pressure in ktp_dct2.keys():
                     (_, kts2) = ktp_dct2[pressure]  # unpack ktp_dct2 values
                 else:  # if the pressure is not in ktp_dct2
-                    kts2 = np.zeros(np.shape(kts1))  # use an array of zeros
+                    kts2 = numpy.zeros(numpy.shape(kts1))
                 added_kts = kts1 + kts2
                 added_dct[pressure] = (temps, added_kts)  # store added values
 
@@ -55,7 +58,7 @@ def eval_rxn_param_dct(rxn_param_dct, pressures, temps):
     return rxn_ktp_dct
 
 
-def eval_param_tup(param_tup, pressures, temps):
+def eval_param_tup(param_tup, pressures, temps, t_ref=1.0):
     """ Look through a param_tup and evaluate k(T,P) based on the contents.
         Return a ktp_dct.
 
@@ -78,7 +81,7 @@ def eval_param_tup(param_tup, pressures, temps):
 
     elif param_tup[4] is not None:  # PLOG
         plog_dct = param_tup[4]
-        ktp_dct = ratefit.calc.plog(plog_dct, temps, pressures, t_ref=1.0)
+        ktp_dct = ratefit.calc.plog(plog_dct, t_ref, temps, pressures)
 
     elif param_tup[2] is not None:  # Troe
         assert param_tup[0] is not None, (
@@ -121,7 +124,7 @@ def eval_param_tup(param_tup, pressures, temps):
             )
         # Case is unique as kTP dict contains only one key-value pair
         highp_params = param_tup[0]
-        kts = ratefit.calc.arrhenius(highp_params, temps, t_ref=1.0)
+        kts = ratefit.calc.arrhenius(highp_params, t_ref, temps)
         ktp_dct = {}
         ktp_dct['high'] = (temps, kts)
 
@@ -133,29 +136,31 @@ def ktp(kp_dct, temps, highp_params=None, t_ref=1.0):
         array of temperatures
 
         :param kp_dct: dct of the form {P:[k@T1, k@T2]}
-        :type kp_dct: {float: np.array}
+        :type kp_dct: {float: numpy.array}
         :param temps: array of temperatures, either 1- or 2-D
-        :type temps: np.ndarray
+        :type temps: numpy.ndarray
         :return ktp_dct:
         :rtype:
 
     """
+
     ktp_dct = {}
     for index, pressure in enumerate(kp_dct):
         kts = kp_dct[pressure]
-        if np.ndim(temps) == 1:  # if the dimensionality of temps is 1
-            ktp_dct[pressure] = (temps,kts)
-        else:  # if the dimensionality of temps is 2
-            ktp_dct[pressure] = (temps[index],kts)
+        if numpy.ndim(temps) == 1:
+            ktp_dct[pressure] = (temps, kts)
+        else:
+            ktp_dct[pressure] = (temps[index], kts)
 
     # Add the high-P k(T)s to the kTP dictionary if needed
     if highp_params:
-        if np.ndim(temps) == 1:
-            highp_kts = arrhenius(highp_params, temps, t_ref)
-            ktp_dct['high'] = (temps,highp_kts)
+        if numpy.ndim(temps) == 1:
+            highp_kts = ratefit.calc.arrhenius(highp_params, temps, t_ref)
+            ktp_dct['high'] = (temps, highp_kts)
         else:
-            highp_kts = arrhenius(highp_params, temps[-1], t_ref)  # use the last value in temps
-            ktp_dct['high'] = (temps[-1],highp_kts)
+            highp_kts = ratefit.calc.arrhenius(
+                highp_params, temps[-1], t_ref)
+            ktp_dct['high'] = (temps[-1], highp_kts)
 
     return ktp_dct
 
@@ -168,16 +173,20 @@ def check_p_t(pressures, temps):
         :param temps: array of temps
         :type temps: numpy.ndarray
     """
-    # Check that the dimensionality of the temps array is either 1 or 2
-    temp_dim = np.ndim(temps)
-    assert temp_dim in (1,2), (
-        f'The dimensionality of temps is {temp_dim}; it should be either 1 or 2'
-        )
 
-    # If temps is 2-D, enforce that the # of values in each temp array matches the # of pressures
+    # Check that the dimensionality of the temps array is either 1 or 2
+    temp_dim = numpy.ndim(temps)
+    assert temp_dim in (1, 2), (
+        f'The dimensionality of temps is {temp_dim};',
+        'it should be either 1 or 2'
+    )
+
+    # If temps is 2-D, enforce that the number of values in
+    # each temp array matches the number of pressures
     if temp_dim == 2:
-        len_temps = np.shape(temps)[1]
+        len_temps = numpy.shape(temps)[1]
         len_pressures = len(pressures)
-        assert len_pressures ==  len_temps,(
-            f'# of pressures is {len_pressures}, while # of temps in each array is {len_temps}'
-            )
+        assert len_pressures == len_temps, (
+            f'# of pressures is {len_pressures},',
+            f'while # of temps in each array is {len_temps}'
+        )

@@ -4,7 +4,7 @@
 
 import copy
 import itertools
-import numpy as np
+import numpy
 import ioformat.pathtools as parser
 from phydat import phycon
 from chemkin_io.parser import mechanism as parser_mech
@@ -597,7 +597,7 @@ def _calculate_equilibrium_constant(spc_thermo_dct, rcts, prds, temps):
             prd_gibbs += spc_thermo_dct[prd][4][temp_idx]  # [4] accesses Gibbs
 
         rxn_gibbs = prd_gibbs - rct_gibbs
-        k_equils.append(np.exp(-rxn_gibbs / (RC_CAL * temp)))
+        k_equils.append(numpy.exp(-rxn_gibbs / (RC_CAL * temp)))
 
     return k_equils
 
