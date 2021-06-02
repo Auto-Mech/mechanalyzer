@@ -80,18 +80,16 @@ def arrhenius(params, t_ref, temps):
          :rtype: numpy.ndarray
     """
 
-    assert len(params) in (1, 2)
-    for param_set in params:
-        assert len(param_set) == 3
+    assert len(params) in (3, 6)
 
-    if len(params) == 1:
+    if len(params) == 3:
         kts = single_arrhenius(
-            params[0][0], params[0][1], params[0][2],
+            params[0], params[1], params[2],
             t_ref, temps)
     else:
         kts = double_arrhenius(
-            params[0][0], params[0][1], params[0][2],
-            params[1][0], params[1][1], params[1][2],
+            params[0], params[1], params[2],
+            params[3], params[4], params[5],
             t_ref, temps)
 
     return kts

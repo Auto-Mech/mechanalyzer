@@ -100,8 +100,8 @@ def eval_param_tup(param_tup, pressures, temps, t_ref=1.0):
         else:
             ts2 = None
 
-        highp_kts = ratefit.calc.arrhenius((param_tup[0],), t_ref, temps)
-        lowp_kts = ratefit.calc.arrhenius((param_tup[1],), t_ref, temps)
+        highp_kts = ratefit.calc.arrhenius(param_tup[0], t_ref, temps)
+        lowp_kts = ratefit.calc.arrhenius(param_tup[1], t_ref, temps)
         ktp_dct = ratefit.calc.troe(
             highp_kts, lowp_kts, temps, pressures,
             alpha, ts3, ts1, ts2, collid_factor=1.0)
@@ -111,8 +111,8 @@ def eval_param_tup(param_tup, pressures, temps, t_ref=1.0):
             'Low-P parameters are included,',
             'but the high-P parameters are absent'
             )
-        highp_kts = ratefit.calc.arrhenius((param_tup[0],), t_ref, temps)
-        lowp_kts = ratefit.calc.arrhenius((param_tup[1],), t_ref, temps)
+        highp_kts = ratefit.calc.arrhenius(param_tup[0], t_ref, temps)
+        lowp_kts = ratefit.calc.arrhenius(param_tup[1], t_ref, temps)
         ktp_dct = ratefit.calc.lindemann(
             highp_kts, lowp_kts,
             temps, pressures, collid_factor=1.0)
@@ -122,9 +122,7 @@ def eval_param_tup(param_tup, pressures, temps, t_ref=1.0):
             'The param_tup does not seem to contain any useful information.'
             )
         # Case is unique as kTP dict contains only one key-value pair
-        highp_params = param_tup[0]
-
-        kts = ratefit.calc.arrhenius((highp_params,), t_ref, temps)
+        kts = ratefit.calc.arrhenius(param_tup[0], t_ref, temps)
         ktp_dct = {}
         ktp_dct['high'] = (temps, kts)
 
