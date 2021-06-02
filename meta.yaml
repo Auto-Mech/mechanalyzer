@@ -2,7 +2,7 @@
 
 package:
     name: mechanalyzer
-    version: "0.2.2"
+    version: "0.2.3"
 
 source:
     path: .
@@ -10,9 +10,6 @@ source:
 requirements:
     host:
         - python=3.7
-    build:
-        - cmake
-        - gfortran_linux-64  # [linux]
     run:
         - gfortran_linux-64  # [linux]
         - python=3.7

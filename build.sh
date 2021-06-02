@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-TOPDIR=$PWD
+export TOPDIR=$PWD
+export FC=$(which gfortran)
 
 # Build and install the Fortran Fit Codes
 cd $TOPDIR/external/dsarrfit
