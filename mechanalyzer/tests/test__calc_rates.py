@@ -7,9 +7,9 @@ import ratefit.ktpdct
 from mechanalyzer.calculator import rates
 
 
-PRESSURES = np.array([0.316, 1, 10, 100])
-TEMPS = np.array([1000, 1500, 2000])
-TEMPS2 = np.array([300, 500, 1000])  # only for Chebyshev test
+PRESSURES = np.array([0.316, 1.0, 10.0, 100.0])
+TEMPS = np.array([1000.0, 1500.0, 2000.0])
+TEMPS2 = np.array([300.0, 500.0, 1000.0])  # only for Chebyshev test
 LOW_P_RXN = (('N2O',), ('N2', 'O'), ('+M',))
 HIGH_P_RXN = (('N2O',), ('N2', 'O'), ('(+M)',))
 LOW_P_PARAMS = [1.04E+15, 0, 59810]
@@ -151,10 +151,10 @@ def test__dup_plog():
 
 
 if __name__ == '__main__':
-    # test__arrhenius()
-    # test__lindemann()
-    # test__troe()
-    # test__plog()
+    test__arrhenius()
+    test__lindemann()
+    test__troe()
+    test__plog()
     test__chebyshev()
     test__dup_arrhenius()
     test__dup_plog()

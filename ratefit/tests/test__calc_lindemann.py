@@ -28,22 +28,22 @@ T_REF = 1.0
 
 # Set Reference Data for Comparison
 REF_LIND_KTPS = {
-    0.1: numpy.array(
+    0.1: (TEMPS, numpy.array(
         [1.90012212e+13, 2.04642017e+12, 5.39063794e+11, 2.08842501e+11,
          1.00055327e+11, 5.48373687e+10, 3.29794522e+10, 2.12293442e+10,
-         1.43940899e+10, 1.01677501e+10]),
-    2.0: numpy.array(
+         1.43940899e+10, 1.01677501e+10])),
+    2.0: (TEMPS, numpy.array(
         [1.83310605e+14, 3.85505323e+13, 1.06611782e+13, 4.16283619e+12,
          1.99847087e+12, 1.09607519e+12, 6.59377398e+11, 4.24509116e+11,
-         2.87849644e+11, 2.03340410e+11]),
-    5.0: numpy.array(
+         2.87849644e+11, 2.03340410e+11])),
+    5.0: (TEMPS, numpy.array(
         [2.52171901e+14, 8.82782026e+13, 2.61922597e+13, 1.03522489e+13,
          4.98580852e+12, 2.73753882e+12, 1.64760874e+12, 1.06096595e+12,
-         7.19497221e+11, 5.08293436e+11]),
-    10.0: numpy.array(
+         7.19497221e+11, 5.08293436e+11])),
+    10.0: (TEMPS, numpy.array(
         [2.88268239e+14, 1.54868128e+14, 5.09176979e+13, 2.05242390e+13,
          9.93724544e+12, 5.46626983e+12, 3.29243871e+12, 2.12090992e+12,
-         1.43857168e+12, 1.01639496e+12])
+         1.43857168e+12, 1.01639496e+12]))
 }
 
 
@@ -53,9 +53,12 @@ def test__calc():
 
     lind_ktps = ratefit.calc.lindemann(HIGHP_KTS, LOWP_KTS, TEMPS, PRESSURES)
 
-    assert numpy.allclose(tuple(lind_ktps.keys()), PRESSURES)
-
-    assert numpy.allclose(lind_ktps[0.1], REF_LIND_KTPS[0.1], atol=0.01)
-    assert numpy.allclose(lind_ktps[2.0], REF_LIND_KTPS[2.0], atol=0.01)
-    assert numpy.allclose(lind_ktps[5.0], REF_LIND_KTPS[5.0], atol=0.01)
-    assert numpy.allclose(lind_ktps[10.0], REF_LIND_KTPS[10.0], atol=0.01)
+    assert set(PRESSURES) <= set(lind_ktps.keys())
+    assert numpy.allclose(
+        lind_ktps[0.1][1], REF_LIND_KTPS[0.1][1], atol=0.01)
+    assert numpy.allclose(
+        lind_ktps[2.0][1], REF_LIND_KTPS[2.0][1], atol=0.01)
+    assert numpy.allclose(
+        lind_ktps[5.0][1], REF_LIND_KTPS[5.0][1], atol=0.01)
+    assert numpy.allclose(
+        lind_ktps[10.0][1], REF_LIND_KTPS[10.0][1], atol=0.01)
