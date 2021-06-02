@@ -4,12 +4,10 @@
 
 import os
 import tempfile
-from types import new_class
 import numpy as np
 from mechanalyzer.builder import sorter
 from mechanalyzer.parser import mech as mparser
 from mechanalyzer.parser import spc as sparser
-from autoio.chemkin_io import writer
 
 # Set Paths to test/data directory and output directory
 CWD = os.path.dirname(os.path.realpath(__file__))
@@ -134,11 +132,6 @@ def __sort_with_input():
     for rxn in param_dct_sort.keys():
         assert [rxn, cmts_dct[rxn]['cmts_inline']] == RESULTS[index]
         index += 1
-
-    print('ok')
-    # write
-    # mech_str_sort = writer.mechanism.write_chemkin_file(elem_tuple=elems, spc_dct=spc_dct_ord,
-    #                                                    rxn_param_dct=param_dct_sort)
 
 
 def test__readwrite_thirdbody():

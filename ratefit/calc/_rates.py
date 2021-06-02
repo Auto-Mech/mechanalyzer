@@ -293,6 +293,13 @@ def plog(plog_dct, t_ref, temps, pressures):
         if min(plog_pressures) <= pressure <= max(plog_pressures):
             ktp_dct[pressure] = plog_one_pressure(
                 plog_dct, t_ref, temps, pressure)
+            # From mechanalyzer, might need fix
+            # if np.ndim(temps) == 1:
+            #     kp_dct[pressure] = plog_one_pressure(
+            #         plog_dct, temps, pressure, t_ref)
+            # else:
+            #     kp_dct[pressure] = plog_one_pressure(
+            #         plog_dct, temps[index], pressure, t_ref)
 
     return ktp_dct
 

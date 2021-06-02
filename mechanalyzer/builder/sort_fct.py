@@ -145,9 +145,10 @@ class SortMech:
 
         try:
             # last "stndard" criterion: rxn name
+            asclst = list(asc_series[hierarchy[:-1] + ['rxn_names']].values)
             self.mech_df = self.mech_df.sort_values(
                 by=hierarchy[:-1] + ['rxn_names'],
-                ascending=list(asc_series[hierarchy[:-1] + ['rxn_names']].values))
+                ascending=asclst)
         except KeyError as err:
             print(
                 'WARNING: Reactions not sorted according ',
@@ -587,7 +588,7 @@ class SortMech:
 
                 # Build the full channel list for the SUB-PES
                 chnl_lst = tuple((idx+idx_start, rxn)
-                                for idx, rxn in enumerate(rxn_names))
+                                 for idx, rxn in enumerate(rxn_names))
 
                 pes_dct[pes_dct_key] = chnl_lst
                 # update idx start

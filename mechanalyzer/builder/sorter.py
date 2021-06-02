@@ -1,7 +1,6 @@
 """ Runs the sorter
 """
 
-# from automol.util.dict_ import filter_keys
 from mechanalyzer.parser import mech as mparser
 from mechanalyzer.parser import spc as sparser
 from mechanalyzer.builder import sort_fct
@@ -15,9 +14,9 @@ MECH_TYPE = 'chemkin'
 def sorted_pes_dct(spc_str, mech_str, isolate_spc, sort_lst):
     """ Function that extracts sorted subpes for a mech
     """
-    
+
     srt_mch, _, _, _ = _sort_objs(spc_str, mech_str, sort_lst, isolate_spc)
-    
+
     return srt_mch.return_pes_dct()
 
 
