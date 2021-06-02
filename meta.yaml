@@ -1,7 +1,8 @@
-# cmd: conda build . -c auto-mech -c psi4 -c rdkit -c openbabel -c cantera -c conda-forge
+# cmd: conda build .  -c auto-mech -c psi4 -c rdkit -c openbabel -c conda-forge
+
 package:
     name: mechanalyzer
-    version: "0.2.3"
+    version: "0.2.2"
 
 source:
     path: .
@@ -9,19 +10,15 @@ source:
 requirements:
     host:
         - python=3.7
-    build:
-        - cmake
-        - gfortran_linux-64
     run:
-        - python=3.7
-        - pybind11
-        - cmake
         - gfortran_linux-64  # [linux]
-        - numpy
-        - scipy
-        - pandas
+        - python=3.7
+        - cmake
+        - numpy=1.15.4
+        - scipy=1.5.0
         - pyyaml
         - mako
+        - networkx
         - matplotlib
         - pytest
         - pytest-cov
@@ -32,16 +29,13 @@ requirements:
         - rdkit::rdkit
         - openbabel::openbabel
         - conda-forge::qcelemental
-        - conda-forge::nglview
-        - conda-forge::pypdf2
-        - conda-forge::python-igraph
-        - cantera::cantera
         - auto-mech::autochem
-        - auto-mech::autofile
         - auto-mech::autoio-base
-        - auto-mech::autoio-interfaces
-        - auto-mech::mess
-        - auto-mech::pac99
-        - auto-mech::projrot
-        - auto-mech::thermp
         - auto-mech::x2z
+        - auto-mech::mess
+        - auto-mech::projrot
+        - auto-mech::pac99
+        - auto-mech::thermp
+        - auto-mech::autoio-interfaces
+        - auto-mech::autofile
+        # - auto-mech::mechanalyzer
