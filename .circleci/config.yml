@@ -45,6 +45,12 @@ jobs:
                     source activate mechanalyzer-env
                     cd mechanalyzer
                     pytest . -v --disable-pytest-warnings --cov=mechanalyzer --pyargs mechanalyzer
+            - run:
+                name: Assess PEP8
+                no_output_timeout: 60m
+                command: |
+                    source activate mechanalyzer-env
+                    cd mechanalyzer
                     flake8 --exit-zero mechanalyzer
                     pylint --rcfile=../.pylintrc mechanalyzer
 workflows:
