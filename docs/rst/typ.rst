@@ -35,7 +35,10 @@ Objects describing rate expressions
 rxn_param_dct
 description: reactions and their accompanying rate expressions
 type: dct
-format: {rxn1: (param_tup1, param_tup2, ...), rxn2: ...}
+.. code_block: python
+    {rxn1: (param_tup1, param_tup2, ...), rxn2: ...}
+
+.. example:: .. code_block: python
 the different param_tuples pertain to different duplicate expressions
 example of double Arrhenius: {((‘H’, ‘O2’), (‘OH’, ‘O’), (None,)): ([1e15, 0, 15000], None, None, None, None, None), ([1e10, 0, 5000], None, None, None, None, None)}
 example of PLOG with some (but not all) pressures with duplicate fits: {(('H', 'O2'), ('OH', 'O'), (None,)): (([1E+15, 0.00, 25000], None, None, None, {0.1: [1E+15, 0.00, 25000], 1.0: [1E+16, 0.00, 25000], 10.0: [1E+17, 0.00, 25000], 100.0: [1E+18, 0.00, 25000]}, None), ([1E+15, 0.00, 25000], None, None, None, {0.1: [1E+15, 0.00, 25000], 1.0: [1E+16, 0.00, 25000], 100.0: [1E+18, 0.00, 25000]}, None),)}
@@ -149,16 +152,20 @@ Objects describing comparisons of mechanisms
 
 aligned_rxn_ktp_dct
 type: dct
-{rxn1: [ktp_dct1, ktp_dct2, ...], rxn2: ...}
+.. code_block: python
+    {rxn1: [ktp_dct1, ktp_dct2, ...], rxn2: ...}
 aligned_rxn_ratio_dct
 type: dct
-{rxn1: [ratio_dct1, ratio_dct2, ...], rxn2: ...}
+.. code_block: python
+    {rxn1: [ratio_dct1, ratio_dct2, ...], rxn2: ...}
 aligned_spc_thermo_dct
 type: dct
-{spc1: [thermo_array1, thermo_array2, ...] , spc2: ...}
+.. code_block: python
+    {spc1: [thermo_array1, thermo_array2, ...] , spc2: ...}
 aligned_spc_diff_dct
 type: dct
-{spc1: [diff_array1, diff_array2, ...] , spc2: ...}
+.. code_block: python
+    {spc1: [diff_array1, diff_array2, ...] , spc2: ...}
 ratio_dct:
 type: dct 
 similar structure to a ktp_dct, except give a ratio of k(T,P) values relative to another ktp_dct
