@@ -1,9 +1,9 @@
 """ Handle thermochemistry calculation procedures
 """
 
-from mechanalyzer.thermfit import basis
-from mechanalyzer.thermfit import heatform
-from mechanalyzer.thermfit import pf
+from thermfit import basis
+from thermfit import heatform
+from thermfit import pf
 
 
 __all__ = [

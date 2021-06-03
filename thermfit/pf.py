@@ -5,7 +5,7 @@
 import numpy
 
 
-def combine_pfs(pfs, coeffs, operators):
+def combine(pfs, coeffs, operators):
     """ combine partition functions
 
         _pf = [temps, logq, dq_dt, d2q_dt2]

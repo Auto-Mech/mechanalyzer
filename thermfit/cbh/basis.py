@@ -6,39 +6,15 @@ import os
 import math
 import multiprocessing
 import random
+import numpy
 import automol.inchi
 import automol.geom
 from phydat import phycon
 from mechanalyzer.inf import rxn as rinfo
-from mechroutines.pf.thermo import heatform
+from thermfit import heatform
 
 
 # FUNCTIONS TO PREPARE THE LIST OF REFERENCE SPECIES NEEDED FOR THERM CALCS #
-REF_CALLS = {
-    "basic": "get_basic",
-    "cbh0": "get_cbhzed",
-    "cbh1": "get_cbhone",
-    "cbh1_0": "get_cbhone",
-    "cbh1_1": "get_cbhone",
-    "cbh2": "get_cbhtwo",
-    "cbh2_0": "get_cbhtwo",
-    "cbh2_1": "get_cbhtwo",
-    "cbh2_2": "get_cbhtwo",
-    "cbh3": "get_cbhthree"
-}
-
-TS_REF_CALLS = {
-    "basic": "get_basic_ts",
-    "cbh0": "get_cbhzed_ts",
-    "cbh1": "get_cbhone_ts",
-    "cbh1_0": "get_cbhzed_ts",
-    "cbh1_1": "get_cbhone_ts",
-    "cbh2": "get_cbhzed_ts",
-    "cbh2_0": "get_cbhzed_ts",
-    "cbh2_1": "get_cbhone_ts",
-    "cbh3": "get_cbhone_ts"
-}
-
 IMPLEMENTED_CBH_TS_CLASSES = [
     'hydrogen abstraction high',
     # 'hydrogen migration',
@@ -49,10 +25,107 @@ IMPLEMENTED_CBH_TS_CLASSES = [
 ]
 
 
-def prepare_refs(
-        ref_scheme, spc_dct, spc_queue, run_prefix, save_prefix,
-        repeats=False, parallel=False, zrxn=None):
-    """ add refs to species list as necessary
+# Build list of basis functions
+def basis_species(atom_dct):
+    """
+    Given a list of atoms, generates a list of molecules
+    that is best suited to serve as a basis for those atoms
+
+    :param atomlist: list of atoms
+    :type atomlist: list
+    :param att: ???
+    :type att: ???
+
+    OUPUT:
+    basis    - recommended basis as a list of stoichiometries
+    """
+
+    # Get a list of all the atom types in the molecule
+    symbs = tuple(atom_dct.keys())
+
+    # Create list of inchi keys corresponding to basis species
+    basis = ()
+    # H2
+    basis += ('InChI=1S/H2/h1H',)
+    # CH4
+    if 'C' in symbs:
+        basis += ('InChI=1S/CH4/h1H4',)
+    # H2O
+    if 'O' in symbs:
+        basis += ('InChI=1S/H2O/h1H2',)
+    # NH3
+    if 'N' in symbs:
+        basis += ('InChI=1S/H3N/h1H3',)
+    # Cl2
+    if 'Cl' in symbs:
+        basis += ('InChI=1S/ClH/h1H',)
+        # basis += ('InChI=1S/Cl2/c1-2',)
+    # SO2
+    if 'S' in symbs:
+        basis += ('InChI=1S/O2S/c1-3-2',)
+        if 'O' not in symbs:
+            basis += ('InChI=1S/H2O/h1H2',)
+
+    return basis
+
+
+def basis_coefficients(basis, fml):
+    """ Form a matrix consisting of the coefficients for the basis
+        species to balance out the atoms.
+
+        :param basis: list of InChI strings for basis species
+        :type basis: tuple(str)
+        :param fml: stoichiometric formula of species basis corresponds to
+        :type fml: dict[str:int]
+        :rtype: numpy.ndarray
+    """
+
+    # Initialize an natoms x natoms matrix
+    nbasis = len(basis)
+    basis_mat = numpy.zeros((nbasis, nbasis))
+
+    # Get the basis formulae list
+    basis_formulae = [automol.inchi.formula_string(spc) for spc in basis]
+    for spc in basis_formulae:
+        basis_atom_dict = automol.formula.from_string(spc)
+        for atom in basis_atom_dict:
+            if atom not in fml:
+                fml[atom] = 0
+
+    # Set the elements of the matrix
+    for i, spc in enumerate(basis_formulae):
+        basis_atom_dict = automol.formula.from_string(spc)
+        basis_vals = []
+        for key in fml.keys():
+            if key in basis_atom_dict:
+                basis_vals.append(basis_atom_dict[key])
+            else:
+                basis_vals.append(0)
+        basis_mat[i] = basis_vals
+
+    #  Transpose
+    basis_mat = basis_mat.T
+
+    # Form stoich vector
+    stoich_vec = numpy.zeros(len(fml))
+    for i, key in enumerate(fml.keys()):
+        stoich_vec[i] = fml[key]
+
+    # Solve C = M^-1 S
+    basis_mat = numpy.linalg.inv(basis_mat)
+    coeff = numpy.dot(basis_mat, stoich_vec)
+
+    return coeff
+
+
+# Set up the references for building
+def prepare_refs(ref_scheme, spc_dct, spc_queue,
+                 repeats=False, parallel=False, zrxn=None):
+    """ Generate all of the reference (basis) species for
+        a list of species. Will also generate needed info
+        if it does not exist.
+    
+    add refs to species list as necessary
     """
     spc_names = [spc[0] for spc in spc_queue]
 
@@ -77,7 +150,6 @@ def prepare_refs(
             proc = multiprocessing.Process(
                 target=_prepare_refs,
                 args=(queue, ref_scheme, spc_dct, spc_lst,
-                      run_prefix, save_prefix,
                       repeats, parallel, zrxn))
             procs.append(proc)
             proc.start()
@@ -109,7 +181,6 @@ def prepare_refs(
     else:
         basis_dct, unique_refs_dct = _prepare_refs(
             None, ref_scheme, spc_dct, spc_names,
-            run_prefix, save_prefix,
             repeats=repeats, parallel=parallel,
             zrxn=zrxn)
 
@@ -117,7 +188,6 @@ def prepare_refs(
 
 
 def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
-                  run_prefix, save_prefix,
                   repeats=False, parallel=False, zrxn=None):
     """ Prepare references
     """
@@ -157,8 +227,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
                     ts_ref_scheme = 'cbh' + ref_scheme.split('_')[1]
                 for spc_i in spc_dct[spc_name]['reacs']:
                     bas_dct_i, _ = prepare_refs(
-                        ts_ref_scheme, spc_dct, [[spc_i, None]],
-                        run_prefix, save_prefix)
+                        ts_ref_scheme, spc_dct, [[spc_i, None]])
                     spc_bas_i, coeff_bas_i = bas_dct_i[spc_i]
                     for bas_i, c_bas_i in zip(spc_bas_i, coeff_bas_i):
                         if bas_i not in spc_basis:
@@ -183,7 +252,6 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
 
         # Add to the dct with reference dct if it is not in the spc dct
         for ref in spc_basis:
-            print('ref test', ref)
             bas_ichs = [
                 unique_refs_dct[spc]['inchi']
                 if 'inchi' in unique_refs_dct[spc]
@@ -206,7 +274,6 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
                     ).format(ref, ref_name)
                     unique_refs_dct[ref_name] = create_ts_spc(
                         ref, spc_dct, spc_dct[spc_name]['mult'],
-                        run_prefix, save_prefix,
                         rxnclass)
     print(msg)
 
@@ -219,7 +286,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
     return ret
 
 
-def create_ts_spc(ref, spc_dct, mult, run_prefix, save_prefix, rxnclass):
+def create_ts_spc(ref, spc_dct, mult, rxnclass):
     """ add a ts species to the species dictionary
     """
 
@@ -278,12 +345,6 @@ def create_spec(ich, charge=0,
         'mc_nsamp': mc_nsamp,
         'hind_inc': hind_inc * phycon.DEG2RAD
     }
-
-
-def is_scheme(scheme):
-    """ Return Boolean val if there is a scheme
-    """
-    return bool(scheme in REF_CALLS)
 
 
 # Helpers
