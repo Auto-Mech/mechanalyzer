@@ -249,8 +249,6 @@ def create_ts_spc(ref, spc_dct, mult, run_prefix, save_prefix, rxnclass):
         rxn_muls += (rgt_muls,)
         rxn_chgs += (rgt_chgs,)
 
-    rxn_info = rinfo.from_data(rxn_ichs, rxn_chgs, rxn_muls, mult)
-
     return {
         'reacs': list(reacs),
         'prods': list(prods),
@@ -258,9 +256,8 @@ def create_ts_spc(ref, spc_dct, mult, run_prefix, save_prefix, rxnclass):
         'inchi': '',
         'class': rxnclass,
         'mult': mult,
-        'rxn_info': rxn_info,
         'ts_locs': (0,),
-        'rxn_fs': reaction_fs(run_prefix, save_prefix, rinfo.sort(rxn_info))
+        'rxn_info': rinfo.from_data(rxn_ichs, rxn_chgs, rxn_muls, mult)
     }
 
 

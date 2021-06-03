@@ -6,8 +6,9 @@ import csv
 import numpy as np
 import automol.inchi
 import automol.graph
+import automol.formula
 from phydat import phycon
-from mechlib.amech_io import printer as ioprinter
+# from mechlib.amech_io import printer as ioprinter
 from . import util
 
 
@@ -20,8 +21,8 @@ def calc_hform_0k(hzero_mol, hzero_basis, basis, coeff, ref_set):
     """
 
     dhzero = hzero_mol * phycon.EH2KCAL
-    ioprinter.debug_message(
-        'ABS of molecule in kcal: {:.5f}'.format(dhzero))
+    # ioprinter.debug_message(
+    #     'ABS of molecule in kcal: {:.5f}'.format(dhzero))
     for i, spc in enumerate(basis):
         _ts = True
         if isinstance(spc, str):
@@ -29,18 +30,18 @@ def calc_hform_0k(hzero_mol, hzero_basis, basis, coeff, ref_set):
         h_basis = get_ref_h(spc, ref_set, 0, _ts)
         if h_basis is None:
             h_basis = 0.0
-            ioprinter.warning_message(
-                'No Heat of Formation in database for {} {} ', spc, ref_set)
+            # ioprinter.warning_message(
+            #     'No Heat of Formation in database for {} {} ', spc, ref_set)
         if _ts:
             h_basis *= phycon.KJ2KCAL
         dhzero += coeff[i] * h_basis
         dhzero -= coeff[i] * hzero_basis[i] * phycon.EH2KCAL
-        ioprinter.debug_message('Contribution from:', spc)
-        ioprinter.debug_message(
-            'HF0K in kcal: {:g} * {:.5f}'.format(coeff[i], h_basis))
-        ioprinter.debug_message(
-            'ABS in kcal: {:g} * {:.5f}'.format(
-                coeff[i], hzero_basis[i] * phycon.EH2KCAL))
+        # ioprinter.debug_message('Contribution from:', spc)
+        # ioprinter.debug_message(
+        #     'HF0K in kcal: {:g} * {:.5f}'.format(coeff[i], h_basis))
+        # ioprinter.debug_message(
+        #     'ABS in kcal: {:g} * {:.5f}'.format(
+        #         coeff[i], hzero_basis[i] * phycon.EH2KCAL))
 
     return dhzero
 
@@ -138,7 +139,7 @@ def get_reduced_basis(basis_ich, species_formula):
 
     reduced_basis = []
     for i, basis_formula in enumerate(basis_formulae):
-        basis_atom_dict = util.get_atom_counts_dict(basis_formula)
+        basis_atom_dict = automol.formula.from_string(basis_formula)
         flag = True
         for key, _ in basis_atom_dict.items():
             if key not in species_formula:
@@ -172,13 +173,13 @@ def calc_coefficients(basis, mol_atom_dict):
     # basis_atom_dict = [
     # automol.geom.formula(automol.inchi.geom(spc) for spc in basis]
     for spc in basis_formulae:
-        basis_atom_dict = util.get_atom_counts_dict(spc)
+        basis_atom_dict = automol.formula.from_string(spc)
         for atom in basis_atom_dict:
             if atom not in mol_atom_dict:
                 mol_atom_dict[atom] = 0
     # Set the elements of the matrix
     for i, spc in enumerate(basis_formulae):
-        basis_atom_dict = util.get_atom_counts_dict(spc)
+        basis_atom_dict = automol.formula.from_string(spc)
         basis_vals = []
         for key in mol_atom_dict.keys():
             if key in basis_atom_dict:
@@ -200,51 +201,6 @@ def calc_coefficients(basis, mol_atom_dict):
     coeff = np.dot(basis_mat, stoich_vec)
 
     return coeff
-
-
-def stoich_gra(gra):
-    """ Stoichiometry dictionary from a graph
-    """
-
-    atms = automol.graph.atoms(gra)
-    stoich_dct = {}
-    hcount = 0
-    for atm in atms:
-        hcount += np.floor(atms[atm][1])
-        if atms[atm][0] in stoich_dct:
-            stoich_dct[atms[atm][0]] += 1
-        else:
-            stoich_dct[atms[atm][0]] = 1
-    if 'H' not in stoich_dct:
-        stoich_dct['H'] = hcount
-    else:
-        stoich_dct['H'] += hcount
-
-    return stoich_dct
-
-
-def stoich(ich):
-    """
-    Finds the stoichiometry of a molecule
-    INPUT:
-    ich  -- STR inchi
-    OUTPUT:
-    stoich -- dictionary with key = STR atomsymbol,
-                val = INT number of atomsymbol in molecule
-
-    replace with automol.inchi.formula
-    """
-
-    stoich_dct = {'H': 0}
-    gra = automol.inchi.graph(ich)
-    atms = automol.graph.atoms(gra)
-    for atm in atms:
-        stoich_dct['H'] += atms[atm][1]
-        if atms[atm][0] in stoich_dct:
-            stoich_dct[atms[atm][0]] += 1
-        else:
-            stoich_dct[atms[atm][0]] = 1
-    return stoich_dct
 
 
 def remove_hyd_from_adj_atms(atms, adj_atms, othersite=(), other_adj=()):
@@ -405,7 +361,6 @@ def remove_zero_order_bnds(gra):
     for bnd in bnds:
         if bnds[bnd][0] > 0:
             new_bnds[bnd] = bnds[bnd]
-    ioprinter.info_message('new bonds ', new_bnds)
 
     return (atms, new_bnds)
 
@@ -630,7 +585,7 @@ def split_elim_gras(gras):
                         order, tmp = bnd_ords[frozenset({atmbi, atmi})]
                         bnd_ords[frozenset({atmbi, atmi})] = (round(
                             order + 0.4, 1), tmp)
-            ioprinter.info_message(atms, bnd_ords)
+            # ioprinter.info_message(atms, bnd_ords)
             prd_gra = remove_zero_order_bnds((atms, bnd_ords))
             atms, bnd_ords = prd_gra
     prd_gras = automol.graph.connected_components(prd_gra)
@@ -1748,7 +1703,7 @@ def get_basis(ich):
     """
 
     formula = automol.inchi.formula_string(ich)
-    atm_dict = util.get_atom_counts_dict(formula)
+    atm_dict = automol.formula.from_string(formula)
     return select_basis(atm_dict)
 
 
@@ -2056,8 +2011,8 @@ def get_cbh_ts(cbhlevel, zrxn):
             else:
                 fraglist.append(split_gras(frags[frag]['ts_gra']))
             clist.append(frags[frag]['coeff'])
-    ioprinter.debug_message('frags from cbh_ts ', fraglist)
-    ioprinter.debug_message('coeffs from cbh_ts ', clist)
+    # ioprinter.debug_message('frags from cbh_ts ', fraglist)
+    # ioprinter.debug_message('coeffs from cbh_ts ', clist)
     return fraglist, clist
 
 
@@ -2158,14 +2113,14 @@ def _balance(ich, frags):
     """
     stoichs = {}
     for frag in frags:
-        _stoich = stoich(frag)
+        _stoich = util.stoich(frag)
         for atm in _stoich:
             if atm in stoichs:
                 stoichs[atm] += _stoich[atm] * frags[frag]
             else:
                 stoichs[atm] = _stoich[atm] * frags[frag]
     balance_ = {}
-    _stoich = stoich(ich)
+    _stoich = util.stoich(ich)
     for atom in _stoich:
         if atom in stoichs:
             balance_[atom] = _stoich[atom] - stoichs[atom]
@@ -2183,14 +2138,14 @@ def _balance_ts(gra, frags):
         if 'exp_gra' in frags[frag]:
             _stoich = automol.graph.formula(frags[frag]['exp_gra'])
         elif 'ts_gra' in frags[frag]:
-            _stoich = stoich_gra(frags[frag]['ts_gra'])
+            _stoich = util.stoich_gra(frags[frag]['ts_gra'])
         for atm in _stoich:
             if atm in stoichs:
                 stoichs[atm] += _stoich[atm] * frags[frag]['coeff']
             else:
                 stoichs[atm] = _stoich[atm] * frags[frag]['coeff']
     balance_ = {}
-    _stoich = stoich_gra(gra)
+    _stoich = util.stoich_gra(gra)
     for atom in _stoich:
         if atom in stoichs:
             balance_[atom] = _stoich[atom] - stoichs[atom]
