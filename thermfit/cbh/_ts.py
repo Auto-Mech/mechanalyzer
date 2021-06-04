@@ -1,21 +1,30 @@
 """ Computes the Heat of Formation at 0 K for a given species
 """
 
-import numpy as np
 import automol.inchi
 import automol.graph
 import automol.formula
+from automol.par import ReactionClass
+from thermfit.cbh import _tsgra as tsutil
+from thermfit.cbh import _util as util
 
 
 # Main CBH functions to call
 def ts_cbh_basis(zrxn, scheme):
-    """ get basis for CBH0 for a TS molecule
+    """ get basis for CBH for a transition state structure
+
+        :param zrxn: Z-Matrix oriented Reacti:
+        :type zrxn: automol.
+        :param scheme: CBH scheme
+        :type scheme: str
+
     """
+
     rxnclass = automol.reac.reaction_class(zrxn)
     frm_bnd_keys = automol.reac.forming_bond_keys(zrxn)
     brk_bnd_keys = automol.reac.breaking_bond_keys(zrxn)
-    frm_key1, frm_key2 = _split_bnd_keys(frm_bnd_keys)
-    brk_key1, brk_key2 = _split_bnd_keys(brk_bnd_keys)
+    frm_key1, frm_key2 = tsutil.split_bnd_keys(frm_bnd_keys)
+    brk_key1, brk_key2 = tsutil.split_bnd_keys(brk_bnd_keys)
     gra = zrxn.forward_ts_graph
 
     # Set up graph and reaction site information
@@ -25,47 +34,47 @@ def ts_cbh_basis(zrxn, scheme):
     #  Elimination missing the forming double bond
     if 'elimination' in rxnclass:
         # brk_key, brk_key2 = _elimination_find_brk_bnds(gra, frm_key1)
-        frm_key2 = _elimination_second_forming_bond(
+        frm_key2 = tsutil.elimination_second_forming_bond(
             gra, brk_key1, brk_key2)
 
     #  Addition is missing the 2nd order bond in the graph
     elif 'addition' in rxnclass:
-        gra, brk_key1 = _add_appropriate_pi_bonds(gra)
+        gra, brk_key1 = tsutil.add_appropriate_pi_bonds(gra)
         if not brk_key1:
-            gra = _remove_frm_bnd(gra, brk_key1, frm_key1)
-            gra, brk_key1 = _add_appropriate_pi_bonds(gra)
+            gra = tsutil.remove_frm_bnd(gra, brk_key1, frm_key1)
+            gra, brk_key1 = tsutil.add_appropriate_pi_bonds(gra)
 
-    gra = _remove_frm_bnd(gra, brk_key1, frm_key1)
-    gra = _remove_frm_bnd(gra, brk_key2, frm_key2)
+    gra = tsutil.remove_frm_bnd(gra, brk_key1, frm_key1)
+    gra = tsutil.remove_frm_bnd(gra, brk_key2, frm_key2)
 
     # The first set of forming and breaking bonds makes the first reaction site
     if frm_key1 and brk_key1 and 'elimination' not in rxnclass:
         site = [
-            _xor(frm_key1, brk_key1),
-            _intersec(frm_key1, brk_key1),
-            _xor(brk_key1, frm_key1)]
+            tsutil.xor(frm_key1, brk_key1),
+            tsutil.intersec(frm_key1, brk_key1),
+            tsutil.xor(brk_key1, frm_key1)]
 
     #  eliminations are one large reaction site that we split into
     # site1 and site2 for convieninece
     if 'elimination' in rxnclass:
         try:
             site = [
-                _xor(frm_key1, brk_key1),
-                _intersec(frm_key1, brk_key1),
-                _xor(brk_key1, frm_key1)]
+                tsutil.xor(frm_key1, brk_key1),
+                tsutil.intersec(frm_key1, brk_key1),
+                tsutil.xor(brk_key1, frm_key1)]
             site2 = [
-                _xor(frm_key2, brk_key2),
-                _intersec(frm_key2, brk_key2),
-                _xor(brk_key2, frm_key2)]
+                tsutil.xor(frm_key2, brk_key2),
+                tsutil.intersec(frm_key2, brk_key2),
+                tsutil.xor(brk_key2, frm_key2)]
         except:
             site = [
-                _xor(frm_key1, brk_key2),
-                _intersec(frm_key1, brk_key2),
-                _xor(brk_key2, frm_key1)]
+                tsutil.xor(frm_key1, brk_key2),
+                tsutil.intersec(frm_key1, brk_key2),
+                tsutil.xor(brk_key2, frm_key1)]
             site2 = [
-                _xor(frm_key2, brk_key2),
-                _intersec(frm_key2, brk_key2),
-                _xor(brk_key2, frm_key2)]
+                tsutil.xor(frm_key2, brk_key2),
+                tsutil.intersec(frm_key2, brk_key2),
+                tsutil.xor(brk_key2, frm_key2)]
 
     elif 'beta scission' in rxnclass:
         rad_atm = list(automol.graph.sing_res_dom_radical_atom_keys(gra))[0]
@@ -98,19 +107,19 @@ def ts_cbh_basis(zrxn, scheme):
     fclasses = ('hydrogen abstraction', 'beta scission',
                 'hydrogen migration', 'addition')
     if 'radical radical hyd' in rxnclass:
-        if cbhlevel == 'cbh0':
+        if scheme == 'cbh0':
             frags = cbhzed_radradabs(gra, site, site2)
-        elif cbhlevel == 'cbh1':
+        elif scheme == 'cbh1':
             frags = cbhone_radradabs(gra, site, site2)
     elif any(cls in rxnclass for cls in fclasses):
-        if cbhlevel == 'cbh0':
+        if scheme == 'cbh0':
             frags = cbhzed_habs(gra, site)
-        elif cbhlevel == 'cbh1':
+        elif scheme == 'cbh1':
             frags = cbhone_habs(gra, site)
     elif 'elimination' in rxnclass:
-        if cbhlevel == 'cbh0':
+        if scheme == 'cbh0':
             frags = cbhzed_elim(gra, site, site2)
-        elif cbhlevel == 'cbh1':
+        elif scheme == 'cbh1':
             frags = cbhone_elim(gra, site, site2)
     else:
         raise NotImplementedError
@@ -120,20 +129,26 @@ def ts_cbh_basis(zrxn, scheme):
     clist = []
     for frag in frags:
         if 'exp_gra' in frags[frag]:
-            fraglist.append(automol.graph.inchi(frags[frag]['exp_gra']))
-            clist.append(frags[frag]['coeff'])
+            # Remove dummy atoms from graph, broke for H-ABS (KBM)
+            egra = automol.graph.without_dummy_atoms(frags[frag]['exp_gra'])
+            if egra != ({}, {}):  # Check if graph is empty
+                fraglist.append(automol.graph.inchi(frags[frag]['exp_gra']))
+                clist.append(frags[frag]['coeff'])
         else:
             if 'beta' in rxnclass:
-                fraglist.append(split_beta_gras(frags[frag]['ts_gra']))
+                fraglist.append(
+                    tsutil.split_beta_gras(frags[frag]['ts_gra']))
             elif 'elim' in rxnclass:
-                fraglist.append(split_elim_gras(frags[frag]['ts_gra']))
+                fraglist.append(
+                    tsutil.split_elim_gras(frags[frag]['ts_gra']))
             elif 'radical radical hyd' in rxnclass:
-                fraglist.append(split_radradabs_gras(frags[frag]['ts_gra']))
+                fraglist.append(
+                    tsutil.split_radradabs_gras(frags[frag]['ts_gra']))
             else:
-                fraglist.append(split_gras(frags[frag]['ts_gra']))
+                fraglist.append(
+                    tsutil.split_gras(frags[frag]['ts_gra']))
             clist.append(frags[frag]['coeff'])
-    # ioprinter.debug_message('frags from cbh_ts ', fraglist)
-    # ioprinter.debug_message('coeffs from cbh_ts ', clist)
+
     return fraglist, clist
 
 
@@ -149,7 +164,7 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
     """
 
     # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, adj_atms = _ts_graph(gra, site1, site2)
+    _, atms, bnd_ords, atm_vals, adj_atms = tsutil.ts_graph(gra, site1, site2)
     # Determine CBHzed fragments
     frags = {}
     for atm in atm_vals:
@@ -159,26 +174,29 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
             coeff = 1.0
             if not bal:
                 if atm in site1 + site2:
-                    non_hyd_adj_atms1 = remove_hyd_from_adj_atms(
+                    non_hyd_adj_atms1 = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[site1[0]], site2,
                         other_adj=adj_atms[site2[0]])
-                    non_hyd_adj_atms2 = remove_hyd_from_adj_atms(
+                    non_hyd_adj_atms2 = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[site2[0]], site1,
                         other_adj=adj_atms[site1[0]])
-                    for adj in non_hyd_adj_atms1:
-                        if adj in site1:
-                            non_hyd_adj_atms1.remove(adj)
-                    for adj in non_hyd_adj_atms2:
-                        if adj in site2:
-                            non_hyd_adj_atms2.remove(adj)
-                    coeff = branchpoint(
-                        non_hyd_adj_atms1, non_hyd_adj_atms2) * terminalmoity(
+                    non_hyd_adj_atms1 = tuple(adj for adj in non_hyd_adj_atms1
+                                              if adj not in site1)
+                    non_hyd_adj_atms1 = tuple(adj for adj in non_hyd_adj_atms2
+                                              if adj not in site2)
+                    coeff = (
+                        util.branch_point(
+                            non_hyd_adj_atms1, non_hyd_adj_atms2) *
+                        util.terminal_moiety(
                             non_hyd_adj_atms1, non_hyd_adj_atms2)
+                    )
                 else:
-                    non_hyd_adj_atms = remove_hyd_from_adj_atms(
+                    non_hyd_adj_atms = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[atm])
-                    coeff = branchpoint(non_hyd_adj_atms) * terminalmoity(
-                        non_hyd_adj_atms)
+                    coeff = (
+                        util.branch_point(non_hyd_adj_atms) *
+                        util.terminal_moiety(non_hyd_adj_atms)
+                    )
             if atm == site1[0]:
                 key1 = [site1[0], site1[1]]
                 key1.sort()
@@ -225,14 +243,15 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
                 newname = len(frags.keys())
                 frags[newname] = {}
                 frags[newname][key] = grai
-            _add2dic(frags[newname], 'coeff', coeff)
-    frags = _simplify_gra_frags(frags)
+            util.add2dic(frags[newname], 'coeff', coeff)
+    frags = tsutil.simplify_gra_frags(frags)
     if bal:
-        balance_ = _balance_ts(gra, frags)
+        balance_ = util.balance_ts(gra, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
-            frags = _balance_frags_ts(gra, frags)
-    frags = _simplify_gra_frags(frags)
+            frags = util.balance_frags_ts(gra, frags)
+    frags = tsutil.simplify_gra_frags(frags)
+
     return frags
 
 
@@ -247,7 +266,8 @@ def cbhone_radradabs(gra, site1, site2, bal=True):
     """
 
     # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, _ = _ts_graph(gra, site1, site2)
+    _, atms, bnd_ords, atm_vals, _ = tsutil.ts_graph(gra, site1, site2)
+
     # Determine CBHzed fragments
     frags = {}
     for bnd in bnd_ords:
@@ -336,10 +356,10 @@ def cbhone_radradabs(gra, site1, site2, bal=True):
                     newname = len(frags.keys())
                     frags[newname] = {}
                     frags[newname][key] = grai
-                _add2dic(frags[newname], 'coeff', coeff)
-    frags = _simplify_gra_frags(frags)
+                util.add2dic(frags[newname], 'coeff', coeff)
+    frags = tsutil.simplify_gra_frags(frags)
     if bal:
-        balance_ = _balance_ts(gra, frags)
+        balance_ = util.balance_ts(gra, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
             zedfrags = cbhzed_radradabs(gra, site1, site2, bal=False)
@@ -362,14 +382,15 @@ def cbhone_radradabs(gra, site1, site2, bal=True):
                     newname = len(newfrags.keys())
                     newfrags[newname] = {}
                     newfrags[newname][key] = zedfrags[zedname][key]
-                _add2dic(
+                util.add2dic(
                     newfrags[newname], 'coeff', -zedfrags[zedname]['coeff'])
             frags = newfrags
-        balance_ = _balance_ts(gra, frags)
+        balance_ = util.balance_ts(gra, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
-            frags = _balance_frags_ts(gra, frags)
-    frags = _simplify_gra_frags(frags)
+            frags = util.balance_frags_ts(gra, frags)
+    frags = util.simplify_gra_frags(frags)
+
     return frags
 
 
@@ -384,7 +405,8 @@ def cbhzed_elim(gra, site1, site2, bal=True):
     """
 
     # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, adj_atms = _ts_graph(gra, site1, site2)
+    _, atms, bnd_ords, atm_vals, adj_atms = tsutil.ts_graph(gra, site1, site2)
+
     # Determine CBHzed fragments
     frags = {}
     if not site1[0] == site2[2]:
@@ -396,9 +418,9 @@ def cbhzed_elim(gra, site1, site2, bal=True):
             coeff = 1.0
             if not bal:
                 if atm in site1:
-                    non_hyd_adj_atms1 = remove_hyd_from_adj_atms(
+                    non_hyd_adj_atms1 = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[site1[1]], othersite=site2)
-                    non_hyd_adj_atms2 = remove_hyd_from_adj_atms(
+                    non_hyd_adj_atms2 = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[site2[2]], othersite=site1)
                     for adj in non_hyd_adj_atms1:
                         if adj in site1:
@@ -406,14 +428,19 @@ def cbhzed_elim(gra, site1, site2, bal=True):
                     for adj in non_hyd_adj_atms2:
                         if adj in site2:
                             non_hyd_adj_atms2.remove(adj)
-                    coeff = branchpoint(
-                        non_hyd_adj_atms1, non_hyd_adj_atms2) * terminalmoity(
+                    coeff = (
+                        util.branch_point(
+                            non_hyd_adj_atms1, non_hyd_adj_atms2) *
+                        util.terminal_moiety(
                             non_hyd_adj_atms1, non_hyd_adj_atms2)
+                    )
                 else:
-                    non_hyd_adj_atms = remove_hyd_from_adj_atms(
+                    non_hyd_adj_atms = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[atm])
-                    coeff = branchpoint(
-                        non_hyd_adj_atms) * terminalmoity(non_hyd_adj_atms)
+                    coeff = (
+                        util.branch_point(non_hyd_adj_atms) *
+                        util.terminal_moiety(non_hyd_adj_atms)
+                    )
             if atm == site1[0]:
                 key1 = [site1[0], site1[1]]
                 key1.sort()
@@ -469,14 +496,15 @@ def cbhzed_elim(gra, site1, site2, bal=True):
                 newname = len(frags.keys())
                 frags[newname] = {}
                 frags[newname][key] = grai
-            _add2dic(frags[newname], 'coeff', coeff)
-    frags = _simplify_gra_frags(frags)
+            util.add2dic(frags[newname], 'coeff', coeff)
+    frags = tsutil.simplify_gra_frags(frags)
     if bal:
-        balance_ = _balance_ts(gra, frags)
+        balance_ = util.balance_ts(gra, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
-            frags = _balance_frags_ts(gra, frags)
-    frags = _simplify_gra_frags(frags)
+            frags = util.balance_frags_ts(gra, frags)
+    frags = tsutil.simplify_gra_frags(frags)
+
     return frags
 
 
@@ -491,7 +519,7 @@ def cbhzed_habs(gra, site, bal=True):
     """
 
     # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, adj_atms = _ts_graph(gra, site)
+    _, atms, bnd_ords, atm_vals, adj_atms = tsutil.ts_graph(gra, site)
     # Determine CBHzed fragments
     frags = {}
     for atm in atm_vals:
@@ -501,27 +529,32 @@ def cbhzed_habs(gra, site, bal=True):
             coeff = 1.0
             if not bal:
                 if atm in site:
-                    non_hyd_adj_atms1 = remove_hyd_from_adj_atms(
+                    non_hyd_adj_atms1 = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[site[0]], site,
                         other_adj=adj_atms[site[2]])
-                    non_hyd_adj_atms2 = remove_hyd_from_adj_atms(
+                    non_hyd_adj_atms2 = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[site[2]],
                         site, other_adj=adj_atms[site[0]])
                     non_hyd_adj_atms3 = []
                     for adj in adj_atms[site[0]]:
                         if adj in adj_atms[site[2]]:
-                            non_hyd_adj_atms3 = remove_hyd_from_adj_atms(
+                            non_hyd_adj_atms3 = tsutil.remove_hyd_from_adj_atms(
                                 atms, adj_atms[adj], othersite=site)
-                    coeff = branchpoint(
-                        non_hyd_adj_atms1, non_hyd_adj_atms2,
-                        non_hyd_adj_atms3) * terminalmoity(
+                    coeff = (
+                        util.branch_point(
+                            non_hyd_adj_atms1, non_hyd_adj_atms2,
+                            non_hyd_adj_atms3) *
+                        util.terminal_moiety(
                             non_hyd_adj_atms1, non_hyd_adj_atms2,
                             non_hyd_adj_atms3, endisterm=False)
+                    )
                 else:
-                    non_hyd_adj_atms = remove_hyd_from_adj_atms(
+                    non_hyd_adj_atms = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[atm])
-                    coeff = branchpoint(
-                        non_hyd_adj_atms) * terminalmoity(non_hyd_adj_atms)
+                    coeff = (
+                        util.branchpoint(non_hyd_adj_atms) *
+                        util.terminal_moiety(non_hyd_adj_atms)
+                    )
             if atm == site[0]:
                 key1 = [site[0], site[1]]
                 key1.sort()
@@ -559,14 +592,14 @@ def cbhzed_habs(gra, site, bal=True):
                 newname = len(frags.keys())
                 frags[newname] = {}
                 frags[newname][key] = grai
-            _add2dic(frags[newname], 'coeff', coeff)
-    frags = _simplify_gra_frags(frags)
+            util.add2dic(frags[newname], 'coeff', coeff)
+    frags = tsutil.simplify_gra_frags(frags)
     if bal:
-        balance_ = _balance_ts(gra, frags)
+        balance_ = util.balance_ts(gra, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
-            frags = _balance_frags_ts(gra, frags)
-    frags = _simplify_gra_frags(frags)
+            frags = util.balance_frags_ts(gra, frags)
+    frags = tsutil.simplify_gra_frags(frags)
 
     return frags
 
@@ -582,7 +615,7 @@ def cbhone_elim(gra, site1, site2, bal=True):
     """
 
     # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, _ = _ts_graph(gra, site1, site2)
+    _, atms, bnd_ords, atm_vals, _ = tsutil.ts_graph(gra, site1, site2)
     # Determine CBHone fragments
     frags = {}
     if not site1[0] == site2[2]:
@@ -689,10 +722,10 @@ def cbhone_elim(gra, site1, site2, bal=True):
                     newname = len(frags.keys())
                     frags[newname] = {}
                     frags[newname][key] = grai
-                _add2dic(frags[newname], 'coeff', coeff)
-    frags = _simplify_gra_frags(frags)
+                util.add2dic(frags[newname], 'coeff', coeff)
+    frags = tsutil.simplify_gra_frags(frags)
     if bal:
-        balance_ = _balance_ts(gra, frags)
+        balance_ = util.balance_ts(gra, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
             zedfrags = cbhzed_elim(gra, site1, site2, bal=False)
@@ -715,14 +748,14 @@ def cbhone_elim(gra, site1, site2, bal=True):
                     newname = len(newfrags.keys())
                     newfrags[newname] = {}
                     newfrags[newname][key] = zedfrags[zedname][key]
-                _add2dic(
+                util.add2dic(
                     newfrags[newname], 'coeff',  -zedfrags[zedname]['coeff'])
             frags = newfrags
-        balance_ = _balance_ts(gra, frags)
+        balance_ = util.balance_ts(gra, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
-            frags = _balance_frags_ts(gra, frags)
-    frags = _simplify_gra_frags(frags)
+            frags = util.balance_frags_ts(gra, frags)
+    frags = tsutil.simplify_gra_frags(frags)
     return frags
 
 
@@ -737,7 +770,7 @@ def cbhone_habs(gra, site, bal=True):
     """
 
     # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, _ = _ts_graph(gra, site)
+    _, atms, bnd_ords, atm_vals, _ = tsutil.ts_graph(gra, site)
 
     # Determine CBHone fragments
     frags = {}
@@ -815,10 +848,10 @@ def cbhone_habs(gra, site, bal=True):
                 newname = len(frags.keys())
                 frags[newname] = {}
                 frags[newname][key] = grai
-            _add2dic(frags[newname], 'coeff', coeff)
-    frags = _simplify_gra_frags(frags)
+            util.add2dic(frags[newname], 'coeff', coeff)
+    frags = tsutil.simplify_gra_frags(frags)
     if bal:
-        balance_ = _balance_ts(gra, frags)
+        balance_ = util.balance_ts(gra, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
             zedfrags = cbhzed_habs(gra, site, bal=False)
@@ -841,14 +874,14 @@ def cbhone_habs(gra, site, bal=True):
                     newname = len(newfrags.keys())
                     newfrags[newname] = {}
                     newfrags[newname][key] = zedfrags[zedname][key]
-                _add2dic(
+                util.add2dic(
                     newfrags[newname], 'coeff', -zedfrags[zedname]['coeff'])
             frags = newfrags
-        balance_ = _balance_ts(gra, frags)
+        balance_ = util.balance_ts(gra, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
-            frags = _balance_frags_ts(gra, frags)
-    frags = _simplify_gra_frags(frags)
+            frags = util.balance_frags_ts(gra, frags)
+    frags = tsutil.simplify_gra_frags(frags)
 
     return frags
 

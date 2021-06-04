@@ -4,7 +4,7 @@
 import automol.inchi
 import automol.graph
 import automol.formula
-# from thermfit import _util as util
+from thermfit.cbh import _util as util
 
 
 # Main callable function
@@ -24,7 +24,7 @@ def species_cbh_basis(ich, scheme, balance=True):
 
 
 # Individual CBH-N calculators
-def cbhzed(ich, bal=True):
+def cbhzed(ich, balance=True):
     """
     Fragments molecule so that each heavy-atom is a seperate fragment
     INPUT:
@@ -45,25 +45,28 @@ def cbhzed(ich, bal=True):
     frags = {}
     for atm in atm_vals:
         coeff = 1
-        if not bal:
-            coeff = branchpoint(adj_atms[atm]) * terminalmoity(adj_atms[atm])
+        if not balance:
+            coeff = (
+                util.branch_point(adj_atms[atm]) *
+                util.terminal_moiety(adj_atms[atm])
+            )
         if atm in rad_atms:
             atm_vals[atm] -= 1
         atm_dic = {0: (atms[atm][0], int(atm_vals[atm]), None)}
         gra = (atm_dic, {})
         frag = automol.graph.inchi(gra)
-        _add2dic(frags, frag, coeff)
+        util.add2dic(frags, frag, coeff)
 
-    if bal:
-        balance_ = _balance(ich, frags)
+    if balance:
+        balance_ = util.balance(ich, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
-            frags = _balance_frags(ich, frags)
+            frags = util.balance_frags(ich, frags)
 
     return frags
 
 
-def cbhone(ich, bal=True):
+def cbhone(ich, balance=True):
     """
     Fragments molecule in a way that conserves each heavy-atom/heavy-atom bond
     INPUT:
@@ -101,28 +104,28 @@ def cbhone(ich, bal=True):
                 bnd_dic = {frozenset({0, 1}): (1, None)}
                 gra = (atm_dic, bnd_dic)
                 frag = automol.graph.inchi(gra)
-                _add2dic(frags, frag)
+                util.add2dic(frags, frag)
     frags = {k: v for k, v in frags.items() if v}
     if not frags:
         frags = cbhzed(ich)
     # Balance
-    if bal:
-        balance_ = _balance(ich, frags)
+    if balance:
+        balance_ = util.balance(ich, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
-            zedfrags = cbhzed(ich, bal=False)
+            zedfrags = cbhzed(ich, balance=False)
             newfrags = frags.copy()
             for frag in zedfrags:
-                _add2dic(newfrags, frag, -zedfrags[frag])
+                util.add2dic(newfrags, frag, -zedfrags[frag])
             frags = {k: v for k, v in newfrags.items() if v}
-        balance_ = _balance(ich, frags)
+        balance_ = util.balance(ich, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
-            frags = _balance_frags(ich, frags)
+            frags = util.balance_frags(ich, frags)
     return frags
 
 
-def cbhtwo(ich, bal=True):
+def cbhtwo(ich, balance=True):
     """
     Fragments molecule for each heavy-atom to stay bonded to its adjacent atoms
     INPUT:
@@ -156,8 +159,11 @@ def cbhtwo(ich, bal=True):
         # Then start adding bonds to the bnddic and atomdic
         j = 0
         coeff = 1
-        if not bal:
-            coeff = branchpoint(adj_atms[atm]) * terminalmoity(adj_atms[atm])
+        if not balance:
+            coeff = (
+                util.branch_point(adj_atms[atm]) *
+                util.terminal_moiety(adj_atms[atm])
+            )
         for adj in list(adj_atms[atm]):
             j += 1
             valj = atm_vals[adj]
@@ -170,38 +176,38 @@ def cbhtwo(ich, bal=True):
             bnd_dic[frozenset({0, j})] = (1, None)
         gra = (atm_dic, bnd_dic)
         frag = automol.graph.inchi(gra)
-        _add2dic(frags, frag, coeff)
+        util.add2dic(frags, frag, coeff)
 
     frags = {k: v for k, v in frags.items() if v}
     if not frags:
         frags = cbhone(frags)
     # Balance
-    if bal:
-        balance_ = _balance(ich, frags)
+    if balance:
+        balance_ = util.balance(ich, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
             newfrags = frags.copy()
-            onefrags = cbhone(ich, bal=False)
+            onefrags = cbhone(ich, balance=False)
             for frag in onefrags:
-                _add2dic(newfrags, frag, -onefrags[frag])
+                util.add2dic(newfrags, frag, -onefrags[frag])
             frags = {k: v for k, v in newfrags.items() if v}
-            balance_ = _balance(ich, frags)
+            balance_ = util.balance(ich, frags)
             balance_ = {k: v for k, v in balance_.items() if v}
             if balance_:
                 newfrags = frags.copy()
-                zedfrags = cbhzed(ich, bal=False)
+                zedfrags = cbhzed(ich, balance=False)
                 for frag in zedfrags:
-                    _add2dic(newfrags, frag, zedfrags[frag])
+                    util.add2dic(newfrags, frag, zedfrags[frag])
                 frags = {k: v for k, v in newfrags.items() if v}
-                balance_ = _balance(ich, frags)
+                balance_ = util.balance(ich, frags)
                 balance_ = {k: v for k, v in balance_.items() if v}
                 if balance_:
-                    frags = _balance_frags(ich, frags)
+                    frags = util.balance_frags(ich, frags)
 
     return frags
 
 
-def cbhthree(ich, bal=True):
+def cbhthree(ich, balance=True):
     """
     Fragments molecule to retain each heavy-atom -- heavy-atom bond,
     and keep the bonds of each    atm1 b1 atm2 b2 atm3 b3 atm4 b4 atm5
@@ -250,42 +256,42 @@ def cbhthree(ich, bal=True):
                     bnd_dic[frozenset({i, i*4+j+1})] = (bnd_ord, None)
         gra = (atm_dic, bnd_dic)
         frag = automol.graph.inchi(gra)
-        _add2dic(frags, frag)
+        util.add2dic(frags, frag)
 
     if not frags:
         frags = cbhtwo(frags)
 
-    if bal:
-        balance_ = _balance(ich, frags)
+    if balance:
+        balance_ = util.balance(ich, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
             newfrags = frags.copy()
-            twofrags = cbhtwo(ich, bal=False)
+            twofrags = cbhtwo(ich, balance=False)
             for frag in twofrags:
-                _add2dic(newfrags, frag, -twofrags[frag])
+                util.add2dic(newfrags, frag, -twofrags[frag])
             frags = {k: v for k, v in newfrags.items() if v}
-            # balance_ = _balance(ich, frags)
+            # balance_ = util.balancec(ich, frags)
             # balance_ = {k: v for k, v in balance_.items() if v}
             # if balance_:
             #    newfrags = frags.copy()
             #    newerfrags = {}
-            #    onefrags = cbhone(ich, bal=False)
+            #    onefrags = cbhone(ich, balance=False)
             #    for frag in onefrags:
-            #         _add2dic(newfrags, frag, - onefrags[frag])
+            #         util.add2dic(newfrags, frag, - onefrags[frag])
             #    frags = {k: v for k, v in newfrags.items() if v}
-            #    balance_ = _balance(ich, frags)
+            #    balance_ = util.balancec(ich, frags)
             #    balance_ = {k: v for k, v in balance_.items() if v}
             #    if balance_:
             #        newfrags = frags.copy()
-            #        zedfrags = cbhzed(ich, bal=False)
+            #        zedfrags = cbhzed(ich, balance=False)
             #        for frag in zedfrags:
-            #            _add2dic(newfrags, frag, zedfrags[frag])
+            #            util.add2dic(newfrags, frag, zedfrags[frag])
             #        frags = {k: v for k, v in newfrags.items() if v}
-            #        balance_ = _balance(ich, frags)
+            #        balance_ = util.balancec(ich, frags)
             #        balance_ = {k: v for k, v in balance_.items() if v}
             #        if balance_:
-            #            frags = _balance_frags(ich, frags)
-    # balance = _balance(ich, frags)
+            #            frags = util.balancec_frags(ich, frags)
+    # balance = util.balancec(ich, frags)
     # balance_ = {k: v for k, v in balance_.items() if v}
     return frags
 
@@ -360,7 +366,7 @@ def cbhthree(ich, bal=True):
 #
 #        gra     = (atm_dic, bnd_dic)
 #        frag = automol.graph.inchi(gra)
-#        _add2dic(frags, frag)
+#        util.add2dic(frags, frag)
 #    frags =  {k: v for k, v in frags.items() if v}
 #    ioprinter.info_message(frags)
 #    return
@@ -380,4 +386,3 @@ CBH_SCHEMES = {
     # "cbh2_2": "get_cbhtwo",
     'cbh3': cbhthree
 }
-

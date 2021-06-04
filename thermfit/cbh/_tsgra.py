@@ -1,54 +1,51 @@
-""" Computes the Heat of Formation at 0 K for a given species
+""" Utility functions for handling ts graphs for CBH schemes
 """
 
-import os
 import numpy as np
-import automol.inchi
 import automol.graph
-import automol.formula
-# from mechlib.amech_io import printer as ioprinter
-from thermfit import _util as util
+import automol.inchi
 
 
-# Path  the database files (stored in the thermo src directory)
-SRC_PATH = os.path.dirname(os.path.realpath(__file__))
-
-
-def remove_hyd_from_adj_atms(atms, adj_atms, othersite=(), other_adj=()):
-    """ Removes H atoms from all atms adjacent to a set of atoms requested
-        by the user
+# Check TS keys
+def intersec(lst1, lst2):
+    """ Determine index shared by broken and formed keys , verifying that
+        they intersect
     """
 
-    new_adj_atms = ()
-    for atm in adj_atms:
-        if atms[atm][0] != 'H' and atm not in othersite:
-            if atm not in other_adj:
-                new_adj_atms += (atm,)
+    ret = None
+    for atm in lst1:
+        if atm in lst2:
+            ret = atm
+    assert ret is not None, (
+        'brk_key {} and frm_key {} do not intersect'.format(lst1, lst2))
+    return ret
 
-    return new_adj_atms
 
+def xor(lst1, lst2):
+    """ Check
 
-def branchpoint(adj_atms_i, adj_atms_j=(), adj_atms_k=()):
-    """ Branch point?
+        :param lst1:
+        :type lst1:
+        :param lst2:
+        :type lst2:
     """
-    return max(1, len(adj_atms_i) + len(adj_atms_j) + len(adj_atms_k) - 1)
 
-
-def terminalmoity(adj_atms_i, adj_atms_j=(), adj_atms_k=(), endisterm=True):
-    """ Get moiety of termial groups?
-    """
-
-    ret = 1
-    if len(adj_atms_i) + len(adj_atms_j) < 2:
-        ret = 0
-    if ret == 0 and len(adj_atms_k) > 0 and not endisterm:
-        ret = 1
+    ret = None
+    for atm in lst1:
+        if atm not in lst2:
+            ret = atm
+    assert ret is not None, (
+        'problem with bond_key {}'.format(lst1))
 
     return ret
 
 
-def _ts_graph(gra, site1, site2=None):
+def ts_graph(gra, site1, site2=None):
     """ Get a transition state graph.
+
+        :param gra:
+        :type gra: automol
+        :param site1: 
     """
 
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
@@ -137,6 +134,20 @@ def remove_zero_order_bnds(gra):
     return (atms, new_bnds)
 
 
+def remove_hyd_from_adj_atms(atms, adj_atms, othersite=(), other_adj=()):
+    """ Removes H atoms from all atms adjacent to a set of atoms requested
+        by the user
+    """
+
+    new_adj_atms = ()
+    for atm in adj_atms:
+        if atms[atm][0] != 'H' and atm not in othersite:
+            if atm not in other_adj:
+                new_adj_atms += (atm,)
+
+    return new_adj_atms
+
+
 def split_beta_gras(gras):
     """ ?
     """
@@ -205,6 +216,7 @@ def split_beta_gras(gras):
     return (rct_ichs, prd_ichs)
 
 
+# GRAPH SPLITTING FUNCTIONS
 def split_radradabs_gras(gras):
     """ Split a graph from radical-radical abstraction TS into the constituent
         reactant/products graphs.
@@ -438,7 +450,7 @@ def split_gras(gras):
     return (rct_ichs, prd_ichs)
 
 
-def _simplify_gra_frags(frags):
+def simplify_gra_frags(frags):
     """ ?
     """
 
@@ -450,27 +462,101 @@ def _simplify_gra_frags(frags):
     return new_frags
 
 
-def _intersec(lst1, lst2):
-    ret = None
-    for atm in lst1:
-        if atm in lst2:
-            ret = atm
-    assert ret is not None, (
-        'brk_key {} and frm_key {} do not intersect'.format(lst1, lst2))
-    return ret
+def remove_frm_bnd(gra, brk_key, frm_key):
+    bond_keys = automol.graph.bond_keys(gra)
+    if brk_key and brk_key not in bond_keys:
+        gra = automol.graph.add_bonds(gra, [brk_key])
+    if frm_key and frm_key in bond_keys:
+        gra = automol.graph.remove_bonds(gra, [frm_key])
+    return gra
 
 
-def _xor(lst1, lst2):
-    ret = None
-    for atm in lst1:
-        if atm not in lst2:
-            ret = atm
-    assert ret is not None, (
-        'problem with bond_key {}'.format(lst1))
-    return ret
+def add_appropriate_pi_bonds(gra):
+    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
+    unsat_atms_dct = automol.graph.atom_unsaturated_valences(gra)
+    atms, bnd_ords = gra
+    brk_key = frozenset({})
+    unsat_atms = []
+    for atm in unsat_atms_dct:
+        if unsat_atms_dct[atm] > 0:
+            unsat_atms.append(atm)
+    for atmi in unsat_atms:
+        for atmj in unsat_atms:
+            if atmi > atmj:
+                if atmi in adj_atms[atmj]:
+                    key = [atmi, atmj]
+                    key.sort()
+                    key = frozenset(key)
+                    brk_key = key
+                    bnd, tmp = bnd_ords[key]
+                    bnd_ords[key] = (bnd + 1, tmp)
+
+    return (atms, bnd_ords), brk_key
 
 
-def _remove_dummies(zma, frm_key, brk_key, geo=None):
+def elimination_second_forming_bond(gra, brk_key1, brk_key2):
+    frm_bnd2 = frozenset({})
+    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
+    for atm1 in brk_key1:
+        for atm2 in brk_key2:
+            if atm2 in adj_atms[atm1]:
+                frm_bnd2 = [atm1, atm2]
+                frm_bnd2.sort()
+                frm_bnd2 = frozenset(frm_bnd2)
+    return frm_bnd2
+
+
+def ring_forming_forming_bond(gra, brk_key):
+    """ Add in missing forming bond for ring forming scission reactions
+    """
+    frm_key = frozenset({})
+    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
+    rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
+    form_atm1 = rad_atms[0]
+    for break_atm in brk_key:
+        if adj_atms[break_atm] > 1:
+            form_atm2 = break_atm
+            frm_key = frozenset({form_atm1, form_atm2})
+    return frm_key
+
+
+def elimination_find_brk_bnds(gra, frm_key):
+    brk_key1 = frozenset({})
+    brk_key2 = frozenset({})
+    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
+    atms, _ = gra
+    atm1, atm2 = frm_key
+    atm3, atm4 = list(adj_atms[atm1])[0], list(adj_atms[atm2])[0]
+    if atms[atm1][0] == 'H':
+        brk_key1 = [atm1, atm3]
+    elif atms[atm1][0] == 'O':
+        for atm5 in adj_atms[atm3]:
+            if atm5 != atm1:
+                brk_key1 = [atm3, atm5]
+    if atms[atm2][0] == 'H':
+        brk_key2 = [atm2, atm4]
+    elif atms[atm2][0] == 'O':
+        for atm6 in adj_atms[atm4]:
+            if atm6 != atm2:
+                brk_key2 = [atm4, atm6]
+    brk_key1.sort()
+    brk_key2.sort()
+
+    return frozenset(brk_key1), frozenset(brk_key2)
+
+
+def split_bnd_keys(bnd_keys):
+    bnd_key1 = None
+    bnd_key2 = None
+    bnd_keys = list(bnd_keys)
+    if len(bnd_keys) > 0:
+        bnd_key1 = bnd_keys[0]
+        if len(bnd_keys) > 1:
+            bnd_key2 = bnd_keys[1]
+    return bnd_key1, bnd_key2
+
+
+def remove_dummies(zma, frm_key, brk_key, geo=None):
     """get zma and bond key idxs without dummy atoms
     """
     zgeo = automol.zmat.geometry(zma)
@@ -506,16 +592,22 @@ def _remove_dummies(zma, frm_key, brk_key, geo=None):
     return gra, frm_key, brk_key, brk_key2
 
 
-def _remove_frm_bnd(gra, brk_key, frm_key):
+def remove_frm_bnd(gra, brk_key, frm_key):
+    """
+    """
     bond_keys = automol.graph.bond_keys(gra)
     if brk_key and brk_key not in bond_keys:
         gra = automol.graph.add_bonds(gra, [brk_key])
     if frm_key and frm_key in bond_keys:
         gra = automol.graph.remove_bonds(gra, [frm_key])
+
     return gra
 
 
-def _add_appropriate_pi_bonds(gra):
+def add_appropriate_pi_bonds(gra):
+    """ Add pi bonds to graphs
+    """
+
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
     unsat_atms_dct = automol.graph.atom_unsaturated_valences(gra)
     atms, bnd_ords = gra
@@ -538,7 +630,10 @@ def _add_appropriate_pi_bonds(gra):
     return (atms, bnd_ords), brk_key
 
 
-def _elimination_second_forming_bond(gra, brk_key1, brk_key2):
+def elimination_second_forming_bond(gra, brk_key1, brk_key2):
+    """
+    """
+
     frm_bnd2 = frozenset({})
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
     for atm1 in brk_key1:
@@ -547,12 +642,14 @@ def _elimination_second_forming_bond(gra, brk_key1, brk_key2):
                 frm_bnd2 = [atm1, atm2]
                 frm_bnd2.sort()
                 frm_bnd2 = frozenset(frm_bnd2)
+
     return frm_bnd2
 
 
-def _ring_forming_forming_bond(gra, brk_key):
+def ring_forming_forming_bond(gra, brk_key):
     """ Add in missing forming bond for ring forming scission reactions
     """
+
     frm_key = frozenset({})
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
@@ -561,10 +658,14 @@ def _ring_forming_forming_bond(gra, brk_key):
         if adj_atms[break_atm] > 1:
             form_atm2 = break_atm
             frm_key = frozenset({form_atm1, form_atm2})
+
     return frm_key
 
 
-def _elimination_find_brk_bnds(gra, frm_key):
+def elimination_find_brk_bnds(gra, frm_key):
+    """
+    """
+
     brk_key1 = frozenset({})
     brk_key2 = frozenset({})
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
@@ -589,7 +690,10 @@ def _elimination_find_brk_bnds(gra, frm_key):
     return frozenset(brk_key1), frozenset(brk_key2)
 
 
-def _split_bnd_keys(bnd_keys):
+def split_bnd_keys(bnd_keys):
+    """ 
+    """
+
     bnd_key1 = None
     bnd_key2 = None
     bnd_keys = list(bnd_keys)
@@ -598,151 +702,3 @@ def _split_bnd_keys(bnd_keys):
         if len(bnd_keys) > 1:
             bnd_key2 = bnd_keys[1]
     return bnd_key1, bnd_key2
-
-
-def _add2dic(dic, key, val=1):
-    """ helper function to add a key to dct
-    """
-    if key in dic:
-        dic[key] += val
-    else:
-        dic[key] = val
-
-
-def _lhs_rhs(frags):
-    """ Determine the left-hand side and right-hand side of reaction
-    """
-    rhs = {}
-    lhs = {}
-    for frag in frags:
-        if frags[frag] > 0:
-            rhs[frag] = frags[frag]
-        elif frags[frag] < 0:
-            lhs[frag] = - frags[frag]
-    return lhs, rhs
-
-
-def print_lhs_rhs(ich, frags):
-    """ print the fragments from each side of the reaction
-    """
-    lhs, rhs = _lhs_rhs(frags)
-    lhsprint = automol.inchi.smiles(ich)
-    rhsprint = ''
-    for frag in rhs:
-        if rhsprint:
-            rhsprint += ' +  {:.1f} {} '.format(
-                rhs[frag], automol.inchi.smiles(frag))
-        else:
-            rhsprint = ' {:.1f} {} '.format(
-                rhs[frag], automol.inchi.smiles(frag))
-    for frag in lhs:
-        lhsprint += ' +  {:.1f} {} '.format(
-            lhs[frag], automol.inchi.smiles(frag))
-    return '{} --> {}'.format(lhsprint, rhsprint)
-
-
-def _balance(ich, frags):
-    """ balance the equation?
-    """
-    stoichs = {}
-    for frag in frags:
-        _stoich = util.stoich(frag)
-        for atm in _stoich:
-            if atm in stoichs:
-                stoichs[atm] += _stoich[atm] * frags[frag]
-            else:
-                stoichs[atm] = _stoich[atm] * frags[frag]
-    balance_ = {}
-    _stoich = util.stoich(ich)
-    for atom in _stoich:
-        if atom in stoichs:
-            balance_[atom] = _stoich[atom] - stoichs[atom]
-        else:
-            balance_[atom] = _stoich[atom]
-    balance_ = {x: y for x, y in balance_.items() if y != 0}
-    return balance_
-
-
-def _balance_ts(gra, frags):
-    """ balance the equation using graphs
-    """
-    stoichs = {}
-    for frag in frags:
-        if 'exp_gra' in frags[frag]:
-            _stoich = automol.graph.formula(frags[frag]['exp_gra'])
-        elif 'ts_gra' in frags[frag]:
-            _stoich = util.stoich_gra(frags[frag]['ts_gra'])
-        for atm in _stoich:
-            if atm in stoichs:
-                stoichs[atm] += _stoich[atm] * frags[frag]['coeff']
-            else:
-                stoichs[atm] = _stoich[atm] * frags[frag]['coeff']
-    balance_ = {}
-    _stoich = util.stoich_gra(gra)
-    for atom in _stoich:
-        if atom in stoichs:
-            balance_[atom] = _stoich[atom] - stoichs[atom]
-        else:
-            balance_[atom] = _stoich[atom]
-    balance_ = {x: y for x, y in balance_.items() if y != 0}
-    return balance_
-
-
-def _balance_frags(ich, frags):
-    """ balance the equation?
-    """
-    balance_ = _balance(ich, frags)
-    methane = automol.smiles.inchi('C')
-    water = automol.smiles.inchi('O')
-    ammonm = automol.smiles.inchi('N')
-    hydrgn = automol.smiles.inchi('[H][H]')
-    if 'C' in balance_:
-        _add2dic(frags, methane, balance_['C'])
-    if 'N' in balance_:
-        _add2dic(frags, ammonm, balance_['N'])
-    if 'O' in balance_:
-        _add2dic(frags, water, balance_['O'])
-    balance_ = _balance(ich, frags)
-    if 'H' in balance_:
-        _add2dic(frags, hydrgn, balance_['H']/2)
-    return frags
-
-
-def _balance_frags_ts(gra, frags):
-    """ balance the equation?
-    """
-    balance_ = _balance_ts(gra, frags)
-    methane = automol.smiles.inchi('C')
-    water = automol.smiles.inchi('O')
-    ammonm = automol.smiles.inchi('N')
-    hydrgn = automol.smiles.inchi('[H][H]')
-    methane = automol.inchi.graph(methane)
-    water = automol.inchi.graph(water)
-    ammonm = automol.inchi.graph(ammonm)
-    hydrgn = automol.inchi.graph(hydrgn)
-    idx_dct = []
-    for spc in [methane, water, ammonm, hydrgn]:
-        spc = automol.graph.explicit(spc)
-        found = False
-        for frag in frags:
-            if 'exp_gra' in frags[frag]:
-                if automol.graph.full_isomorphism(frags[frag]['exp_gra'], spc):
-                    idx = frag
-                    found = True
-                    break
-        if not found:
-            idx = len(frags.keys())
-            frags[idx] = {}
-            frags[idx]['exp_gra'] = spc
-            frags[idx]['coeff'] = 0.0
-        idx_dct.append(idx)
-    if 'C' in balance_:
-        _add2dic(frags[idx_dct[0]], 'coeff', balance_['C'])
-    if 'N' in balance_:
-        _add2dic(frags[idx_dct[1]], 'coeff', balance_['N'])
-    if 'O' in balance_:
-        _add2dic(frags[idx_dct[2]], 'coeff', balance_['O'])
-    balance_ = _balance_ts(gra, frags)
-    if 'H' in balance_:
-        _add2dic(frags[idx_dct[3]], 'coeff', balance_['H']/2)
-    return frags

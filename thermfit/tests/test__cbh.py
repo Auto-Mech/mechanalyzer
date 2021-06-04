@@ -6,6 +6,7 @@ import thermfit.cbh
 
 
 # Species ZMA
+CH3CH2OH_ICH = 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3'
 CH3CH2OH_ZMA = (
     ('C', (None, None, None), (None, None, None),
      (None, None, None)),
@@ -99,8 +100,13 @@ products keys:
 def test__species():
     """ test
     """
-    basis = thermfit.cbh.species_cbh_basis(CH3CH2OH_ZMA, 'cbh0')
+    basis = thermfit.cbh.species_cbh_basis(CH3CH2OH_ICH, 'cbh0')
     print(basis)
+
+    assert basis == (
+        ('InChI=1S/CH4/h1H4', 'InChI=1S/H2O/h1H2', 'InChI=1S/H2/h1H'),
+        (2, 1, -2.0)
+    )
 
 
 def test__transition_state():
@@ -109,6 +115,14 @@ def test__transition_state():
     zrxn = automol.reac.from_string(ZRXN_STR)
     basis = thermfit.cbh.ts_cbh_basis(zrxn, 'cbh0')
     print(basis)
+
+    assert basis == (
+        ['InChI=1S/H2O/h1H2', 'InChI=1S/CH4/h1H4',
+         (('InChI=1S/CH4/h1H4', 'InChI=1S/CH3/h1H3'),
+          ('InChI=1S/CH4/h1H4', 'InChI=1S/CH3/h1H3')),
+         'InChI=1S/H2/h1H'],
+        [1.0, 1.0, 1.0, -2.0]
+    )
 
 
 if __name__ == '__main__':

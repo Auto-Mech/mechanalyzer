@@ -1,8 +1,8 @@
-""" test thermfit.basis
+""" test thermfit.cbh
 """
 
 import numpy
-import thermfit.basis
+import thermfit.cbh
 
 
 # Formula dicts for various species
@@ -18,12 +18,12 @@ def test__():
     """ test basis
     """
 
-    c3h8_basis = thermfit.basis.basis_species(C3H8_FML)
-    c3h7oh_basis = thermfit.basis.basis_species(C3H7OH_FML)
-    c3h7nh2_basis = thermfit.basis.basis_species(C3H7NH2_FML)
-    c3h7cl_basis = thermfit.basis.basis_species(C3H7CL_FML)
-    ch3ch2sch3_basis = thermfit.basis.basis_species(CH3CH2SCH3_FML)
-    hoch2ch2sch3_basis = thermfit.basis.basis_species(HOCH2CH2SCH3_FML)
+    c3h8_basis = thermfit.cbh.basis_species(C3H8_FML)
+    c3h7oh_basis = thermfit.cbh.basis_species(C3H7OH_FML)
+    c3h7nh2_basis = thermfit.cbh.basis_species(C3H7NH2_FML)
+    c3h7cl_basis = thermfit.cbh.basis_species(C3H7CL_FML)
+    ch3ch2sch3_basis = thermfit.cbh.basis_species(CH3CH2SCH3_FML)
+    hoch2ch2sch3_basis = thermfit.cbh.basis_species(HOCH2CH2SCH3_FML)
 
     assert c3h8_basis == (
         'InChI=1S/H2/h1H',
@@ -51,17 +51,17 @@ def test__():
         'InChI=1S/H2O/h1H2',
         'InChI=1S/O2S/c1-3-2')
 
-    c3h8_cffs = thermfit.basis.basis_coefficients(
+    c3h8_cffs = thermfit.cbh.basis_coefficients(
         c3h8_basis, C3H8_FML)
-    c3h7oh_cffs = thermfit.basis.basis_coefficients(
+    c3h7oh_cffs = thermfit.cbh.basis_coefficients(
         c3h7oh_basis, C3H7OH_FML)
-    c3h7nh2_cffs = thermfit.basis.basis_coefficients(
+    c3h7nh2_cffs = thermfit.cbh.basis_coefficients(
         c3h7nh2_basis, C3H7NH2_FML)
-    c3h7cl_cffs = thermfit.basis.basis_coefficients(
+    c3h7cl_cffs = thermfit.cbh.basis_coefficients(
         c3h7cl_basis, C3H7CL_FML)
-    ch3ch2sch3_cffs = thermfit.basis.basis_coefficients(
+    ch3ch2sch3_cffs = thermfit.cbh.basis_coefficients(
         ch3ch2sch3_basis, CH3CH2SCH3_FML)
-    hoch2ch2sch3_cffs = thermfit.basis.basis_coefficients(
+    hoch2ch2sch3_cffs = thermfit.cbh.basis_coefficients(
         hoch2ch2sch3_basis, HOCH2CH2SCH3_FML)
 
     assert numpy.allclose(c3h8_cffs, numpy.array([-2.,  3.]))

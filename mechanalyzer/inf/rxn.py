@@ -51,6 +51,21 @@ def from_dct(reacs, prods, spc_dct, rxn_mul='low'):
     return rxn_info
 
 
+def from_data(rxn_ichs, rxn_chgs, rxn_muls, ts_mul):
+    """ Constructs a full reaction info object using the constituent data.
+
+        :param rxn_ichs: InChI strings for reactants and products
+        :type rxn_ichs: tuple(tuple(str), tuple(str))
+        :param rxn_chgs: electric charges of reactants and products
+        :type rxn_chgs: tuple(tuple(int), tuple(int))
+        :param rxn_muls: spin multiplicities of reactants and products
+        :type rxn_muls: tuple(tuple(int), tuple(int))
+        :param ts_mul: spin multiplicity of reaction transition state
+        :type ts_mul: int
+    """
+    return (rxn_ichs, rxn_chgs, rxn_muls, ts_mul)
+
+
 def value(inf_obj, val):
     """ Obtain a desired value from a reaction info object.
 
