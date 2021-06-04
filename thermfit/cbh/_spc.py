@@ -1,4 +1,7 @@
 """ Computes the Heat of Formation at 0 K for a given species
+
+    Explanation of various basis determination schemes
+
 """
 
 import automol.inchi
@@ -13,17 +16,35 @@ def species_cbh_basis(ich, scheme, balance=True):
 
         :param ich
     """
-    frags = CBH_SCHEMES[scheme](ich, balance=balance)
 
-    frag_lst, coeff_lst = (), ()
-    for frag in frags:
-        frag_lst += (frag,)
-        coeff_lst += (frags[frag],)
+    if scheme == 'basic':
+        frag_lst, coeff_lst = basic(ich)
+    else:
+        frags = CBH_SCHEMES[scheme](ich, balance=balance)
+        frag_lst, coeff_lst = (), ()
+        for frag in frags:
+            frag_lst += (frag,)
+            coeff_lst += (frags[frag],)
+    
 
     return frag_lst, coeff_lst
 
 
 # Individual CBH-N calculators
+def basic(ich):
+    """ get basis for basic scheme
+    """
+
+    fml_dct = automol.inchi.formula(ich)
+    basis_ichs = basis_species(fml_dct)
+    if len(basis_ichs) == 1 and ich == basis_ichs[0]:
+        coeff_list = (1.0,)
+    else:
+        coeff_lst = basis_coefficients(basis_ichs, fml_dct)
+
+    return spc_bas, coeff_lst
+
+
 def cbhzed(ich, balance=True):
     """
     Fragments molecule so that each heavy-atom is a seperate fragment
@@ -376,13 +397,13 @@ def cbhthree(ich, balance=True):
 
 # Dictionary of schemes
 CBH_SCHEMES = {
-    # "basic": "get_basic",
+    'basic': basic,
     'cbh0': cbhzed,
     'cbh1': cbhone,
-    # "cbh1_0": "get_cbhone",
-    # "cbh1_1": "get_cbhone",
+    'cbh1_0': cbhone,
+    'cbh1_1': cbhone,
     'cbh2': cbhtwo,
-    # "cbh2_1": "get_cbhtwo",
-    # "cbh2_2": "get_cbhtwo",
+    'cbh2_1': cbhtwo,
+    'cbh2_2': cbhtwo,
     'cbh3': cbhthree
 }

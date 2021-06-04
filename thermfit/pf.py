@@ -1,5 +1,7 @@
 """ Handle arithmetic operations for partition functions and related
     information.
+
+    only works for one value for pfs?
 """
 
 import numpy
