@@ -107,7 +107,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
                 if spc != 'global' and 'ts' not in spc]
 
     # Determine the function to be used to get the thermochemistry ref species
-    if zrxn is not None:
+    if zrxn is None:
         get_ref_fxn = thermfit.cbh.species_cbh_basis
     else:
         get_ts_ref_fxn = thermfit.cbh.ts_cbh_basis
@@ -146,9 +146,9 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
                                     coeff_basis[j] += c_bas_i
         else:
             spc_basis, coeff_basis = get_ref_fxn(spc_ich, ref_scheme)
-        for i,  _ in enumerate(spc_basis):
-            if isinstance(spc_basis[i], str):
-                spc_basis[i] = automol.inchi.add_stereo(spc_basis[i])
+
+        spc_basis = tuple(automol.inchi.add_stereo(bas) for bas in spc_basis
+                          if isinstance(bas, str))
 
         msg += '\nInCHIs for basis set:'
         for base in spc_basis:
