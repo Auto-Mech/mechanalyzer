@@ -273,7 +273,8 @@ def _chk(ref, spc_ichs, dct_ichs, bas_ichs, repeats):
 
 # Basic Basis List builders
 def basis_species(atom_dct):
-    """
+    """ Build a list of basis species 
+
     Given a list of atoms, generates a list of molecules
     that is best suited to serve as a basis for those atoms
 

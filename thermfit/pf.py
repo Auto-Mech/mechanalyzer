@@ -8,7 +8,8 @@ import numpy
 
 
 def combine(pfs, coeffs, operators):
-    """ combine partition functions
+    """ Combine sets of partition function data together via some set
+        of input coefficients and arithmetic operations.
 
         _pf = [temps, logq, dq_dt, d2q_dt2]
     """
@@ -33,7 +34,16 @@ def combine(pfs, coeffs, operators):
 
 
 def _combine_pfs(pfa, pfb, coeff, operator):
-    """ Obtain the pf information of the multiplication of pfa and pfb
+    """ Combine two sets of partition function data together under
+        multiplication or division where the combined data is
+        weighted by some coefficient.
+
+        pfn = ((temp1, logq1, dqdt1, d2gdt21), (temp2, logq2, dqdt2, d2gdt22),)
+
+        :param pfa: partition function set A
+        :param pfb: partition function set B
+        :param coeff: weighting coefficient
+        :param operator: multiplication/division operator
     """
 
     tempsa, logqa, dq_dta, d2q_dt2a = pfa
