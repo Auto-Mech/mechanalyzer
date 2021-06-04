@@ -5,32 +5,13 @@ import automol.reac
 import thermfit.cbh
 
 
-# Species ZMA
+# Species
 CH3CH2OH_ICH = 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3'
-CH3CH2OH_ZMA = (
-    ('C', (None, None, None), (None, None, None),
-     (None, None, None)),
-    ('C', (0, None, None), ('R1', None, None),
-     (2.8621866421132123, None, None)),
-    ('H', (0, 1, None), ('R2', 'A2', None),
-     (2.0691950317120837, 1.9320905931404335, None)),
-    ('H', (0, 1, 2), ('R3', 'A3', 'D3'),
-     (2.0665277363750003, 1.9353637583977303, 2.108686322109069)),
-    ('H', (0, 1, 2), ('R4', 'A4', 'D4'),
-     (2.069152234029259, 1.930351996269131, 4.218481783495319)),
-    ('O', (1, 0, 2), ('R5', 'A5', 'D5'),
-     (2.683747067528887, 1.9194991329920528, 1.0492575691901376)),
-    ('H', (1, 0, 5), ('R6', 'A6', 'D6'),
-     (2.067751813667005, 1.9377163905267163, 4.182292202036946)),
-    ('H', (1, 0, 5), ('R7', 'A7', 'D7'),
-     (2.0671092193398275, 1.928341045304867, 2.082936263972801)),
-    ('H', (5, 1, 0), ('R8', 'A8', 'D8'),
-     (1.8376095698733521, 1.8770195234414855, 5.238498010242486)))
 # Example for high-level CBH schemes
 # Radical Example
 
 # TS ZRXN OBJECTS
-ZRXN_STR = """
+HYD_ABS_ZRXN_STR = """
 reaction class: hydrogen abstraction
 forward TS atoms:
   1: {symbol: O, implicit_hydrogen_valence: 0, stereo_parity: null}
@@ -100,7 +81,7 @@ products keys:
 def test__species():
     """ test
     """
-    basis = thermfit.cbh.species_cbh_basis(CH3CH2OH_ICH, 'cbh0')
+    basis = thermfit.cbh.species_basis(CH3CH2OH_ICH, 'cbh0')
     print(basis)
 
     assert basis == (
@@ -109,12 +90,11 @@ def test__species():
     )
 
 
-def test__transition_state():
+def test__transition_states():
     """ test
     """
-    zrxn = automol.reac.from_string(ZRXN_STR)
-    basis = thermfit.cbh.ts_cbh_basis(zrxn, 'cbh0')
-    print(basis)
+    zrxn = automol.reac.from_string(HYD_ABS_ZRXN_STR)
+    basis = thermfit.cbh.ts_basis(zrxn, 'cbh0')
 
     assert basis == (
         ['InChI=1S/H2O/h1H2', 'InChI=1S/CH4/h1H4',
@@ -127,4 +107,4 @@ def test__transition_state():
 
 if __name__ == '__main__':
     test__species()
-    test__transition_state()
+    test__transition_states()
