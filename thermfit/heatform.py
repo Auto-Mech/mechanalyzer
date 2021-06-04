@@ -30,14 +30,14 @@ def calc_hform_0k(spc_h0, basis_h0,
     """
 
     dhzero = spc_h0
-    for i, spc in enumerate(basis):
+    for i, ich in enumerate(basis_ichs):
 
         # Read reference enthalpies for basis molecule
-        ref_h0 = reference_enthalpy(spc, ref_set, 0, rxn=rxn)
-        ref_h0 = ref_h0 if ref_h0 is not None: else 0.0  # break loop?
+        ref_h0 = reference_enthalpy(ich, ref_set, 0, rxn=rxn)
+        ref_h0 = ref_h0 if ref_h0 is not None else 0.0  # break loop?
 
         # Add basis and reference energies to overall va
-        dhzero += coeff[i] * (ref_h0 - basis_h0[i])
+        dhzero += basis_coeffs[i] * (ref_h0 - basis_h0[i])
 
     return dhzero
 
@@ -52,7 +52,7 @@ def reference_enthalpy(ich_lookup, ref_set, temp, rxn=False):
         :type ich_lookup: str
         :param ref_set: database set to read value from
         :type ref_set: str
-        :param temp: temperature to obtain enthalpy value for 
+        :param temp: temperature to obtain enthalpy value for
         :type temp: int
         :param rxn: parameter to read value for species or reaction
         :type rxn: bool
@@ -66,7 +66,7 @@ def reference_enthalpy(ich_lookup, ref_set, temp, rxn=False):
     with open(thermodb_file, 'r') as db_file:
         reader = csv.DictReader(db_file)
         for row in reader:
-            if row['inchi'] == species:
+            if row['inchi'] == ich_lookup:
                 val = row[ref_set]
                 if val == '':
                     val = None
@@ -80,7 +80,7 @@ def reference_enthalpy(ich_lookup, ref_set, temp, rxn=False):
             hf_val *= phycon.KJ2EH
     else:
         print('No Heat for Formation exists:')
-        print('SPC:{} Set:{} Temp:{}K'.format(species, ref_set, temp)
+        print('SPC:{} Set:{} Temp:{}K'.format(ich_lookup, ref_set, temp))
 
     return hf_val
 
@@ -101,16 +101,16 @@ def format_reaction_inchi(rxn_ichs):
     return species
 
 
-def _thermo_database(temp, rxn=rxn):
+def _thermo_database(temp, rxn=False):
     """ Set the path to appropriate database to read based on the
         desired temperature and whether the user intends to read a value
         for a species or transition state.
-        
-        :param temp: temperature to obtain enthalpy value for 
+
+        :param temp: temperature to obtain enthalpy value for
         :type temp: int
         :param rxn: parameter to look for species or reaction
         :type rxn: bool
-        :rtype: str 
+        :rtype: str
     """
 
     if rxn:

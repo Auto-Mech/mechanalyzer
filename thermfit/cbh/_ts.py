@@ -18,7 +18,7 @@ def ts_cbh_basis(zrxn, scheme):
         :type zrxn: automol.reac.Reaction object
         :param scheme: CBH scheme to determine basis for
         :type scheme: str
-        :rtype: (tuple(str), list(float))  
+        :rtype: (tuple(str), list(float))
     """
 
     rxnclass = automol.reac.reaction_class(zrxn)
@@ -33,13 +33,13 @@ def ts_cbh_basis(zrxn, scheme):
     site2 = None
 
     #  Elimination missing the forming double bond
-    if 'elimination' in rxnclass:
+    if rxnclass == ReactionClass.Typ.ELIMINATION:
         # brk_key, brk_key2 = _elimination_find_brk_bnds(gra, frm_key1)
         frm_key2 = tsutil.elimination_second_forming_bond(
             gra, brk_key1, brk_key2)
 
     #  Addition is missing the 2nd order bond in the graph
-    elif 'addition' in rxnclass:
+    elif rxnclass == ReactionClass.Typ.ADDITION:
         gra, brk_key1 = tsutil.add_appropriate_pi_bonds(gra)
         if not brk_key1:
             gra = tsutil.remove_frm_bnd(gra, brk_key1, frm_key1)
@@ -49,7 +49,7 @@ def ts_cbh_basis(zrxn, scheme):
     gra = tsutil.remove_frm_bnd(gra, brk_key2, frm_key2)
 
     # The first set of forming and breaking bonds makes the first reaction site
-    if frm_key1 and brk_key1 and 'elimination' not in rxnclass:
+    if frm_key1 and brk_key1 and rxnclass != ReactionClass.Typ.ELIMINATION:
         site = [
             tsutil.xor(frm_key1, brk_key1),
             tsutil.intersec(frm_key1, brk_key1),
@@ -57,7 +57,7 @@ def ts_cbh_basis(zrxn, scheme):
 
     #  eliminations are one large reaction site that we split into
     # site1 and site2 for convieninece
-    if 'elimination' in rxnclass:
+    if rxnclass == ReactionClass.Typ.ELIMINATION:
         try:
             site = [
                 tsutil.xor(frm_key1, brk_key1),
@@ -77,7 +77,7 @@ def ts_cbh_basis(zrxn, scheme):
                 tsutil.intersec(frm_key2, brk_key2),
                 tsutil.xor(brk_key2, frm_key2)]
 
-    elif 'beta scission' in rxnclass:
+    elif rxnclass == ReactionClass.Typ.BETA_SCISSION:
         rad_atm = list(automol.graph.sing_res_dom_radical_atom_keys(gra))[0]
         adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
         site = [rad_atm, None, None]
@@ -175,28 +175,28 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
             coeff = 1.0
             if not bal:
                 if atm in site1 + site2:
-                    non_hyd_adj_atms1 = tsutil.remove_hyd_from_adj_atms(
+                    nonhyd_adj_atms1 = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[site1[0]], site2,
                         other_adj=adj_atms[site2[0]])
-                    non_hyd_adj_atms2 = tsutil.remove_hyd_from_adj_atms(
+                    nonhyd_adj_atms2 = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[site2[0]], site1,
                         other_adj=adj_atms[site1[0]])
-                    non_hyd_adj_atms1 = tuple(adj for adj in non_hyd_adj_atms1
+                    nonhyd_adj_atms1 = tuple(adj for adj in nonhyd_adj_atms1
                                               if adj not in site1)
-                    non_hyd_adj_atms1 = tuple(adj for adj in non_hyd_adj_atms2
+                    nonhyd_adj_atms1 = tuple(adj for adj in nonhyd_adj_atms2
                                               if adj not in site2)
                     coeff = (
                         util.branch_point(
-                            non_hyd_adj_atms1, non_hyd_adj_atms2) *
+                            nonhyd_adj_atms1, nonhyd_adj_atms2) *
                         util.terminal_moiety(
-                            non_hyd_adj_atms1, non_hyd_adj_atms2)
+                            nonhyd_adj_atms1, nonhyd_adj_atms2)
                     )
                 else:
-                    non_hyd_adj_atms = tsutil.remove_hyd_from_adj_atms(
+                    nonhyd_adj_atms = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[atm])
                     coeff = (
-                        util.branch_point(non_hyd_adj_atms) *
-                        util.terminal_moiety(non_hyd_adj_atms)
+                        util.branch_point(nonhyd_adj_atms) *
+                        util.terminal_moiety(nonhyd_adj_atms)
                     )
             if atm == site1[0]:
                 key1 = [site1[0], site1[1]]
@@ -390,7 +390,7 @@ def cbhone_radradabs(gra, site1, site2, bal=True):
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
             frags = util.balance_frags_ts(gra, frags)
-    frags = util.simplify_gra_frags(frags)
+    frags = tsutil.simplify_gra_frags(frags)
 
     return frags
 
@@ -419,28 +419,26 @@ def cbhzed_elim(gra, site1, site2, bal=True):
             coeff = 1.0
             if not bal:
                 if atm in site1:
-                    non_hyd_adj_atms1 = tsutil.remove_hyd_from_adj_atms(
+                    nonhyd_adj_atms1 = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[site1[1]], othersite=site2)
-                    non_hyd_adj_atms2 = tsutil.remove_hyd_from_adj_atms(
+                    nonhyd_adj_atms2 = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[site2[2]], othersite=site1)
-                    for adj in non_hyd_adj_atms1:
-                        if adj in site1:
-                            non_hyd_adj_atms1.remove(adj)
-                    for adj in non_hyd_adj_atms2:
-                        if adj in site2:
-                            non_hyd_adj_atms2.remove(adj)
+                    nonhyd_adj_atms1 = tuple(adj for adj in nonhyd_adj_atms1
+                                              if adj not in site1)
+                    nonhyd_adj_atms1 = tuple(adj for adj in nonhyd_adj_atms2
+                                              if adj not in site2)
                     coeff = (
                         util.branch_point(
-                            non_hyd_adj_atms1, non_hyd_adj_atms2) *
+                            nonhyd_adj_atms1, nonhyd_adj_atms2) *
                         util.terminal_moiety(
-                            non_hyd_adj_atms1, non_hyd_adj_atms2)
+                            nonhyd_adj_atms1, nonhyd_adj_atms2)
                     )
                 else:
-                    non_hyd_adj_atms = tsutil.remove_hyd_from_adj_atms(
+                    nonhyd_adj_atms = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[atm])
                     coeff = (
-                        util.branch_point(non_hyd_adj_atms) *
-                        util.terminal_moiety(non_hyd_adj_atms)
+                        util.branch_point(nonhyd_adj_atms) *
+                        util.terminal_moiety(nonhyd_adj_atms)
                     )
             if atm == site1[0]:
                 key1 = [site1[0], site1[1]]
@@ -530,31 +528,31 @@ def cbhzed_habs(gra, site, bal=True):
             coeff = 1.0
             if not bal:
                 if atm in site:
-                    non_hyd_adj_atms1 = tsutil.remove_hyd_from_adj_atms(
+                    nonhyd_adj_atms1 = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[site[0]], site,
                         other_adj=adj_atms[site[2]])
-                    non_hyd_adj_atms2 = tsutil.remove_hyd_from_adj_atms(
+                    nonhyd_adj_atms2 = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[site[2]],
                         site, other_adj=adj_atms[site[0]])
-                    non_hyd_adj_atms3 = []
+                    nonhyd_adj_atms3 = []
                     for adj in adj_atms[site[0]]:
                         if adj in adj_atms[site[2]]:
-                            non_hyd_adj_atms3 = tsutil.remove_hyd_from_adj_atms(
+                            nonhyd_adj_atms3 = tsutil.remove_hyd_from_adj_atms(
                                 atms, adj_atms[adj], othersite=site)
                     coeff = (
                         util.branch_point(
-                            non_hyd_adj_atms1, non_hyd_adj_atms2,
-                            non_hyd_adj_atms3) *
+                            nonhyd_adj_atms1, nonhyd_adj_atms2,
+                            nonhyd_adj_atms3) *
                         util.terminal_moiety(
-                            non_hyd_adj_atms1, non_hyd_adj_atms2,
-                            non_hyd_adj_atms3, endisterm=False)
+                            nonhyd_adj_atms1, nonhyd_adj_atms2,
+                            nonhyd_adj_atms3, endisterm=False)
                     )
                 else:
-                    non_hyd_adj_atms = tsutil.remove_hyd_from_adj_atms(
+                    nonhyd_adj_atms = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[atm])
                     coeff = (
-                        util.branchpoint(non_hyd_adj_atms) *
-                        util.terminal_moiety(non_hyd_adj_atms)
+                        util.branch_point(nonhyd_adj_atms) *
+                        util.terminal_moiety(nonhyd_adj_atms)
                     )
             if atm == site[0]:
                 key1 = [site[0], site[1]]
