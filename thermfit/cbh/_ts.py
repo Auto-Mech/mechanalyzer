@@ -11,13 +11,14 @@ from thermfit.cbh import _util as util
 
 # Main CBH functions to call
 def ts_cbh_basis(zrxn, scheme):
-    """ get basis for CBH for a transition state structure
+    """ Determine basis species required for relative enthalpy calculations
+        for transition state structures for various CBH-n schemes.
 
-        :param zrxn: Z-Matrix oriented Reacti:
-        :type zrxn: automol.
-        :param scheme: CBH scheme
+        :param zrxn: reaction object oriented to Z-Matrix
+        :type zrxn: automol.reac.Reaction object
+        :param scheme: CBH scheme to determine basis for
         :type scheme: str
-
+        :rtype: (tuple(str), list(float))  
     """
 
     rxnclass = automol.reac.reaction_class(zrxn)
@@ -152,7 +153,7 @@ def ts_cbh_basis(zrxn, scheme):
     return fraglist, clist
 
 
-# Individual CBH-N calculators
+# Individual CBH-n calculators
 def cbhzed_radradabs(gra, site1, site2, bal=True):
     """
     Fragments molecule so that each heavy-atom is a seperate fragment

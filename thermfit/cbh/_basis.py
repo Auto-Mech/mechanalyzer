@@ -272,18 +272,6 @@ def _chk(ref, spc_ichs, dct_ichs, bas_ichs, repeats):
 
 
 # Basic Basis List builders
-def get_basic(ich):
-    """ get basis for basic scheme
-    """
-    formula_dct = automol.inchi.formula(ich)
-    spc_bas = basis_species(formula_dct)
-    if len(spc_bas) == 1 and ich == spc_bas[0]:
-        clist = [1.0]
-    else:
-        clist = basis_coefficients(spc_bas, formula_dct)
-    return spc_bas, clist
-
-
 def basis_species(atom_dct):
     """
     Given a list of atoms, generates a list of molecules
@@ -331,7 +319,7 @@ def basis_coefficients(basis, fml):
     """ Form a matrix consisting of the coefficients for the basis
         species to balance out the atoms.
 
-        :param basis: list of InChI strings for basis species
+        :param basis: InChI strings for basis species
         :type basis: tuple(str)
         :param fml: stoichiometric formula of species basis corresponds to
         :type fml: dict[str:int]
