@@ -11,7 +11,7 @@ import automol.inchi
 import automol.geom
 from phydat import phycon
 from mechanalyzer.inf import rxn as rinfo
-from thermfit import heatform
+import thermfit.cbh
 
 
 # FUNCTIONS TO PREPARE THE LIST OF REFERENCE SPECIES NEEDED FOR THERM CALCS #
@@ -107,10 +107,10 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
                 if spc != 'global' and 'ts' not in spc]
 
     # Determine the function to be used to get the thermochemistry ref species
-    if ref_scheme in REF_CALLS:
-        get_ref_fxn = getattr(heatform, REF_CALLS[ref_scheme])
-    if ref_scheme in TS_REF_CALLS:
-        get_ts_ref_fxn = getattr(heatform, TS_REF_CALLS[ref_scheme])
+    if zrxn is not None:
+        get_ref_fxn = thermfit.cbh.species_cbh_basis
+    else:
+        get_ts_ref_fxn = thermfit.cbh.ts_cbh_basis
 
     # Print the message
     msg = '\nDetermining reference molecules for scheme: {}'.format(ref_scheme)
@@ -124,7 +124,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
             rxnclass = automol.reac.reaction_class(zrxn)
             if (rxnclass in IMPLEMENTED_CBH_TS_CLASSES and
                'basic' not in ref_scheme):
-                spc_basis, coeff_basis = get_ts_ref_fxn(zrxn)
+                spc_basis, coeff_basis = get_ts_ref_fxn(zrxn, ref_scheme)
             else:
                 # Use a basic scheme
                 spc_basis = []
@@ -145,7 +145,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
                                 if bas_i == bas_j:
                                     coeff_basis[j] += c_bas_i
         else:
-            spc_basis, coeff_basis = get_ref_fxn(spc_ich)
+            spc_basis, coeff_basis = get_ref_fxn(spc_ich, ref_scheme)
         for i,  _ in enumerate(spc_basis):
             if isinstance(spc_basis[i], str):
                 spc_basis[i] = automol.inchi.add_stereo(spc_basis[i])
@@ -273,7 +273,7 @@ def _chk(ref, spc_ichs, dct_ichs, bas_ichs, repeats):
 
 # Basic Basis List builders
 def basis_species(atom_dct):
-    """ Build a list of basis species 
+    """ Build a list of basis species
 
     Given a list of atoms, generates a list of molecules
     that is best suited to serve as a basis for those atoms

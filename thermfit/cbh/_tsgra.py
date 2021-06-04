@@ -45,7 +45,7 @@ def ts_graph(gra, site1, site2=None):
 
         :param gra:
         :type gra: automol
-        :param site1: 
+        :param site1:
     """
 
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
@@ -463,144 +463,15 @@ def simplify_gra_frags(frags):
 
 
 def remove_frm_bnd(gra, brk_key, frm_key):
+    """ Remove the formning bond and add the breaking bond
+        of a molecular graph.
+    """
+
     bond_keys = automol.graph.bond_keys(gra)
     if brk_key and brk_key not in bond_keys:
         gra = automol.graph.add_bonds(gra, [brk_key])
     if frm_key and frm_key in bond_keys:
         gra = automol.graph.remove_bonds(gra, [frm_key])
-    return gra
-
-
-def add_appropriate_pi_bonds(gra):
-    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
-    unsat_atms_dct = automol.graph.atom_unsaturated_valences(gra)
-    atms, bnd_ords = gra
-    brk_key = frozenset({})
-    unsat_atms = []
-    for atm in unsat_atms_dct:
-        if unsat_atms_dct[atm] > 0:
-            unsat_atms.append(atm)
-    for atmi in unsat_atms:
-        for atmj in unsat_atms:
-            if atmi > atmj:
-                if atmi in adj_atms[atmj]:
-                    key = [atmi, atmj]
-                    key.sort()
-                    key = frozenset(key)
-                    brk_key = key
-                    bnd, tmp = bnd_ords[key]
-                    bnd_ords[key] = (bnd + 1, tmp)
-
-    return (atms, bnd_ords), brk_key
-
-
-def elimination_second_forming_bond(gra, brk_key1, brk_key2):
-    frm_bnd2 = frozenset({})
-    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
-    for atm1 in brk_key1:
-        for atm2 in brk_key2:
-            if atm2 in adj_atms[atm1]:
-                frm_bnd2 = [atm1, atm2]
-                frm_bnd2.sort()
-                frm_bnd2 = frozenset(frm_bnd2)
-    return frm_bnd2
-
-
-def ring_forming_forming_bond(gra, brk_key):
-    """ Add in missing forming bond for ring forming scission reactions
-    """
-    frm_key = frozenset({})
-    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
-    rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
-    form_atm1 = rad_atms[0]
-    for break_atm in brk_key:
-        if adj_atms[break_atm] > 1:
-            form_atm2 = break_atm
-            frm_key = frozenset({form_atm1, form_atm2})
-    return frm_key
-
-
-def elimination_find_brk_bnds(gra, frm_key):
-    brk_key1 = frozenset({})
-    brk_key2 = frozenset({})
-    adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
-    atms, _ = gra
-    atm1, atm2 = frm_key
-    atm3, atm4 = list(adj_atms[atm1])[0], list(adj_atms[atm2])[0]
-    if atms[atm1][0] == 'H':
-        brk_key1 = [atm1, atm3]
-    elif atms[atm1][0] == 'O':
-        for atm5 in adj_atms[atm3]:
-            if atm5 != atm1:
-                brk_key1 = [atm3, atm5]
-    if atms[atm2][0] == 'H':
-        brk_key2 = [atm2, atm4]
-    elif atms[atm2][0] == 'O':
-        for atm6 in adj_atms[atm4]:
-            if atm6 != atm2:
-                brk_key2 = [atm4, atm6]
-    brk_key1.sort()
-    brk_key2.sort()
-
-    return frozenset(brk_key1), frozenset(brk_key2)
-
-
-def split_bnd_keys(bnd_keys):
-    bnd_key1 = None
-    bnd_key2 = None
-    bnd_keys = list(bnd_keys)
-    if len(bnd_keys) > 0:
-        bnd_key1 = bnd_keys[0]
-        if len(bnd_keys) > 1:
-            bnd_key2 = bnd_keys[1]
-    return bnd_key1, bnd_key2
-
-
-def remove_dummies(zma, frm_key, brk_key, geo=None):
-    """get zma and bond key idxs without dummy atoms
-    """
-    zgeo = automol.zmat.geometry(zma)
-    brk_key2 = None
-    if isinstance(brk_key, list):
-        brk_key, brk_key2 = brk_key
-    dummy_idxs = automol.geom.dummy_atom_indices(zgeo)
-    for idx in dummy_idxs:
-        if frm_key:
-            frm1, frm2 = frm_key
-            if idx < frm1:
-                frm1 -= 1
-            if idx < frm2:
-                frm2 -= 1
-            frm_key = frozenset({frm1, frm2})
-        if brk_key:
-            brk1, brk2 = brk_key
-            if idx < brk1:
-                brk1 -= 1
-            if idx < brk2:
-                brk2 -= 1
-            brk_key = frozenset({brk1, brk2})
-        if brk_key2:
-            brk3, brk4 = brk_key2
-            if idx < brk3:
-                brk3 -= 1
-            if idx < brk4:
-                brk4 -= 1
-            brk_key2 = frozenset({brk3, brk4})
-    if not geo:
-        geo = automol.geom.without_dummy_atoms(zgeo)
-    gra = automol.geom.graph(geo)
-    return gra, frm_key, brk_key, brk_key2
-
-
-def remove_frm_bnd(gra, brk_key, frm_key):
-    """
-    """
-    bond_keys = automol.graph.bond_keys(gra)
-    if brk_key and brk_key not in bond_keys:
-        gra = automol.graph.add_bonds(gra, [brk_key])
-    if frm_key and frm_key in bond_keys:
-        gra = automol.graph.remove_bonds(gra, [frm_key])
-
     return gra
 
 
@@ -631,7 +502,7 @@ def add_appropriate_pi_bonds(gra):
 
 
 def elimination_second_forming_bond(gra, brk_key1, brk_key2):
-    """
+    """ a
     """
 
     frm_bnd2 = frozenset({})
@@ -649,7 +520,6 @@ def elimination_second_forming_bond(gra, brk_key1, brk_key2):
 def ring_forming_forming_bond(gra, brk_key):
     """ Add in missing forming bond for ring forming scission reactions
     """
-
     frm_key = frozenset({})
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
@@ -658,12 +528,11 @@ def ring_forming_forming_bond(gra, brk_key):
         if adj_atms[break_atm] > 1:
             form_atm2 = break_atm
             frm_key = frozenset({form_atm1, form_atm2})
-
     return frm_key
 
 
 def elimination_find_brk_bnds(gra, frm_key):
-    """
+    """ a
     """
 
     brk_key1 = frozenset({})
@@ -691,7 +560,7 @@ def elimination_find_brk_bnds(gra, frm_key):
 
 
 def split_bnd_keys(bnd_keys):
-    """ 
+    """ Obtain the indiviual keys of a forming/breaking bond keys.
     """
 
     bnd_key1 = None
@@ -701,4 +570,43 @@ def split_bnd_keys(bnd_keys):
         bnd_key1 = bnd_keys[0]
         if len(bnd_keys) > 1:
             bnd_key2 = bnd_keys[1]
+
     return bnd_key1, bnd_key2
+
+
+def remove_dummies(zma, frm_key, brk_key, geo=None):
+    """get zma and bond key idxs without dummy atoms
+    """
+
+    zgeo = automol.zmat.geometry(zma)
+    brk_key2 = None
+    if isinstance(brk_key, list):
+        brk_key, brk_key2 = brk_key
+    dummy_idxs = automol.geom.dummy_atom_indices(zgeo)
+    for idx in dummy_idxs:
+        if frm_key:
+            frm1, frm2 = frm_key
+            if idx < frm1:
+                frm1 -= 1
+            if idx < frm2:
+                frm2 -= 1
+            frm_key = frozenset({frm1, frm2})
+        if brk_key:
+            brk1, brk2 = brk_key
+            if idx < brk1:
+                brk1 -= 1
+            if idx < brk2:
+                brk2 -= 1
+            brk_key = frozenset({brk1, brk2})
+        if brk_key2:
+            brk3, brk4 = brk_key2
+            if idx < brk3:
+                brk3 -= 1
+            if idx < brk4:
+                brk4 -= 1
+            brk_key2 = frozenset({brk3, brk4})
+    if not geo:
+        geo = automol.geom.without_dummy_atoms(zgeo)
+    gra = automol.geom.graph(geo)
+
+    return gra, frm_key, brk_key, brk_key2
