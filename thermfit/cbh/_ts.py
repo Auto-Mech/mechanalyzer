@@ -4,13 +4,32 @@
 import automol.inchi
 import automol.graph
 import automol.formula
+import automol.reac
 from automol.par import ReactionClass
 from thermfit.cbh import _tsgra as tsutil
 from thermfit.cbh import _util as util
+from thermfit.cbh._basic import basic_ts_basis
 
 
 # Main CBH functions to call
-def ts_cbh_basis(zrxn, scheme):
+def ts_basis(zrxn, scheme):
+    """ Get the basis for the appropriate CBH scheme
+
+        :param zrxn: reaction object oriented to Z-Matrix
+        :type zrxn: automol.reac.Reaction object
+        :param scheme: CBH Scheme used to generate basis
+        :type scheme: str
+    """
+
+    if scheme == 'basic':
+        frag_lst, coeff_lst = basic_ts_basis(zrxn)
+    else:
+        frag_lst, coeff_lst = cbh_basis(zrxn, scheme)
+
+    return frag_lst, coeff_lst
+
+
+def cbh_basis(zrxn, scheme):
     """ Determine basis species required for relative enthalpy calculations
         for transition state structures for various CBH-n schemes.
 

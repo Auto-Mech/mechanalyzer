@@ -6,7 +6,6 @@ import os
 import math
 import multiprocessing
 import random
-import numpy
 import automol.inchi
 import automol.geom
 from phydat import phycon
@@ -26,7 +25,7 @@ IMPLEMENTED_CBH_TS_CLASSES = [
 
 
 # Set up the references for building
-def prepare_refs(ref_scheme, spc_dct, spc_queue,
+def prepare_refs(ref_scheme, spc_dct, spc_names,
                  repeats=False, parallel=False, zrxn=None):
     """ Generate all of the reference (basis) species for
         a list of species. Will also generate needed info
@@ -34,7 +33,6 @@ def prepare_refs(ref_scheme, spc_dct, spc_queue,
 
     add refs to species list as necessary
     """
-    spc_names = [spc[0] for spc in spc_queue]
 
     if parallel:
         nproc_avail = len(os.sched_getaffinity(0)) - 1
@@ -108,9 +106,9 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
 
     # Determine the function to be used to get the thermochemistry ref species
     if zrxn is None:
-        get_ref_fxn = thermfit.cbh.species_cbh_basis
+        get_ref_fxn = thermfit.cbh.species_basis
     else:
-        get_ts_ref_fxn = thermfit.cbh.ts_cbh_basis
+        get_ts_ref_fxn = thermfit.cbh.ts_basis
 
     # Print the message
     msg = '\nDetermining reference molecules for scheme: {}'.format(ref_scheme)
@@ -269,97 +267,3 @@ def _chk(ref, spc_ichs, dct_ichs, bas_ichs, repeats):
     )
 
     return ini or sec
-
-
-# Basic Basis List builders
-def basis_species(atom_dct):
-    """ Build a list of basis species
-
-    Given a list of atoms, generates a list of molecules
-    that is best suited to serve as a basis for those atoms
-
-    :param atomlist: list of atoms
-    :type atomlist: list
-    :param att: ???
-    :type att: ???
-
-    OUPUT:
-    basis    - recommended basis as a list of stoichiometries
-    """
-
-    # Get a list of all the atom types in the molecule
-    symbs = tuple(atom_dct.keys())
-
-    # Create list of inchi keys corresponding to basis species
-    basis = ()
-    # H2
-    basis += ('InChI=1S/H2/h1H',)
-    # CH4
-    if 'C' in symbs:
-        basis += ('InChI=1S/CH4/h1H4',)
-    # H2O
-    if 'O' in symbs:
-        basis += ('InChI=1S/H2O/h1H2',)
-    # NH3
-    if 'N' in symbs:
-        basis += ('InChI=1S/H3N/h1H3',)
-    # Cl2
-    if 'Cl' in symbs:
-        basis += ('InChI=1S/ClH/h1H',)
-        # basis += ('InChI=1S/Cl2/c1-2',)
-    # SO2
-    if 'S' in symbs:
-        basis += ('InChI=1S/O2S/c1-3-2',)
-        if 'O' not in symbs:
-            basis += ('InChI=1S/H2O/h1H2',)
-
-    return basis
-
-
-def basis_coefficients(basis, fml):
-    """ Form a matrix consisting of the coefficients for the basis
-        species to balance out the atoms.
-
-        :param basis: InChI strings for basis species
-        :type basis: tuple(str)
-        :param fml: stoichiometric formula of species basis corresponds to
-        :type fml: dict[str:int]
-        :rtype: numpy.ndarray
-    """
-
-    # Initialize an natoms x natoms matrix
-    nbasis = len(basis)
-    basis_mat = numpy.zeros((nbasis, nbasis))
-
-    # Get the basis formulae list
-    basis_formulae = [automol.inchi.formula_string(spc) for spc in basis]
-    for spc in basis_formulae:
-        basis_atom_dict = automol.formula.from_string(spc)
-        for atom in basis_atom_dict:
-            if atom not in fml:
-                fml[atom] = 0
-
-    # Set the elements of the matrix
-    for i, spc in enumerate(basis_formulae):
-        basis_atom_dict = automol.formula.from_string(spc)
-        basis_vals = []
-        for key in fml.keys():
-            if key in basis_atom_dict:
-                basis_vals.append(basis_atom_dict[key])
-            else:
-                basis_vals.append(0)
-        basis_mat[i] = basis_vals
-
-    #  Transpose
-    basis_mat = basis_mat.T
-
-    # Form stoich vector
-    stoich_vec = numpy.zeros(len(fml))
-    for i, key in enumerate(fml.keys()):
-        stoich_vec[i] = fml[key]
-
-    # Solve C = M^-1 S
-    basis_mat = numpy.linalg.inv(basis_mat)
-    coeff = numpy.dot(basis_mat, stoich_vec)
-
-    return coeff

@@ -7,9 +7,43 @@ import automol.geom
 
 
 # Basic Basis List builders
-def basic_basis(ich):
+def basic_ts_basis(zrxn):
+    """ Determine a basis for relative enthalpy calculations for a
+        transition states by looping over the reactants and building
+        a list of a simple species in a inear combination which
+        reproduces the number of atoms in the stoichiometry of the species.
+
+        Basis represented by list of InChI strings and array of coefficients.
+
+        :param zrxn: reaction object oriented to Z-Matrix
+        :type zrxn: automol.reac.Reaction object
+        :rtype: (tuple(str), numpy.ndarray)
+    """
+
+    # Just use reactants
+    rxn_ichs = automol.reac.reaction_inchis(zrxn)
+    rct_ichs, _ = rxn_ichs
+
+    basis, coeff_lst = [], []
+    for ich in rct_ichs:
+        spc_bas_i, coeff_bas_i = basic_spc_basis(ich)
+        for bas_i, c_bas_i in zip(spc_bas_i, coeff_bas_i):
+            if bas_i not in basis:
+                # Add basis and coefficients to list
+                basis.append(bas_i)
+                coeff_lst.append(c_bas_i)
+            else:
+                # Add coefficient value to existing coefficient value
+                for j, bas_j in enumerate(basis):
+                    if bas_i == bas_j:
+                        coeff_lst[j] += c_bas_i
+
+    return (tuple(basis), numpy.array(coeff_lst))
+
+
+def basic_spc_basis(ich):
     """ Determine a basis for relative enthalpy calculations for species
-        by builgding a list of a simple species in a inear combination which
+        by building a list of a simple species in a inear combination which
         reproduces the number of atoms in the stoichiometry of the species.
 
         Basis represented by list of InChI strings and array of coefficients.

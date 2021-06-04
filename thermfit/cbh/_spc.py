@@ -7,11 +7,11 @@ import automol.inchi
 import automol.graph
 import automol.formula
 from thermfit.cbh import _util as util
-from thermfit.cbh._basic import basic_basis
+from thermfit.cbh._basic import basic_spc_basis
 
 
 # Main callable function
-def species_cbh_basis(ich, scheme, balance=True):
+def species_basis(ich, scheme, balance=True):
     """ Get the basis for the appropriate CBH scheme
 
         :param ich: InChI string for spc
@@ -24,7 +24,7 @@ def species_cbh_basis(ich, scheme, balance=True):
     """
 
     if scheme == 'basic':
-        frag_lst, coeff_lst = basic_basis(ich)
+        frag_lst, coeff_lst = basic_spc_basis(ich)
     else:
         frags = CBH_SCHEMES[scheme](ich, balance=balance)
         frag_lst, coeff_lst = (), ()
