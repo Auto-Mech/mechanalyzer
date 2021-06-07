@@ -1,5 +1,4 @@
-""" Computes the Heat of Formation at 0 K for a given species
-
+""" Species CBH schemes
     Explanation of various basis determination schemes
 """
 

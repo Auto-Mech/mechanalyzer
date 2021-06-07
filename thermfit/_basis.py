@@ -14,9 +14,9 @@ import thermfit.cbh
 
 
 # FUNCTIONS TO PREPARE THE LIST OF REFERENCE SPECIES NEEDED FOR THERM CALCS #
-IMPLEMENTED_CBH_TS_CLASSES = [
-    'hydrogen abstraction high',
-    # 'hydrogen migration',
+# high not stored in the zrxn object
+CBH_TS_CLASSES = [
+    'hydrogen abstraction',
     'beta scission',
     'elimination high',
     'radical radical hydrogen abstraction high',
@@ -104,12 +104,6 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
     dct_ichs = [spc_dct[spc]['inchi'] for spc in spc_dct.keys()
                 if spc != 'global' and 'ts' not in spc]
 
-    # Determine the function to be used to get the thermochemistry ref species
-    if zrxn is None:
-        get_ref_fxn = thermfit.cbh.species_basis
-    else:
-        get_ts_ref_fxn = thermfit.cbh.ts_basis
-
     # Print the message
     msg = '\nDetermining reference molecules for scheme: {}'.format(ref_scheme)
     msg += '\n'
@@ -117,34 +111,16 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
     basis_dct = {}
     unique_refs_dct = {}
     for spc_name, spc_ich in zip(spc_names, spc_ichs):
+
+        # Build the basis set and coefficients for spc/TS
         msg += '\nDetermining basis for species: {}'.format(spc_name)
         if zrxn is not None:
             rxnclass = automol.reac.reaction_class(zrxn)
-            if (rxnclass in IMPLEMENTED_CBH_TS_CLASSES and
-               'basic' not in ref_scheme):
-                spc_basis, coeff_basis = get_ts_ref_fxn(zrxn, ref_scheme)
-            else:
-                # Use a basic scheme
-                spc_basis = []
-                coeff_basis = []
-                ts_ref_scheme = ref_scheme
-                if '_' in ts_ref_scheme:
-                    ts_ref_scheme = 'cbh' + ref_scheme.split('_')[1]
-                for spc_i in spc_dct[spc_name]['reacs']:
-                    bas_dct_i, _ = prepare_refs(
-                        ts_ref_scheme, spc_dct, [[spc_i, None]])
-                    spc_bas_i, coeff_bas_i = bas_dct_i[spc_i]
-                    for bas_i, c_bas_i in zip(spc_bas_i, coeff_bas_i):
-                        if bas_i not in spc_basis:
-                            spc_basis.append(bas_i)
-                            coeff_basis.append(c_bas_i)
-                        else:
-                            for j, bas_j in enumerate(spc_basis):
-                                if bas_i == bas_j:
-                                    coeff_basis[j] += c_bas_i
+            scheme = ref_scheme if rxnclass in CBH_TS_CLASSES else 'basic'
+            spc_basis, coeff_basis = thermfit.cbh.ts_basis(zrxn, ref_scheme)
         else:
-            spc_basis, coeff_basis = get_ref_fxn(spc_ich, ref_scheme)
-
+            spc_basis, coeff_basis = thermfit.cbh.species_basis(
+                spc_ich, ref_scheme)
         spc_basis = tuple(automol.inchi.add_stereo(bas) for bas in spc_basis
                           if isinstance(bas, str))
 
@@ -158,9 +134,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
         # Add to the dct with reference dct if it is not in the spc dct
         for ref in spc_basis:
             bas_ichs = [
-                unique_refs_dct[spc]['inchi']
-                if 'inchi' in unique_refs_dct[spc]
-                else unique_refs_dct[spc]['reacs']
+                unique_refs_dct[spc]['inchi'] if 'inchi' in unique_refs_dct[spc] else unique_refs_dct[spc]['reacs']
                 for spc in unique_refs_dct]
             cnt = len(list(unique_refs_dct.keys())) + 1
             if isinstance(ref, str):
