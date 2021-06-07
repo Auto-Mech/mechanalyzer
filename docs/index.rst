@@ -11,6 +11,7 @@ Welcome to MechAnalyzer's documentation!
     :caption: Contents:
 
     rst/proc
+    rst/typ
     rst/autolib/index
 
 
