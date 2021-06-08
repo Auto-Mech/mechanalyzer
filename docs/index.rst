@@ -10,9 +10,9 @@ Welcome to MechAnalyzer's documentation!
     :maxdepth: 2
     :caption: Contents:
 
+    rst/intro
     rst/proc
-    rst/typ
-    rst/autolib/index
+    rst/codedoc/index
 
 
 Indices and tables
