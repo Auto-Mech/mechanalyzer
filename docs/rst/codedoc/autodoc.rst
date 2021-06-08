@@ -1,7 +1,4 @@
 
-Documentation
-=============
-
 MechAnalyzer
 ------------
 
@@ -63,5 +60,14 @@ RateFit
 .. automodule:: ratefit.fit.chebyshev
    :members:
 .. automodule:: ratefit.fit.troe
+   :members:
+
+
+ThermFit
+--------
+
+.. automodule:: thermfit
+   :members:
+.. automodule:: thermfit.cbh
    :members:
 
