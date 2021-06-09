@@ -13,17 +13,6 @@ from mechanalyzer.inf import rxn as rinfo
 import thermfit.cbh
 
 
-# FUNCTIONS TO PREPARE THE LIST OF REFERENCE SPECIES NEEDED FOR THERM CALCS #
-# high not stored in the zrxn object
-CBH_TS_CLASSES = [
-    'hydrogen abstraction',
-    'beta scission',
-    'elimination high',
-    'radical radical hydrogen abstraction high',
-    'addition high'
-]
-
-
 # Set up the references for building
 def prepare_refs(ref_scheme, spc_dct, spc_names,
                  repeats=False, parallel=False, zrxn=None):
@@ -117,7 +106,8 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
         if zrxn is not None:
             rxnclass = automol.reac.reaction_class(zrxn)
             scheme = ref_scheme if rxnclass in CBH_TS_CLASSES else 'basic'
-            spc_basis, coeff_basis = thermfit.cbh.ts_basis(zrxn, ref_scheme)
+            spc_basis, coeff_basis = thermfit.cbh.ts_basis(
+                zrxn, scheme, spc_scheme=ref_scheme)
         else:
             spc_basis, coeff_basis = thermfit.cbh.species_basis(
                 spc_ich, ref_scheme)

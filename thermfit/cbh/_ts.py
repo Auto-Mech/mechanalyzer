@@ -8,25 +8,76 @@ import automol.reac
 from automol.par import ReactionClass
 from thermfit.cbh import _tsgra as tsutil
 from thermfit.cbh import _util as util
-from thermfit.cbh._basic import basic_ts_basis
+from thermfit.cbh._spc import species_basis
+
+
+CBH_TS_CLASSES = [
+    'hydrogen abstraction',
+    'beta scission',
+    'elimination high',
+    'radical radical hydrogen abstraction high',
+    'addition high'
+]
 
 
 # Main CBH functions to call
-def ts_basis(zrxn, scheme):
+def ts_basis(zrxn, scheme, spc_scheme=None):
     """ Get the basis for the appropriate CBH scheme
 
         :param zrxn: reaction object oriented to Z-Matrix
         :type zrxn: automol.reac.Reaction object
         :param scheme: CBH Scheme used to generate basis
         :type scheme: str
+        :param spc_scheme: CBH Scheme for species fragments used in `basic` TS scheme
+        :type spc_scheme: str
     """
 
     if scheme == 'basic':
-        frag_lst, coeff_lst = basic_ts_basis(zrxn)
+        spc_scheme = scheme if spc_scheme is not None else 'basic'
+        if '_' in spc_scheme:
+            spc_scheme = 'cbh' + spc_scheme.split('_')[1]
+        frag_lst, coeff_lst = basic_ts_basis(zrxn, spc_scheme=spc_scheme)
     else:
         frag_lst, coeff_lst = cbh_basis(zrxn, scheme)
 
     return frag_lst, coeff_lst
+
+
+def basic_ts_basis(zrxn, spc_scheme):
+    """ Determine a basis for relative enthalpy calculations for a
+        transition states by looping over the reactants and building
+        a list of a simple species in a inear combination which
+        reproduces the number of atoms in the stoichiometry of the species.
+
+        Basis represented by list of InChI strings and array of coefficients.
+
+        :param zrxn: reaction object oriented to Z-Matrix
+        :type zrxn: automol.reac.Reaction object
+        :param spc_scheme: CBH Scheme for species fragments
+        :type spc_scheme: str
+        :rtype: (tuple(str), numpy.ndarray)
+    """
+
+    # Just use reactants
+    rxn_ichs = automol.reac.reaction_inchis(zrxn)
+    rct_ichs, _ = rxn_ichs
+
+    basis, coeff_lst = [], []
+    for ich in rct_ichs:
+        spc_bas_i, coeff_bas_i = species_basis(ich, spc_scheme, balance=True)
+        for bas_i, c_bas_i in zip(spc_bas_i, coeff_bas_i):
+            if bas_i not in basis:
+                # Add basis and coefficients to list
+                basis.append(bas_i)
+                coeff_lst.append(c_bas_i)
+            else:
+                # Add coefficient value to existing coefficient value
+                for j, bas_j in enumerate(basis):
+                    if bas_i == bas_j:
+                        coeff_lst[j] += c_bas_i
+
+    return (tuple(basis), numpy.array(coeff_lst))
+
 
 
 def cbh_basis(zrxn, scheme):

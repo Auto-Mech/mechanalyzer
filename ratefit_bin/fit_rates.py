@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
   Script to fit rates for a standalone
 """
@@ -5,19 +6,17 @@
 import os
 import json
 import argparse
-import ioformat
 import ratefit
 
 
-def _read_json(path, file_name, remove_comments=None, remove_whitespace=False):
+def _read_json(path, file_name):
     """ read a json file, send to pathtools/mechanalyzer parser
     """
 
-    file_str = ioformat.pathtools.read_file(
-        path, file_name,
-        remove_comments=remove_comments, remove_whitespace=remove_whitespace)
-    if file_str is not None:
-        json_dct = json.load(file_str)
+    json_path = os.path.join(path, file_name)
+    if os.path.exists(json_path):
+        with open(json_path, 'r') as fobj:
+            json_dct = json.load(fobj)
     else:
         json_dct = None
 

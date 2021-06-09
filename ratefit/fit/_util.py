@@ -13,6 +13,8 @@ def filter_ktp_dct(inp_ktp_dct, bimol, tmin=None, tmax=None):
 
     filt_ktp_dct = {}
     for pressure, kt_lst in inp_ktp_dct.items():
+        print(pressure)
+        print(kt_lst)
         temps, kts = kt_lst[0], kt_lst[1]
         filt_temps, filt_kts = get_valid_tk(
             temps, kts, bimol, tmin=tmin, tmax=tmax)
