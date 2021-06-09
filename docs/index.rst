@@ -1,18 +1,27 @@
-.. MechAnalyzer documentation master file, created by
-   sphinx-quickstart on Tue Jun  1 12:44:19 2021.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+.. MechAnalyzer documentation master file
 
-Welcome to MechAnalyzer's documentation!
-========================================
+************
+MechAnalyzer
+************
+
+*A Package of the AutoMech Suite*
+
+Andreas V. Copan, Kevin B. Moore III, Sarah N. Elliott,
+Clayton Mulvihill, Luna Pratali Maffei, and Stephen J. Klippenstein
+
+--------------------------------------------------------------------------------------
 
 .. toctree::
     :maxdepth: 2
     :caption: Contents:
 
+    rst/intro
+    rst/execution
     rst/proc
-    rst/typ
-    rst/autolib/index
+    rst/code_scripts
+    rst/codedoc/index
+
+--------------------------------------------------------------------------------------
 
 
 Indices and tables
