@@ -157,7 +157,9 @@ def read_rates(mess_out_str, pdep_dct, rct_lab, prd_lab,
     # Read all k(T,P) values from MESS output; filter negative/undefined values
     calc_ktp_dct = mess_io.reader.rates.ktp_dct(
         mess_out_str, rct_lab, prd_lab)
-
+    print(rct_lab)
+    print(prd_lab)
+    print(calc_ktp_dct)
     print(
         '\nRemoving invalid k(T,P)s from MESS output that are either:\n',
         '  (1) negative, (2) undefined [***], or (3) below 10**(-21) if',
