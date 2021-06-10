@@ -21,7 +21,7 @@ CBH_TS_CLASSES = [
 
 
 # Main CBH functions to call
-def ts_basis(zrxn, scheme, spc_scheme=None):
+def ts_basis(zrxn, scheme, spc_scheme='basic'):
     """ Get the basis for the appropriate CBH scheme
 
         :param zrxn: reaction object oriented to Z-Matrix
@@ -33,7 +33,6 @@ def ts_basis(zrxn, scheme, spc_scheme=None):
     """
 
     if scheme == 'basic':
-        spc_scheme = scheme if spc_scheme is not None else 'basic'
         if '_' in spc_scheme:
             spc_scheme = 'cbh' + spc_scheme.split('_')[1]
         frag_lst, coeff_lst = basic_ts_basis(zrxn, spc_scheme=spc_scheme)
