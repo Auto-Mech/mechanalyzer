@@ -51,6 +51,14 @@ jobs:
                     flake8 --exit-zero ratefit
                     pylint --rcfile=../.pylintrc ratefit
             - run:
+                name: Assess thermfit PEP8
+                no_output_timeout: 60m
+                command: |
+                    source activate mechanalyzer-env
+                    cd thermfit
+                    flake8 --exit-zero ratefit
+                    pylint --rcfile=../.pylintrc thermfit
+            - run:
                 name: Assess mechanalyzer PEP8
                 no_output_timeout: 60m
                 command: |

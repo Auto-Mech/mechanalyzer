@@ -135,7 +135,7 @@ def write_basis_csv(spc_str, outname='species_hof_basis.csv',
     for ref_scheme in ref_schemes:
         formula_dct = {}
         _, uniref_dct = thermfit.prepare_refs(
-            ref_scheme, init_dct, spc_queue, '', '',
+            ref_scheme, init_dct, spc_queue,
             repeats=True, parallel=parallel)
         for name in uniref_dct:
             spc_str, formula_dct = _species_row_string(
@@ -150,7 +150,7 @@ def write_basis_csv(spc_str, outname='species_hof_basis.csv',
     for ref_scheme in ref_schemes:
         _, uniref_dct = thermfit.prepare_refs(
             ref_scheme, init_dct, spc_queue,
-            '', '', repeats=False, parallel=parallel)
+            repeats=False, parallel=parallel)
     new_names, init_dct, uniref_dct = _add_unique_references_to_dct(
         new_names, init_dct, uniref_dct, ref_scheme)
     spc_str = ','.join(['name'] + new_headers) + '\n'
