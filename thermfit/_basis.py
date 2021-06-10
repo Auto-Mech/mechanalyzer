@@ -104,8 +104,11 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
         # Build the basis set and coefficients for spc/TS
         msg += '\nDetermining basis for species: {}'.format(spc_name)
         if zrxn is not None:
-            rxnclass = automol.reac.reaction_class(zrxn)
-            scheme = ref_scheme if rxnclass in CBH_TS_CLASSES else 'basic'
+            rcls = automol.reac.reaction_class(zrxn)
+            if rcls in thermfit.cbh.CBH_TS_CLASSES:
+                scheme = ref_scheme
+            else:
+                scheme = 'basic'
             spc_basis, coeff_basis = thermfit.cbh.ts_basis(
                 zrxn, scheme, spc_scheme=ref_scheme)
         else:
@@ -124,7 +127,9 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
         # Add to the dct with reference dct if it is not in the spc dct
         for ref in spc_basis:
             bas_ichs = [
-                unique_refs_dct[spc]['inchi'] if 'inchi' in unique_refs_dct[spc] else unique_refs_dct[spc]['reacs']
+                unique_refs_dct[spc]['inchi']
+                if 'inchi' in unique_refs_dct[spc] else
+                unique_refs_dct[spc]['reacs']
                 for spc in unique_refs_dct]
             cnt = len(list(unique_refs_dct.keys())) + 1
             if isinstance(ref, str):
