@@ -85,7 +85,6 @@ def basic_ts_basis(zrxn, spc_scheme):
     return (tuple(basis), numpy.array(coeff_lst))
 
 
-
 def cbh_basis(zrxn, scheme):
     """ Determine basis species required for relative enthalpy calculations
         for transition state structures for various CBH-n schemes.

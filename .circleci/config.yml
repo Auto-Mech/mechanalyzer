@@ -36,6 +36,12 @@ jobs:
                     cd ratefit
                     pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs ratefit
             - run:
+                name: Test thermfit
+                command: |
+                    source activate mechanalyzer-env
+                    cd thermfit
+                    pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs thermfit
+            - run:
                 name: Test mechanalyzer
                 no_output_timeout: 60m
                 command: |
