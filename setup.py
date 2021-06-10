@@ -19,7 +19,7 @@ setup(
         'ratefit.fit',
         'ratefit.fit.arrhenius',
         'ratefit.fit.chebyshev',
-        'ratefit.fit.troe'
+        'ratefit.fit.troe',
         'thermfit',
         'thermfit.cbh'
     ],
