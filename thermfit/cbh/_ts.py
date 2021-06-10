@@ -1,6 +1,7 @@
 """ Computes the Heat of Formation at 0 K for a given species
 """
 
+import numpy
 import automol.inchi
 import automol.graph
 import automol.formula
@@ -21,7 +22,7 @@ CBH_TS_CLASSES = [
 
 
 # Main CBH functions to call
-def ts_basis(zrxn, scheme, spc_scheme='basic'):
+def ts_basis(zrxn, scheme, spc_scheme=None):
     """ Get the basis for the appropriate CBH scheme
 
         :param zrxn: reaction object oriented to Z-Matrix
@@ -30,11 +31,17 @@ def ts_basis(zrxn, scheme, spc_scheme='basic'):
         :type scheme: str
         :param spc_scheme: CBH Scheme for species fragments used in `basic` TS scheme
         :type spc_scheme: str
+
+        spc_scheme either basic, cbh0, cbh1
     """
 
     if scheme == 'basic':
-        if '_' in spc_scheme:
-            spc_scheme = 'cbh' + spc_scheme.split('_')[1]
+        # For a cbh_m scheme, spc = cbh_m
+        # For a cbh_m_n scheme, spc = cbh_n
+        if spc_scheme is None:
+            spc_scheme = scheme
+            if '_' in spc_scheme:
+                spc_scheme = 'cbh' + spc_scheme.split('_')[1]
         frag_lst, coeff_lst = basic_ts_basis(zrxn, spc_scheme=spc_scheme)
     else:
         frag_lst, coeff_lst = cbh_basis(zrxn, scheme)
@@ -90,7 +97,10 @@ def cbh_basis(zrxn, scheme):
         :rtype: (tuple(str), list(float))
     """
 
+    zrxn = automol.reac.without_dummy_atoms(zrxn)
+
     rxnclass = automol.reac.reaction_class(zrxn)
+
     frm_bnd_keys = automol.reac.forming_bond_keys(zrxn)
     brk_bnd_keys = automol.reac.breaking_bond_keys(zrxn)
     frm_key1, frm_key2 = tsutil.split_bnd_keys(frm_bnd_keys)
@@ -200,10 +210,12 @@ def cbh_basis(zrxn, scheme):
     for frag in frags:
         if 'exp_gra' in frags[frag]:
             # Remove dummy atoms from graph, broke for H-ABS (KBM)
-            egra = automol.graph.without_dummy_atoms(frags[frag]['exp_gra'])
-            if egra != ({}, {}):  # Check if graph is empty
-                fraglist.append(automol.graph.inchi(frags[frag]['exp_gra']))
-                clist.append(frags[frag]['coeff'])
+            # egra = automol.graph.without_dummy_atoms(frags[frag]['exp_gra'])
+            # if egra != ({}, {}):  # Check if graph is empty
+            #     fraglist.append(automol.graph.inchi(frags[frag]['exp_gra']))
+            #     clist.append(frags[frag]['coeff'])
+            fraglist.append(automol.graph.inchi(frags[frag]['exp_gra']))
+            clist.append(frags[frag]['coeff'])
         else:
             if 'beta' in rxnclass:
                 fraglist.append(
@@ -251,9 +263,9 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
                         atms, adj_atms[site2[0]], site1,
                         other_adj=adj_atms[site1[0]])
                     nonhyd_adj_atms1 = tuple(adj for adj in nonhyd_adj_atms1
-                                              if adj not in site1)
+                                             if adj not in site1)
                     nonhyd_adj_atms1 = tuple(adj for adj in nonhyd_adj_atms2
-                                              if adj not in site2)
+                                             if adj not in site2)
                     coeff = (
                         util.branch_point(
                             nonhyd_adj_atms1, nonhyd_adj_atms2) *
@@ -952,16 +964,3 @@ def cbhone_habs(gra, site, bal=True):
     frags = tsutil.simplify_gra_frags(frags)
 
     return frags
-
-
-TS_REF_CALLS = {
-    "basic": "get_basic_ts",
-    "cbh0": "get_cbhzed_ts",
-    "cbh1": "get_cbhone_ts",
-    "cbh1_0": "get_cbhzed_ts",
-    "cbh1_1": "get_cbhone_ts",
-    "cbh2": "get_cbhzed_ts",
-    "cbh2_0": "get_cbhzed_ts",
-    "cbh2_1": "get_cbhone_ts",
-    "cbh3": "get_cbhone_ts"
-}
