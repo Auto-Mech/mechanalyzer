@@ -25,7 +25,7 @@ jobs:
                     cd external/troefit
                     bash build.sh
             - run:
-                name: Build/install mechanalzyer
+                name: Build/install mechanalzyer, ratefit, thermfit
                 command: |
                     source activate mechanalyzer-env
                     python setup.py install
