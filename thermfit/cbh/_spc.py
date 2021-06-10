@@ -2,6 +2,7 @@
     Explanation of various basis determination schemes
 """
 
+import numpy
 import automol.inchi
 import automol.graph
 import automol.formula
