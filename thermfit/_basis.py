@@ -105,6 +105,8 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
         msg += '\nDetermining basis for species: {}'.format(spc_name)
         if zrxn is not None:
             rcls = automol.reac.reaction_class(zrxn)
+            if '_' in spc_scheme:
+                spc_scheme = 'cbh' + spc_scheme.split('_')[1]
             if rcls in thermfit.cbh.CBH_TS_CLASSES:
                 scheme = ref_scheme
             else:
