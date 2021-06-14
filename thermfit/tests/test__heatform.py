@@ -44,7 +44,7 @@ def test__ref_enthalpy():
 
     # Species
     hf0k = thermfit.heatform.reference_enthalpy(
-        species, REF_SET1, TEMP1, rxn=False)
+        C3H7OH_H0, REF_SET1, TEMP1, rxn=False)
     print(hf0k)
 
     # Transition State
