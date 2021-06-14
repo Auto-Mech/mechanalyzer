@@ -29,13 +29,9 @@ def ts_basis(zrxn, scheme):
         :type zrxn: automol.reac.Reaction object
         :param scheme: CBH Scheme used to generate basis
         :type scheme: str
-
-        spc_scheme either basic, cbh0, cbh1
     """
 
     if scheme == 'basic':
-        # For a cbh_m scheme, spc = cbh_m
-        # For a cbh_m_n scheme, spc = cbh_n
         frag_lst, coeff_lst = basic_ts_basis(zrxn, spc_scheme=scheme)
     else:
         frag_lst, coeff_lst = cbh_basis(zrxn, scheme)
