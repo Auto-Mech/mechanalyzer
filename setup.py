@@ -35,6 +35,6 @@ setup(
         'ratefit': ['tests/data/*',
                     'fit/arrhenius/dsarrfit.mako',
                     'fit/troe/troefit.mako'],
-        'thermfit': ['thermdb']
+        'thermfit': ['thermdb/*.csv']
     }
 )
