@@ -150,7 +150,7 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
                     ).format(ref, ref_name)
                     unique_refs_dct[ref_name] = create_ts_spc(
                         ref, spc_dct, spc_dct[spc_name]['mult'],
-                        rxnclass)
+                        rcls)
     print(msg)
 
     ret = None
