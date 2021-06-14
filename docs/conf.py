@@ -28,6 +28,7 @@ author = 'Kevin Moore'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc']
+master_doc = 'index'
 autodoc_member_order = 'bysource'
 autodoc_mock_imports = [
     'numpy', 'scipy', 'pandas', 'mako', 'matplotlib',
@@ -50,6 +51,9 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 html_theme = 'alabaster'
+html_logo = 'logo.png'
+html_style = 'css/automech.css'
+html_sidebars = { '**': ['globaltoc.html', 'relations.html', 'sourcelink.html', 'searchbox.html'] }
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

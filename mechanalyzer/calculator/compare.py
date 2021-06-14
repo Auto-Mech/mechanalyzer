@@ -210,6 +210,8 @@ def rename_dcts(target_dcts, spc_ident_dcts, target_type):
         of the preference specified by the order of the list (first dct is unchanged, second is
         only changed by first, third is changed by first and then second, etc.).
 
+        Both dcts must be lists, not tuples; code will break otherwise.
+
         :param target_dcts: list of dictionaries to be renamed
         :type target_dcts: list of dcts; [{dct1}, {dct2}, ...]
         :param spc_ident_dcts: list of species dictionaries corresponding to dcts

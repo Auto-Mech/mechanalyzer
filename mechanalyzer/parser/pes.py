@@ -42,11 +42,8 @@ def connected_channels_dct(pes_dct):
 def find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
     """ Determine all of the connected reaction channels on a PES.
         Information compiled in SUB-PES dictionaries:
-        conndct = {0: [['S1','S2'],['S3','S4'],[S5']],
-                   1:[['S6','S7'],['S8','S9']]}
+        conndct = {0: [['S1','S2'],['S3','S4'],[S5']], ..}
         connchnls = {0: [0,1,2] , 1:[3,4,5]}...
-
-        :param pes_rct_lst:
     """
 
     # preprocessing:

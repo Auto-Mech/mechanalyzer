@@ -19,16 +19,22 @@ setup(
         'ratefit.fit',
         'ratefit.fit.arrhenius',
         'ratefit.fit.chebyshev',
-        'ratefit.fit.troe'],
+        'ratefit.fit.troe',
+        'thermfit',
+        'thermfit.cbh'
+    ],
     package_dir={
         'mechanalyzer': 'mechanalyzer',
-        'ratefit': 'ratefit'},
+        'ratefit': 'ratefit',
+        'thermfit': 'thermfit'
+    },
     package_data={
         'mechanalyzer': ['tests/data/*.txt',
                          'tests/data/*.dat',
                          'tests/data/*.csv'],
         'ratefit': ['tests/data/*',
                     'fit/arrhenius/dsarrfit.mako',
-                    'fit/troe/troefit.mako']
+                    'fit/troe/troefit.mako'],
+        'thermfit': ['thermdb/*.csv']
     }
 )

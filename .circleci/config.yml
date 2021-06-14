@@ -25,7 +25,7 @@ jobs:
                     cd external/troefit
                     bash build.sh
             - run:
-                name: Build/install mechanalzyer
+                name: Build/install mechanalzyer, ratefit, thermfit
                 command: |
                     source activate mechanalyzer-env
                     python setup.py install
@@ -35,6 +35,12 @@ jobs:
                     source activate mechanalyzer-env
                     cd ratefit
                     pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs ratefit
+            - run:
+                name: Test thermfit
+                command: |
+                    source activate mechanalyzer-env
+                    cd thermfit
+                    pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs thermfit
             - run:
                 name: Test mechanalyzer
                 no_output_timeout: 60m
@@ -50,6 +56,14 @@ jobs:
                     cd ratefit
                     flake8 --exit-zero ratefit
                     pylint --rcfile=../.pylintrc ratefit
+            - run:
+                name: Assess thermfit PEP8
+                no_output_timeout: 60m
+                command: |
+                    source activate mechanalyzer-env
+                    cd thermfit
+                    flake8 --exit-zero ratefit
+                    pylint --rcfile=../.pylintrc thermfit
             - run:
                 name: Assess mechanalyzer PEP8
                 no_output_timeout: 60m

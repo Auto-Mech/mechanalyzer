@@ -86,8 +86,8 @@ def run_dsarrfit(path):
     # Run the executable
     exe_cmd = 'dsarrfit.x'
     try:
-        fnull = open(os.devnull, 'w')
-        subprocess.check_call([exe_cmd], stdout=fnull, stderr=fnull)
+        with open(os.devnull, 'w') as fnull:
+            subprocess.check_call([exe_cmd], stdout=fnull, stderr=fnull)
     except subprocess.CalledProcessError:
         print('dsarrfit failed for', path)
 
