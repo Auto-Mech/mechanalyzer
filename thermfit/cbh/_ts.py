@@ -22,15 +22,13 @@ CBH_TS_CLASSES = [
 
 
 # Main CBH functions to call
-def ts_basis(zrxn, scheme, spc_scheme=None):
+def ts_basis(zrxn, scheme):
     """ Get the basis for the appropriate CBH scheme
 
         :param zrxn: reaction object oriented to Z-Matrix
         :type zrxn: automol.reac.Reaction object
         :param scheme: CBH Scheme used to generate basis
         :type scheme: str
-        :param spc_scheme: CBH Scheme for species fragments used in `basic` TS scheme
-        :type spc_scheme: str
 
         spc_scheme either basic, cbh0, cbh1
     """
@@ -38,11 +36,7 @@ def ts_basis(zrxn, scheme, spc_scheme=None):
     if scheme == 'basic':
         # For a cbh_m scheme, spc = cbh_m
         # For a cbh_m_n scheme, spc = cbh_n
-        if spc_scheme is None:
-            spc_scheme = scheme
-            if '_' in spc_scheme:
-                spc_scheme = 'cbh' + spc_scheme.split('_')[1]
-        frag_lst, coeff_lst = basic_ts_basis(zrxn, spc_scheme=spc_scheme)
+        frag_lst, coeff_lst = basic_ts_basis(zrxn, spc_scheme=scheme)
     else:
         frag_lst, coeff_lst = cbh_basis(zrxn, scheme)
 
