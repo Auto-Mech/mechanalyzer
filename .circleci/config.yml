@@ -74,7 +74,9 @@ jobs:
                     pylint --rcfile=../.pylintrc mechanalyzer
             - store_artifacts:
                     path: ratefit/htmlcov
+            - store_artifacts:
                     path: thermfit/htmlcov
+            - store_artifacts:
                     path: mechanalyzerfit/htmlcov
 workflows:
     version: 2
