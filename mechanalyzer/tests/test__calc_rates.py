@@ -152,9 +152,9 @@ def test__dup_plog():
 
 if __name__ == '__main__':
     test__arrhenius()
-    test__lindemann()
-    test__troe()
-    test__plog()
-    test__chebyshev()
-    test__dup_arrhenius()
-    test__dup_plog()
+    # test__lindemann()
+    # test__troe()
+    # test__plog()
+    # test__chebyshev()
+    # test__dup_arrhenius()
+    # test__dup_plog()

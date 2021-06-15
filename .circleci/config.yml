@@ -34,20 +34,20 @@ jobs:
                 command: |
                     source activate mechanalyzer-env
                     cd ratefit
-                    pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs ratefit
+                    pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs ratefit --cov-report=html
             - run:
                 name: Test thermfit
                 command: |
                     source activate mechanalyzer-env
                     cd thermfit
-                    pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs thermfit
+                    pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs thermfit --cov-report=html
             - run:
                 name: Test mechanalyzer
                 no_output_timeout: 60m
                 command: |
                     source activate mechanalyzer-env
                     cd mechanalyzer
-                    pytest . -v --disable-pytest-warnings --cov=mechanalyzer --pyargs mechanalyzer
+                    pytest . -v --disable-pytest-warnings --cov=mechanalyzer --pyargs mechanalyzer --cov-report=html
             - run:
                 name: Assess ratefit PEP8
                 no_output_timeout: 60m
@@ -72,6 +72,10 @@ jobs:
                     cd mechanalyzer
                     flake8 --exit-zero mechanalyzer
                     pylint --rcfile=../.pylintrc mechanalyzer
+            - store_artifacts:
+                    path: ratefit/htmlcov
+                    path: thermfit/htmlcov
+                    path: mechanalyzerfit/htmlcov
 workflows:
     version: 2
     build-all:

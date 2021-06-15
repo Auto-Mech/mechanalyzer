@@ -23,7 +23,6 @@ TEMP2 = 298
 
 # Database sets to read
 REF_SET1 = 'ANL0'
-REF_SET2 = 'ATcT'
 
 
 def test__hform():
