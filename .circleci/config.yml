@@ -39,7 +39,7 @@ jobs:
                 command: |
                     source activate mechanalyzer-env
                     cd thermfit
-                    pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs thermfit --cov-report=html
+                    pytest . -v --disable-pytest-warnings --cov=thermfit --pyargs thermfit --cov-report=html
             - run:
                 name: Test mechanalyzer
                 no_output_timeout: 60m
