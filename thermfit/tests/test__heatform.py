@@ -45,7 +45,7 @@ def test__hform():
         C3H7OH_H0, C3H7OH_BASIS_H0, C3H7OH_BASIS, C3H7OH_CFFS, REF_SET1)
     assert numpy.isclose(ref_hf0k, hf0k)
 
-    # test for reaction? (would need list of lists in calc_hform)
+    # test reaction? (would need list of lists in calc_hform)
 
 
 def test__ref_enthalpy():
