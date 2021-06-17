@@ -4,37 +4,48 @@
 import numpy
 import thermfit.heatform
 
+# Energies (ene+zpve [Hartrees])
+DCT_H0 = {
+    'InChI=1S/H2/h1H': -1.16329723,
+    'InChI=1S/CH4/h1H4': -40.40245975,
+    'InChI=1S/CH3/h1H3': -39.73962587,
+    'InChI=1S/H2O/h1H2': -76.33504552,
+    'InChI=1S/HO/h1H': -75.64954341
+}
+C3H7OH_H0 = -193.9754161
+TS_CH4_OH_H0 = -116.0451612
 
-# Formula dicts for various species
+# Species
 C3H7OH_ICH = 'InChI=1S/C3H8O/c1-2-3-4/h4H,2-3H2,1H3'
-C3H7OH_H0 = -200.0
 C3H7OH_BASIS = ('InChI=1S/H2/h1H', 'InChI=1S/CH4/h1H4', 'InChI=1S/H2O/h1H2')
-C3H7OH_BASIS_H0 = (-0.48, -100.0, -230.0)
+C3H7OH_BASIS_H0 = tuple(DCT_H0[base] for base in C3H7OH_BASIS)
 C3H7OH_CFFS = numpy.array([-3., 3., 1.])
 
-# Transition state names
-TSNAME = 'CH4+O=CH3+OH'
-RXN_ICHS = (('InChI=1S/CH4/h1H4', 'InChI=1S/HO/h1H'),
-            ('InChI=1S/CH3/h1H3', 'InChI=1S/H2O/h1H2'))
+# TS
+TS_CH4_OH_ICHS = (('InChI=1S/CH4/h1H4', 'InChI=1S/HO/h1H'),
+                  ('InChI=1S/CH3/h1H3', 'InChI=1S/H2O/h1H2'))
 
-# Temps for database
+# InChI not in database
+NON_DB_ICH = 'InChI=1S/C8H18/c1-3-5-7-8-6-4-2/h3-8H2,1-2H3'
+
+# Database reading parameters
 TEMP1 = 0
-TEMP2 = 298
-
-# Database sets to read
 REF_SET1 = 'ANL0'
+REF_SET2 = 'ANL1'
+REF_SET3 = 'Ladder'
 
 
 def test__hform():
     """ test thermfit.heatform.calc_hform_0k
     """
 
-    # test all ref sets
+    ref_hf0k = -0.08995619479826189
+
     hf0k = thermfit.heatform.calc_hform_0k(
         C3H7OH_H0, C3H7OH_BASIS_H0, C3H7OH_BASIS, C3H7OH_CFFS, REF_SET1)
-    print(hf0k)
+    assert numpy.isclose(ref_hf0k, hf0k)
 
-    # test for reaction
+    # test for reaction? (would need list of lists in calc_hform
 
 
 def test__ref_enthalpy():
@@ -42,15 +53,32 @@ def test__ref_enthalpy():
     """
 
     # Species
-    hf0k = thermfit.heatform.reference_enthalpy(
-        C3H7OH_H0, REF_SET1, TEMP1, rxn=False)
-    print(hf0k)
+    ref_hf0k_1 = -0.08780743925395121
+    ref_hf0k_2 = 0.0
+    ref_hf0k_3 = -0.08785524729710219
+
+    hf0k_1 = thermfit.heatform.reference_enthalpy(
+        C3H7OH_ICH, REF_SET1, TEMP1, rxn=False)
+    hf0k_2 = thermfit.heatform.reference_enthalpy(
+        C3H7OH_ICH, REF_SET2, TEMP1, rxn=False)
+    hf0k_3 = thermfit.heatform.reference_enthalpy(
+        C3H7OH_ICH, REF_SET3, TEMP1, rxn=False)
+    assert numpy.isclose(ref_hf0k_1, hf0k_1)
+    assert numpy.isclose(ref_hf0k_2, hf0k_2)
+    assert numpy.isclose(ref_hf0k_3, hf0k_3)
 
     # Transition State
-    db_rxn_ich = thermfit.heatform.format_reaction_inchi(RXN_ICHS)
+    ref_hf0k = -0.0033071800404707342
+
+    db_rxn_ich = thermfit.heatform.format_reaction_inchi(TS_CH4_OH_ICHS)
     hf0k = thermfit.heatform.reference_enthalpy(
         db_rxn_ich, REF_SET1, TEMP1, rxn=True)
-    print(hf0k)
+    assert numpy.isclose(ref_hf0k, hf0k)
+
+    # Missing InChI (just species should be fine)
+    miss_hf0k = thermfit.heatform.reference_enthalpy(
+        NON_DB_ICH, REF_SET1, TEMP1, rxn=False)
+    assert miss_hf0k is None
 
 
 if __name__ == '__main__':

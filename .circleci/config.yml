@@ -34,12 +34,14 @@ jobs:
                     source activate mechanalyzer-env
                     cd ratefit
                     pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs ratefit --cov-report=html
+                    coverage report
             - run:
                 name: Test thermfit
                 command: |
                     source activate mechanalyzer-env
                     cd thermfit
                     pytest . -v --disable-pytest-warnings --cov=thermfit --pyargs thermfit --cov-report=html
+                    coverage report
             - run:
                 name: Test mechanalyzer
                 no_output_timeout: 60m
@@ -47,6 +49,7 @@ jobs:
                     source activate mechanalyzer-env
                     cd mechanalyzer
                     pytest . -v --disable-pytest-warnings --cov=mechanalyzer --pyargs mechanalyzer --cov-report=html
+                    coverage report
             - run:
                 name: Assess ratefit PEP8
                 no_output_timeout: 60m

@@ -58,4 +58,4 @@ def _combine_pfs(pfa, pfb, coeff, operator):
         dq_dt = [a-b-numpy.log(coeff) for a, b in zip(dq_dta, dq_dtb)]
         d2q_dt2 = [a-b-numpy.log(coeff) for a, b in zip(d2q_dt2a, d2q_dt2b)]
 
-    return tempsa, logq, dq_dt, d2q_dt2
+    return tempsa, tuple(logq), tuple(dq_dt), tuple(d2q_dt2)
