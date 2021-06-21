@@ -64,7 +64,7 @@ jobs:
                 command: |
                     source activate mechanalyzer-env
                     cd thermfit
-                    flake8 --exit-zero ratefit
+                    flake8 --exit-zero thermfit
                     pylint --rcfile=../.pylintrc thermfit
             - run:
                 name: Assess mechanalyzer PEP8
