@@ -11,10 +11,8 @@ from ratefit.fit._util import filter_ktp_dct
 from ratefit.fit._util import invert_ktp_dct
 from ratefit.fit._util import pull_highp_from_dct
 from ratefit.fit._util import set_a_conversion_factor
-
 from ratefit.fit._fit import fit_ktp_dct
-
-
+from ratefit.fit._wellextend import well_lumped_input_file
 from ratefit.fit import arrhenius
 from ratefit.fit import troe
 from ratefit.fit import chebyshev
@@ -31,6 +29,7 @@ __all__ = [
     'pull_highp_from_dct',
     'set_a_conversion_factor',
     'fit_ktp_dct',
+    'well_lumped_input_file',
     'arrhenius',
     'troe',
     'chebyshev',
