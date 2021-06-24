@@ -52,28 +52,46 @@ def well_lumping_scheme(mess_aux_str, pressure, temp):
 
 # Get the energies for definining the well extension cap
 def well_energies(mess_out_str, mess_log_str, pressure):
-    """ Analyze a well lumping algorithm.
+    """ Obtain the energies for each well at the given pressure.
     """
+
+    mess_temps, _ = mess_io.reader.rates.temperatures(mess_out_str)
+    max_run_temp = max(mess_temps)
 
     # Get the temps where each well exists
     well_enes = {}
     well_rxns = _get_well_reactions(mess_out_str)
-    for well, (lab_i, lab_j) in well_rxns.items():
-
+    for well, rxn_lst in well_rxns.items():
+        print('\n***********************************************\n')
         print('Obtaining information for well {} at P={}'.format(
             well, pressure))
+        max_temp = -1.0
+        for (lab_i, lab_j) in rxn_lst:
 
-        # Read the rate constants out of the mess outputs
-        print('\nReading k(T,P)s from MESS output...')
-        ktp_dct, _ = read_rates(mess_out_str, None, lab_i, lab_j)
-        max_temp = _max_temp_well_exists(ktp_dct, pressure)
+            rxn = '{}->{}'.format(lab_i, lab_j)
 
-        print('\nMax T for energies is {}'.format(max_temp))
+            # Read the rate constants out of the mess outputs
+            print('\n-----------------------------------------------\n')
+            print('Finding max T where k(T) exists for {}...'.format(rxn))
+            ktp_dct, _ = read_rates(mess_out_str, None, lab_i, lab_j)
+            rxn_temp = _max_temp_well_exists(ktp_dct, pressure, mess_temps)
+
+            if rxn_temp > max_temp:
+                max_temp = rxn_temp
+                print('- New max temperature for well: {} K'.format(rxn_temp))
+
+        # Determine if k(T) exist at highest T -> no Well cap exists
+        if numpy.isclose(max_temp, max_run_temp):
+            max_temp = None
+            print('\nMax temperature at highest value from run.',
+                  'No cap needed.')
+        else:
+            print('\nMax temperature for energies is {} K'.format(max_temp))
 
         # Read the average energy at the max temperature
-        well_enes[well] = (
-            mess_io.reader.well_average_energy(mess_log_str, well, max_temp)
-        )
+        ene = (mess_io.reader.well_average_energy(mess_log_str, well, max_temp)
+               if max_temp is not None else None)
+        well_enes[well] = ene
 
     return well_enes
 
@@ -88,30 +106,39 @@ def _get_well_reactions(mess_out_str):
     rgts = tuple(spc for spc in itertools.chain(*rxn_pairs) if 'W' in spc)
     wells = tuple(n for i, n in enumerate(rgts) if n not in rgts[:i])
 
-    # Grab a reaction that contains the well
+    # Grab reactions that contains the well as the reactant
     well_rxns = {}
     for well in wells:
+        rxn_lst = ()
         for rxn in rxn_pairs:
             rct, _ = rxn
             if well == rct:
-                well_rxns[well] = rxn
-                break
+                rxn_lst += (rxn,)
+        well_rxns[well] = rxn_lst
 
     return well_rxns
 
 
-def _max_temp_well_exists(ktp_dct, pressure):
+def _max_temp_well_exists(ktp_dct, pressure, mess_temps):
     """ For a given reaction and pressure, find a max temperature
 
         Assumes a filtered ktp dct.
     """
 
-    max_temp = 600.0  # fake value for now
+    max_temp = None
     for _pressure, kt_lst in ktp_dct.items():
         if _pressure != 'high':
             if numpy.isclose(_pressure, pressure):
                 max_temp = max(kt_lst[0])
                 break
+
+    # default to the lowest temperature run if no rate constants found
+    if max_temp is None:
+        max_temp = min(mess_temps)
+        print('\nNo k(T) values found for P = {} atm.'.format(pressure))
+        print('T={}: minimum of all temps in output'.format(max_temp))
+    else:
+        print('\nT={}: max T where k(T) found'.format(max_temp))
 
     return max_temp
 
@@ -126,16 +153,17 @@ def _format_well_extension_inp(inp_str, well_enes_dct, well_lump_str):
 
     # Write string for each of the well enes
     for well, ene in well_enes_dct.items():
-        # Find line for where well start, for-loop used for formatting diffs
-        for line in inp_str.splitlines():
-            if 'Well' in line and well in line:
-                _search = line
-                break
-        _add = '  WellExtensionCap[kcal/mol]    {0:.2f}'.format(
-            ene*phycon.EH2KCAL)
-        new_inp_str = ioformat.add_line(
-            string=new_inp_str, addline=_add,
-            searchline=_search, position='after')
+        if ene is not None:
+            # Find line for where well start, for-loop handle weird format
+            for line in inp_str.splitlines():
+                if 'Well' in line and well in line:
+                    _search = line
+                    break
+            _add = '  WellExtensionCap[kcal/mol]    {0:.2f}'.format(
+                ene*phycon.EH2KCAL)
+            new_inp_str = ioformat.add_line(
+                string=new_inp_str, addline=_add,
+                searchline=_search, position='after')
 
     # Write new strings with the lumped input
     well_extend_line = 'WellExtension\nExtensionCorrection    0.2'

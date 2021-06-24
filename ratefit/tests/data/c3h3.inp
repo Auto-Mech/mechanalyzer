@@ -3,7 +3,7 @@ PressureList[atm]                     0.01 0.1  1. 10.0 100.0
 EnergyStepOverTemperature             0.2          #Ratio of discretization energy step to T 
 ExcessEnergyOverTemperature           30
 ModelEnergyLimit[kcal/mol]	      400     
-!WellCutoff                            10
+WellCutoff                            10
 ChemicalEigenvalueMax                 0.2
 ChemicalEigenvalueMin                 1.e-6          #only for direct diagonalization method
 CalculationMethod                     direct
