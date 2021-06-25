@@ -12,15 +12,23 @@ def gen_reaction_pairs(mess_out_str, label_dct):
     """ Generate pairs of reactions
     """
 
-    sorted_rxn_pairs = mess_io.reader.rates.reactions(
+    rxn_pairs = mess_io.reader.rates.reactions(
         mess_out_str,
         read_rev=True,
         read_fake=False,
         read_self=False)
 
+    # Grab the reactions either using the label dct or use
     if label_dct is None:
-        labels = set(itertools.chain(*sorted_rxn_pairs))
+        labels = set(itertools.chain(*rxn_pairs))
         label_dct = dict(zip(labels, labels))
+        sorted_rxn_pairs = rxn_pairs
+    else:
+        sorted_rxn_pairs = ()
+        for rxn in rxn_pairs:
+            rct, prd = rxn
+            if rct in label_dct and prd in label_dct:
+                sorted_rxn_pairs += (rxn,)
 
     return sorted_rxn_pairs, label_dct
 
