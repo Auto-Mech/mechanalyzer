@@ -3,4 +3,4 @@ cmake_minimum_required(VERSION 2.8)
 
 add_executable(troefit.x ${PROJECT_SOURCE_DIR}/src/troefit.f)
 
-install(TARGETS troefit.x DESTINATION ${PROJECT_SOURCE_DIR}/../../bin)
+install(TARGETS troefit.x)
