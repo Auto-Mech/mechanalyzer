@@ -3,7 +3,6 @@
 
 import os
 import csv
-import automol
 from phydat import phycon
 
 
