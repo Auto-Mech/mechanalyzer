@@ -74,7 +74,7 @@ def read_rates(mess_out_str, pdep_dct, rct_lab, prd_lab,
             print('\nValid k(T)s only found at High Pressure...')
             ktp_dct['high'] = filt_ktp_dct['high']
         else:
-            if pdep_dct:
+            if pdep_dct is not None:
                 print(
                     '\nUser requested to assess pressure dependence',
                     'of reaction.')

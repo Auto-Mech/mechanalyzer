@@ -34,7 +34,7 @@ DEFAULT_CHEB_DCT = {
 
 
 def fit_ktp_dct(mess_path, inp_fit_method,
-                pdep_dct=None,
+                pdep_dct='auto',
                 arrfit_dct=None,
                 chebfit_dct=None,
                 troefit_dct=None,
@@ -49,7 +49,9 @@ def fit_ktp_dct(mess_path, inp_fit_method,
     mess_out_str = ioformat.pathtools.read_file(mess_path, 'rate.out')
 
     # Set dictionaries if they are unprovided
-    pdep_dct = pdep_dct or DEFAULT_PDEP_DCT
+    print('pdep1', pdep_dct)
+    pdep_dct = DEFAULT_PDEP_DCT if pdep_dct == 'auto' else pdep_dct
+    print('pdep2', pdep_dct)
     arrfit_dct = arrfit_dct or DEFAULT_ARRFIT_DCT
     chebfit_dct = chebfit_dct or DEFAULT_CHEB_DCT
     troefit_dct = troefit_dct or DEFAULT_TROE_DCT

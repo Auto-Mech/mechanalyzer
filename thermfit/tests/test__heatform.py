@@ -39,7 +39,7 @@ def test__hform():
     """ test thermfit.heatform.calc_hform_0k
     """
 
-    ref_hf0k = -0.08995619479826189
+    ref_hf0k = -0.08992931992116837
 
     hf0k = thermfit.heatform.calc_hform_0k(
         C3H7OH_H0, C3H7OH_BASIS_H0, C3H7OH_BASIS, C3H7OH_CFFS, REF_SET1)
@@ -53,9 +53,9 @@ def test__ref_enthalpy():
     """
 
     # Species
-    ref_hf0k_1 = -0.08780743925395121
+    ref_hf0k_1 = -0.08780432505395637
     ref_hf0k_2 = 0.0
-    ref_hf0k_3 = -0.08785524729710219
+    ref_hf0k_3 = -0.08785677661265853
 
     hf0k_1 = thermfit.heatform.reference_enthalpy(
         C3H7OH_ICH, REF_SET1, TEMP1, rxn=False)
@@ -79,8 +79,3 @@ def test__ref_enthalpy():
     miss_hf0k = thermfit.heatform.reference_enthalpy(
         NON_DB_ICH, REF_SET1, TEMP1, rxn=False)
     assert miss_hf0k is None
-
-
-if __name__ == '__main__':
-    test__hform()
-    test__ref_enthalpy()
