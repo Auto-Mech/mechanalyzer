@@ -3,14 +3,12 @@
   Arrhenius, Plog, Troe, and Chebyshev expressions
 """
 
-import copy
-import mess_io
 import ioformat
 from ratefit.fit import arrhenius as arrfit
 from ratefit.fit import chebyshev as chebfit
 from ratefit.fit import troe as troefit
-from ratefit.fit._util import filter_ktp_dct
-from ratefit.fit._pdep import pressure_dependent_ktp_dct
+from ratefit.fit._read import gen_reaction_pairs
+from ratefit.fit._read import read_rates
 
 
 DEFAULT_PDEP_DCT = {
@@ -36,7 +34,7 @@ DEFAULT_CHEB_DCT = {
 
 
 def fit_ktp_dct(mess_path, inp_fit_method,
-                pdep_dct=None,
+                pdep_dct='auto',
                 arrfit_dct=None,
                 chebfit_dct=None,
                 troefit_dct=None,
@@ -51,22 +49,21 @@ def fit_ktp_dct(mess_path, inp_fit_method,
     mess_out_str = ioformat.pathtools.read_file(mess_path, 'rate.out')
 
     # Set dictionaries if they are unprovided
-    pdep_dct = pdep_dct or DEFAULT_PDEP_DCT
+    print('pdep1', pdep_dct)
+    pdep_dct = DEFAULT_PDEP_DCT if pdep_dct == 'auto' else pdep_dct
+    print('pdep2', pdep_dct)
     arrfit_dct = arrfit_dct or DEFAULT_ARRFIT_DCT
     chebfit_dct = chebfit_dct or DEFAULT_CHEB_DCT
     troefit_dct = troefit_dct or DEFAULT_TROE_DCT
 
-    if label_dct is None:
-        labels = mess_io.reader.rates.labels(mess_out_str, read_fake=False)
-        label_dct = dict(zip(labels, labels))
+    rxn_pairs, label_dct = gen_reaction_pairs(mess_out_str, label_dct)
 
     # Loop through reactions, fit rates, and write ckin strings
     chemkin_str_dct = {}
-    rxn_pairs = gen_reaction_pairs(label_dct)
-    for (name_i, lab_i), (name_j, lab_j) in rxn_pairs:
+    for (lab_i, lab_j) in rxn_pairs:
 
         # Set the name and A conversion factor
-        reaction = name_i + '=' + name_j
+        reaction = label_dct[lab_i] + '=' + label_dct[lab_j]
         print('------------------------------------------------\n')
         print('Reading and Fitting Rates for {}'.format(reaction))
 
@@ -103,81 +100,6 @@ def fit_ktp_dct(mess_path, inp_fit_method,
         chemkin_str_dct.update({ridx: chemkin_str})
 
     return chemkin_str_dct
-
-
-def gen_reaction_pairs(label_dct):
-    """ Generate pairs of reactions
-    """
-
-    rxn_pairs = ()
-    for name_i, lab_i in label_dct.items():
-        if 'F' not in lab_i and 'B' not in lab_i:
-            for name_j, lab_j in label_dct.items():
-                if 'F' not in lab_j and 'B' not in lab_j and lab_i != lab_j:
-                    rxn_pairs += (((name_i, lab_i), (name_j, lab_j)),)
-
-    # Only grab the forward reactions, remove the reverse reactions
-    sorted_rxn_pairs = ()
-    for pair in rxn_pairs:
-        rct, prd = pair
-        if (rct, prd) in sorted_rxn_pairs or (prd, rct) in sorted_rxn_pairs:
-            continue
-        sorted_rxn_pairs += ((rct, prd),)
-
-    return sorted_rxn_pairs
-
-
-# Readers
-def read_rates(mess_out_str, pdep_dct, rct_lab, prd_lab,
-               fit_temps=None, fit_pressures=None,
-               fit_tunit=None, fit_punit=None):
-    """ Read the rate constants from the MESS output and
-        (1) filter out the invalid rates that are negative or undefined
-        and obtain the pressure dependent values
-    """
-
-    # Initialize vars
-    ktp_dct = {}
-    bimol = bool('W' not in rct_lab)
-
-    # Read temperatures, pressures and rateks from MESS output
-    mess_temps, tunit = mess_io.reader.rates.temperatures(mess_out_str)
-    mess_press, punit = mess_io.reader.rates.pressures(mess_out_str)
-
-    fit_temps = fit_temps if fit_temps is not None else mess_temps
-    fit_pressures = fit_pressures if fit_pressures is not None else mess_press
-    fit_tunit = fit_tunit if fit_tunit is not None else tunit
-    fit_punit = fit_punit if fit_punit is not None else punit
-
-    fit_temps = list(set(list(fit_temps)))
-    fit_temps.sort()
-    assert set(fit_temps) <= set(mess_temps)
-    assert set(fit_pressures) <= set(mess_press)
-
-    # Read all k(T,P) values from MESS output; filter negative/undefined values
-    calc_ktp_dct = mess_io.reader.rates.ktp_dct(
-        mess_out_str, rct_lab, prd_lab)
-    print(
-        '\nRemoving invalid k(T,P)s from MESS output that are either:\n',
-        '  (1) negative, (2) undefined [***], or (3) below 10**(-21) if',
-        'reaction is bimolecular')
-    filt_ktp_dct = filter_ktp_dct(calc_ktp_dct, bimol)
-
-    # Filter the ktp dictionary by assessing the presure dependence
-    if filt_ktp_dct:
-        if list(filt_ktp_dct.keys()) == ['high']:
-            print('\nValid k(T)s only found at High Pressure...')
-            ktp_dct['high'] = filt_ktp_dct['high']
-        else:
-            if pdep_dct:
-                print(
-                    '\nUser requested to assess pressure dependence',
-                    'of reaction.')
-                ktp_dct = pressure_dependent_ktp_dct(filt_ktp_dct, **pdep_dct)
-            else:
-                ktp_dct = copy.deepcopy(filt_ktp_dct)
-
-    return ktp_dct, fit_temps
 
 
 def _assess_fit_method(ktp_dct, inp_fit_method):

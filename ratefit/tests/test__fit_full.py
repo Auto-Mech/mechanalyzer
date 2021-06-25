@@ -23,17 +23,17 @@ FIT_METHOD1 = 'arrhenius'
 # influences direction of reactions from MESS if forw and rev not taken
 # no explicit control inside of mechdriver
 LABEL_DCT = {
-    'WELL1': 'w1',
-    'WELL2': 'w2',
-    'WELL3': 'w3',
-    'WELL4': 'w4',
-    'BIMOL1': 'p1',
-    'BIMOL2': 'p2',
-    'BIMOL3': 'p3',
-    'BIMOL4': 'p4',
-    'BIMOL5': 'p5',
-    'BIMOL6': 'p6',
-    'BIMOL7': 'p7'
+    'w1': 'WELL1',
+    'w2': 'WELL2',
+    'w3': 'WELL3',
+    'w4': 'WELL4',
+    'p1': 'BIMOL1',
+    'p2': 'BIMOL2',
+    'p3': 'BIMOL3',
+    'p4': 'BIMOL4',
+    'p5': 'BIMOL5',
+    'p6': 'BIMOL6',
+    'p7': 'BIMOL7'
 }
 FIT_TEMPS = (300, 400, 500, 600, 700, 800, 900, 1000, 1100,
              1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000)

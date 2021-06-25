@@ -41,4 +41,3 @@ dependencies:
     - auto-mech::thermp
     - auto-mech::autoio-interfaces
     - auto-mech::autofile
-    # - auto-mech::mechanalyzer

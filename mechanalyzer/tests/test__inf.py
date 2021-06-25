@@ -183,6 +183,8 @@ def test__rxn():
     rxn_info1rev = inf.rxn.from_dct(reacs1rev, prods1rev, SPC_DCT, rxn_mul='low')
     rxn_info2 = inf.rxn.from_dct(reacs2, prods2, SPC_DCT, rxn_mul='high')
     rxn_info3 = inf.rxn.from_dct(reacs3, prods3, SPC_DCT, rxn_mul='low')
+    rxn_info4 = inf.rxn.from_data(
+        ((INCHI1, INCHI2), (INCHI3,)), ((0, 0), (0,)), ((2, 2), (1,)), 1)
 
     assert rxn_info1 == (
         ((INCHI1, INCHI2), (INCHI3,)), ((0, 0), (0,)), ((2, 2), (1,)), 1
@@ -192,6 +194,9 @@ def test__rxn():
     )
     assert rxn_info3 == (
         ((INCHI6,), (INCHI7,)), ((0,), (1,)), ((2,), (2,)), 2
+    )
+    assert rxn_info4 == (
+        ((INCHI1, INCHI2), (INCHI3,)), ((0, 0), (0,)), ((2, 2), (1,)), 1
     )
 
     # Rearrange the info object
@@ -236,9 +241,3 @@ def test__rxn():
     assert inf.rxn.radrad(rxn_info1rev)
     assert inf.rxn.radrad(rxn_info2)
     assert not inf.rxn.radrad(rxn_info3)
-
-
-if __name__ == '__main__':
-    test__spc()
-    test__thy()
-    test__rxn()

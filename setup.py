@@ -6,7 +6,7 @@ from distutils.core import setup
 
 setup(
     name="mechanalyzer",
-    version="0.2.2",
+    version="0.2.4",
     packages=[
         'mechanalyzer',
         'mechanalyzer.builder',

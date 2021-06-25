@@ -3,7 +3,6 @@
 
 import os
 import csv
-import automol
 from phydat import phycon
 
 
@@ -41,12 +40,13 @@ def calc_hform_0k(spc_h0, basis_h0,
         # Add basis and reference energies to overall va
         dhzero += basis_coeffs[i] * (ref_h0 - basis_h0[i])
 
-        print('Contribution from:', automol.inchi.smiles(ich))
-        print(
-            'HF0K in kcal: {:g} * {:.5f}'.format(basis_coeffs[i], ref_h0 *phycon.EH2KCAL))
-        print(
-            'ABS in hartree: {:g} * {:.5f}'.format(
-                basis_coeffs[i], basis_h0[i] * phycon.EH2KCAL))
+        # print('Contribution from:', automol.inchi.smiles(ich))
+        # print(
+        #     'HF0K in kcal: {:g} * {:.5f}'.format(
+        #     basis_coeffs[i], ref_h0 *phycon.EH2KCAL))
+        # print(
+        #     'ABS in hartree: {:g} * {:.5f}'.format(
+        #         basis_coeffs[i], basis_h0[i] * phycon.EH2KCAL))
 
     return dhzero
 
@@ -71,18 +71,15 @@ def reference_enthalpy(ich_lookup, ref_set, temp, rxn=False):
     thermodb_file = _thermo_database(temp, rxn=rxn)
 
     # Find the energy value for the given species and enery type
-    print('ich lookup', ich_lookup)
-    print('thermfile', thermodb_file)
     hf_val = None
     with open(thermodb_file, 'r') as db_file:
         reader = csv.DictReader(db_file)
         for row in reader:
             if row['inchi'] == ich_lookup:
                 val = row[ref_set]
-                if val == '':
-                    val = None
-                hf_val = float(val)
-    print('hf_val', hf_val)
+                hf_val = float(val) if val != '' else None
+                break
+
     # Convert units if val found, else print error message
     if hf_val is not None:
         if not rxn:
