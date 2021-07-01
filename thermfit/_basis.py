@@ -53,11 +53,17 @@ def prepare_refs(ref_scheme, spc_dct, spc_names,
         for _ in procs:
             bas_dct, unq_dct = queue.get()
             basis_dct.update(bas_dct)
-            bas_ichs = [
-                unique_refs_dct[spc]['inchi']
-                if 'inchi' in unique_refs_dct[spc]
-                else unique_refs_dct['reacs']
-                for spc in unique_refs_dct]
+            bas_ichs = []
+            for dct in unique_refs_dct.values():
+                if 'inchi' in dct:
+                    bas_ichs.append(dct['inchi'])
+                else:
+                    bas_ichs.append(unique_refs_dct['reacs'])
+            # bas_ichs = [
+            #     unique_refs_dct[spc]['inchi']
+            #     if 'inchi' in unique_refs_dct[spc]
+            #     else unique_refs_dct['reacs']
+            #     for spc in unique_refs_dct]
             for spc in unq_dct:
                 new_ich = (
                     unq_dct[spc]['inchi']
@@ -129,11 +135,17 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
 
         # Add to the dct with reference dct if it is not in the spc dct
         for ref in spc_basis:
-            bas_ichs = [
-                unique_refs_dct[spc]['inchi']
-                if 'inchi' in unique_refs_dct[spc] else
-                unique_refs_dct[spc]['reacs']
-                for spc in unique_refs_dct]
+            bas_ichs = []
+            for spc, dct in unique_refs_dct.items():
+                if 'inchi' in dct:
+                    bas_ichs.append(dct['inchi'])
+                else:
+                    bas_ichs.append(unique_refs_dct['reacs'])
+            # bas_ichs = [
+            #     unique_refs_dct[spc]['inchi']
+            #     if 'inchi' in unique_refs_dct[spc] else
+            #     unique_refs_dct[spc]['reacs']
+            #     for spc in unique_refs_dct]
             cnt = len(list(unique_refs_dct.keys())) + 1
             if isinstance(ref, str):
                 if ((ref not in spc_ichs and ref not in dct_ichs)
@@ -179,11 +191,11 @@ def create_ts_spc(ref, spc_dct, mult, rxnclass):
         rgt_muls, rgt_chgs = (), ()
         for rgt in rgts:
             found = False
-            for name in spc_dct:
-                if 'inchi' in spc_dct[name]:
-                    if spc_dct[name]['inchi'] == rgt:
-                        rgt_muls += (spc_dct[name]['mult'],)
-                        rgt_chgs += (spc_dct[name]['charge'],)
+            for dct in spc_dct.values():
+                if 'inchi' in dct:
+                    if dct['inchi'] == rgt:
+                        rgt_muls += (dct['mult'],)
+                        rgt_chgs += (dct['charge'],)
                         found = True
                         break
             if not found:
