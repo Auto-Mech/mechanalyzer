@@ -85,8 +85,8 @@ def find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
 
             if len(chnl_species[0]) == 2 and len(chnl_species[1]) == 2:
                 # bimol bimol reactions
-                if ((chnl_species[0] in conndct[conn_chnls_idx]) and
-                        (chnl_species[1] in conndct[conn_chnls_idx]) and
+                if ((chnl_species[0] in spc_lst) and
+                        (chnl_species[1] in spc_lst) and
                         (conn_chnls_idx not in connected_to)):
                     connected_to.append(conn_chnls_idx)
 
