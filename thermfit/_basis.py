@@ -105,7 +105,8 @@ def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
         msg += '\nDetermining basis for species: {}'.format(spc_name)
         if zrxn is not None:
             rcls = automol.reac.reaction_class(zrxn)
-            if rcls in thermfit.cbh.CBH_TS_CLASSES:
+            radrad = automol.reac.is_radical_radical(zrxn)
+            if (rcls, radrad) in thermfit.cbh.CBH_TS_CLASSES:
                 scheme = ref_scheme
             else:
                 scheme = 'basic'
