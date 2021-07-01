@@ -176,22 +176,22 @@ def cbh_basis(zrxn, scheme):
     # breaking bonds are order N.6 and forming are N.4 and the valences
     # of the atoms involved are appropriately altered
     fclasses = (
-        ReactionClass.Typ.HYDROGEN_ABSTRACTION,
-        ReactionClass.Typ.HYDROGEN_MIGRATION,
-        ReactionClass.Typ.BETA_SCISSION,
-        ReactionClass.Typ.ADDITION
+        (ReactionClass.Typ.HYDROGEN_ABSTRACTION, False),
+        (ReactionClass.Typ.HYDROGEN_MIGRATION, False),
+        (ReactionClass.Typ.BETA_SCISSION, False),
+        (ReactionClass.Typ.ADDITION, False)
     )
     if rxnclass == ReactionClass.Typ.HYDROGEN_ABSTRACTION and radrad:
         if scheme == 'cbh0':
             frags = cbhzed_radradabs(gra, site, site2)
         elif scheme == 'cbh1':
             frags = cbhone_radradabs(gra, site, site2)
-    elif any(cls in rxnclass for cls in fclasses):
+    elif any(cls[0] == rxnclass for cls in fclasses):
         if scheme == 'cbh0':
             frags = cbhzed_habs(gra, site)
         elif scheme == 'cbh1':
             frags = cbhone_habs(gra, site)
-    if rxnclass == ReactionClass.Typ.ELIMINATION:
+    elif rxnclass == ReactionClass.Typ.ELIMINATION:
         if scheme == 'cbh0':
             frags = cbhzed_elim(gra, site, site2)
         elif scheme == 'cbh1':
