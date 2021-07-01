@@ -12,12 +12,13 @@ from thermfit.cbh import _util as util
 from thermfit.cbh._spc import species_basis
 
 
+# (Reaction Type, IsRadRad)
 CBH_TS_CLASSES = [
-    'hydrogen abstraction',
-    'beta scission',
-    'elimination high',
-    'radical radical hydrogen abstraction high',
-    'addition high'
+    (ReactionClass.Typ.HYDROGEN_ABSTRACTION, False),
+    (ReactionClass.Typ.HYDROGEN_ABSTRACTION, True),
+    (ReactionClass.Typ.ADDITION, False),
+    (ReactionClass.Typ.ELIMINATION, False),
+    (ReactionClass.Typ.BETA_SCISSION, False)
 ]
 
 
@@ -89,6 +90,7 @@ def cbh_basis(zrxn, scheme):
     zrxn = automol.reac.without_dummy_atoms(zrxn)
 
     rxnclass = automol.reac.reaction_class(zrxn)
+    radrad = automol.reac.is_radical_radical(zrxn)
 
     frm_bnd_keys = automol.reac.forming_bond_keys(zrxn)
     brk_bnd_keys = automol.reac.breaking_bond_keys(zrxn)
@@ -157,7 +159,7 @@ def cbh_basis(zrxn, scheme):
 
     #  radical radical hydrogen abstraction needs a second site
     #  where the pi bond is formed
-    elif 'radical radical hyd' in rxnclass:
+    elif rxnclass == ReactionClass.Typ.HYDROGEN_ABSTRACTION and radrad:
         rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
         adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
         atmc, atmd = frm_key1
@@ -173,19 +175,23 @@ def cbh_basis(zrxn, scheme):
     # Run the appropriate function to transform the graph so that
     # breaking bonds are order N.6 and forming are N.4 and the valences
     # of the atoms involved are appropriately altered
-    fclasses = ('hydrogen abstraction', 'beta scission',
-                'hydrogen migration', 'addition')
-    if 'radical radical hyd' in rxnclass:
+    fclasses = (
+        (ReactionClass.Typ.HYDROGEN_ABSTRACTION, False),
+        (ReactionClass.Typ.HYDROGEN_MIGRATION, False),
+        (ReactionClass.Typ.BETA_SCISSION, False),
+        (ReactionClass.Typ.ADDITION, False)
+    )
+    if rxnclass == ReactionClass.Typ.HYDROGEN_ABSTRACTION and radrad:
         if scheme == 'cbh0':
             frags = cbhzed_radradabs(gra, site, site2)
         elif scheme == 'cbh1':
             frags = cbhone_radradabs(gra, site, site2)
-    elif any(cls in rxnclass for cls in fclasses):
+    elif any(cls[0] == rxnclass for cls in fclasses):
         if scheme == 'cbh0':
             frags = cbhzed_habs(gra, site)
         elif scheme == 'cbh1':
             frags = cbhone_habs(gra, site)
-    elif 'elimination' in rxnclass:
+    elif rxnclass == ReactionClass.Typ.ELIMINATION:
         if scheme == 'cbh0':
             frags = cbhzed_elim(gra, site, site2)
         elif scheme == 'cbh1':
@@ -196,29 +202,24 @@ def cbh_basis(zrxn, scheme):
     # Split the transformed graphs into a list of inchis
     fraglist = []
     clist = []
-    for frag in frags:
-        if 'exp_gra' in frags[frag]:
-            # Remove dummy atoms from graph, broke for H-ABS (KBM)
-            # egra = automol.graph.without_dummy_atoms(frags[frag]['exp_gra'])
-            # if egra != ({}, {}):  # Check if graph is empty
-            #     fraglist.append(automol.graph.inchi(frags[frag]['exp_gra']))
-            #     clist.append(frags[frag]['coeff'])
-            fraglist.append(automol.graph.inchi(frags[frag]['exp_gra']))
-            clist.append(frags[frag]['coeff'])
+    for frag_gra in frags.values():
+        if 'exp_gra' in frag_gra:
+            fraglist.append(automol.graph.inchi(frag_gra['exp_gra']))
+            clist.append(frag_gra['coeff'])
         else:
-            if 'beta' in rxnclass:
+            if rxnclass == ReactionClass.Typ.BETA_SCISSION:
                 fraglist.append(
-                    tsutil.split_beta_gras(frags[frag]['ts_gra']))
-            elif 'elim' in rxnclass:
+                    tsutil.split_beta_gras(frag_gra['ts_gra']))
+            elif rxnclass == ReactionClass.Typ.ELIMINATION:
                 fraglist.append(
-                    tsutil.split_elim_gras(frags[frag]['ts_gra']))
-            elif 'radical radical hyd' in rxnclass:
+                    tsutil.split_elim_gras(frag_gra['ts_gra']))
+            elif rxnclass == ReactionClass.Typ.HYDROGEN_ABSTRACTION and radrad:
                 fraglist.append(
-                    tsutil.split_radradabs_gras(frags[frag]['ts_gra']))
+                    tsutil.split_radradabs_gras(frag_gra['ts_gra']))
             else:
                 fraglist.append(
-                    tsutil.split_gras(frags[frag]['ts_gra']))
-            clist.append(frags[frag]['coeff'])
+                    tsutil.split_gras(frag_gra['ts_gra']))
+            clist.append(frag_gra['coeff'])
 
     return fraglist, clist
 
@@ -305,9 +306,9 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
                 key = 'ts_gra'
             newname = None
             repeat = False
-            for name in frags:
-                if key in frags[name]:
-                    if automol.graph.full_isomorphism(frags[name][key], grai):
+            for name, frag_dct in frags.items():
+                if key in frag_dct:
+                    if automol.graph.full_isomorphism(frag_dct[key], grai):
                         newname = name
                         repeat = True
             if not repeat:
@@ -412,15 +413,15 @@ def cbhone_radradabs(gra, site1, site2, bal=True):
                     key = 'ts_gra'
                 newname = None
                 repeat = False
-                for name in frags:
-                    if key in frags[name]:
+                for name, frag_dct in frags.items():
+                    if key in frag_dct:
                         if key == 'exp_gra':
                             if automol.graph.full_isomorphism(
-                                    frags[name][key], grai):
+                                    frag_dct[key], grai):
                                 newname = name
                                 repeat = True
                         else:
-                            if frags[name][key] == grai:
+                            if frag_dct[key] == grai:
                                 newname = name
                                 repeat = True
                 if not repeat:
@@ -435,16 +436,16 @@ def cbhone_radradabs(gra, site1, site2, bal=True):
         if balance_:
             zedfrags = cbhzed_radradabs(gra, site1, site2, bal=False)
             newfrags = frags.copy()
-            for zedname in zedfrags:
+            for zedfrags_dct in zedfrags.values():
                 newname = None
                 repeat = False
-                if 'exp_gra' in zedfrags[zedname]:
+                if 'exp_gra' in zedfrags_dct:
                     key = 'exp_gra'
                     for onename in newfrags:
                         if 'exp_gra' in newfrags[onename]:
                             if automol.graph.full_isomorphism(
                                    newfrags[onename][key],
-                                   zedfrags[zedname][key]):
+                                   zedfrags_dct[key]):
                                 newname = onename
                                 repeat = True
                 else:
@@ -452,9 +453,9 @@ def cbhone_radradabs(gra, site1, site2, bal=True):
                 if not repeat:
                     newname = len(newfrags.keys())
                     newfrags[newname] = {}
-                    newfrags[newname][key] = zedfrags[zedname][key]
+                    newfrags[newname][key] = zedfrags_dct[key]
                 util.add2dic(
-                    newfrags[newname], 'coeff', -zedfrags[zedname]['coeff'])
+                    newfrags[newname], 'coeff', -zedfrags_dct['coeff'])
             frags = newfrags
         balance_ = util.balance_ts(gra, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
@@ -494,9 +495,9 @@ def cbhzed_elim(gra, site1, site2, bal=True):
                     nonhyd_adj_atms2 = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[site2[2]], othersite=site1)
                     nonhyd_adj_atms1 = tuple(adj for adj in nonhyd_adj_atms1
-                                              if adj not in site1)
-                    nonhyd_adj_atms1 = tuple(adj for adj in nonhyd_adj_atms2
-                                              if adj not in site2)
+                                             if adj not in site1)
+                    nonhyd_adj_atms2 = tuple(adj for adj in nonhyd_adj_atms2
+                                             if adj not in site2)
                     coeff = (
                         util.branch_point(
                             nonhyd_adj_atms1, nonhyd_adj_atms2) *
@@ -556,9 +557,9 @@ def cbhzed_elim(gra, site1, site2, bal=True):
                 key = 'ts_gra'
             newname = None
             repeat = False
-            for name in frags:
-                if key in frags[name]:
-                    if automol.graph.full_isomorphism(frags[name][key], grai):
+            for name, frags_dct in frags.items():
+                if key in frags_dct:
+                    if automol.graph.full_isomorphism(frags_dct[key], grai):
                         newname = name
                         repeat = True
             if not repeat:
@@ -652,9 +653,9 @@ def cbhzed_habs(gra, site, bal=True):
                 key = 'ts_gra'
             newname = None
             repeat = False
-            for name in frags:
-                if key in frags[name]:
-                    if automol.graph.full_isomorphism(frags[name][key], grai):
+            for name, frags_dct in frags.items():
+                if key in frags_dct:
+                    if automol.graph.full_isomorphism(frags_dct[key], grai):
                         newname = name
                         repeat = True
             if not repeat:
@@ -776,15 +777,15 @@ def cbhone_elim(gra, site1, site2, bal=True):
                     key = 'ts_gra'
                 newname = None
                 repeat = False
-                for name in frags:
-                    if key in frags[name]:
+                for name, frags_dct in frags.items():
+                    if key in frags_dct:
                         if key == 'exp_gra':
                             if automol.graph.full_isomorphism(
-                                   frags[name][key], grai):
+                                   frags_dct[key], grai):
                                 newname = name
                                 repeat = True
                         else:
-                            if frags[name][key] == grai:
+                            if frags_dct[key] == grai:
                                 newname = name
                                 repeat = True
                 if not repeat:
@@ -799,16 +800,16 @@ def cbhone_elim(gra, site1, site2, bal=True):
         if balance_:
             zedfrags = cbhzed_elim(gra, site1, site2, bal=False)
             newfrags = frags.copy()
-            for zedname in zedfrags:
+            for zedfrags_dct in zedfrags.values():
                 newname = None
                 repeat = False
-                if 'exp_gra' in zedfrags[zedname]:
+                if 'exp_gra' in zedfrags_dct:
                     key = 'exp_gra'
                     for onename in newfrags:
                         if 'exp_gra' in newfrags[onename]:
                             if automol.graph.full_isomorphism(
                                     newfrags[onename][key],
-                                    zedfrags[zedname][key]):
+                                    zedfrags_dct[key]):
                                 newname = onename
                                 repeat = True
                 else:
@@ -816,9 +817,9 @@ def cbhone_elim(gra, site1, site2, bal=True):
                 if not repeat:
                     newname = len(newfrags.keys())
                     newfrags[newname] = {}
-                    newfrags[newname][key] = zedfrags[zedname][key]
+                    newfrags[newname][key] = zedfrags_dct[key]
                 util.add2dic(
-                    newfrags[newname], 'coeff',  -zedfrags[zedname]['coeff'])
+                    newfrags[newname], 'coeff',  -zedfrags_dct['coeff'])
             frags = newfrags
         balance_ = util.balance_ts(gra, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
@@ -902,15 +903,15 @@ def cbhone_habs(gra, site, bal=True):
                 key = 'ts_gra'
             newname = None
             repeat = False
-            for name in frags:
-                if key in frags[name]:
+            for name, frags_dct in frags.items():
+                if key in frags_dct:
                     if key == 'exp_gra':
                         if automol.graph.full_isomorphism(
-                           frags[name][key], grai):
+                           frags_dct[key], grai):
                             newname = name
                             repeat = True
                     else:
-                        if frags[name][key] == grai:
+                        if frags_dct[key] == grai:
                             newname = name
                             repeat = True
             if not repeat:
@@ -925,16 +926,16 @@ def cbhone_habs(gra, site, bal=True):
         if balance_:
             zedfrags = cbhzed_habs(gra, site, bal=False)
             newfrags = frags.copy()
-            for zedname in zedfrags:
+            for zedfrags_dct in zedfrags.values():
                 newname = None
                 repeat = False
-                if 'exp_gra' in zedfrags[zedname]:
+                if 'exp_gra' in zedfrags_dct:
                     key = 'exp_gra'
                     for onename in newfrags:
                         if 'exp_gra' in newfrags[onename]:
                             if automol.graph.full_isomorphism(
                                newfrags[onename][key],
-                               zedfrags[zedname][key]):
+                               zedfrags_dct[key]):
                                 newname = onename
                                 repeat = True
                 else:
@@ -942,9 +943,9 @@ def cbhone_habs(gra, site, bal=True):
                 if not repeat:
                     newname = len(newfrags.keys())
                     newfrags[newname] = {}
-                    newfrags[newname][key] = zedfrags[zedname][key]
+                    newfrags[newname][key] = zedfrags_dct[key]
                 util.add2dic(
-                    newfrags[newname], 'coeff', -zedfrags[zedname]['coeff'])
+                    newfrags[newname], 'coeff', -zedfrags_dct['coeff'])
             frags = newfrags
         balance_ = util.balance_ts(gra, frags)
         balance_ = {k: v for k, v in balance_.items() if v}

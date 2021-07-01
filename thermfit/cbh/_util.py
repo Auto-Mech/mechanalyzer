@@ -184,14 +184,14 @@ def print_lhs_rhs(ich, frags):
     lhs, rhs = _lhs_rhs(frags)
     lhsprint = automol.inchi.smiles(ich)
     rhsprint = ''
-    for frag in rhs:
+    for frag, side in rhs.values():
         if rhsprint:
             rhsprint += ' +  {:.1f} {} '.format(
-                rhs[frag], automol.inchi.smiles(frag))
+                side, automol.inchi.smiles(frag))
         else:
             rhsprint = ' {:.1f} {} '.format(
                 rhs[frag], automol.inchi.smiles(frag))
-    for frag in lhs:
+    for frag, side in lhs.values():
         lhsprint += ' +  {:.1f} {} '.format(
-            lhs[frag], automol.inchi.smiles(frag))
+            side, automol.inchi.smiles(frag))
     return '{} --> {}'.format(lhsprint, rhsprint)

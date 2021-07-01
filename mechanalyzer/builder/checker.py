@@ -207,10 +207,10 @@ def get_lone_spcs(rxn_param_dct, threshold):
             lone_spcs[spc] = []
 
     # Store the reaction name(s) for each lone species
-    for spc in lone_spcs:
+    for spc, dct in lone_spcs.items():
         for rxn in rxn_param_dct.keys():
             if spc in rxn[0] or spc in rxn[1]:  # whether spc in prds or rcts
-                lone_spcs[spc].append(rxn)
+                dct.append(rxn)
 
     return lone_spcs
 

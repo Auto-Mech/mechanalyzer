@@ -71,22 +71,22 @@ def find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
         chnl_species = [list(pes_df['rcts'][chnl_idx]),
                         list(pes_df['prds'][chnl_idx])]
 
-        for conn_chnls_idx in conndct:
+        for conn_chnls_idx, spc_lst in conndct.items():
             for spc_pair in chnl_species:
-                if len(spc_pair) == 1 and spc_pair in conndct[conn_chnls_idx]:
+                if len(spc_pair) == 1 and spc_pair in spc_lst:
                     # This works for unimol species
                     # Need also to verify bimol wellskipping channels
                     if conn_chnls_idx not in connected_to:
                         connected_to.append(conn_chnls_idx)
                 elif (len(spc_pair) == 1 and
-                      spc_pair[::-1] in conndct[conn_chnls_idx]):
+                      spc_pair[::-1] in spc_lst):
                     if conn_chnls_idx not in connected_to:
                         connected_to.append(conn_chnls_idx)
 
             if len(chnl_species[0]) == 2 and len(chnl_species[1]) == 2:
                 # bimol bimol reactions
-                if ((chnl_species[0] in conndct[conn_chnls_idx]) and
-                        (chnl_species[1] in conndct[conn_chnls_idx]) and
+                if ((chnl_species[0] in spc_lst) and
+                        (chnl_species[1] in spc_lst) and
                         (conn_chnls_idx not in connected_to)):
                     connected_to.append(conn_chnls_idx)
 
@@ -104,12 +104,11 @@ def find_conn_chnls(pes_rct_lst, pes_prd_lst, pes_rxn_name_lst):
                         conn_chnls = connchnls.pop(cval, None)
                         conndct[connected_to[0]].extend(conn_specs)
                         connchnls[connected_to[0]].extend(conn_chnls)
-            for cidx in conndct:
-                conndct[cidx].sort()
-                conndct[cidx] = [
-                    conndct[cidx][i] for i in
-                    range(len(conndct[cidx])) if i == 0 or
-                    conndct[cidx][i] != conndct[cidx][i-1]]
+            for cidx, spc_lst in conndct.items():
+                lst = sorted(spc_lst)
+                lst = [lst[i] for i in range(len(lst))
+                       if i == 0 or lst[i] != lst[i-1]]
+                conndct[cidx] = lst
 
     return connchnls
 
