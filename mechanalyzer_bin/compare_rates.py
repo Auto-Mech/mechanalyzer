@@ -6,16 +6,16 @@ import sys
 
 # INPUTS
 # Filenames
-mech_filenames = ['Danilack_v33_no_stereo_short_names_only_calcs.ckin', 'Tran_MECH.ckin']
-thermo_filenames = ['Danilack_v33_no_stereo_short_names_only_calcs.ckin', 'Tran_THERM.ckin']
-spc_csv_filenames = ['Danilack_species_short_names.csv', 'Tran_species.csv']  
+mech_filenames = ['Tran_v33_short.ckin', 'Tran_v42_short.ckin']
+thermo_filenames = ['Tran_v33_short.ckin', 'Tran_v42_short.ckin']
+spc_csv_filenames = ['Tran_species_dumb.csv', 'Tran_species_dumb.csv']
 
-output_filename = 'dan_vs_tran_only_calcs.pdf'
-mech_nicknames = ['Danilack', 'Tran']  # for plotting
+output_filename = '33_42_short.pdf'
+mech_nicknames = ['v33', 'v42']
 
 # Conditions
-temps = np.linspace(300, 2000, 18)
-pressures = np.array([1, 10, 100])
+temps = np.linspace(400, 700, 31)
+pressures = np.array([1, 10])
 
 # options
 sort_method = 'ratios' # sorting; either 'rates', 'ratios', or None

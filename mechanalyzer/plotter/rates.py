@@ -8,7 +8,7 @@ import matplotlib.backends.backend_pdf as plt_pdf
 import numpy
 from chemkin_io.writer import _util as writer
 
-LINESTYLES = ['-', '--', '-.', ':']  # for plot formatting
+LINES = ['-', '--', '-.', ':']  # for plot formatting
 K_UNITS_DCT = {1: '(s$^{-1}$)', 2: '(cm$^3$ mol$^{-1}$ s$^{-1}$)',
                3: '(cm$^6$ mol$^{-2}$ s$^{-1}$)', 4: '(cm$^9$ mol$^{-3}$ s$^{-1}$)'}
 
@@ -87,7 +87,7 @@ def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
         :type mech_names: list [mech_name1, mech_name2]
         :param format_dct: dct containing color and label for each pressure
         :type: dct {pressure1: (color1, label1), pressure2: ...}
-        """
+    """
     ratios_plotted = False
     for mech_idx, ktp_dct in enumerate(ktp_dcts):
         if ktp_dct is not None:
@@ -99,22 +99,32 @@ def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
                 axs[0].plot(1000 / temps,
                             numpy.log10(kts), label=_label,
                             color=_color,
-                            linestyle=LINESTYLES[mech_idx])
+                            linestyle=LINES[mech_idx])
 
                 # Plot the ratios if they exist
-                if ratio_dcts[mech_idx] is not None:  # putting second "if" below prevents errors
-                    if ratio_dcts[mech_idx][pressure] is not None:
+                if ratio_dcts[mech_idx] is not None: 
+                    if pressure in ratio_dcts[mech_idx].keys(): 
+                    #if ratio_dcts[mech_idx][pressure] is not None:
                         (_, ratios) = ratio_dcts[mech_idx][pressure]
                         ratios_plotted = True
                         axs[1].plot(1000 / temps,
                                     numpy.log10(ratios), label=_label,
                                     color=_color,
-                                    linestyle=LINESTYLES[mech_idx])
-    # Add legend
+                                    linestyle=LINES[mech_idx])
+            # Check for the 'max_to_high' case
+            if ratio_dcts[mech_idx] is not None:    
+                if 'max_to_high' in ratio_dcts[mech_idx].keys():
+                    (_, ratios) = ratio_dcts[mech_idx]['max_to_high']
+                    ratios_plotted = True
+                    _color = 'k'
+                    _label = 'max to P-indep, ' + mech_names[mech_idx]
+                    axs[1].plot(1000/temps, np.log10(ratios), label=_label,
+                                color=_color, linestyle=LINES[mech_idx])
+
+    # Do some formatting
     axs[0].legend(fontsize=12, loc='upper right')
     if ratios_plotted:
         axs[1].legend(fontsize=12, loc='upper right')
-
     rxn_name_formatted = writer.format_rxn_name(rxn)
     fig.suptitle(rxn_name_formatted, x=0.5, y=0.94, fontsize=20)
 
@@ -184,20 +194,37 @@ def get_aligned_rxn_ratio_dct(aligned_rxn_ktp_dct):
         ref_ktp_dct = ktp_dcts[0]
         ratio_dcts = []
         for mech_idx, ktp_dct in enumerate(ktp_dcts):
-            # If (1) on the first ktp_dct, (2) the ref_ktp_dct is None, or (3) the current_ktp_dct
-            # is None, set the ratio_dct to None
+            # If (1) on first ktp_dct, (2) ref_ktp_dct is None, or (3) current
+            # ktp_dct is None, set the ratio_dct to None
             if mech_idx == 0 or ref_ktp_dct is None or ktp_dct is None:
                 ratio_dct = None
             # Otherwise, calculate the ratio_dct
             else:
                 ratio_dct = {}
                 for pressure, (temps, kts) in ktp_dct.items():
-                    # If the pressure is defined in the ref ktp_dct, calculate and store the ratio
+                    # If pressure defined in ref ktp_dct, calculate the ratio
                     if pressure in ref_ktp_dct.keys():
                         _, ref_kts = ref_ktp_dct[pressure]
                         ratios = kts / ref_kts
                         ratio_dct[pressure] = (temps, ratios)
-                if ratio_dct == {}:  # account for the case when no pressures contain ratios
+                # If the ratio_dct is still empty, one has 'high' and one has 
+                # numerical pressures (e.g., PLOG and Troe); calculate
+                # using the highest numerical pressure
+                if ratio_dct == {}:
+                    if 'high' in ref_ktp_dct.keys():
+                        _, ref_kts = ref_ktp_dct['high']
+                        max_pressure = max(ktp_dct.keys())
+                        _, kts = ktp_dct[max_pressure]
+                        ratios = kts / ref_kts
+                        ratio_dct['max_to_high'] = (temps, ratios)
+                    elif 'high' in ktp_dct.keys():
+                        max_pressure = max(ref_ktp_dct.keys())
+                        _, ref_kts = ref_ktp_dct[max_pressure]
+                        _, kts = ktp_dct['high']
+                        ratios = kts / ref_kts
+                        ratio_dct['max_to_high'] = (temps, ratios)
+                # Catch case when ratio_dct is still empty 
+                if ratio_dct == {}:  
                     ratio_dct = None
             ratio_dcts.append(ratio_dct)  # store
         aligned_rxn_ratio_dct[rxn] = ratio_dcts  # store
@@ -274,10 +301,10 @@ def get_format_dct(pressures):
 def build_fig_and_axs(molecularity, ratio_dcts, mech_names):
     """ Build a figure with two axes
 
-        :param molecularity: molecularity of a reaction (used for rates plot y-axis label)
+        :param molecularity: molecularity of a reaction 
         :type molecularity: int
-        :param ratio_dcts: ratio_dcts for this reaction (used for ratio plot y-axis label)
-        :param mech_names: short names for mechs (used for ratio plot y-axis label)
+        :param ratio_dcts: ratio_dcts for this reaction
+        :param mech_names: short names for mechs 
         :return:
     """
     # Set up the y labels for the rate plot and the ratios plot
