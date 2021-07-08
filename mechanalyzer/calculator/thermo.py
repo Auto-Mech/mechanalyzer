@@ -7,8 +7,8 @@ from phydat import phycon
 RC = phycon.RC_CAL  # gas constant in cal/(mol.K)
 
 
-def create_spc_thermo_dct(spc_nasa7_dct, temps, rval=RC):
-    """ Create a spc_thermo_dct. If left with the default input rval=phycon.RC_cal, the
+def create_spc_therm_dct(spc_nasa7_dct, temps, rval=RC):
+    """ Create a spc_therm_dct. If left with the default input rval=phycon.RC_cal, the
         thermo quantities will have units of cal/mol for h(T) and g(T) and units of cal/mol-K
         for cp(T) and s(T).
 
@@ -18,10 +18,10 @@ def create_spc_thermo_dct(spc_nasa7_dct, temps, rval=RC):
         :type temps: list
         :param rval: universal gas constant (units decided by the user)
         :type rval: float
-        :return spc_thermo_dct: species dictionary with arrays of T, h(T), cp(T), s(T), and g(T)
+        :return spc_therm_dct: species dictionary with arrays of T, h(T), cp(T), s(T), and g(T)
         :rtype: dct {spc1: thermo_array1, spc2: ...}
     """
-    spc_thermo_dct = {}
+    spc_therm_dct = {}
     for spc, nasa7_params in spc_nasa7_dct.items():
         h_t, cp_t, s_t, g_t, = [], [], [], []
         for temp in temps:
@@ -40,9 +40,9 @@ def create_spc_thermo_dct(spc_nasa7_dct, temps, rval=RC):
         s_t = numpy.array(s_t)
         g_t = numpy.array(g_t)
 
-        spc_thermo_dct[spc] = (temps, h_t, cp_t, s_t, g_t)
+        spc_therm_dct[spc] = (temps, h_t, cp_t, s_t, g_t)
 
-    return spc_thermo_dct
+    return spc_therm_dct
 
 
 def enthalpy(nasa7_params, temp, rval=RC):

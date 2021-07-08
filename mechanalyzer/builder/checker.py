@@ -63,11 +63,6 @@ def run_all_checks(rxn_param_dct, rxn_ktp_dct, k_thresholds,
     total_str += write_sources_and_sinks(source_spcs, sink_spcs)
     total_str += separator()
 
-    if filename is not None:
-        with open(filename, 'w') as fid:
-            fid.write(total_str)
-        fid.close()
-
     return total_str
 
 
@@ -274,6 +269,48 @@ def get_mismatches(rxn_param_dct):
             mismatched_rxns[rxn] = (params, rxn_types)
 
     return mismatched_rxns
+
+
+def get_missing_spcs(rxn_param_dct, spc_ident_dct):
+
+
+    def strip_thrd_bod(thrd_bod, rxn):
+        if thrd_bod == '(+M)' or thrd_bod == '+M':
+            stripped_thrd_bod = None
+        elif thrd_bod[0] == '(':
+            stripped_thrd_bod = thrd_bod[2:-1]
+        elif thrd_bod[0] == '+':
+            stripped_thrd_bod = thrd_bod[1:]
+        else:
+            stripped_thrd_bod = None
+            print(f'The third body could not be read for the reaction {rxn}')
+
+        return stripped_thrd_bod
+
+    # Get the mechanism species
+    mech_spcs = []
+    for rxn in rxn_param_dct.keys():
+        rcts, prds, thrd_bods = rxn
+        for spc in rcts:
+            mech_spcs.append(spc)
+        for spc in prds:
+            mech_spcs.append(spc)
+        for thrd_bod in thrd_bods:
+            if thrd_bod:  # if it's not None, try to read it
+                stripped_thrd_bod = strip_thrd_bod(thrd_bod, rxn)
+                if stripped_thrd_bod:  # will be None for '+M' or '(+M)'
+                    mech_spcs.append(stripped_thrd_bod)
+
+    mech_spcs = set(mech_spcs)
+
+    # Get the spc_ident_dct spcs
+    csv_spcs = set(spc_ident_dct.keys())
+
+    # Get the differences between the two sets
+    missing_from_csv = list(mech_spcs - csv_spcs)
+    missing_from_mech = list(csv_spcs - mech_spcs)
+
+    return missing_from_csv, missing_from_mech
 
 
 def write_sources_and_sinks(source_spcs, sink_spcs):
@@ -501,6 +538,20 @@ def write_mismatches(mismatched_rxns):
             'No reactions with mismatching rate expressions found\n\n\n')
 
     return mismatch_str
+
+
+def write_missing_spcs(missing_from_csv, missing_from_mech):
+
+    missing_spcs_str = '\nSPECIES MISSING FROM CSV OR MECHANISM\n\n'
+    missing_spcs_str += 'These species are missing from the spc.csv file:\n'
+    for spc in missing_from_csv:
+        missing_spcs_str += spc + '\n'
+    missing_spcs_str += '\nThese species are missing from the mechanism file:\n'
+    for spc in missing_from_mech:
+        missing_spcs_str += spc + '\n'
+    missing_spcs_str += '\n\n'
+
+    return missing_spcs_str
 
 
 def _write_rxn_ktp_dct(rxn_ktp_dct):
