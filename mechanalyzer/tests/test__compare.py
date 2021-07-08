@@ -130,7 +130,7 @@ CORRECT_PARTIALLY_REVERSED_RXN_KEYS = (
 )
 
 # Without removing loners
-CORRECT_ALIGNED_RXN_KTP_KEYS = (
+CORRECT_ALGN_RXN_KTP_KEYS = (
     (('H2', 'O'), ('OH', 'H'), (None,)),
     (('H', 'O2'), ('OH', 'O'), (None,)),
     (('H2', 'O'), ('OH', 'OH'), (None,)),
@@ -142,7 +142,7 @@ CORRECT_ALIGNED_RXN_KTP_KEYS = (
 )
 
 # With removing loners
-CORRECT_ALIGNED_RXN_KTP_KEYS_NO_LONERS = (
+CORRECT_ALGN_RXN_KTP_KEYS_NO_LONERS = (
     (('H2', 'O'), ('OH', 'H'), (None,)),
     (('H', 'O2'), ('OH', 'O'), (None,)),
     (('H', 'O'), ('OH',), (None,)),
@@ -238,29 +238,29 @@ def test_align_rxn_ktp_dcts():
     spc_ident_dcts = [SPC_IDENT_DCT1, SPC_IDENT_DCT2]
 
     # Try without removing loners
-    aligned_rxn_ktp_dct = compare.get_aligned_rxn_ktp_dct(
+    algn_rxn_ktp_dct = compare.get_algn_rxn_ktp_dct(
         rxn_ktp_dcts, spc_thermo_dcts, spc_ident_dcts, TEMPS, rev_rates=True, remove_loners=False,
         write_file=False
     )
-    #print('aligned:\n', aligned_rxn_ktp_dct)
+    #print('aligned:\n', algn_rxn_ktp_dct)
     # Try with removing loners
-    no_loners_aligned_rxn_ktp_dct = compare.get_aligned_rxn_ktp_dct(
+    no_loners_algn_rxn_ktp_dct = compare.get_algn_rxn_ktp_dct(
         rxn_ktp_dcts, spc_thermo_dcts, spc_ident_dcts, TEMPS, rev_rates=True, remove_loners=True,
         write_file=False
     )
 
     # Check that the keys are written correctly
-    assert tuple(aligned_rxn_ktp_dct.keys()) == CORRECT_ALIGNED_RXN_KTP_KEYS
-    assert tuple(no_loners_aligned_rxn_ktp_dct.keys()) == CORRECT_ALIGNED_RXN_KTP_KEYS_NO_LONERS
+    assert tuple(algn_rxn_ktp_dct.keys()) == CORRECT_ALGN_RXN_KTP_KEYS
+    assert tuple(no_loners_algn_rxn_ktp_dct.keys()) == CORRECT_ALGN_RXN_KTP_KEYS_NO_LONERS
 
     # Check that the rates were correctly reversed/not reversed for one reaction
     # Not reversed, so should be the same as KTS
     assert np.allclose(
-        aligned_rxn_ktp_dct[(('H', 'O2'), ('OH', 'O'), (None,))][0]['high'][1], KTS
+        algn_rxn_ktp_dct[(('H', 'O2'), ('OH', 'O'), (None,))][0]['high'][1], KTS
         )
     # Reversed, so should *not* be the same as KTS
     assert not np.allclose(
-        aligned_rxn_ktp_dct[(('H', 'O2'), ('OH', 'O'), (None,))][1]['high'][1], KTS
+        algn_rxn_ktp_dct[(('H', 'O2'), ('OH', 'O'), (None,))][1]['high'][1], KTS
         )
 
 

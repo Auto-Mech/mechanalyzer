@@ -1,8 +1,9 @@
-""" Plot the contents of an aligned_rxn_ktp_dct, with comparison to other mechanisms as appropriate
+""" Plot the contents of an algn_rxn_ktp_dct, with comparison to other mechanisms as appropriate
 """
 
 import os
 import matplotlib.pyplot as plt
+from matplotlib import cm
 from matplotlib.ticker import FormatStrFormatter
 import matplotlib.backends.backend_pdf as plt_pdf
 import numpy
@@ -13,23 +14,21 @@ K_UNITS_DCT = {1: '(s$^{-1}$)', 2: '(cm$^3$ mol$^{-1}$ s$^{-1}$)',
                3: '(cm$^6$ mol$^{-2}$ s$^{-1}$)', 4: '(cm$^9$ mol$^{-3}$ s$^{-1}$)'}
 
 
-def build_plots(aligned_rxn_ktp_dct, filename=None, path=None, mech_names=None, ratio_sort=False):
-    """ Build plots of an aligned_rxn_ktp_dct, with one reaction per page. Also calculate ratios
+def build_plots(algn_rxn_ktp_dct, mech_names=None, ratio_sort=False):
+    """ Build plots of an algn_rxn_ktp_dct, with one reaction per page. Also calculate ratios
         relative to other mechs and plot the ratios. Output a PDF.
 
-        :param aligned_rxn_ktp_dct: aligned dct containing rates for each mech
-        :type aligned_rxn_ktp_dct: dct {rxn1: [ratio_dct_mech1, ratio_dct_mech2, ...], rxn2: ...}
-        :param filename: filename for the output pdf; default is 'rate_comparison.pdf'
-        :type filename: str
-        :param path: path for the output pdf; default is the current directory
-        :type path: str
+        :param algn_rxn_ktp_dct: aligned dct containing rates for each mech
+        :type algn_rxn_ktp_dct: dct {rxn1: [ktp_dct_mech1, ktp_dct_mech2, ...], rxn2: ...}
         :param mech_names: list of mech_names for plot labeling; default is 'mech1, mech2, ...'
         :type mech_names: list [mech_name1, mech_name2, ...]
         :param ratio_sort: whether or not to sort plots by the max value of the ratio
         :type ratio_sort: Bool
+        :return figs: list of MatPlotLib figure objects
+        :rtype: list [fig1, fig2, ...]
     """
     # Get the number of mechanisms
-    vals = aligned_rxn_ktp_dct.values()
+    vals = algn_rxn_ktp_dct.values()
     val_iter = iter(vals)
     first_val = next(val_iter)
     num_mechs = len(first_val)
@@ -45,27 +44,27 @@ def build_plots(aligned_rxn_ktp_dct, filename=None, path=None, mech_names=None, 
                    mech_names is {len(mech_names)}."""
         )
 
-    # Get the aligned_rxn_ratio_dct
-    aligned_rxn_ratio_dct = get_aligned_rxn_ratio_dct(aligned_rxn_ktp_dct)
+    # Get the algn_rxn_ratio_dct
+    algn_rxn_ratio_dct = get_algn_rxn_ratio_dct(algn_rxn_ktp_dct)
 
     # If indicated, sort the ktp and ratio dcts by the ratio value
     if ratio_sort:
-        aligned_rxn_ratio_dct, aligned_rxn_ktp_dct = sort_by_max_ratio(
-            aligned_rxn_ratio_dct, aligned_rxn_ktp_dct
+        algn_rxn_ratio_dct, algn_rxn_ktp_dct = sort_by_max_ratio(
+            algn_rxn_ratio_dct, algn_rxn_ktp_dct
         )
 
     # Loop over each rxn and plot
     figs = []
-    pressures = get_pressures(aligned_rxn_ktp_dct)
+    pressures = get_pressures(algn_rxn_ktp_dct)
     format_dct = get_format_dct(pressures)  # defines color and label for each pressure
-    for rxn, ktp_dcts in aligned_rxn_ktp_dct.items():
-        ratio_dcts = aligned_rxn_ratio_dct[rxn]
+    for rxn, ktp_dcts in algn_rxn_ktp_dct.items():
+        ratio_dcts = algn_rxn_ratio_dct[rxn]
         molecularity = get_molecularity(rxn)
         fig, axs = build_fig_and_axs(molecularity, ratio_dcts, mech_names)
         fig = plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
         figs.append(fig)
 
-    build_pdf(figs, filename, path)
+    return figs
 
 
 def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct):
@@ -131,21 +130,21 @@ def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
     return fig
 
 
-def sort_by_max_ratio(aligned_rxn_ratio_dct, aligned_rxn_ktp_dct):
-    """ Sort the aligned_rxn_ratio_dct and aligned_rxn_ktp_dct by maximum ratio value
+def sort_by_max_ratio(algn_rxn_ratio_dct, algn_rxn_ktp_dct):
+    """ Sort the algn_rxn_ratio_dct and algn_rxn_ktp_dct by maximum ratio value
 
-        :param aligned_rxn_ratio_dct: aligned dct containing ratios of rates relative to a ref mech
-        :type aligned_rxn_ratio_dct: dct {rxn1: [ratio_dct_mech1, ratio_dct_mech2, ...], rxn2: ...}
-        :param aligned_rxn_ktp_dct: aligned dct containing rates for each mech
-        :type aligned_rxn_ktp_dct: dct {rxn1: [ratio_dct_mech1, ratio_dct_mech2, ...], rxn2: ...}
-        :return sorted_rxn_ratio_dct: aligned_rxn_ratio_dct sorted by maximum ratio
+        :param algn_rxn_ratio_dct: aligned dct containing ratios of rates relative to a ref mech
+        :type algn_rxn_ratio_dct: dct {rxn1: [ratio_dct_mech1, ratio_dct_mech2, ...], rxn2: ...}
+        :param algn_rxn_ktp_dct: aligned dct containing rates for each mech
+        :type algn_rxn_ktp_dct: dct {rxn1: [ktp_dct_mech1, ktp_dct_mech2, ...], rxn2: ...}
+        :return sorted_rxn_ratio_dct: algn_rxn_ratio_dct sorted by maximum ratio
         :rtype: dct {rxn1: [ratio_dct_mech1, ratio_dct_mech2, ...], rxn2: ...}
-        :return sorted_rxn_ktp_dct: aligned_rxn_ktp_dct sorted by maximum ratio
-        :rtype: dct {rxn1: [ratio_dct_mech1, ratio_dct_mech2, ...], rxn2: ...}
+        :return sorted_rxn_ktp_dct: algn_rxn_ktp_dct sorted by maximum ratio
+        :rtype: dct {rxn1: [ktp_dct_mech1, ktp_dct_mech2, ...], rxn2: ...}
     """
     # Get the maximum ratios
     max_ratios = {}
-    for rxn, ratio_dcts in aligned_rxn_ratio_dct.items():
+    for rxn, ratio_dcts in algn_rxn_ratio_dct.items():
         max_ratio = -0.5  # this value keeps rxns without ratio_dcts behind rxns with them
         for ratio_dct in ratio_dcts:
             if ratio_dct is not None:
@@ -154,10 +153,10 @@ def sort_by_max_ratio(aligned_rxn_ratio_dct, aligned_rxn_ktp_dct):
                         max_ratio = max(abs(numpy.log10(ratios)))
         # If no ratio_dcts were found, check if the rxn is missing in some mechs; order accordingly
         if max_ratio == -0.5:
-            if None not in aligned_rxn_ktp_dct[rxn]:  # if there are no Nones, leave max_ratio
+            if None not in algn_rxn_ktp_dct[rxn]:  # if there are no Nones, leave max_ratio
                 pass
             else:
-                for mech_idx, ktp_dct in enumerate(aligned_rxn_ktp_dct[rxn]):
+                for mech_idx, ktp_dct in enumerate(algn_rxn_ktp_dct[rxn]):
                     if ktp_dct is not None:
                         max_ratio = (mech_idx + 1) * -1  # find the first mech with non-None
                         break
@@ -169,28 +168,28 @@ def sort_by_max_ratio(aligned_rxn_ratio_dct, aligned_rxn_ktp_dct):
                                  key=lambda item: item[1],
                                  reverse=True):
         sorted_dct[rxn] = max_ratio
-    # Reorder the aligned_rxn_ratio_dct and aligned_rxn_ktp_dct
+    # Reorder the algn_rxn_ratio_dct and algn_rxn_ktp_dct
     sorted_rxn_ratio_dct = {}
     sorted_rxn_ktp_dct = {}
     for rxn in sorted_dct.keys():
-        sorted_rxn_ratio_dct[rxn] = aligned_rxn_ratio_dct[rxn]
-        sorted_rxn_ktp_dct[rxn] = aligned_rxn_ktp_dct[rxn]
+        sorted_rxn_ratio_dct[rxn] = algn_rxn_ratio_dct[rxn]
+        sorted_rxn_ktp_dct[rxn] = algn_rxn_ktp_dct[rxn]
 
     return sorted_rxn_ratio_dct, sorted_rxn_ktp_dct
 
 
-def get_aligned_rxn_ratio_dct(aligned_rxn_ktp_dct):
-    """ Take an aligned_rxn_ktp_dct and calculate the ratio of each rate relative to a reference
-        mechanism; the output is an aligned_rxn_ratio_dct. The reference mechanism is the first
+def get_algn_rxn_ratio_dct(algn_rxn_ktp_dct):
+    """ Take an algn_rxn_ktp_dct and calculate the ratio of each rate relative to a reference
+        mechanism; the output is an algn_rxn_ratio_dct. The reference mechanism is the first
         mechanism in the ktp_dct that has rate values for that pressure.
 
-        :param aligned_rxn_ktp_dct: aligned dct containing rates for each mech
-        :type aligned_rxn_ktp_dct: dct {rxn1: [ratio_dct_mech1, ratio_dct_mech2, ...], rxn2: ...}
-        :return: aligned_rxn_ratio_dct: aligned dct containing ratios of rates relative to ref mech
+        :param algn_rxn_ktp_dct: aligned dct containing rates for each mech
+        :type algn_rxn_ktp_dct: dct {rxn1: [ktp_dct_mech1, ktp_dct_mech2, ...], rxn2: ...}
+        :return: algn_rxn_ratio_dct: aligned dct containing ratios of rates relative to ref mech
         :rtype: dct {rxn1: [ratio_dct_mech1, ratio_dct_mech2, ...], rxn2: ...}
     """
-    aligned_rxn_ratio_dct = {}
-    for rxn, ktp_dcts in aligned_rxn_ktp_dct.items():
+    algn_rxn_ratio_dct = {}
+    for rxn, ktp_dcts in algn_rxn_ktp_dct.items():
         ref_ktp_dct = ktp_dcts[0]
         ratio_dcts = []
         for mech_idx, ktp_dct in enumerate(ktp_dcts):
@@ -227,21 +226,21 @@ def get_aligned_rxn_ratio_dct(aligned_rxn_ktp_dct):
                 if ratio_dct == {}:  
                     ratio_dct = None
             ratio_dcts.append(ratio_dct)  # store
-        aligned_rxn_ratio_dct[rxn] = ratio_dcts  # store
+        algn_rxn_ratio_dct[rxn] = ratio_dcts  # store
 
-    return aligned_rxn_ratio_dct
+    return algn_rxn_ratio_dct
 
 
-def get_pressures(aligned_rxn_ktp_dct):
-    """ Get all the unique  pressure values in an aligned_rxn_ktp_dct ('high' is excluded)
+def get_pressures(algn_rxn_ktp_dct):
+    """ Get all the unique  pressure values in an algn_rxn_ktp_dct ('high' is excluded)
 
-        :param aligned_rxn_ktp_dct: aligned dct containing rates for each mech
-        :type aligned_rxn_ktp_dct: dct {rxn1: [ratio_dct_mech1, ratio_dct_mech2, ...], rxn2: ...}
+        :param algn_rxn_ktp_dct: aligned dct containing rates for each mech
+        :type algn_rxn_ktp_dct: dct {rxn1: [ratio_dct_mech1, ratio_dct_mech2, ...], rxn2: ...}
         :return pressures: pressures included in the rxn_ktp_dct (not including 'high')
         :rtype: list [pressure1, pressure2, ...]
     """
     pressures = []
-    for ktp_dcts in aligned_rxn_ktp_dct.values():
+    for ktp_dcts in algn_rxn_ktp_dct.values():
         for ktp_dct in ktp_dcts:
             if ktp_dct is not None:
                 for pressure in ktp_dct.keys():
