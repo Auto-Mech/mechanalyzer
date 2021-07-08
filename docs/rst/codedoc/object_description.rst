@@ -11,7 +11,14 @@ Description: rate constants for each reaction as a function of T and P
 
 .. code-block:: python
 
+    # Description
     {rxn1: ktp_dct1, rxn2: ...}
+
+    # Type
+    dict[tuple(tuple(str)): dict[]
+
+    # Example
+    {(('CH4', 'H'), ('CH3', 'H2'), ()): {}}
 
 ktp_dct
 Description: rate constants as a function of T and P
@@ -25,16 +32,18 @@ description: reactions and their accompanying rate expressions
 
 .. code-block:: python
 
+
+    # Description
     {rxn1: (param_tup1, param_tup2, ...), rxn2: ...}
 
-double Arrhenius example::
-
+    # Example::
     {((‘H’, ‘O2’), (‘OH’, ‘O’), (None,)):
         ([1e15, 0, 15000], None, None, None, None, None),
         ([1e10, 0, 5000], None, None, None, None, None)}
 
-PLOG::
+.. code-block:: python
 
+    # Example
     {(('H', 'O2'), ('OH', 'O'), (None,)):
         (([1E+15, 0.00, 25000], None, None, None,
             {0.1: [1E+15, 0.00, 25000],
