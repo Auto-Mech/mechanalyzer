@@ -2,8 +2,6 @@
 MechAnalyzer
 ------------
 
-.. automodule:: mechanalyzer
-   :members:
 .. automodule:: mechanalyzer.builder.rxn
    :members:
 .. automodule:: mechanalyzer.builder.checker
