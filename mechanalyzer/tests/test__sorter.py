@@ -71,7 +71,7 @@ AL_KTP_DCT = {
         {'high': (
             np.array([500, 1000, 1500]),
             np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+139]))},
-        {'high': (
+        {1: (
             np.array([500, 1000, 1500]),
             np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+139]))}],
     (('H2', 'O2'), ('HO2V', 'H'), (None,)): [None, {
@@ -235,9 +235,14 @@ def test__sortby_molec_r1():
     # Sort mechanism by R1-molecularity - No Headers Included
     isolate_spc = []
     sort_lst = ['r1', 'molecularity', 0]  # NO HEADERS INCLUDED
+    sort_lst_2 = ['molecularity', 0]  # ONLY BY MOLEC- CHECK HEADERS WITH INT NUMBER
 
     param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
+
+    param_dct_sort_2, _, _, cmts_dct_2, _ = sorter.sorted_mech(
+        spc_str, mech_str, isolate_spc, sort_lst_2)
+        # NO NEED TO CALL IT AFTERWARDS
 
     comments = []
     for rxn in param_dct_sort.keys():
@@ -468,20 +473,13 @@ def test_sort_ktp():
         sort ktp dictionary according to highest rate values/ratios
     """
     results = {
-        (('H2', 'O'), ('OH', 'H'), (None,)): (
-            '2.72670689e+149 _22.692539074854153'),
-        (('H', 'O'), ('OH',), ('(+M)',)): (
-            '2.72670689e+149 _4.619780379447244e-16'),
-        (('H', 'O'), ('OH',), (None,)): (
-            '2.72670689e+149 _3.973593578206074e-39'),
-        (('H', 'O2'), ('OH', 'O'), (None,)): (
-            '2.72670689e+149 _1.3017843126207617e-89'),
-        (('H2', 'O'), ('OH', 'OH'), (None,)): (
-            '2.72670689e+149 _0.0'),
-        (('H2', 'O2'), ('HO2V', 'H'), (None,)): (
-            '2.72670689e+149 _0.0'),
-        (('H2', 'O(S)'), ('OH', 'H'), (None,)): (
-            '4.79926202e+143 _1.0')
+        (('H2', 'O'), ('OH', 'H'), (None,)): '2.72670689e+149 _22.692539074854153',
+        (('H', 'O'), ('OH',), ('(+M)',)): '2.72670689e+149 _4.619780379447244e-16',
+        (('H', 'O'), ('OH',), (None,)): '2.72670689e+149 _3.973593578206074e-39',
+        (('H', 'O2'), ('OH', 'O'), (None,)): '2.72670689e+149 _1.3017843126207617e-89',
+        (('H2', 'O'), ('OH', 'OH'), (None,)): '2.72670689e+149 _0.0',
+        (('H2', 'O2'), ('HO2V', 'H'), (None,)): '2.72670689e+149 _0.0',
+        (('H2', 'O(S)'), ('OH', 'H'), (None,)): '4.79926202e+143 _0.0'
     }
 
     # Read mechanism files into strings
@@ -505,7 +503,7 @@ def test_sort_ktp():
         mech_info, spc_dct_full, sort_lst, isolate_spc)
     sorted_idx, cmts_dct, _ = srt_mch.return_mech_df()
     al_ktp_dct_sorted = sorter.reordered_mech(AL_KTP_DCT, sorted_idx)
-
+    print('ktp dct sorted by max val and ratios test:')
     assert al_ktp_dct_sorted.keys() == results.keys()
     newdct = dict.fromkeys(al_ktp_dct_sorted.keys())
     for rxn in al_ktp_dct_sorted.keys():
@@ -535,12 +533,12 @@ def _read_files(spc_path, mech_path, sort_path):
 
 
 if __name__ == '__main__':
-    # __sort_with_input()
-    # test__readwrite_thirdbody()
-    # test__sortby_mult()
-    # test__sortby_molec_r1()
-    # test_sortby_pes_dct()
-    # test_sortby_rxnclass()
-    # test__sortby_species_subpes()
-    # test__sortby_submech_class()
-    test_sort_ktp()
+   # __sort_with_input()
+   # test__readwrite_thirdbody()
+   # test__sortby_mult()
+   # test__sortby_molec_r1()
+   # test_sortby_pes_dct()
+   # test_sortby_rxnclass()
+   # test__sortby_species_subpes()
+   # test__sortby_submech_class()
+   # test_sort_ktp()

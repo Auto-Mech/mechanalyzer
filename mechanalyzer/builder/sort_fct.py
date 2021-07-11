@@ -742,7 +742,7 @@ def get_aligned_rxn_ratio_dct(aligned_rxn_dct_entry):
     ref_ktp_dct = aligned_rxn_dct_entry[0]
     ratio_dct_entry = []
     for mech_idx, ktp_dct in enumerate(aligned_rxn_dct_entry):
-        # If (1) on the first ktp_dct, (2) the ref_ktp_dct is None,
+        # If (1) you are on the first ktp_dct, (2) the ref_ktp_dct is None,
         # or (3) the current_ktp_dct is None, set the ratio_dct to None
         if mech_idx == 0 or ref_ktp_dct is None or ktp_dct is None:
             ratio_dct = None
