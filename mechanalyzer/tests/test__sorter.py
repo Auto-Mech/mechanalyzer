@@ -533,12 +533,12 @@ def _read_files(spc_path, mech_path, sort_path):
 
 
 if __name__ == '__main__':
-   # __sort_with_input()
-   # test__readwrite_thirdbody()
-   # test__sortby_mult()
-   # test__sortby_molec_r1()
-   # test_sortby_pes_dct()
-   # test_sortby_rxnclass()
-   # test__sortby_species_subpes()
-   # test__sortby_submech_class()
-   # test_sort_ktp()
+   __sort_with_input()
+   test__readwrite_thirdbody()
+   test__sortby_mult()
+   test__sortby_molec_r1()
+   test_sortby_pes_dct()
+   test_sortby_rxnclass()
+   test__sortby_species_subpes()
+   test__sortby_submech_class()
+   test_sort_ktp()
