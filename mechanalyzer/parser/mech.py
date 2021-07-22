@@ -15,7 +15,9 @@ def parse_mechanism(mech_str, mech_type, spc_dct):
 
     # Parse the info from the chemkin file
     if mech_type == 'chemkin':
-        rxn_param_dct, elem_tuple = ckin.parse(mech_str)
+        rxn_param_dct = ckin.parse_rxn_param_dct(mech_str)
+        elem_tuple = ckin.parse_elem_tuple(mech_str)
+        
     else:
         raise NotImplementedError
 

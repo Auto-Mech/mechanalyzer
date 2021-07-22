@@ -271,10 +271,22 @@ def get_mismatches(rxn_param_dct):
     return mismatched_rxns
 
 
-def get_missing_spcs(rxn_param_dct, spc_ident_dct):
+def get_missing_spcs(rxn_param_dct, spc_dct):
+    """ Compares a rxn_param_dct and a spc_dct to find missing species
 
-
+        :param rxn_param_dct: rate constant parameters for a mechanism
+        :type rxn_param_dct: dct
+            {rxn1: (param_tuple1, param_tuple2, ...), rxn2: ...}
+        :param spc_dct: info on species
+        :type spc_dct: dct {spc1: info_dct1, spc2: ...} 
+        :return missing_from_csv: list of species missing from the spc_csv 
+        :rtype: list [spc1, spc2, ...]
+        :return missing_from_mech: list of species missing from the mechanism
+        :rtype: list [spc1, spc2, ...]
+    """
     def strip_thrd_bod(thrd_bod, rxn):
+        """ Strip the third body notation from a species name
+        """
         if thrd_bod == '(+M)' or thrd_bod == '+M':
             stripped_thrd_bod = None
         elif thrd_bod[0] == '(':
@@ -303,8 +315,8 @@ def get_missing_spcs(rxn_param_dct, spc_ident_dct):
 
     mech_spcs = set(mech_spcs)
 
-    # Get the spc_ident_dct spcs
-    csv_spcs = set(spc_ident_dct.keys())
+    # Get the spc_dct spcs
+    csv_spcs = set(spc_dct.keys())
 
     # Get the differences between the two sets
     missing_from_csv = list(mech_spcs - csv_spcs)

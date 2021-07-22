@@ -57,9 +57,12 @@ def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None, sort=True,
     for spc, therm_arrays in algn_spc_therm_dct.items():
         diff_arrays = algn_spc_diff_dct[spc]
         if spc_dct is not None:
-            smiles = spc_dct.get(spc).get('smiles')
-            inchi = spc_dct.get(spc).get('inchi')
-            fig, axs = initialize_fig_and_axes(spc, smiles, inchi)
+            if spc_dct.get(spc) is not None:
+                smiles = spc_dct.get(spc).get('smiles')
+                inchi = spc_dct.get(spc).get('inchi')
+                fig, axs = initialize_fig_and_axes(spc, smiles, inchi)
+            else: 
+                fig, axs = initialize_fig_and_axes(spc)
         else:  # if no spc_dct provided, the smiles and inchis will be blank
             fig, axs = initialize_fig_and_axes(spc)
         fig = plot_single_spc(therm_arrays, diff_arrays, fig, axs, mech_names)
@@ -98,7 +101,7 @@ def plot_single_spc(therm_arrays, diff_arrays, fig, axs, mech_names):
         if therm_array is not None:
             # Plot the four thermo values on the even indices plots
             for idx in range(4):
-                if idx == 2:  # if on entropy (s), do not divide by 1000
+                if idx == 1 or idx == 2:  # if s or cp, no divide by 1000
                     axs[(idx * 2)].plot(
                         therm_array[0], therm_array[idx + 1], label=_label,
                         color=_color, linestyle=_line)
@@ -113,7 +116,7 @@ def plot_single_spc(therm_arrays, diff_arrays, fig, axs, mech_names):
                 diffs_plotted = True
                 # Plot the four diff values on the odd indices plots
                 for idx in range(4):
-                    if idx == 2:  # if on entropy (s), do not divide by 1000
+                    if idx == 1 or idx == 2:  # if s or cp, no divide by 1000
                         axs[(idx * 2) + 1].plot(
                             therm_array[0], diff_array[idx + 1], label=_label,
                             color=_color, linestyle=_line)
@@ -265,8 +268,8 @@ def initialize_fig_and_axes(spc, smiles=None, inchi=None):
     # For formatting
     plot_placements = [(0, 2, 0), (2, 3, 0), (4, 6, 0), (6, 7, 0), (0, 2, 1),
                        (2, 3, 1), (4, 6, 1), (6, 7, 1)]
-    plot_titles = ('Enthalpy (kcal/mol)', 'Heat capacity, (kcal/mol-K)',
-                   'Entropy (cal/mol)', 'Gibbs free energy (kcal/mol)')
+    plot_titles = ('Enthalpy (kcal/mol)', 'Heat capacity, (cal/mol-K)',
+                   'Entropy (cal/mol-K)', 'Gibbs free energy (kcal/mol)')
 
     # Create each axis, with some formatting
     axs = []
@@ -280,21 +283,21 @@ def initialize_fig_and_axes(spc, smiles=None, inchi=None):
         # Apply formatting for the main plots, which are the even indices
         if ax_num % 2 == 0:
             axs[ax_num].set_xticks([])
-            axs[ax_num].set_ylabel('Value')
             axs[ax_num].set_title(plot_titles[int(ax_num/2)])
 
         # Apply formatting for the residual plots, which are the odd indices
         else:
             axs[ax_num].set_xlabel('Temperature (K)')
-            axs[ax_num].set_ylabel('Residual')
 
-    # Add some annotations at the bottom center of the page
+    # Add some annotations
     if smiles is None:
         smiles = 'not specified'
     if inchi is None:
         inchi = 'not specified'
     footnotes = f'SMILES: {smiles}\nInChi: {inchi}'
+    header = 'Large plots: values\nSmall plots: residuals'
     plt.figtext(0.5, 0.05, footnotes, fontsize=10, va="top", ha="center")
+    plt.figtext(0.02, 0.98, header, fontsize=8, va="top", ha="left")
 
     return fig, axs
 
