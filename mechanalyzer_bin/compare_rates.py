@@ -6,7 +6,8 @@ import numpy
 import mechanalyzer.calculator.compare as compare
 import mechanalyzer.plotter.rates as plot_rates
 import mechanalyzer.plotter._util as util
-import mechanalyzer.parser.mech as mech_parser
+import mechanalyzer.parser.spc as spc_parser
+import mechanalyzer.parser.ckin_ as ckin_parser
 
 # INPUTS
 # Filenames
@@ -22,7 +23,7 @@ temps = numpy.linspace(400, 700, 31)
 pressures = numpy.array([1, 10])
 
 # options
-sort_method = 'ratios' # sorting; either 'rates', 'ratios', or None
+sort_method = 'ratios' # either 'ratios' or None
 rev_rates = True
 remove_loners = True
 write_file = False
@@ -31,14 +32,14 @@ write_file = False
 # RUN FUNCTIONS
 # Load dcts
 assert len(sys.argv) == 2, (
-    'There should be one command line inumpy.t; namely, the job path')
+    'There should be one command line input; namely, the job path')
 
 JOB_PATH = sys.argv[1]
-rxn_ktp_dcts = compare.load_rxn_ktp_dcts_chemkin(
+rxn_ktp_dcts = ckin_parser.load_rxn_ktp_dcts(
     mech_filenames, JOB_PATH, temps, pressures)
-spc_therm_dcts = compare.load_spc_therm_dcts_chemkin(
+spc_therm_dcts = ckin_parser.load_spc_therm_dcts(
     thermo_filenames, JOB_PATH, temps)
-spc_dcts = compare.load_spc_dcts(spc_csv_filenames, JOB_PATH)
+spc_dcts = spc_parser.load_spc_dcts(spc_csv_filenames, JOB_PATH)
 
 # Get the algn_rxn_ktp_dct
 algn_rxn_ktp_dct = compare.get_algn_rxn_ktp_dct(
@@ -46,18 +47,7 @@ algn_rxn_ktp_dct = compare.get_algn_rxn_ktp_dct(
     remove_loners=remove_loners, write_file=write_file
 )
 
-# Sort as indicated in the inumpy.ts
-if sort_method == 'rates':
-    SORT_STR = ['molecularity', 'rxn_max_vals', 'rxn_max_ratio',
-        'rxn_class_broad', 0]
-    ISOLATE_SPCS = []
-    mech_info = mech_parser.build_dct(spc_dcts[0], algn_rxn_ktp_dct)
-    sorted_idx, _, _ = mech_parser.sort_mechanism(mech_info, spc_dct_full,
-                                                  SORT_STR, ISOLATE_SPCS)
-    algn_rxn_ktp_dct = mech_parser.reordered_mech(algn_rxn_ktp_dct, 
-                                                     sorted_idx)
-    ratio_sort = False
-elif sort_method == 'ratios':
+if sort_method == 'ratios':
     ratio_sort = True
 else:
     ratio_sort = False

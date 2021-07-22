@@ -5,16 +5,9 @@
 import copy
 import itertools
 import numpy
-import ioformat.pathtools as parser
 from phydat import phycon
-from chemkin_io.parser import mechanism as parser_mech
-from chemkin_io.parser import thermo as parser_thermo
-from chemkin_io.parser import reaction as parser_rxn
 from chemkin_io.writer import _util as writer_util
 import ratefit
-from mechanalyzer.parser import spc as parser_spc
-from mechanalyzer.calculator import thermo as calc_thermo
-from mechanalyzer.calculator import rates as calc_rates
 
 RC_CAL = phycon.RC_CAL  # universal gas constant in cal/mol-K
 
@@ -48,7 +41,7 @@ def get_algn_rxn_ktp_dct(rxn_ktp_dcts, spc_therm_dcts, spc_dcts, temps,
     )
 
     # Get the renamed dictionaries
-    renamed_rxn_ktp_dcts, rename_instructions_lst = rename_dcts(rxn_ktp_dcts, spc_dcts,
+    renamed_rxn_ktp_dcts, rename_instr_lst = rename_dcts(rxn_ktp_dcts, spc_dcts,
                                                                 target_type='rxn')
     if rev_rates:
         renamed_spc_therm_dcts, _ = rename_dcts(spc_therm_dcts, spc_dcts,
@@ -69,7 +62,7 @@ def get_algn_rxn_ktp_dct(rxn_ktp_dcts, spc_therm_dcts, spc_dcts, temps,
 
     # Write to file
     if write_file:
-        write_output_file(rename_instructions_lst)
+        write_output_file(rename_instr_lst)
 
     return algn_rxn_ktp_dct
 
@@ -97,7 +90,7 @@ def get_algn_spc_therm_dct(spc_therm_dcts, spc_dcts, remove_loners=True,
         )
 
     # Get the renamed spc_therm_dct
-    renamed_spc_therm_dcts, rename_instructions_lst = rename_dcts(
+    renamed_spc_therm_dcts, rename_instr_lst = rename_dcts(
         spc_therm_dcts, spc_dcts, target_type='spc'
     )
 
@@ -110,7 +103,7 @@ def get_algn_spc_therm_dct(spc_therm_dcts, spc_dcts, remove_loners=True,
 
     # Write to file
     if write_file:
-        write_output_file(rename_instructions_lst)
+        write_output_file(rename_instr_lst)
 
     return algn_spc_therm_dct
 
@@ -152,18 +145,18 @@ def align_dcts(list_of_dcts):
     return algn_dct
 
 
-def write_output_file(rename_instructions_lst):
+def write_output_file(rename_instr_lst):
     """ Write the output of a comparison to a text file
     """
     with open("comparison_output.txt", "w") as fid:
-        for mech_idx, rename_instructions in enumerate(rename_instructions_lst):
+        for mech_idx, rename_instr in enumerate(rename_instr_lst):
             fid.write(
                 f"Rename instructions for converting mech {mech_idx+2} to mech {mech_idx+1}:\n"
             )
             fid.write(
                 f"First column: mech {mech_idx+2} name, Second column: mech {mech_idx+1} name\n"
             )
-            for spc_name2, spc_name1 in rename_instructions.items():
+            for spc_name2, spc_name1 in rename_instr.items():
                 fid.write(('{0:<1s}, {1:<5s}\n').format(spc_name2, spc_name1))
             fid.write("\n\n")
 # need to fix with new third body methods
@@ -229,30 +222,30 @@ def rename_dcts(target_dcts, spc_dcts, target_type):
         )
 
     # Loop through each item in the list of dictionaries
-    rename_instructions_lst = []
+    rename_instr_lst = []
     for mech_idx in range(num_mechs-1):
         spc_dct1 = renamed_spc_dcts[mech_idx]
         for idx2 in range(mech_idx+1, num_mechs):
             spc_dct2 = renamed_spc_dcts[idx2]
 
             # Get the rename instructions from the species dcts
-            rename_instructions, _ = get_rename_instructions(spc_dct1, spc_dct2)
+            rename_instr = get_rename_instr(spc_dct1, spc_dct2)
 
             # Rename and store the current spc_dct
-            renamed_spc_dct2 = rename_species(spc_dct2, rename_instructions,
+            renamed_spc_dct2 = rename_species(spc_dct2, rename_instr,
                                                     target_type='spc')
             renamed_spc_dcts[idx2] = renamed_spc_dct2
 
             # Rename and store the current dct
-            renamed_dct = rename_species(renamed_target_dcts[idx2], rename_instructions,
+            renamed_dct = rename_species(renamed_target_dcts[idx2], rename_instr,
                                          target_type)
             renamed_target_dcts[idx2] = renamed_dct
-            rename_instructions_lst.append(rename_instructions)
+            rename_instr_lst.append(rename_instr)
 
-    return renamed_target_dcts, rename_instructions_lst
+    return renamed_target_dcts, rename_instr_lst
 
 
-def get_rename_instructions(spc_dct1, spc_dct2):
+def get_rename_instr(spc_dct1, spc_dct2):
     """ Get instructions for renaming spc_dct2 to be consistent with spc_dct1. Also,
         output a combined spc_dct that contains all species from spc_dct1 along with
         any species unique to spc_dct2
@@ -261,13 +254,12 @@ def get_rename_instructions(spc_dct1, spc_dct2):
         :type spc_dct1: dct {spc1: ident_array1, spc2: ...}
         :param spc_dct2: the spc_dct to be renamed (and also added)
         :type spc_dct2: dct {spc1: ident_array1, spc2: ...}
-        :return rename_instructions: instructions for renaming the species in spc_dct2
+        :return rename_instr: instructions for renaming the species in spc_dct2
         :rtype: dct {spc_to_be_renamed1: new_spc_name1, spc_to_be_renamed2: ...}
-        :return combined_spc_dct: spc_dct1 plus any species unique to spc_dct2
+        :return comb_spc_dct: spc_dct1 plus any species unique to spc_dct2
         :rtype: dct {spc1: ident_array1, spc2: ...}
     """
-    combined_spc_dct = copy.deepcopy(spc_dct1)  # deepcopy to prevent external changes
-    rename_instructions = {}
+    rename_instr = {}
     rename_str = '-zz'
 
     # Loop through each species in mech1
@@ -284,13 +276,28 @@ def get_rename_instructions(spc_dct1, spc_dct2):
             # If species are identical
             if ich1  == ich2 and mlt1 == mlt2 and chg1 == chg2:
                 if spc_name1 != spc_name2:  # if spc names different, add to rename instructions
-                    rename_instructions[spc_name2] = spc_name1
+                    rename_instr[spc_name2] = spc_name1
 
             # If species are different but have same name
             elif spc_name1 == spc_name2:
-                rename_instructions[spc_name2] = spc_name2 + rename_str
+                rename_instr[spc_name2] = spc_name2 + rename_str
 
-    # Add species that are only in mech2
+    return rename_instr
+
+
+def get_comb_spc_dct(spc_dct1, spc_dct2):
+    """ Combine two spc_dcts by adding to spc_dct1 any spcs unique to spc_dct2
+
+        :param spc_dct1: the reference spc_dct
+        :type spc_dct1: dct {spc1: ident_array1, spc2: ...}
+        :param spc_dct2: the spc_dct to be added
+        :type spc_dct2: dct {spc1: ident_array1, spc2: ...}
+        :return comb_spc_dct: spc_dct1 plus any species unique to spc_dct2
+        :rtype: dct {spc1: ident_array1, spc2: ...}
+    """
+    rename_instr = get_rename_instr(spc_dct1, spc_dct2)
+    rename_str = '-zz'
+    comb_spc_dct = copy.deepcopy(spc_dct1)  # deepcopy = no external changes
     for spc_name2, spc_vals2 in spc_dct2.items():
         unique = True
         ich2 = spc_vals2['inchi']
@@ -303,30 +310,46 @@ def get_rename_instructions(spc_dct1, spc_dct2):
             chg1 = spc_vals1['charge']
 
             if ich1 == ich2 and mlt1 == mlt2 and chg1 == chg2:
-                if spc_name2 in rename_instructions.keys():
+                if spc_name2 in rename_instr.keys():
                     unique = False
                 break
 
         if unique:
-            if spc_name2 in rename_instructions.keys():
-                combined_spc_dct[spc_name2 + rename_str] = spc_vals2
+            if spc_name2 in rename_instr.keys():
+                comb_spc_dct[spc_name2 + rename_str] = spc_vals2
             else:
-                combined_spc_dct[spc_name2] = spc_vals2
+                comb_spc_dct[spc_name2] = spc_vals2
 
-    return rename_instructions, combined_spc_dct
+    return comb_spc_dct
 
 
-def rename_species(target_dct, rename_instructions, target_type='rxn'):
+def get_mult_comb_spc_dct(spc_dcts):
+    """ Combine a list of spc_dcts into a single comb_spc_dct 
+    
+        :param spc_dcts: list of spc_dcts
+        :type spc_dcts: list [spc_dct1, spc_dct2, ...]
+        :return comb_spc_dct: spc_dct with all unique species
+        :rtype: dct {spc1: ident_array1, spc2: ...}
+    """
+    num_combs = len(spc_dcts) - 1  # n-1 combinations to do
+    comb_spc_dct = copy.deepcopy(spc_dcts[0])
+    for idx in range(num_combs):
+        comb_spc_dct = get_comb_spc_dct(comb_spc_dct, spc_dcts[idx + 1])
+    
+    return comb_spc_dct
+
+
+def rename_species(target_dct, rename_instr, target_type='rxn'):
     """ Rename the species inside a rxn_ktp_dct, rxn_param_dct, or thermo_dct according to the
-        instructions inside the rename_instructions.
+        instructions inside the rename_instr.
 
         :param target_dct: the dct whose species are to be renamed
         :type target_dct: dct; either a rxn_ktp, rxn_param, or thermo dct
-        :param rename_instructions: instructions for renaming the species in the target_dct
-        :type rename_instructions: dct {spc_to_be_renamed1: new_spc_name1, spc_to_be_renamed2: ...}
+        :param rename_instr: instructions for renaming the species in the target_dct
+        :type rename_instr: dct {spc_to_be_renamed1: new_spc_name1, spc_to_be_renamed2: ...}
         :param target_type: the type of dictionary; either "rxn", "thermo", or "spc"
         :type target_type: str
-        :return renamed_dct: dct with all species renamed according to the rename_instructions
+        :return renamed_dct: dct with all species renamed according to the rename_instr
         :rtype: dct; either a rxn_ktp, rxn_param, or thermo dct
     """
     def strip_third_bod(third_bod):
@@ -356,19 +379,19 @@ def rename_species(target_dct, rename_instructions, target_type='rxn'):
             new_prds = []
             new_third_bods = []
             for spc in rcts:
-                if spc in rename_instructions.keys():
-                    new_rcts.append(rename_instructions[spc])
+                if spc in rename_instr.keys():
+                    new_rcts.append(rename_instr[spc])
                 else:
                     new_rcts.append(spc)
             for spc in prds:
-                if spc in rename_instructions.keys():
-                    new_prds.append(rename_instructions[spc])
+                if spc in rename_instr.keys():
+                    new_prds.append(rename_instr[spc])
                 else:
                     new_prds.append(spc)
             for spc in third_bods:
                 spc, addition = strip_third_bod(spc)  # if not '(+M)' or '+M', strip '(+)'
-                if spc in rename_instructions.keys():
-                    new_third_bod = rename_instructions[spc]
+                if spc in rename_instr.keys():
+                    new_third_bod = rename_instr[spc]
                 else:  # this condition will occur if third_bod is '(+M)' or '+M'
                     new_third_bod = spc
 
@@ -387,8 +410,8 @@ def rename_species(target_dct, rename_instructions, target_type='rxn'):
     # If a spc_therm_dct or spc_dct
     else:
         for spc, data in target_dct.items():
-            if spc in rename_instructions.keys():
-                new_spc_name = rename_instructions[spc]
+            if spc in rename_instr.keys():
+                new_spc_name = rename_instr[spc]
                 renamed_dct[new_spc_name] = data
             else:
                 renamed_dct[spc] = data
@@ -603,73 +626,3 @@ def _calculate_equilibrium_constant(spc_therm_dct, rcts, prds, temps):
 
     return k_equils
 
-
-def load_rxn_ktp_dcts_chemkin(mech_filenames, direc, temps, pressures):
-    """ Read one or more Chemkin-formatted mechanisms files and calculate rates at the indicated
-        pressures and temperatures. Return a list of rxn_ktp_dcts.
-
-        :param mech_filenames: filenames containing Chemkin-formatted kinetics information
-        :type mech_filenames: list [filename1, filename2, ...]
-        :param direc: directory with file(s) (all files must be in the same directory)
-        :type direc: str
-        :param temps: temperatures at which to do calculations (Kelvin)
-        :type temps: list [float]
-        :param pressures: pressures at which to do calculations (atm)
-        :type pressures: list [float]
-        :return rxn_ktp_dcts: list of rxn_ktp_dcts
-        :rtype: list of dcts [rxn_ktp_dct1, rxn_ktp_dct2, ...]
-    """
-    rxn_ktp_dcts = []
-    for mech_filename in mech_filenames:
-        mech_str = parser.read_file(direc, mech_filename)
-        ea_units, a_units = parser_mech.reaction_units(mech_str)
-        rxn_block_str = parser_mech.reaction_block(mech_str)
-        rxn_param_dct = parser_rxn.param_dct(rxn_block_str, ea_units, a_units)
-        rxn_ktp_dct = calc_rates.eval_rxn_param_dct(rxn_param_dct, pressures, temps)
-        rxn_ktp_dcts.append(rxn_ktp_dct)
-
-    return rxn_ktp_dcts
-
-
-def load_spc_therm_dcts_chemkin(thermo_filenames, direc, temps):
-    """ Reads one or more Chemkin-formatted thermo files and calculates thermo at the indicated
-        temperatures. Outputs a list of spc_therm_dcts.
-
-        :param thermo_filenames: filenames containing Chemkin-formatted thermo information
-        :type thermo_filenames: list [filename1, filename2, ...]
-        :param direc: directory with file(s) (all files must be in the same directory)
-        :type direc: str
-        :param temps: temperatures at which to do calculations (Kelvin)
-        :type temps: list [float]
-        :return spc_therm_dcts: list of spc_therm_dcts
-        :rtype: list of dcts [spc_therm_dct1, spc_therm_dct2, ...]
-    """
-    spc_therm_dcts = []
-    for thermo_filename in thermo_filenames:
-        thermo_str = parser.read_file(direc, thermo_filename)
-        thermo_block_str = parser_mech.thermo_block(thermo_str)
-        spc_nasa7_dct = parser_thermo.create_spc_nasa7_dct(thermo_block_str)
-        spc_therm_dct = calc_thermo.create_spc_therm_dct(spc_nasa7_dct, temps)
-        spc_therm_dcts.append(spc_therm_dct)
-
-    return spc_therm_dcts
-
-
-def load_spc_dcts(spc_csv_filenames, direc):
-    """ Reads one or more spc.csv files (in the AutoMech format). Outputs a list of
-        spc_dcts.
-
-        :param spc_csv_filenames: filenames containing species identity information (spc.csv files)
-        :type spc_csv_filenames: list [filename1, filename2, ...]
-        :param direc: directory with file(s) (all files must be in the same directory)
-        :type direc: str
-        :return spc_dcts: list of spc_dcts
-        :rtype: list of dcts [spc_dct1, spc_dct2, ...]
-    """
-    spc_dcts = []
-    for spc_csv_filename in spc_csv_filenames:
-        spc_csv_str = parser.read_file(direc, spc_csv_filename)
-        spc_dct = parser_spc.build_spc_dct(spc_csv_str, 'csv')
-        spc_dcts.append(spc_dct)
-
-    return spc_dcts
