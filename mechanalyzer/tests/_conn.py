@@ -28,14 +28,20 @@ PES_DCT = {
     )
 }
 
+EXCL_SPC = ('O2', 'OH')
+
 
 def test__():
     """ conn
     """
 
-    conn_lst = mechanalyzer.parser.conn_pes(PES_DCT)
-    print('CONN LST')
-    print(conn_lst)
+    conns = mechanalyzer.builder.connected_surfaces(
+        PES_DCT, excl_spc=EXCL_SPC)
+    print('\n\nconn dct')
+    for name, pes_lst in conns.items():
+        print(name)
+        print(pes_lst)
+        print('')
 
 
 if __name__ == '__main__':
