@@ -226,6 +226,7 @@ def create_spec(ich, charge=0,
     mult = 1 if not rad else 2
 
     return {
+        'smiles': automol.inchi.smiles(ich),
         'inchi': ich,
         'inchikey': automol.inchi.inchi_key(ich),
         'sens': 0.0,

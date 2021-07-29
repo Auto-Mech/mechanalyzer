@@ -1,8 +1,14 @@
-"""
-Read the mechanism file
+""" Handles the construction, parsing, and manipulation of
+    mechanism species dictionaries structured as
+
+    {name: spc_data_dct}
+
+    Also handles ancillary dictionaries used contain and
+    organize information related to the species dictionary
 """
 
 import os
+import csv
 import errno
 from functools import wraps
 import math
@@ -16,11 +22,31 @@ from mechanalyzer.parser.csv_ import csv_dct
 from mechanalyzer.parser.csv_ import read_csv_headers
 import ioformat.pathtools as text_parser
 
-# HACK FOR A MECHANISM
-# put in bad names for the hack
 BAD_NAMES = []
 
 
+# Write a spc_dct to a CSV string
+def csv_str(spc_dct, headers):
+    """ Convert a species dictionary to a CSV string
+
+        headers should preclude name as it is first column
+    """
+
+    # Build spc sub dct of just info in the headers
+    _csv_dct = {}
+    for name, dct in spc_dct.items():
+        _csv_dct[name] = {}
+        for header in headers:
+            _csv_dct[name][header] = dct.get(header, None)
+
+    # Build the datagrame and resultant CSV string
+    dframe = pd.DataFrame.from_dict(_csv_dct, orient='index')
+    csv_str = dframe.to_csv(index_label='name', quoting=csv.QUOTE_NONNUMERIC)
+
+    return csv_str
+
+
+# Build spc_dct from file/string i/o
 def load_spc_dcts(spc_csv_filenames, direc):
     """ Reads one or more spc.csv files (in the AutoMech format). Outputs a
         list of spc_dcts.
@@ -42,13 +68,10 @@ def load_spc_dcts(spc_csv_filenames, direc):
     return spc_dcts
 
 
-# Build a spc dct containing all info species from an input file
 def build_spc_dct(spc_str, spc_type):
     """ Get a dictionary of all the input species
         indexed by InChi string
     """
-
-    # new_headers = _set_headers(spc_str)
 
     if spc_type == 'csv':
         spc_dct = csv_dct(spc_str)
@@ -81,70 +104,21 @@ def order_species_by_atomcount(spc_dct):
     return spc_dct_ordered
 
 
-def _get_smiles_from_dct(dct, name):
-    return automol.inchi.smiles(dct[name]['inchi'])
-
-
-def _get_formula_from_dct(dct, name):
-    return automol.inchi.formula_string(dct[name]['inchi'])
-
-
-def _assign_unique_name(formula_dct, formula):
-    if formula in formula_dct:
-        formula_dct[formula] += 1
-        formula = formula + '({})'.format(formula_dct[formula])
-    else:
-        formula_dct[formula] = 0
-    return formula, formula_dct
-
-
-def _species_row_string(uniref_dct, formula_dct, name, new_headers):
-    smiles = _get_smiles_from_dct(uniref_dct, name)
-    formula = _get_formula_from_dct(uniref_dct, name)
-    uniref_dct[name]['smiles'] = smiles
-    formula, formula_dct = _assign_unique_name(formula, formula_dct)
-    spc_str = formula + ','
-    for idx, header in enumerate(new_headers):
-        val = uniref_dct[name][header]
-        if isinstance(val, str):
-            val = "'{}'".format(val)
-        spc_str += str(val)
-        if idx+1 < len(new_headers):
-            spc_str += ','
-    spc_str += '\n'
-    return spc_str, formula_dct
-
-
-def _add_unique_references_to_dct(new_names, init_dct, uniref_dct, ref_scheme):
-    new_dct = {}
-    for newn in list(uniref_dct.keys()):
-        tempn_smiles = automol.inchi.smiles(uniref_dct[newn]['inchi'])
-        tempn = ref_scheme + '_' + tempn_smiles
-        if tempn not in new_names:
-            new_names.append(tempn)
-            new_dct[tempn] = uniref_dct[newn]
-            new_dct[tempn]['smiles'] = tempn_smiles
-            new_dct.update(init_dct)
-            init_dct = new_dct
-    return new_names, init_dct, uniref_dct
-
-
 def write_basis_csv(spc_str, outname='species_hof_basis.csv',
                     path='.', parallel=False):
     """ Read the species file in a .csv format and write a new one
         that has hof basis species added to it.
     """
 
-    headers = [header for header in read_csv_headers(spc_str)
-               if header != 'name']
-    if 'inchi' not in headers:
-        headers.append('inchi')
-    headers_noich = [header for header in headers
-                     if header not in ('inchi', 'inchikey')]
-    new_headers = ['inchi', 'inchikey'] + headers_noich
+    # new_headers, orig_headers = _set_headers(spc_str)
     csv_str = ','.join(['name'] + new_headers) + '\n'
+
     # Read in the initial CSV information (deal with mult stereo)
-    init_dct = csv_dct(spc_str, values=headers, key='name')
+    init_dct = csv_dct(
+        spc_str,
+        values=(x for x in orig_headers if x != 'name'),
+        key='name')
+
     # Build a new dict
     names = list(init_dct.keys())
     spc_queue = []
@@ -159,14 +133,15 @@ def write_basis_csv(spc_str, outname='species_hof_basis.csv',
             ref_scheme, init_dct, spc_queue,
             repeats=True, parallel=parallel)
         for name in uniref_dct:
-            spc_str, formula_dct = _species_row_string(
+            bas_str, formula_dct = _species_row_string(
                 uniref_dct, formula_dct, name, new_headers)
             csv_str += ref_scheme + '_' + spc_str
-    basis_file = os.path.join(path, outname + '_basis')
-    with open(basis_file, 'w') as file_obj:
-        file_obj.write(spc_str)
+    # return bas_str
+    # basis_file = os.path.join(path, outname + '_basis')
+    # with open(basis_file, 'w') as file_obj:
+    #     file_obj.write(spc_str)
 
-    # Find only the unique references
+    # Build dictionaries including the basis species
     new_names = []
     for ref_scheme in ref_schemes:
         _, uniref_dct = thermfit.prepare_refs(
@@ -174,6 +149,7 @@ def write_basis_csv(spc_str, outname='species_hof_basis.csv',
             repeats=False, parallel=parallel)
     new_names, init_dct, uniref_dct = _add_unique_references_to_dct(
         new_names, init_dct, uniref_dct, ref_scheme)
+
     spc_str = ','.join(['name'] + new_headers) + '\n'
     formula_dct = {}
     for name in init_dct:
@@ -184,7 +160,7 @@ def write_basis_csv(spc_str, outname='species_hof_basis.csv',
             frmdct = formula_dct[namelabel]
             spc_str += namelabel + '_'
             formula = _get_formula_from_dct(init_dct, name)
-            formula, frmdct = _assign_unique_name(frmdct, formula)
+            formula, frmdct = assign_unique_name(frmdct, formula)
             spc_str += formula + ','
         else:
             spc_str += '{},'.format(name)
@@ -211,6 +187,7 @@ def write_stereo_csv(spc_str, outname='species_stereo.csv', path='.',
     # Build a stereochemical dictionary
     new_dct, new_headers, names_in_order = write_stereo_dct(
         spc_str, allstereo=allstereo)
+    new_headers, orig_headers = _set_headers(spc_str)
 
     # Writer string
     spc_str = ','.join(['name'] + new_headers) + '\n'
@@ -337,13 +314,15 @@ def _add_stereo_to_dct(queue, names, init_dct, headers_noich, allstereo):
 # HELPER FUNCTIONS
 def _set_headers(spc_str):
     """ DEtermine headers of an output CSV file
+
+        Uses the order, except forces new order of
+        name,...
     """
-    headers = [header for header in read_csv_headers(spc_str)
-               if header != 'name']
-    if 'inchi' not in headers:
-        headers.append('inchi')
-    headers_noich = [header for header in headers
-                     if header not in ('inchi', 'inchikey')]
+    orig_headers = read_csv_headers(spc_str)
+    # if 'inchi' not in headers:
+    #     headers.append('inchi')
+    headers_noich = [header for header in orig_headers
+                     if header not in ('name', 'inchi', 'inchikey')]
     new_headers = ['inchi', 'inchikey'] + headers_noich
 
     return new_headers
@@ -406,3 +385,87 @@ def get_nrings(name, dct):
         print('Cannot produce graph for {} '.format(name))
         nrings = 2000
     return nrings
+
+
+# SOME NEW FUNCTIONS
+
+# Build Ancillary Organizing Information
+def fml_count_dct(spc_dct):
+    """ get the spc_fml dct
+
+        Loop over the spc dct, obtain the formula
+        and use it to build a count of each formula
+        in the dictionary
+    """
+
+    _fml_count_dct = {}
+    for name, dct in spc_dct.items():
+        fml_str = automol.inchi.formula_string(dct['inchi'])
+        # fml_str = _get_formula_from_dct(dct, name)
+        _, _fml_count_dct = assign_unique_name(
+            _fml_count_dct, fml_str)
+
+    return _fml_count_dct
+
+
+# Helper builder functions
+def assign_unique_name(fml_count_dct, fml):
+    """ Generate a unique name for a species with the
+        given formula that corresponds to
+
+        formula(N) where formula is the string N
+        is the Nth iteration of said formula in the
+        dictionary.
+
+        Also, updates the overall formula dictionary
+        which contains a count of how many times the
+        formula appears in some mechanism.
+    """
+
+    if fml in fml_count_dct:
+        fml_count_dct[fml] += 1
+        fml = fml + '({})'.format(fml_count_dct[fml])
+    else:
+        fml_count_dct[fml] = 1
+
+    return fml, fml_count_dct
+
+
+def _species_row_string(uniref_dct, formula_dct, name, new_headers):
+    smiles = _get_smiles_from_dct(uniref_dct, name)
+    formula = _get_formula_from_dct(uniref_dct, name)
+    uniref_dct[name]['smiles'] = smiles
+    formula, formula_dct = assign_unique_name(formula, formula_dct)
+    spc_str = formula + ','
+    for idx, header in enumerate(new_headers):
+        val = uniref_dct[name][header]
+        if isinstance(val, str):
+            val = "'{}'".format(val)
+        spc_str += str(val)
+        if idx+1 < len(new_headers):
+            spc_str += ','
+    spc_str += '\n'
+    return spc_str, formula_dct
+
+
+def _add_unique_references_to_dct(new_names, init_dct, uniref_dct, ref_scheme):
+    new_dct = {}
+    for newn in list(uniref_dct.keys()):
+        tempn_smiles = automol.inchi.smiles(uniref_dct[newn]['inchi'])
+        tempn = ref_scheme + '_' + tempn_smiles
+        if tempn not in new_names:
+            new_names.append(tempn)
+            new_dct[tempn] = uniref_dct[newn]
+            new_dct[tempn]['smiles'] = tempn_smiles
+            new_dct.update(init_dct)
+            init_dct = new_dct
+    return new_names, init_dct, uniref_dct
+
+
+# Helper Reader functions
+def _get_smiles_from_dct(dct, name):
+    return automol.inchi.smiles(dct[name]['inchi'])
+
+
+def _get_formula_from_dct(dct, name):
+    return automol.inchi.formula_string(dct[name]['inchi'])
