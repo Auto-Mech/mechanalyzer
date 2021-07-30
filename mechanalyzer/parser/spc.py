@@ -22,18 +22,19 @@ BAD_NAMES = []
 
 
 def load_spc_dcts(spc_csv_filenames, direc):
-    """ Reads one or more spc.csv files (in the AutoMech format). Outputs a 
+    """ Reads one or more spc.csv files (in the AutoMech format). Outputs a
         list of spc_dcts.
 
         :param spc_csv_filenames: filenames containing spc info
         :type spc_csv_filenames: list [filename1, filename2, ...]
         :param direc: directory with file(s) (all must be in same directory)
-        :type direc: str 
+        :type direc: str
         :return spc_dcts: list of spc_dcts
         :rtype: list of dcts [spc_dct1, spc_dct2, ...]
-    """ 
+    """
     spc_dcts = []
     for spc_csv_filename in spc_csv_filenames:
+        print('spc csv test:', spc_csv_filename)
         spc_csv_str = text_parser.read_file(direc, spc_csv_filename)
         spc_dct = build_spc_dct(spc_csv_str, 'csv')
         spc_dcts.append(spc_dct)

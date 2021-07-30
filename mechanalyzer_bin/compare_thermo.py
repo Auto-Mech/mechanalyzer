@@ -6,25 +6,48 @@ import numpy
 import mechanalyzer.calculator.compare as compare
 import mechanalyzer.plotter.thermo as plot_thermo
 import mechanalyzer.plotter._util as util
-import mechanalyzer.parser.spc as spc_parser  
+import mechanalyzer.parser.spc as spc_parser
 import mechanalyzer.parser.ckin_ as ckin_parser
 
 # INPUTS
 # Filenames
-thermo_filenames = ['NUIGMech1.2.new.THERM', 'NUIGMech1.2.old.THERM']
-spc_csv_filenames = ['NUIG_species.csv', 'NUIG_species.csv']
+# thermo_filenames = ['fa_07.THERM', 'NUIGMech1.2.THERM']
+# spc_csv_filenames = ['C5-C8_species.csv', 'NUIG_stereo.csv']
+# thermo_filenames = ['nc5_fa_07.THERM', 'NUIG_nc5.THERM']
+# spc_csv_filenames = ['nc5_species.csv', 'NUIG_nc5_species.csv']
+# thermo_filenames = ['NUIG_nc5.THERM', 'nc5_fa_07.THERM', 'nc5_f.THERM']
+# spc_csv_filenames = ['NUIG_nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv']
+# thermo_filenames = ['NUIG_nc5.THERM', 'nc5_fa_07.THERM', 'nc5_f.THERM', 'nc5_f_wbt.THERM']
+# spc_csv_filenames = ['NUIG_nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv']
+# thermo_filenames = ['NUIG_nc5.THERM', 'nc5_1-5_fa_07.THERM', 'nc5_1-5_f.THERM', 'nc5_1-5_1dhr.THERM']
+# spc_csv_filenames = ['NUIG_nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv']
+# thermo_filenames = ['NUIG_nc5.THERM', '1-5_wbt_fa_07.THERM', '1-5_wbt_f.THERM', '1-5_wbt_1dhr.THERM']
+# spc_csv_filenames = ['NUIG_nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv']
+# THERMO_FILENAMES = ['NUIG_nc5.THERM', 'nc5_1-5_f.THERM', '1-5_wbt_f.THERM', '1-5_b3sp_f.THERM']
+# THERMO_FILENAMES = ['NUIG_nc5.THERM', 'nc5_1-5_1dhr.THERM', '1-5_wbt_1dhr.THERM', '1-5_b3sp_1dhr.THERM']
+# SPC_CSV_FILENAMES = ['NUIG_nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv']
+# THERMO_FILENAMES = ['NUIG_nc3.THERM', '1-12_wbs_fa.THERM', '1-12_wbs_f.THERM', '1-12_wbs_hr.THERM']
+# SPC_CSV_FILENAMES = ['NUIG_nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv']
+THERMO_FILENAMES = ['NUIG_nc3.THERM', '1-12_b3sp_fa.THERM', '1-12_b3sp_f.THERM', '1-12_b3sp_hr.THERM']
+SPC_CSV_FILENAMES = ['NUIG_nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv']
+# THERMO_FILENAMES = ['NUIG_nc3.THERM', '1-12_wbs_hr.THERM', '1-12_b3sp_hr.THERM']
+# SPC_CSV_FILENAMES = ['NUIG_nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv']
 
-output_filename = 'compare_thermo.pdf'
-mech_nicknames = ['ANL', 'NUIG']
+OUTPUT_FILENAME = 'compare_thermo.pdf'
+# MECH_NICKNAMES = ['NUIG', 'ANL_wbs_hr', 'ANL_b3_hr']
+# MECH_NICKNAMES = ['NUIG', 'ANL_wbs_fa', 'ANL_wbs_f', 'ANHL_wbs_hr']
+MECH_NICKNAMES = ['NUIG', 'ANL_b3sp_fa', 'ANL_b3sp_f', 'ANHL_b3sp_hr']
+#mech_nicknames = ['NUIG', 'ANL_fa_07', 'ANL_f', 'ANL_hr']
 
 # Conditions
-temps = numpy.linspace(300,1000, 15)
+TEMPS = numpy.linspace(300, 1000, 15)
 
 # options
-sort = True
-sort_instr = 's' # either 'h', 'cp', 's', 'g', or None
-remove_loners = True
-write_file = False
+SORT = False
+# sort = True
+SORT_INSTR = 'h' # either 'h', 'cp', 's', 'g', or None
+REMOVE_LONERS = True
+WRITE_FILE = False
 
 
 # RUN FUNCTIONS
@@ -32,21 +55,20 @@ write_file = False
 assert len(sys.argv) == 2, (
     'There should be one command line input; namely, the job path')
 JOB_PATH = sys.argv[1]
-spc_therm_dcts = ckin_parser.load_spc_therm_dcts(thermo_filenames, JOB_PATH, 
-                                                 temps)
-spc_dcts = spc_parser.load_spc_dcts(spc_csv_filenames, JOB_PATH)
+SPC_THERM_DCTS = ckin_parser.load_spc_therm_dcts(THERMO_FILENAMES, JOB_PATH,
+                                                 TEMPS)
+SPC_DCTS = spc_parser.load_spc_dcts(SPC_CSV_FILENAMES, JOB_PATH)
 
 # Get the algn_spc_therm_dct
-algn_spc_therm_dct = compare.get_algn_spc_therm_dct(
-    spc_therm_dcts, spc_dcts, remove_loners=remove_loners,
-    write_file=write_file)
+ALGN_SPC_THERM_DCT = compare.get_algn_spc_therm_dct(
+    SPC_THERM_DCTS, SPC_DCTS, remove_loners=REMOVE_LONERS,
+    write_file=WRITE_FILE)
 
 # Get the combined spc_dct (used for including SMILES and InChis)
-comb_spc_dct = compare.get_mult_comb_spc_dct(spc_dcts)
+COMB_SPC_DCT = compare.get_mult_comb_spc_dct(SPC_DCTS)
 
 # Run the plotter
-figs = plot_thermo.build_plots(
-    algn_spc_therm_dct, spc_dct=comb_spc_dct, mech_names=mech_nicknames,
-    sort=sort, sort_instr=sort_instr)
-util.build_pdf(figs, filename=output_filename, path=JOB_PATH)
-
+FIGS = plot_thermo.build_plots(
+    ALGN_SPC_THERM_DCT, spc_dct=COMB_SPC_DCT, mech_names=MECH_NICKNAMES,
+    sort=SORT, sort_instr=SORT_INSTR)
+util.build_pdf(FIGS, filename=OUTPUT_FILENAME, path=JOB_PATH)
