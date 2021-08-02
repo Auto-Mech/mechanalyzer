@@ -269,6 +269,8 @@ def test__missing_spcs():
 
     missing_from_csv, missing_from_mech = checker.get_missing_spcs(
         RXN_PARAM_DCT1, SPC_IDENT_DCT1)
+    # Sort so the test always passes
+    missing_from_csv = sorted(missing_from_csv)
     assert set(missing_from_csv) == set(['HO2', 'O(S)'])
     assert set(missing_from_mech) == set(['OHV'])
 

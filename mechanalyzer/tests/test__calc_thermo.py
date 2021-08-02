@@ -26,11 +26,11 @@ CORR_G = np.array([-38521.984410513964, -73084.86345687084, -110031.82226060645]
 def test__valid_temps():
     """ Test the thermo calculator for temps within the valid range
     """
-    spc_thermo_dct = thermo.create_spc_thermo_dct(SPC_NASA7_DCT, TEMPS)
-    calc_h = spc_thermo_dct['N2O'][1]
-    calc_cp = spc_thermo_dct['N2O'][2]
-    calc_s = spc_thermo_dct['N2O'][3]
-    calc_g = spc_thermo_dct['N2O'][4]
+    spc_therm_dct = thermo.create_spc_therm_dct(SPC_NASA7_DCT, TEMPS)
+    calc_h = spc_therm_dct['N2O'][1]
+    calc_cp = spc_therm_dct['N2O'][2]
+    calc_s = spc_therm_dct['N2O'][3]
+    calc_g = spc_therm_dct['N2O'][4]
     assert np.allclose(calc_h, CORR_H, rtol=1e-3)
     assert np.allclose(calc_cp, CORR_CP, rtol=1e-3)
     assert np.allclose(calc_s, CORR_S, rtol=1e-3)
@@ -40,15 +40,15 @@ def test__valid_temps():
 def test__invalid_temps():
     """ Test the thermo calculator for temps outside the valid range
     """
-    spc_thermo_dct = thermo.create_spc_thermo_dct(SPC_NASA7_DCT, BAD_TEMPS)
-    calc_h = spc_thermo_dct['N2O'][1]
-    calc_cp = spc_thermo_dct['N2O'][2]
-    calc_s = spc_thermo_dct['N2O'][3]
-    calc_g = spc_thermo_dct['N2O'][4]
-    assert calc_h[2] is None
-    assert calc_cp[2] is None
-    assert calc_s[2] is None
-    assert calc_g[2] is None
+    spc_therm_dct = thermo.create_spc_therm_dct(SPC_NASA7_DCT, BAD_TEMPS)
+    calc_h = spc_therm_dct['N2O'][1]
+    calc_cp = spc_therm_dct['N2O'][2]
+    calc_s = spc_therm_dct['N2O'][3]
+    calc_g = spc_therm_dct['N2O'][4]
+    assert np.isnan(calc_h[2])
+    assert np.isnan(calc_cp[2])
+    assert np.isnan(calc_s[2])
+    assert np.isnan(calc_g[2])
 
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 """ Script for running a comparison of rate constants between mechanisms
 """
 
+import os
 import sys
 import numpy
 import mechanalyzer.calculator.compare as compare
@@ -30,11 +31,13 @@ write_file = False
 
 
 # RUN FUNCTIONS
-# Load dcts
-assert len(sys.argv) == 2, (
-    'There should be one command line input; namely, the job path')
-
-JOB_PATH = sys.argv[1]
+# Get the job path and load the dcts
+if len(sys.argv) > 1:
+    JOB_PATH = sys.argv[1]
+    print(f'The job path is {JOB_PATH}')
+elif len(sys.argv) == 1:
+    JOB_PATH = os.getcwd()
+    print(f'No job path input; using the current directory, {JOB_PATH}')
 rxn_ktp_dcts = ckin_parser.load_rxn_ktp_dcts(
     mech_filenames, JOB_PATH, temps, pressures)
 spc_therm_dcts = ckin_parser.load_spc_therm_dcts(

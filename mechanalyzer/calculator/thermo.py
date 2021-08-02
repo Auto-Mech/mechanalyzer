@@ -34,11 +34,11 @@ def create_spc_therm_dct(spc_nasa7_dct, temps, rval=RC):
                 print(f'Failed to calculate thermo at {temp} K for {spc} due to an invalid temp.')
 
         # Convert to numpy arrays
-        temps = numpy.array(temps)
-        h_t = numpy.array(h_t)
-        cp_t = numpy.array(cp_t)
-        s_t = numpy.array(s_t)
-        g_t = numpy.array(g_t)
+        temps = numpy.array(temps, dtype=float)
+        h_t = numpy.array(h_t, dtype=float)
+        cp_t = numpy.array(cp_t, dtype=float)
+        s_t = numpy.array(s_t, dtype=float)
+        g_t = numpy.array(g_t, dtype=float)
 
         spc_therm_dct[spc] = (temps, h_t, cp_t, s_t, g_t)
 

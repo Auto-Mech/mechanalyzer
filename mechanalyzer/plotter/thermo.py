@@ -9,7 +9,7 @@ SORT_DCT = {'h': 1, 'cp': 2, 's': 3, 'g': 4}
 
 
 def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None, sort=True,
-                sort_instr='h'):
+                sort_instr='h', sort_temp=None):
     """ Builds plots of an algn_spc_therm_dct, with one species per page.
         Also plots differences relative to other mechs.
 
@@ -25,6 +25,8 @@ def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None, sort=True,
         :type sort: Bool
         :param sort_instr: instructions for sorting; 'h', 'cp', 's', or 'g'
         :type sort_instr: None or str
+        :param sort_temp:
+        :type sort_temp: 
         :return figs: list of MatPlotLib figure objects
         :rtype: list [fig1, fig2, ...]
     """
@@ -50,7 +52,8 @@ def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None, sort=True,
     # If indicated, sort the thermo and diff dcts by the differences
     if sort:
         algn_spc_diff_dct, algn_spc_therm_dct = sort_by_max_diff(
-            algn_spc_diff_dct, algn_spc_therm_dct, sort_instr=sort_instr)
+            algn_spc_diff_dct, algn_spc_therm_dct, sort_instr=sort_instr,
+            sort_temp=sort_temp)
 
     # Loop over each spc and plot
     figs = []
@@ -143,7 +146,8 @@ def plot_single_spc(therm_arrays, diff_arrays, fig, axs, mech_names):
     return fig
 
 
-def sort_by_max_diff(algn_spc_diff_dct, algn_spc_therm_dct, sort_instr='h'):
+def sort_by_max_diff(algn_spc_diff_dct, algn_spc_therm_dct, sort_instr='h',
+                     sort_temp=None):
     """ Sort the algn_spc_diff_dct and algn_spc_therm_dct by maximum
         difference between the thermo quantities
 
@@ -156,6 +160,8 @@ def sort_by_max_diff(algn_spc_diff_dct, algn_spc_therm_dct, sort_instr='h'):
             therm_array_mech2, ...], spc2: ...}
         :param sort_instr: criteria by which to sort; 'h', 'cp', 's', or 'g'
         :type sort_instr: str
+        :param sort_temp:
+        :type sort_temp: 
         :return sorted_spc_diff_dct: algn_spc_diff_dct sorted by max diff
         :rtype: dct {spc1: [diff_array_mech1, diff_array_mech2, ...], spc2: ...}
         :return sorted_spc_therm_dct: algn_spc_therm_dct sorted by max diff
@@ -167,14 +173,32 @@ def sort_by_max_diff(algn_spc_diff_dct, algn_spc_therm_dct, sort_instr='h'):
     assert sort_idx is not None, (
         f"sort_instr should be 'h', 'cp', 's', or 'g', but is {sort_instr}")
 
+    # If a sort_temp was input, get the idx of the sort_temp
+    sort_temp_idx = None  # default is None
+    if sort_temp is not None:
+        # Get the temps array
+        temps = None
+        for therm_arrays in algn_spc_therm_dct.values():
+            for therm_array in therm_arrays:
+                if therm_array is not None:
+                    temps = therm_array[0]
+                    break
+        sort_temp_idx = numpy.argmin(abs(temps - sort_temp))
+
     # Get the maximum differences
     max_diffs = {}
     for spc, diff_arrays in algn_spc_diff_dct.items():
         max_diff = -0.5  # keeps spcs without diff_arrays behind spcs with them
         for diff_array in diff_arrays:
             if diff_array is not None:
-                if max(abs(diff_array[sort_idx])) > max_diff:
-                    max_diff = max(abs(diff_array[sort_idx]))
+                # If a sort_temp was provided, use the corresponding temp_idx
+                if sort_temp_idx is not None:
+                    if diff_array[sort_idx][sort_temp_idx] > max_diff:
+                        max_diff = diff_array[sort_idx][sort_temp_idx]
+                # Otherwise, just look for the maximum among all values
+                else:
+                    if max(abs(diff_array[sort_idx])) > max_diff:
+                        max_diff = max(abs(diff_array[sort_idx]))
 
         # If no diff_arrays found, check if the spc is missing in some mechs
         if max_diff == -0.5:
@@ -218,6 +242,7 @@ def get_algn_spc_diff_dct(algn_spc_therm_dct):
             thermo quantities relative to ref mech
         :rtype: dct {spc1: [diff_array_mech1, diff_array_mech2, ...], spc2: ...}
     """
+
     algn_spc_diff_dct = {}
     for spc, therm_arrays in algn_spc_therm_dct.items():
         # Get the ref_therm_array, which is the first non-None array
@@ -240,9 +265,19 @@ def get_algn_spc_diff_dct(algn_spc_therm_dct):
                 diff_array = []
                 for idx, quantity in enumerate(therm_array):
                     if idx == 0:  # if on the temps, just store them
-                        diff_array.append(quantity)
-                    else:  # if on h, cp, s, or g, calculate the difference
-                        diff_array.append(quantity - ref_therm_array[idx])
+#                        diff_array.append(quantity)
+                        temps = quantity
+                    elif idx == 1:
+                        h_t = quantity - ref_therm_array[idx]
+                    elif idx == 2:
+                        cp_t = quantity - ref_therm_array[idx]
+                    elif idx == 3:
+                        s_t = quantity - ref_therm_array[idx]
+                    elif idx == 4:
+                        g_t = quantity - ref_therm_array[idx]
+#                    else:  # if on h, cp, s, or g, calculate the difference
+#                        diff_array.append(quantity - ref_therm_array[idx])
+                diff_array = (temps, h_t, cp_t, s_t, g_t)
             diff_arrays.append(diff_array)
         algn_spc_diff_dct[spc] = diff_arrays
 
