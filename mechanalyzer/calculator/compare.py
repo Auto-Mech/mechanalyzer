@@ -246,9 +246,7 @@ def rename_dcts(target_dcts, spc_dcts, target_type):
 
 
 def get_rename_instr(spc_dct1, spc_dct2):
-    """ Get instructions for renaming spc_dct2 to be consistent with spc_dct1. Also,
-        output a combined spc_dct that contains all species from spc_dct1 along with
-        any species unique to spc_dct2
+    """ Get instructions for renaming spc_dct2 to be consistent with spc_dct1
 
         :param spc_dct1: the reference spc_dct
         :type spc_dct1: dct {spc1: ident_array1, spc2: ...}
