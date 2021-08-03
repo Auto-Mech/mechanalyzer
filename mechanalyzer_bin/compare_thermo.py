@@ -12,17 +12,45 @@ import mechanalyzer.parser.ckin_ as ckin_parser
 
 # INPUTS
 # Filenames
-THERMO_FILENAMES = ['NUIGMech1.2.new.THERM', 'NUIGMech1.2.old.THERM']
-SPC_CSV_FILENAMES = ['NUIG_species.csv', 'NUIG_species.csv']
+# thermo_filenames = ['fa_07.THERM', 'NUIGMech1.2.THERM']
+# spc_csv_filenames = ['C5-C8_species.csv', 'NUIG_stereo.csv']
+# thermo_filenames = ['nc5_fa_07.THERM', 'NUIG_nc5.THERM']
+# spc_csv_filenames = ['nc5_species.csv', 'NUIG_nc5_species.csv']
+# thermo_filenames = ['NUIG_nc5.THERM', 'nc5_fa_07.THERM', 'nc5_f.THERM']
+# spc_csv_filenames = ['NUIG_nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv']
+# thermo_filenames = ['NUIG_nc5.THERM', 'nc5_fa_07.THERM', 'nc5_f.THERM', 'nc5_f_wbt.THERM']
+# spc_csv_filenames = ['NUIG_nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv']
+# thermo_filenames = ['NUIG_nc5.THERM', 'nc5_1-5_fa_07.THERM', 'nc5_1-5_f.THERM', 'nc5_1-5_1dhr.THERM']
+# spc_csv_filenames = ['NUIG_nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv']
+# thermo_filenames = ['NUIG_nc5.THERM', '1-5_wbt_fa_07.THERM', '1-5_wbt_f.THERM', '1-5_wbt_1dhr.THERM']
+# spc_csv_filenames = ['NUIG_nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv']
+# THERMO_FILENAMES = ['NUIG_nc5.THERM', 'nc5_1-5_f.THERM', '1-5_wbt_f.THERM', '1-5_b3sp_f.THERM']
+# THERMO_FILENAMES = ['NUIG_nc5.THERM', 'nc5_1-5_1dhr.THERM', '1-5_wbt_1dhr.THERM', '1-5_b3sp_1dhr.THERM']
+# SPC_CSV_FILENAMES = ['NUIG_nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv']
+# THERMO_FILENAMES = ['NUIG_nc3.THERM', '1-12_wbs_fa.THERM', '1-12_wbs_f.THERM', '1-12_wbs_hr.THERM']
+# SPC_CSV_FILENAMES = ['NUIG_nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv']
+# THERMO_FILENAMES = ['NUIG_nc3.THERM', 'conf1.THERM', 'conf2.THERM', 'conf3.THERM', 'conf4.THERM', 'conf5.THERM']
+# THERMO_FILENAMES = ['NUIG_nc3.THERM', 'all_therm.ckin_0']
+# SPC_CSV_FILENAMES = ['NUIG_nc3_species.csv', 'nc3_species.csv']
+THERMO_FILENAMES = ['NUIG_nc3.THERM', 'all_therm.ckin_0', 'all_therm.ckin_1', 'all_therm.ckin_2', 'all_therm.ckin_3', 'all_therm.ckin_4']
+SPC_CSV_FILENAMES = ['NUIG_nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv']
+# THERMO_FILENAMES = ['NUIG_nc3.THERM', '1-12_b3sp_fa.THERM', '1-12_b3sp_f.THERM', '1-12_b3sp_hr.THERM']
+# THERMO_FILENAMES = ['NUIG_nc3.THERM', '1-12_wbs_hr.THERM', '1-12_b3sp_hr.THERM']
+# SPC_CSV_FILENAMES = ['NUIG_nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv']
 
 OUTPUT_FILENAME = 'compare_thermo.pdf'
-MECH_NAMES = ['ANL', 'NUIG']
+# MECH_NICKNAMES = ['NUIG', 'ANL_wbs_hr', 'ANL_b3_hr']
+# MECH_NICKNAMES = ['NUIG', 'ANL_wbs_fa', 'ANL_wbs_f', 'ANHL_wbs_hr']
+# MECH_NICKNAMES = ['NUIG', 'ANL_b3sp_fa', 'ANL_b3sp_f', 'ANHL_b3sp_hr']
+# MECH_NICKNAMES = ['NUIG', 'wbs_hr']
+MECH_NICKNAMES = ['NUIG', 'wbs_hr', 'conf2', 'conf3', 'conf4', 'conf5']
+#mech_nicknames = ['NUIG', 'ANL_fa_07', 'ANL_f', 'ANL_hr']
 
 # Conditions
 TEMPS = numpy.linspace(300,1000, 15)
 
 # Options
-SORT = True
+SORT = False
 SORT_INSTR = 's' # either 'h', 'cp', 's', 'g', or None
 SORT_TEMP = 300  # can be (1) None to sort by max difference or (2) a number
 REMOVE_LONERS = True
