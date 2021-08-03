@@ -16,6 +16,8 @@ def build_input_file(bld_inp_str):
         bld_inp_str, 'rct1', footer='rct1')
     rct2_block = ioformat.ptt.end_block(
         bld_inp_str, 'rct2', footer='rct2')
+    prd_block = ioformat.ptt.end_block(
+        bld_inp_str, 'prd', footer='prd')
     rcls_block = ioformat.ptt.end_block(
         bld_inp_str, 'rclasses', footer='rclasses')
 
@@ -36,8 +38,14 @@ def build_input_file(bld_inp_str):
         rcls_lst = ioformat.ptt.values_from_block(
             rcls_block, val_ptt=app.VARIABLE_STRING)
 
+        if prd_block is not None:
+            prd_lst = ioformat.ptt.values_from_block(
+                prd_block, val_ptt=app.VARIABLE_STRING)
+        else:
+            prd_lst = None
+
         rseries = (
-            (rct1_lst, rct2_lst, rcls_lst),
+            (rct1_lst, rct2_lst, prd_lst, rcls_lst),
         )
     else:
         print('Missing rct1, rct2 or rclasses block')

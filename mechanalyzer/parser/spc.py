@@ -10,14 +10,11 @@
 import os
 import copy
 import csv
-import math
-import multiprocessing
-import random
 import pandas as pd
 import automol
 import thermfit
 from mechanalyzer.parser.csv_ import csv_dct
-from autorun import timeout
+from autorun import timeout, execute_function_in_parallel
 import ioformat.pathtools as text_parser
 
 
@@ -183,46 +180,24 @@ def add_heat_of_formation_basis(spc_dct,
     return spc_dct
 
 
-def stereochemical_spc_dct(spc_dct, allstereo=False):
+def stereochemical_spc_dct(spc_dct, nprocs='auto', all_stereo=False):
     """ read the species file in a .csv format and write a new one
         that has stero information
     """
 
-    # Build a new dict
-    ste_spc_dct = {}
-
     # Generate names and procs for parallel stereochem add'n
-    # names not randomized, should be?
     init_names = list(spc_dct.keys())
-    num_spc = len(init_names)
-    randomized_names = random.sample(init_names, num_spc)
 
-    nproc_avail = max(len(os.sched_getaffinity(0)) - 1, 1)
-    spc_per_proc = math.floor(num_spc / nproc_avail)
+    # Add stereo using multiple processes
+    args = (spc_dct, all_stereo)
+    ste_dcts = execute_function_in_parallel(
+        _add_stereo_to_dct, init_names, args, nprocs=nprocs)
 
-    queue = multiprocessing.Queue()
-    procs = []
-    for proc_n in range(nproc_avail):
-        spc_start = proc_n*spc_per_proc
-        if proc_n == nproc_avail - 1:
-            spc_end = num_spc
-        else:
-            spc_end = (proc_n+1)*spc_per_proc
-        names = randomized_names[spc_start:spc_end]
-
-        proc = multiprocessing.Process(
-            target=_add_stereo_to_dct,
-            args=(queue, names, spc_dct, allstereo,))
-        procs.append(proc)
-        proc.start()
-
-    for _ in procs:
-        ste_spc_dct.update(queue.get())
-    for proc in procs:
-        proc.join()
-
-    # Reoroder the stereo dct (only works if allstereo=False)
-    if not allstereo:
+    # Build and reoroder the stereo dct (only works if all_stereo=False)
+    ste_spc_dct = {}
+    for dct in ste_dcts:
+        ste_spc_dct.update(dct)
+    if not all_stereo:
         ste_spc_dct_ord = {name: ste_spc_dct[name] for name in init_names}
     else:
         ste_spc_dct_ord = copy.deepcopy(ste_spc_dct)
@@ -230,7 +205,7 @@ def stereochemical_spc_dct(spc_dct, allstereo=False):
     return ste_spc_dct_ord
 
 
-def _add_stereo_to_dct(queue, names, init_dct, allstereo):
+def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
     """ Builds a modified species dictionary for a set of names where
         each sub species dictionary contains an InChI string with
         stereochemical layers being added.
@@ -253,14 +228,14 @@ def _add_stereo_to_dct(queue, names, init_dct, allstereo):
         return nrings
 
     @timeout(200)
-    def _generate_stereo(name, ich, allstereo=False):
+    def _generate_stereo(name, ich, all_stereo=False):
         """ stereo
         """
         ret_ichs, worked = [ich], True
         try:
             if not automol.inchi.is_complete(ich):
                 ret_ichs = (
-                    [automol.inchi.add_stereo(ich)] if not allstereo else
+                    [automol.inchi.add_stereo(ich)] if not all_stereo else
                     automol.inchi.expand_stereo(ich))
         except:
             print('{} timed out in stereo generation'.format(name))
@@ -285,7 +260,7 @@ def _add_stereo_to_dct(queue, names, init_dct, allstereo):
 
         # Generate ichs with stereo and hashes
         ich = init_dct[name]['inchi']
-        ste_ichs, success = _generate_stereo(name, ich, allstereo=allstereo)
+        ste_ichs, success = _generate_stereo(name, ich, all_stereo=all_stereo)
         if not success:
             continue
 
@@ -299,7 +274,7 @@ def _add_stereo_to_dct(queue, names, init_dct, allstereo):
             for key in spc_dct_keys:
                 new_dct[sname][key] = init_dct[name][key]
 
-    queue.put(new_dct)
+    output_queue.put(new_dct)
     print('Processor {} finished'.format(os.getpid()))
 
 

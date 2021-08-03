@@ -54,7 +54,7 @@ def _sort_objs(spc_str, mech_str, sort_lst, isolate_spc):
 
     # Build the sorted mechanism and species objects
     srt_mch = sorting(mech_info, spc_dct, sort_lst, isolate_spc)
-    spc_dct_ord = sparser.order_species_by_atomcount(spc_dct)
+    spc_dct_ord = sparser.reorder_by_atomcount(spc_dct)
 
     return srt_mch, rxn_param_dct, spc_dct_ord, elems
 

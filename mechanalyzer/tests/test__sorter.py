@@ -82,10 +82,10 @@ AL_KTP_DCT = {
             np.array([3.57572885e+134, 4.79926202e+143, 2.72670689e+149]))}]}
 
 
-def __sort_with_input():
+def test__sort_with_input():
     """ sort by using the auxlilary input files to specify parameters
     """
-    RESULTS = [
+    results = [
         [(('C2H4',), ('H2', 'H2CC'), ('(+M)',)),
          '! class: N_COH.subpes _NR _rxn type  2004.0 _1 _Decomposition'],
         [(('C2H3', 'H'), ('C2H4',), ('(+M)',)),
@@ -123,14 +123,13 @@ def __sort_with_input():
 
     # Sort mechanism
     isolate_spc, sort_lst = mparser.parse_sort(sort_str)
-    print('parser test:', isolate_spc, sort_lst)
 
     param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     index = 0
     for rxn in param_dct_sort.keys():
-        assert [rxn, cmts_dct[rxn]['cmts_inline']] == RESULTS[index]
+        assert [rxn, cmts_dct[rxn]['cmts_inline']] == results[index]
         index += 1
 
 
@@ -139,7 +138,8 @@ def test__readwrite_thirdbody():
 
         Checks read/write of a small set of rxns involving third bodies
     """
-    TRD_BDY_DCT = {
+
+    trd_bdy_dct = {
         (('H', 'OH'), ('H2O',), ('+M',)):
         (([3.5e+22, -2.0, 0.0], None, None, None, None,
           {'H2': 0.73, 'H2O': 3.65, 'CH4': 2.0, 'C2H6': 3.0, 'AR': 0.38}),),
@@ -152,7 +152,8 @@ def test__readwrite_thirdbody():
         (([150000000000000.0, -0.32, -262.3],
           [5.86e+60, -12.81, 6250.0],
             [0.104, 1606.0, 60000.0, 6118.0], None, None,
-            {'H2': 2.0, 'H2O': 6.0, 'CH4': 2.0, 'CO': 1.5, 'CO2': 2.0, 'C2H6': 3.0, 'AR': 0.7}),),
+            {'H2': 2.0, 'H2O': 6.0, 'CH4': 2.0, 'CO': 1.5,
+             'CO2': 2.0, 'C2H6': 3.0, 'AR': 0.7}),),
         (('C5H10-2',), ('C4H71-3', 'CH3'), ('(+M)',)):
         (([6.486e+19, -1.367, 76320], [1.53e+104, -24.826, 94800.0],
           [0.005301, 143.7, 16770000000000.0, 3671.0], None, None, None),),
@@ -175,12 +176,10 @@ def test__readwrite_thirdbody():
     isolate_spc = []
     sort_lst = ['pes', 0]
 
-    print('third body dictionary test: ')
     param_dct_sort, _, _, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
-    assert param_dct_sort == TRD_BDY_DCT
-    print('ok')
+    assert param_dct_sort == trd_bdy_dct
 
 
 def test__sortby_mult():
@@ -189,7 +188,7 @@ def test__sortby_mult():
         Sort by multiplicity of the reaction
     """
 
-    RESULTS = {
+    results = {
         (('C5H10-2',), ('C4H71-3', 'CH3'), ('(+M)',)): str(1),
         (('C5H11-1',), ('C2H4', 'NC3H7'), (None,)): str(2),
         (('H', 'OH'), ('H2O',), ('+M',)): str(4),
@@ -208,15 +207,11 @@ def test__sortby_mult():
     isolate_spc = []
     sort_lst = ['mult', 0]
 
-    print('sorting by multiplicity test:')
-
     param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     for rxn in param_dct_sort.keys():
-        assert cmts_dct[rxn]['cmts_inline'][-1] == RESULTS[rxn]
-
-    print('ok')
+        assert cmts_dct[rxn]['cmts_inline'][-1] == results[rxn]
 
 
 def test__sortby_molec_r1():
@@ -224,10 +219,11 @@ def test__sortby_molec_r1():
 
         Sort by first (heavier) reactant and molecularity of the reaction
     """
-    comments_results = ['C2H3_2', 'C2H3_2', 'C2H3_2', 'C2H3_2', 'C2H3_2', 'C2H3_2',
-                        'C2H3OO_1', 'C2H3OO_1', 'C2H4_1', 'C2H4_2', 'C2H4_2', 'C2H4_2',
-                        'C2H4_2', 'C2H4_2', 'C2H4_2', 'C2H5_2', 'C2H5_2', 'C2H5_2',
-                        'C2H5O2_1', 'C2H6_2', 'C3H4-A_2', 'CH3_2', 'CH3_2', 'HOCH2CO_1']
+    comments_results = [
+        'C2H3_2', 'C2H3_2', 'C2H3_2', 'C2H3_2', 'C2H3_2', 'C2H3_2',
+        'C2H3OO_1', 'C2H3OO_1', 'C2H4_1', 'C2H4_2', 'C2H4_2', 'C2H4_2',
+        'C2H4_2', 'C2H4_2', 'C2H4_2', 'C2H5_2', 'C2H5_2', 'C2H5_2',
+        'C2H5O2_1', 'C2H6_2', 'C3H4-A_2', 'CH3_2', 'CH3_2', 'HOCH2CO_1']
 
     # Read mechanism files into strings
     spc_path = os.path.join(CWD, 'data', 'LLNL_species.csv')
@@ -247,9 +243,7 @@ def test__sortby_molec_r1():
     for rxn in param_dct_sort.keys():
         comments.append(''.join(cmts_dct[rxn]['cmts_inline'].split()[-2:]))
 
-    print('sorting by molecularity and reactant1 test:')
     assert comments == comments_results
-    print('ok')
 
 
 def test_sortby_pes_dct():
@@ -474,13 +468,20 @@ def test_sort_ktp():
         sort ktp dictionary according to highest rate values/ratios
     """
     results = {
-        (('H2', 'O'), ('OH', 'H'), (None,)): '2.72670689e+149 _22.692539074854153',
-        (('H', 'O'), ('OH',), ('(+M)',)): '2.72670689e+149 _4.619780379447244e-16',
-        (('H', 'O'), ('OH',), (None,)): '2.72670689e+149 _3.973593578206074e-39',
-        (('H', 'O2'), ('OH', 'O'), (None,)): '2.72670689e+149 _1.3017843126207617e-89',
-        (('H2', 'O'), ('OH', 'OH'), (None,)): '2.72670689e+149 _0.0',
-        (('H2', 'O2'), ('HO2V', 'H'), (None,)): '2.72670689e+149 _0.0',
-        (('H2', 'O(S)'), ('OH', 'H'), (None,)): '4.79926202e+143 _1.0'
+        (('H2', 'O'), ('OH', 'H'), (None,)): (
+            '2.72670689e+149 _22.692539074854153'),
+        (('H', 'O'), ('OH',), ('(+M)',)): (
+            '2.72670689e+149 _4.619780379447244e-16'),
+        (('H', 'O'), ('OH',), (None,)): (
+            '2.72670689e+149 _3.973593578206074e-39'),
+        (('H', 'O2'), ('OH', 'O'), (None,)): (
+            '2.72670689e+149 _1.3017843126207617e-89'),
+        (('H2', 'O'), ('OH', 'OH'), (None,)): (
+            '2.72670689e+149 _0.0'),
+        (('H2', 'O2'), ('HO2V', 'H'), (None,)): (
+            '2.72670689e+149 _0.0'),
+        (('H2', 'O(S)'), ('OH', 'H'), (None,)): (
+            '4.79926202e+143 _1.0')
     }
 
     # Read mechanism files into strings
@@ -505,14 +506,12 @@ def test_sort_ktp():
     sorted_idx, cmts_dct, _ = srt_mch.return_mech_df()
     al_ktp_dct_sorted = sorter.reordered_mech(AL_KTP_DCT, sorted_idx)
 
-    print('ktp dct sorted by max val and ratios test:')
     assert al_ktp_dct_sorted.keys() == results.keys()
     newdct = dict.fromkeys(al_ktp_dct_sorted.keys())
     for rxn in al_ktp_dct_sorted.keys():
         newdct[rxn] = cmts_dct[rxn]['cmts_inline'].split('ratio')[1].strip()
 
     assert newdct == results
-    print('ok')
 
 
 # Helper function
