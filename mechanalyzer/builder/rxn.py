@@ -147,6 +147,7 @@ def _prd_ichs(rct_gras, rxn_class_typ, check=True):
     for rxn in rxns:
         prd_gras_ = automol.reac.product_graphs(rxn)
         prd_ichs_ = tuple(map(automol.graph.inchi, prd_gras_))
+        prd_ichs_ = tuple(map(automol.inchi.add_stereo, prd_ichs_))
         prd_ichs += (prd_ichs_,)
         if check:
             rct_gras_ = automol.reac.reactant_graphs(rxn)
