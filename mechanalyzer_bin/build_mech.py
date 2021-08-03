@@ -40,7 +40,7 @@ spc_dct, rxn_param_dct = mechanalyzer.builder.rxn.build_mechanism(
     spc_dct, rxn_param_dct, rxn_series=RSERIES)
 
 # Write the dictionaries to original strings
-csv_str = mechanalyzer.parser.spc.csv_str(
+csv_str = mechanalyzer.parser.spc.csv_string(
     spc_dct, FILE_DCT['headers'])
 mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
     elem_tuple=None,
@@ -54,7 +54,7 @@ param_dct_sort, _, spc_dct, cmts_dct, elems = sorter.sorted_mech(
     csv_str, mech_str, isolate_spc, sort_lst)
 
 # Write the dictionaries to ordered strings
-csv_str = mechanalyzer.parser.spc.csv_str(
+csv_str = mechanalyzer.parser.spc.csv_string(
     spc_dct, FILE_DCT['headers'])
 mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
     elem_tuple=elems,
@@ -64,5 +64,5 @@ mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
     comments=cmts_dct)
 
 # Write the species and mechanism files
-ioformat.pathtools.read_file(CWD, FILE_DCT['inp_spc'])
-ioformat.pathtools.read_file(CWD, FILE_DCT['inp_mech'])
+ioformat.pathtools.write_file(csv_str, CWD, FILE_DCT['out_spc'])
+ioformat.pathtools.write_file(mech_str, CWD, FILE_DCT['out_mech'])

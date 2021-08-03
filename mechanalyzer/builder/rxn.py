@@ -20,7 +20,8 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series):
     # Loop over the reaction series consisting of reactants and reaction type
     for sidx, series in enumerate(rxn_series):
 
-        rct1_set, rct2_set, rxn_typs = series
+        rct1_set, rct2_set, allowed_prds, rxn_typs = series
+        print('allowed prds', allowed_prds)
 
         print('Generating Reactions for Series {}'.format(sidx+1))
 
@@ -31,6 +32,8 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series):
             # Determine reactants to generate reactions for
             rct_ichs = _determine_reactants(
                 mech_spc_dct, rct1_set, rct2_set, rtyp, rct1_lst=new_spc_lst)
+            allowed_prd_ichs = _determine_allowed_products(
+                mech_spc_dct, allowed_prds)
 
             # Print info message for generating reactions usings SMILES strings
             print('\nTrying to find {} products for reactants'.format(rtyp))
@@ -38,10 +41,14 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series):
                 _rct_smis = tuple(map(automol.inchi.smiles, ichs))
                 print(_rct_smis)
             print('')
+            if allowed_prd_ichs:
+                allow_str = ' '.join(allowed_prd_ichs)
+                print('\nEach reaction must produce {}'.format(allow_str))
+                print('')
 
             # Generate Reactions
             for ichs in rct_ichs:
-                rxns += generate_reactions(ichs, rtyp)
+                rxns += generate_reactions(ichs, allowed_prd_ichs, rtyp)
 
         # Update the mechanism objects with unique spc and rxns
         mech_spc_dct, new_spc_lst = update_spc_dct_from_reactions(
@@ -54,7 +61,7 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series):
     return mech_spc_dct, mech_rxn_dct
 
 
-def generate_reactions(rct_ichs, rtyp):
+def generate_reactions(rct_ichs, allowed_prd_ichs, rtyp):
     """ For a given reactants
     """
 
@@ -68,6 +75,11 @@ def generate_reactions(rct_ichs, rtyp):
     # Build list of generated reactions including reactants and products
     rxn_ichs = ()
     for pidx, prds in enumerate(prd_ichs):
+        # Move ahead in loop if requested products not found
+        if allowed_prd_ichs:
+            if not all(prd in prds for prd in allowed_prd_ichs):
+                continue
+        # If continue not hit, save reaction to list and print to stdout
         _prd_smis = tuple(map(automol.inchi.smiles, prds))
         print('Found Product(s) {}: {}'.format(pidx+1, _prd_smis))
 
@@ -114,6 +126,17 @@ def _determine_reactants(spc_dct, rct1_set, rct2_set, rtyp, rct1_lst=None):
     return rxn_ichs
 
 
+def _determine_allowed_products(spc_dct, allowed_prds):
+    """ get the inchis for what products are allowed
+    """
+    if allowed_prds is not None:
+        spc_ichs = tuple(spc_dct[name]['inchi'] for name in allowed_prds)
+    else:
+        spc_ichs = ()
+
+    return spc_ichs
+
+
 # Helper functions
 def _radicals(ich_lst):
     """ Determine the radicals
@@ -149,6 +172,7 @@ def _prd_ichs(rct_gras, rxn_class_typ, check=True):
         prd_ichs_ = tuple(map(automol.graph.inchi, prd_gras_))
         prd_ichs_ = tuple(map(automol.inchi.add_stereo, prd_ichs_))
         prd_ichs += (prd_ichs_,)
+
         if check:
             rct_gras_ = automol.reac.reactant_graphs(rxn)
             rxns_ = automol.reac.find(rct_gras_, prd_gras_)

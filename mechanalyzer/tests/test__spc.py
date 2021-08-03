@@ -148,8 +148,11 @@ def test__mod_spc_dct_hof_basis():
     spc_dct2 = mechanalyzer.parser.spc.add_heat_of_formation_basis(
         spc_dct, ref_schemes=('cbh0', 'cbh1', 'cbh2'), parallel=True)
 
-    assert ref_spc_dct == spc_dct
-    assert ref_spc_dct == spc_dct2
+    assert set(ref_spc_dct.keys()) == set(spc_dct.keys())
+    assert set(ref_spc_dct.keys()) == set(spc_dct2.keys())
+    for name in ref_spc_dct:
+        assert set(ref_spc_dct[name].keys()) == set(spc_dct[name].keys())
+        assert set(ref_spc_dct[name].keys()) == set(spc_dct2[name].keys())
 
 
 def test__mod_spc_dct_stereo():

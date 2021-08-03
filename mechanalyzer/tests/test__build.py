@@ -31,6 +31,7 @@ def test__input_parse():
     ref_rseries = (
         (('C4H9(1)', 'C4H9(2)'),
          ('O2',),
+         None,
          ('addition', 'hydrogen_migration', 'beta_scission')),)
 
     inp_dct, rseries = mechanalyzer.parser.build_input_file(BLD_INP_STR)
@@ -59,6 +60,7 @@ def test__reaction_build():
     rseries = (
         (('C4H9(1)',),
          ('O2',),
+         None,
          ('addition', 'hydrogen migration', 'beta scission')),)
 
     bld_spc_dct, bld_rxn_param_dct = mechanalyzer.builder.rxn.build_mechanism(
