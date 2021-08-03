@@ -265,6 +265,7 @@ def _read_csv_fml(data, idxs):
         spc_dct = dict(zip(idxs, data.fml))
     else:
         ichs_lst = list(spc_dct_inchis.values())
+        print(ichs_lst)
         fml = [_fml_inchi(ichs) for ichs in ichs_lst]
         spc_dct = dict(zip(idxs, fml))
 
