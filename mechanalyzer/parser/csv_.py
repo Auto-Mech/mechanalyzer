@@ -282,6 +282,7 @@ def _check_csv(data):
     """
 
     headers = set(list(data.head()))
+    num_headers = len(headers)
 
     req1 = {'name', 'smiles'}
     req2 = {'name', 'inchi'}
@@ -304,6 +305,12 @@ def _check_csv(data):
     if len(list(data.name)) > len(set(list(data.name))):
         proper = False
         print('Repeat names found')
+
+    for idx, row in data.iterrows():
+        if row.count() != num_headers:
+            print ('Error: The number of items for species', name, 
+                    'does not match the number of headers')
+            proper = False
 
     # Check validity of inchi and multiplicity combinations (and chg?)
     # assert _is_valid_inchi_multiplicity(ich, mul)
