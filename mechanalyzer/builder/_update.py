@@ -37,7 +37,7 @@ def update_spc_dct(spc_ichs, spc_dct):
             # Generate unique name with formula, update formula dct
             fml = automol.inchi.formula_string(ich)
             name, fml_count_dct = mechanalyzer.parser.spc.assign_unique_name(
-                fml_count_dct, fml)
+                fml, fml_count_dct)
 
             # Generate the data dct
             rgt_dct = thermfit.create_spec(ich)
@@ -88,7 +88,7 @@ def _make_spc_bookkepping(spc_dct):
         bookkeeping dictionaries
     """
 
-    fml_count_dct = mechanalyzer.parser.spc.fml_count_dct(spc_dct)
+    fml_count_dct = mechanalyzer.parser.spc.formula_count_dct(spc_dct)
     ich_name_dct = _ich_name_dct(spc_dct)
 
     return fml_count_dct, ich_name_dct
