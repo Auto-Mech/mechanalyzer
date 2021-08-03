@@ -28,15 +28,21 @@ import mechanalyzer.parser.ckin_ as ckin_parser
 # SPC_CSV_FILENAMES = ['NUIG_nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv', 'nc5_species.csv']
 # THERMO_FILENAMES = ['NUIG_nc3.THERM', '1-12_wbs_fa.THERM', '1-12_wbs_f.THERM', '1-12_wbs_hr.THERM']
 # SPC_CSV_FILENAMES = ['NUIG_nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv']
-THERMO_FILENAMES = ['NUIG_nc3.THERM', '1-12_b3sp_fa.THERM', '1-12_b3sp_f.THERM', '1-12_b3sp_hr.THERM']
-SPC_CSV_FILENAMES = ['NUIG_nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv']
+# THERMO_FILENAMES = ['NUIG_nc3.THERM', 'conf1.THERM', 'conf2.THERM', 'conf3.THERM', 'conf4.THERM', 'conf5.THERM']
+# THERMO_FILENAMES = ['NUIG_nc3.THERM', 'all_therm.ckin_0']
+# SPC_CSV_FILENAMES = ['NUIG_nc3_species.csv', 'nc3_species.csv']
+THERMO_FILENAMES = ['NUIG_nc3.THERM', 'all_therm.ckin_0', 'all_therm.ckin_1', 'all_therm.ckin_2', 'all_therm.ckin_3', 'all_therm.ckin_4']
+SPC_CSV_FILENAMES = ['NUIG_nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv']
+# THERMO_FILENAMES = ['NUIG_nc3.THERM', '1-12_b3sp_fa.THERM', '1-12_b3sp_f.THERM', '1-12_b3sp_hr.THERM']
 # THERMO_FILENAMES = ['NUIG_nc3.THERM', '1-12_wbs_hr.THERM', '1-12_b3sp_hr.THERM']
 # SPC_CSV_FILENAMES = ['NUIG_nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv']
 
 OUTPUT_FILENAME = 'compare_thermo.pdf'
 # MECH_NICKNAMES = ['NUIG', 'ANL_wbs_hr', 'ANL_b3_hr']
 # MECH_NICKNAMES = ['NUIG', 'ANL_wbs_fa', 'ANL_wbs_f', 'ANHL_wbs_hr']
-MECH_NICKNAMES = ['NUIG', 'ANL_b3sp_fa', 'ANL_b3sp_f', 'ANHL_b3sp_hr']
+# MECH_NICKNAMES = ['NUIG', 'ANL_b3sp_fa', 'ANL_b3sp_f', 'ANHL_b3sp_hr']
+# MECH_NICKNAMES = ['NUIG', 'wbs_hr']
+MECH_NICKNAMES = ['NUIG', 'wbs_hr', 'conf2', 'conf3', 'conf4', 'conf5']
 #mech_nicknames = ['NUIG', 'ANL_fa_07', 'ANL_f', 'ANL_hr']
 
 # Conditions
@@ -46,7 +52,7 @@ TEMPS = numpy.linspace(300, 1000, 15)
 SORT = False
 # sort = True
 SORT_INSTR = 'h' # either 'h', 'cp', 's', 'g', or None
-REMOVE_LONERS = True
+REMOVE_LONERS = False
 WRITE_FILE = False
 
 
@@ -54,7 +60,11 @@ WRITE_FILE = False
 # Load dcts
 assert len(sys.argv) == 2, (
     'There should be one command line input; namely, the job path')
-JOB_PATH = sys.argv[1]
+if len(sys.argv) > 1: 
+    JOB_PATH = sys.argv[1]
+else:
+    JOB_PATH = os.getcwd()
+print('file test:', THERMO_FILENAMES, JOB_PATH)
 SPC_THERM_DCTS = ckin_parser.load_spc_therm_dcts(THERMO_FILENAMES, JOB_PATH,
                                                  TEMPS)
 SPC_DCTS = spc_parser.load_spc_dcts(SPC_CSV_FILENAMES, JOB_PATH)

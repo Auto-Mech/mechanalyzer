@@ -45,7 +45,7 @@ def load_rxn_param_dcts(mech_filenames, direc):
     """ 
     rxn_param_dcts = []
     for mech_filename in mech_filenames:
-        rxn_param_dct = load_param_dct(mech_filename, direc)
+        rxn_param_dct = load_rxn_ktp_dct(mech_filename, direc)
         rxn_param_dcts.append(rxn_param_dct)
 
     return rxn_param_dcts
@@ -66,6 +66,7 @@ def load_spc_therm_dcts(thermo_filenames, direc, temps):
     """
     spc_therm_dcts = []
     for thermo_filename in thermo_filenames:
+        print('thermo filename test:', thermo_filename)
         spc_therm_dct = load_spc_therm_dct(thermo_filename, direc, temps)
         spc_therm_dcts.append(spc_therm_dct)
 
