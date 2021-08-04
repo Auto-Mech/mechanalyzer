@@ -12,10 +12,10 @@ SPC_DCT = {
         'inchi': 'InChI=1S/C2H6/c1-2/h1-2H3',
         'mult': 1,
         'charge': 0},
-    'C2H5': {
-        'inchi': 'InChI=1S/C2H5/c1-2/h1H2,2H3',
-        'mult': 2,
-        'charge': 0},
+    # 'C2H5': {
+    #     'inchi': 'InChI=1S/C2H5/c1-2/h1H2,2H3',
+    #     'mult': 2,
+    #     'charge': 0},
     'H': {
         'inchi': 'InChI=1S/H',
         'mult': 2,
@@ -160,10 +160,6 @@ products keys:
 HABS_ZRXN = automol.reac.from_string(HABS_ZRXN_STR)
 
 
-# Scheme information
-SCHEME = 'basic'
-
-
 def test__species():
     """ test thermfit.._basis.prepare_basis
     """
@@ -176,7 +172,7 @@ def test__species():
     }
 
     dct1 = thermfit.prepare_basis(
-        SCHEME, SPC_DCT, SPC_NAMES,
+        'basic', SPC_DCT, SPC_NAMES,
         nprocs='auto', print_log=False, zrxn=None)
 
     _check_dct(ref_dct1, dct1)
@@ -188,34 +184,44 @@ def test__transition_state():
 
     ref_dct1 = {
         'ts_1_1_1': (
-            ('InChI=1S/H2/h1H', 'InChI=1S/CH4/h1H4',
-             'InChI=1S/H2O/h1H2'),
-            numpy.array([-7.5,  7.0,  2.0]))
+            ('InChI=1S/H2/h1H', 'InChI=1S/CH4/h1H4', 'InChI=1S/H2O/h1H2'),
+            numpy.array([-7.5,  7.0,  2.0])
+        )
     }
     ref_dct2 = {
         'ts_1_1_1': (
-            ('InChI=1S/CH4/h1H4', 'InChI=1S/H2O/h1H2',
-             'InChI=1S/H2/h1H'),
-            [6.0, 1.0, 1.0, -7.0])
+            ['InChI=1S/CH4/h1H4', 'InChI=1S/H2O/h1H2',
+             (('InChI=1S/CH3/h1H3', 'InChI=1S/H2O/h1H2'),
+              ('InChI=1S/CH4/h1H4', 'InChI=1S/HO/h1H')),
+             'InChI=1S/H2/h1H'],
+            [6.0, 1.0, 1.0, -7.0]
+        )
     }
     ref_dct3 = {
         'ts_1_1_1': (
-            ('InChI=1S/CH4O/c1-2/h2H,1H3',
-             'InChI=1S/C2H6/c1-2/h1-2H3',
-             'InChI=1S/CH4/h1H4',
-             'InChI=1S/H2O/h1H2'),
-            [1.0, 3.0, 1.0, 2.0, -3, -1, -2])
+            ['InChI=1S/CH4O/c1-2/h2H,1H3', 'InChI=1S/C2H6/c1-2/h1-2H3',
+             (('InChI=1S/CH3/h1H3', 'InChI=1S/H2O2/c1-2/h1-2H'),
+              ('InChI=1S/CH4/h1H4', 'InChI=1S/HO2/c1-2/h1H')),
+             (('InChI=1S/C2H5/c1-2/h1H2,2H3', 'InChI=1S/H2O/h1H2'),
+              ('InChI=1S/C2H6/c1-2/h1-2H3', 'InChI=1S/HO/h1H')),
+             'InChI=1S/CH4/h1H4', 'InChI=1S/H2O/h1H2',
+             (('InChI=1S/CH3/h1H3', 'InChI=1S/H2O/h1H2'),
+              ('InChI=1S/CH4/h1H4', 'InChI=1S/HO/h1H'))],
+            [1.0, 3.0, 1.0, 2.0, -3, -1, -2]
+        )
     }
     ref_dct4 = {
         'ts_1_1_1': (
-            ('InChI=1S/CH4/h1H4',
-             'InChI=1S/H2O/h1H2',
-             'InChI=1S/H2/h1H'),
-            [6.0, 1.0, 1.0, -7.0])
+            ['InChI=1S/CH4/h1H4', 'InChI=1S/H2O/h1H2',
+             (('InChI=1S/CH3/h1H3', 'InChI=1S/H2O/h1H2'),
+              ('InChI=1S/CH4/h1H4', 'InChI=1S/HO/h1H')),
+             'InChI=1S/H2/h1H'],
+            [6.0, 1.0, 1.0, -7.0]
+        )
     }
 
     dct1 = thermfit.prepare_basis(
-        SCHEME, SPC_DCT, TS_NAMES,
+        'basic', SPC_DCT, TS_NAMES,
         nprocs='auto', print_log=False, zrxn=HABS_ZRXN)
     dct2 = thermfit.prepare_basis(
         'cbh0', SPC_DCT, TS_NAMES,
@@ -244,9 +250,73 @@ def _check_dct(ref_dct, dct):
 def test__unique():
     """ test thermfit._basis.
     """
-    pass
+
+    ref_uni_dct = {
+        'REF_1': {
+            'smiles': 'CO',
+            'inchi': 'InChI=1S/CH4O/c1-2/h2H,1H3',
+            'inchikey': 'OKKJLVBELUTLKV-UHFFFAOYSA-N',
+            'charge': 0, 'mult': 1,
+            'mc_nsamp': (True, 3, 1, 3, 100, 12),
+            'hind_inc': 0.5235987755982988
+        },
+        'TS_REF_2': {
+            'reacs': ['InChI=1S/CH3/h1H3', 'InChI=1S/H2O2/c1-2/h1-2H'],
+            'prods': ['InChI=1S/CH4/h1H4', 'InChI=1S/HO2/c1-2/h1H'],
+            'charge': 0, 'inchi': '', 'mult': 2,
+            'ts_locs': (0,),
+            'rxn_info': (
+                (('InChI=1S/CH3/h1H3', 'InChI=1S/H2O2/c1-2/h1-2H'),
+                 ('InChI=1S/CH4/h1H4', 'InChI=1S/HO2/c1-2/h1H')),
+                ((0, 0), (0, 0)), ((2, 1), (1, 2)), 2)
+        },
+        'TS_REF_3': {
+            'reacs': ['InChI=1S/C2H5/c1-2/h1H2,2H3', 'InChI=1S/H2O/h1H2'],
+            'prods': ['InChI=1S/C2H6/c1-2/h1-2H3', 'InChI=1S/HO/h1H'],
+            'charge': 0, 'inchi': '', 'mult': 2,
+            'ts_locs': (0,),
+            'rxn_info': (
+                (('InChI=1S/C2H5/c1-2/h1H2,2H3', 'InChI=1S/H2O/h1H2'),
+                 ('InChI=1S/C2H6/c1-2/h1-2H3', 'InChI=1S/HO/h1H')),
+                ((0, 0), (0, 0)), ((2, 1), (1, 2)), 2)},
+        'REF_4': {
+            'smiles': 'O',
+            'inchi': 'InChI=1S/H2O/h1H2',
+            'inchikey': 'XLYOFNOQVPJJNP-UHFFFAOYSA-N',
+            'charge': 0, 'mult': 1,
+            'mc_nsamp': (True, 3, 1, 3, 100, 12),
+            'hind_inc': 0.5235987755982988
+        },
+        'TS_REF_5': {
+            'reacs': ['InChI=1S/CH3/h1H3', 'InChI=1S/H2O/h1H2'],
+            'prods': ['InChI=1S/CH4/h1H4', 'InChI=1S/HO/h1H'],
+            'charge': 0, 'inchi': '', 'mult': 2,
+            'ts_locs': (0,),
+            'rxn_info': (
+                (('InChI=1S/CH3/h1H3', 'InChI=1S/H2O/h1H2'),
+                 ('InChI=1S/CH4/h1H4', 'InChI=1S/HO/h1H')),
+                ((0, 0), (0, 0)), ((2, 1), (1, 2)), 2)}
+        }
+
+    bas_dct = {
+        'ts_1_1_1': (
+            ['InChI=1S/CH4O/c1-2/h2H,1H3', 'InChI=1S/C2H6/c1-2/h1-2H3',
+             (('InChI=1S/CH3/h1H3', 'InChI=1S/H2O2/c1-2/h1-2H'),
+              ('InChI=1S/CH4/h1H4', 'InChI=1S/HO2/c1-2/h1H')),
+             (('InChI=1S/C2H5/c1-2/h1H2,2H3', 'InChI=1S/H2O/h1H2'),
+              ('InChI=1S/C2H6/c1-2/h1-2H3', 'InChI=1S/HO/h1H')),
+             'InChI=1S/CH4/h1H4', 'InChI=1S/H2O/h1H2',
+             (('InChI=1S/CH3/h1H3', 'InChI=1S/H2O/h1H2'),
+              ('InChI=1S/CH4/h1H4', 'InChI=1S/HO/h1H'))],
+            [1.0, 3.0, 1.0, 2.0, -3, -1, -2]
+        )
+    }
+
+    uniref_dct = thermfit.unique_basis_species(bas_dct, SPC_DCT)
+    assert ref_uni_dct == uniref_dct
 
 
 if __name__ == '__main__':
     test__species()
     test__transition_state()
+    test__unique()
