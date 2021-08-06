@@ -99,7 +99,7 @@ def _determine_reactants(spc_dct, rct1_set, rct2_set, rtyp, rct1_lst=None):
         """
 
         # Check if string id of class of species (e.g., 'all', 'radicals'), or
-        # simply list of species name given 
+        # simply list of species name given
         if isinstance(spc_set, str):
 
             # Build ini list from input or spc dct
@@ -142,7 +142,7 @@ def _determine_allowed_products(spc_dct, allowed_prds):
     if allowed_prds is not None:
         spc_ichs = tuple(spc_dct[name]['inchi'] for name in allowed_prds)
     else:
-        spc_ichs, spc_names = (), ()
+        spc_ichs = ()
 
     return spc_ichs
 
@@ -156,7 +156,7 @@ def _radicals(ich_lst, name_lst):
         if automol.graph.radical_species(automol.inchi.graph(ich)):
             rad_ichs += (ich,)
             rad_names += (name,)
-    
+
     return rad_ichs, rad_names
 
 
