@@ -18,14 +18,14 @@ CWD = os.getcwd()
 
 # Parse the command line
 PAR = argparse.ArgumentParser()
-PAR.add_argument('-s', '--stereo', default=False,
+PAR.add_argument('-s', '--stereo', default=False, type=bool,
                  help='add stereochemistry to species (False)')
-PAR.add_argument('-b', '--hof-basis', default=False,
+PAR.add_argument('-b', '--hof-basis', default=False, type=bool,
                  help='add heat-of-formation species (False)')
-PAR.add_argument('-g', '--sort', default=False,
+PAR.add_argument('-g', '--sort', default=False, type=bool,
                  help='sort the species in the CSV file by atom counts')
-PAR.add_argument('-p', '--parallel', default=True,
-                 help='execute the script in parallele (True)')
+PAR.add_argument('-n', '--nprocs', default=1, type=int,
+                 help='number of processors to use for tasks (1)')
 PAR.add_argument('-i', '--input', default='species.csv',
                  help='name of input species mechanism file (species.csv)')
 PAR.add_argument('-o', '--output', default='mod_species.csv',
@@ -36,7 +36,7 @@ OPTS = vars(PAR.parse_args())
 t0 = time.time()
 
 # Check if any runtime options
-if not OPTS['hof-basis'] and not OPTS['stereo']:
+if not OPTS['hof_basis'] and not OPTS['stereo']:
     print('Neither stereo or basis job specified.')
     print('Add either a -b or -s flag to command.')
     print('Exiting...')
@@ -47,15 +47,15 @@ SPC_STR = ioformat.pathtools.read_file(CWD, OPTS['input'])
 spc_dct = mechanalyzer.parser.spc.build_spc_dct(SPC_STR, 'csv')
 
 # Add the thermochemical species to the species dictionary
-if OPTS['hof-basis']:
+if OPTS['hof_basis']:
     spc_dct = mechanalyzer.parser.spc.add_heat_of_formation_basis(
         spc_dct, ref_schemes=('cbh0', 'cbh1', 'cbh2'),
-        parallel=OPTS['parallel'])
+        nprocs=OPTS['nprocs'])
 
 # Add the stereochemical labels to the species
-if OPTS['hof-basis']:
+if OPTS['stereo']:
     spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
-        spc_dct, allstereo=False)
+        spc_dct, nprocs=OPTS['nprocs'], all_stereo=False)
 
 # Sort the species dictionary, if requested
 if OPTS['sort']:

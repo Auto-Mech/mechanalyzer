@@ -306,10 +306,13 @@ def _check_csv(data):
         proper = False
         print('Repeat names found')
 
-    for idx, row in data.iterrows():
-        if row.count() != num_headers:
-            print ('Error: The number of items for species', name, 
-                    'does not match the number of headers')
+    for _, row in data.iterrows():
+        # Have to add number of non-NaNs and NaN values
+        if (row.count() + row.isna().sum()) != num_headers:
+            name = row['name']
+            print(
+                'Error: The number of items for species', name,
+                'does not match the number of headers')
             proper = False
 
     # Check validity of inchi and multiplicity combinations (and chg?)
@@ -349,6 +352,9 @@ def _read_csv(csv_str):
     # Read in csv file while removing whitespace and make all chars lowercase
     csv_file = StringIO(csv_str)
     data = pandas.read_csv(csv_file, comment='!', quotechar="'")
+
+    # Fill empty fields with None
+    data = data.where(data.notnull(), None)
 
     # Parse CSV string into data columns
     data.columns = data.columns.str.strip()
