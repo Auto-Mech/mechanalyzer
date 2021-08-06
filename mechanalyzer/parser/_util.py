@@ -102,17 +102,6 @@ def get_mult(spc_tuple, spc_dct):
     return mult
 
 
-def get_ich_dct(spc_dct):
-    """Generates inchis dictionary from species dictionary
-    """
-    ich_dct = {}
-    for key in spc_dct.keys():
-        if 'ts' not in key and 'global' not in key:
-            ich_dct[key] = spc_dct[key]['inchi']
-
-    return ich_dct
-
-
 def get_fml(rxn_ichs):
     '''
     rxn_icn: inchis of the species of one side of a reaction (ich1, ich2, ..)

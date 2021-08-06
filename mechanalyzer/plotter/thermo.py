@@ -1,7 +1,8 @@
-import os
+""" Plot thermochemical values produced from multiple mechanisms
+"""
+
 import matplotlib.pyplot as plt
 from matplotlib import cm
-import matplotlib.backends.backend_pdf as plt_pdf
 import numpy
 
 LINES = ['-', '--', '-.', ':']  # for plot formatting
@@ -26,7 +27,7 @@ def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None, sort=True,
         :param sort_instr: instructions for sorting; 'h', 'cp', 's', or 'g'
         :type sort_instr: None or str
         :param sort_temp:
-        :type sort_temp: 
+        :type sort_temp:
         :return figs: list of MatPlotLib figure objects
         :rtype: list [fig1, fig2, ...]
     """
@@ -64,7 +65,7 @@ def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None, sort=True,
                 smiles = spc_dct.get(spc).get('smiles')
                 inchi = spc_dct.get(spc).get('inchi')
                 fig, axs = initialize_fig_and_axes(spc, smiles, inchi)
-            else: 
+            else:
                 fig, axs = initialize_fig_and_axes(spc)
         else:  # if no spc_dct provided, the smiles and inchis will be blank
             fig, axs = initialize_fig_and_axes(spc)
@@ -104,7 +105,7 @@ def plot_single_spc(therm_arrays, diff_arrays, fig, axs, mech_names):
         if therm_array is not None:
             # Plot the four thermo values on the even indices plots
             for idx in range(4):
-                if idx == 1 or idx == 2:  # if s or cp, no divide by 1000
+                if idx in (1, 2):  # if s or cp, no divide by 1000
                     axs[(idx * 2)].plot(
                         therm_array[0], therm_array[idx + 1], label=_label,
                         color=_color, linestyle=_line)
@@ -119,7 +120,7 @@ def plot_single_spc(therm_arrays, diff_arrays, fig, axs, mech_names):
                 diffs_plotted = True
                 # Plot the four diff values on the odd indices plots
                 for idx in range(4):
-                    if idx == 1 or idx == 2:  # if s or cp, no divide by 1000
+                    if idx in (1, 2):  # if s or cp, no divide by 1000
                         axs[(idx * 2) + 1].plot(
                             therm_array[0], diff_array[idx + 1], label=_label,
                             color=_color, linestyle=_line)
@@ -161,9 +162,9 @@ def sort_by_max_diff(algn_spc_diff_dct, algn_spc_therm_dct, sort_instr='h',
         :param sort_instr: criteria by which to sort; 'h', 'cp', 's', or 'g'
         :type sort_instr: str
         :param sort_temp:
-        :type sort_temp: 
+        :type sort_temp:
         :return sorted_spc_diff_dct: algn_spc_diff_dct sorted by max diff
-        :rtype: dct {spc1: [diff_array_mech1, diff_array_mech2, ...], spc2: ...}
+        :rtype: dct {spc1: [diff_arr_mech1, diff_arr_mech2, ...], spc2: ...}
         :return sorted_spc_therm_dct: algn_spc_therm_dct sorted by max diff
         :rtype: dct {spc1: [therm_array_mech1, therm_array_mech2, ...],
             spc2: ...}
@@ -205,18 +206,18 @@ def sort_by_max_diff(algn_spc_diff_dct, algn_spc_therm_dct, sort_instr='h',
             if None not in algn_spc_therm_dct[spc]:
                 pass  # if there are no Nones, leave max_ratio
             else:
-                for mech_idx, therm_array in enumerate(algn_spc_therm_dct[spc]):
+                for mechidx, therm_array in enumerate(algn_spc_therm_dct[spc]):
                     if therm_array is not None:
                         # Sort by mech_idx
-                        max_diff = (mech_idx + 1) * -1
+                        max_diff = (mechidx + 1) * -1
                         break
         max_diffs[spc] = max_diff
 
     # Sort spc keys by max values
     sorted_dct = {}
     for spc, max_diff in sorted(max_diffs.items(),
-                                 key=lambda item: item[1],
-                                 reverse=True):
+                                key=lambda item: item[1],
+                                reverse=True):
         sorted_dct[spc] = max_diff
 
     # Reorder the algn_spc_diff_dct and algn_spc_therm_dct
@@ -232,15 +233,15 @@ def sort_by_max_diff(algn_spc_diff_dct, algn_spc_therm_dct, sort_instr='h',
 def get_algn_spc_diff_dct(algn_spc_therm_dct):
     """ Take an algn_spc_therm_dct and calculate the difference between each
         thermo quantity and the same quantity in a reference mechanism. The
-        reference mechanism is the first mechanism in the spc_therm_dct that has
-        rate values for that species.
+        reference mechanism is the first mechanism in the spc_therm_dct
+        that has rate values for that species.
 
         :param algn_spc_therm_dct: aligned dct with thermo for each mech
         :type algn_spc_therm_dct: dct {spc1: [therm_array_mech1,
             therm_array_mech2, ...], spc2: ...}
         :return: algn_spc_diff_dct: aligned dct containing differences in
             thermo quantities relative to ref mech
-        :rtype: dct {spc1: [diff_array_mech1, diff_array_mech2, ...], spc2: ...}
+        :rtype: dct {spc1: [diff_arr_mech1, diff_arr_mech2, ...], spc2: ...}
     """
 
     algn_spc_diff_dct = {}
@@ -265,7 +266,6 @@ def get_algn_spc_diff_dct(algn_spc_therm_dct):
                 diff_array = []
                 for idx, quantity in enumerate(therm_array):
                     if idx == 0:  # if on the temps, just store them
-#                        diff_array.append(quantity)
                         temps = quantity
                     elif idx == 1:
                         h_t = quantity - ref_therm_array[idx]
@@ -275,8 +275,6 @@ def get_algn_spc_diff_dct(algn_spc_therm_dct):
                         s_t = quantity - ref_therm_array[idx]
                     elif idx == 4:
                         g_t = quantity - ref_therm_array[idx]
-#                    else:  # if on h, cp, s, or g, calculate the difference
-#                        diff_array.append(quantity - ref_therm_array[idx])
                 diff_array = (temps, h_t, cp_t, s_t, g_t)
             diff_arrays.append(diff_array)
         algn_spc_diff_dct[spc] = diff_arrays
@@ -335,4 +333,3 @@ def initialize_fig_and_axes(spc, smiles=None, inchi=None):
     plt.figtext(0.02, 0.98, header, fontsize=8, va="top", ha="left")
 
     return fig, axs
-

@@ -13,7 +13,7 @@ RC_CAL = phycon.RC_CAL  # universal gas constant in cal/mol-K
 
 
 def get_algn_rxn_ktp_dct(rxn_ktp_dcts, spc_therm_dcts, spc_dcts, temps,
-                            rev_rates=True, remove_loners=True, write_file=False):
+                         rev_rates=True, remove_loners=True, write_file=False):
     """ Create an algn_rxn_ktp_dct, which contains a single set of rxn keys, where each reaction
         has a ktp_dct for each mechanism. Options exist for reversing rates or not, removing rates
         that don't have entries from all mechanisms, and writing outputs to a file.
@@ -41,17 +41,18 @@ def get_algn_rxn_ktp_dct(rxn_ktp_dcts, spc_therm_dcts, spc_dcts, temps,
     )
 
     # Get the renamed dictionaries
-    renamed_rxn_ktp_dcts, rename_instr_lst = rename_dcts(rxn_ktp_dcts, spc_dcts,
-                                                                target_type='rxn')
+    renamed_rxn_ktp_dcts, rename_instr_lst = rename_dcts(
+        rxn_ktp_dcts, spc_dcts, target_type='rxn')
     if rev_rates:
-        renamed_spc_therm_dcts, _ = rename_dcts(spc_therm_dcts, spc_dcts,
-                                                 target_type='spc')
+        renamed_spc_therm_dcts, _ = rename_dcts(
+            spc_therm_dcts, spc_dcts, target_type='spc')
     else:
         renamed_spc_therm_dcts = []
 
     # Get the reversed_rxn_ktp_dcts
-    reversed_rxn_ktp_dcts = reverse_rxn_ktp_dcts(renamed_rxn_ktp_dcts, renamed_spc_therm_dcts,
-                                                 temps, rev_rates=rev_rates)
+    reversed_rxn_ktp_dcts = reverse_rxn_ktp_dcts(
+        renamed_rxn_ktp_dcts, renamed_spc_therm_dcts,
+        temps, rev_rates=rev_rates)
 
     # Get the algn_rxn_ktp_dct
     algn_rxn_ktp_dct = align_dcts(reversed_rxn_ktp_dcts)
@@ -68,7 +69,7 @@ def get_algn_rxn_ktp_dct(rxn_ktp_dcts, spc_therm_dcts, spc_dcts, temps,
 
 
 def get_algn_spc_therm_dct(spc_therm_dcts, spc_dcts, remove_loners=True,
-                               write_file=False):
+                           write_file=False):
     """ Create an algn_spc_therm_dct, which contains a single set of spc keys, where each
         species has a thermo_array for each mechanism. Options exist for removing species
         that don't have entries from all mechanisms and writing outputs to a file.
@@ -232,13 +233,13 @@ def rename_dcts(target_dcts, spc_dcts, target_type):
             rename_instr = get_rename_instr(spc_dct1, spc_dct2)
 
             # Rename and store the current spc_dct
-            renamed_spc_dct2 = rename_species(spc_dct2, rename_instr,
-                                                    target_type='spc')
+            renamed_spc_dct2 = rename_species(
+                spc_dct2, rename_instr, target_type='spc')
             renamed_spc_dcts[idx2] = renamed_spc_dct2
 
             # Rename and store the current dct
-            renamed_dct = rename_species(renamed_target_dcts[idx2], rename_instr,
-                                         target_type)
+            renamed_dct = rename_species(
+                renamed_target_dcts[idx2], rename_instr, target_type)
             renamed_target_dcts[idx2] = renamed_dct
             rename_instr_lst.append(rename_instr)
 
@@ -253,10 +254,11 @@ def get_rename_instr(spc_dct1, spc_dct2):
         :param spc_dct2: the spc_dct to be renamed (and also added)
         :type spc_dct2: dct {spc1: ident_array1, spc2: ...}
         :return rename_instr: instructions for renaming the species in spc_dct2
-        :rtype: dct {spc_to_be_renamed1: new_spc_name1, spc_to_be_renamed2: ...}
+        :rtype: dct {spc_to_be_renamed1: new_spc_name1, ...}
         :return comb_spc_dct: spc_dct1 plus any species unique to spc_dct2
         :rtype: dct {spc1: ident_array1, spc2: ...}
     """
+
     rename_instr = {}
     rename_str = '-zz'
 
@@ -272,8 +274,9 @@ def get_rename_instr(spc_dct1, spc_dct2):
             chg2 = spc_vals2['charge']
 
             # If species are identical
-            if ich1  == ich2 and mlt1 == mlt2 and chg1 == chg2:
-                if spc_name1 != spc_name2:  # if spc names different, add to rename instructions
+            if ich1 == ich2 and mlt1 == mlt2 and chg1 == chg2:
+                # if spc names different, add to rename instructions
+                if spc_name1 != spc_name2:
                     rename_instr[spc_name2] = spc_name1
 
             # If species are different but have same name
@@ -293,6 +296,7 @@ def get_comb_spc_dct(spc_dct1, spc_dct2):
         :return comb_spc_dct: spc_dct1 plus any species unique to spc_dct2
         :rtype: dct {spc1: ident_array1, spc2: ...}
     """
+
     rename_instr = get_rename_instr(spc_dct1, spc_dct2)
     rename_str = '-zz'
     comb_spc_dct = copy.deepcopy(spc_dct1)  # deepcopy = no external changes
@@ -302,7 +306,7 @@ def get_comb_spc_dct(spc_dct1, spc_dct2):
         mlt2 = spc_vals2['mult']
         chg2 = spc_vals2['charge']
 
-        for spc_name1, spc_vals1 in spc_dct1.items():
+        for spc_vals1 in spc_dct1.values():
             ich1 = spc_vals1['inchi']
             mlt1 = spc_vals1['mult']
             chg1 = spc_vals1['charge']
@@ -322,8 +326,8 @@ def get_comb_spc_dct(spc_dct1, spc_dct2):
 
 
 def get_mult_comb_spc_dct(spc_dcts):
-    """ Combine a list of spc_dcts into a single comb_spc_dct 
-    
+    """ Combine a list of spc_dcts into a single comb_spc_dct
+
         :param spc_dcts: list of spc_dcts
         :type spc_dcts: list [spc_dct1, spc_dct2, ...]
         :return comb_spc_dct: spc_dct with all unique species
@@ -333,7 +337,7 @@ def get_mult_comb_spc_dct(spc_dcts):
     comb_spc_dct = copy.deepcopy(spc_dcts[0])
     for idx in range(num_combs):
         comb_spc_dct = get_comb_spc_dct(comb_spc_dct, spc_dcts[idx + 1])
-    
+
     return comb_spc_dct
 
 
@@ -598,7 +602,7 @@ def _calculate_equilibrium_constant(spc_therm_dct, rcts, prds, temps):
     """ Calculate the equilibrium constant for a given reaction at
         a set of temperatures using constituent species' thermochemistry.
 
-        :param spc_therm_dct: thermochemical values for all species in mechanism
+        :param spc_therm_dct: thermochemical values for all mechanism species
         :type spc_therm_dct: dict {spc1: thermo_array1, spc2: ...}
         :param rcts: name(s) of reactant(s)
         :type rcts: tuple (rct1, rct2, ...)
@@ -623,4 +627,3 @@ def _calculate_equilibrium_constant(spc_therm_dct, rcts, prds, temps):
         k_equils.append(numpy.exp(-rxn_gibbs / (RC_CAL * temp)))
 
     return k_equils
-

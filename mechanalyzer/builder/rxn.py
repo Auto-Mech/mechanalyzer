@@ -12,8 +12,8 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series):
     """ Use the lst of reactions to build objects to describe mechanism
     """
 
-    # Initialize new_spc
-    new_spc_lst = None
+    # Initialize new_spc (needed for sequential steps
+    # new_spc_lst = None
 
     print('---------------------------------------------------------\n')
 
@@ -30,7 +30,7 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series):
 
             # Determine reactants to generate reactions for
             rct_ichs, rct_names = _determine_reactants(
-                mech_spc_dct, rct1_set, rct2_set, rtyp, rct1_lst=new_spc_lst)
+                mech_spc_dct, rct1_set, rct2_set, rtyp)
             allowed_prd_ichs = _determine_allowed_products(
                 mech_spc_dct, allowed_prds)
 
@@ -50,7 +50,7 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series):
                 rxns += generate_reactions(ichs, allowed_prd_ichs, rtyp)
 
         # Update the mechanism objects with unique spc and rxns
-        mech_spc_dct, new_spc_lst = update_spc_dct_from_reactions(
+        mech_spc_dct, _ = update_spc_dct_from_reactions(
             rxns, mech_spc_dct)
         mech_rxn_dct = update_rxn_dct(
             rxns, mech_rxn_dct, mech_spc_dct)
@@ -88,7 +88,7 @@ def generate_reactions(rct_ichs, allowed_prd_ichs, rtyp):
 
 
 # Functions to set lists for mech building step
-def _determine_reactants(spc_dct, rct1_set, rct2_set, rtyp, rct1_lst=None):
+def _determine_reactants(spc_dct, rct1_set, rct2_set, rtyp):
     """ Determine a list of reactants for one or more reactions
         these could be unimolecular or bimolecular.
     """
@@ -103,10 +103,6 @@ def _determine_reactants(spc_dct, rct1_set, rct2_set, rtyp, rct1_lst=None):
         if isinstance(spc_set, str):
 
             # Build ini list from input or spc dct
-            # if rct1_lst is not None:
-            #     spc_ichs = rct1_lst
-            # else:
-            # Get inchis for everything
             spc_names, spc_ichs = (), ()
             for name, dct in spc_dct.items():
                 spc_names += (name,)

@@ -12,10 +12,10 @@ import copy
 import csv
 import pandas as pd
 import automol
-import thermfit
-from mechanalyzer.parser.csv_ import csv_dct
 from autorun import timeout, execute_function_in_parallel
 import ioformat.pathtools as text_parser
+import thermfit
+from mechanalyzer.parser.csv_ import csv_dct
 
 
 # Write a spc_dct to a CSV string
@@ -284,6 +284,17 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
 
 # HELPER FUNCTIONS
 # Handle Formula Count Objects
+def name_inchi_dct(spc_dct):
+    """Generates inchis dictionary from species dictionary
+    """
+    ich_dct = {}
+    for key in spc_dct.keys():
+        if 'ts' not in key and 'global' not in key:
+            ich_dct[key] = spc_dct[key]['inchi']
+
+    return ich_dct
+
+
 def formula_count_dct(spc_dct):
     """ get the spc_fml dct
 

@@ -354,8 +354,7 @@ def _read_csv(csv_str):
     csv_file = StringIO(csv_str)
     data = pandas.read_csv(csv_file, comment='!', quotechar="'")
 
-    # Fill empty fields with None
-    data = data.where(data.notnull(), None)
+    # Want way to fill empty fields with None
 
     # Parse CSV string into data columns
     data.columns = data.columns.str.strip()
