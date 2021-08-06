@@ -52,7 +52,9 @@ def test__spc_dct_build():
 
     spc_dct = mechanalyzer.parser.spc.spc_dct_from_smiles(
         SMILES, stereo=True)
-    assert ref_spc_dct == spc_dct
+    assert set(ref_spc_dct.keys()) == set(spc_dct.keys())
+    for name in ref_spc_dct:
+        assert set(ref_spc_dct[name].keys()) == set(spc_dct[name].keys())
 
 
 # modify/add functionality
@@ -168,20 +170,24 @@ def test__mod_spc_dct_stereo():
     }
 
     ref_spc_dct = {
-        'CC(O)Cl': {'inchi': 'InChI=1S/C2H5ClO/c1-2(3)4/h2,4H,1H3/t2-/m0/s1'},
-        'CC=CC': {'inchi': 'InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3/b4-3+'},
-        'OC=CN': {'inchi': 'InChI=1S/C2H5NO/c3-1-2-4/h1-2,4H,3H2/b2-1-'},
-        'CC': {'inchi': 'InChI=1S/C2H6/c1-2/h1-2H3'}
+        'CC(O)Cl': {
+            'inchi': 'InChI=1S/C2H5ClO/c1-2(3)4/h2,4H,1H3/t2-/m0/s1',
+            'inchikey': 'KJESGYZFVCIMDE-REOHCLBHSA-N'
+        },
+        'CC=CC': {
+            'inchi': 'InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3/b4-3+',
+            'inchikey': 'IAQRGUVFOMOMEM-ONEGZZNKSA-N'
+        },
+        'OC=CN': {
+            'inchi': 'InChI=1S/C2H5NO/c3-1-2-4/h1-2,4H,3H2/b2-1-',
+            'inchikey': 'UEVZOFFYIPNZNW-UPHRSURJSA-N'
+        },
+        'CC': {
+            'inchi': 'InChI=1S/C2H6/c1-2/h1-2H3',
+            'inchikey': 'OTMSDBZUPAUEDD-UHFFFAOYSA-N'
+        }
     }
 
     spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
         ref_spc_dct, all_stereo=False)
     assert ref_spc_dct == spc_dct
-
-
-if __name__ == '__main__':
-    # test__csv_io()
-    # test__spc_dct_build()
-    # test__mod_spc_dct_atomcount()
-    test__mod_spc_dct_hof_basis()
-    # test__mod_spc_dct_stereo() to fix
