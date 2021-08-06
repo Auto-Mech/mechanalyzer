@@ -39,10 +39,6 @@ def test__spc_dct_build():
             'smiles': 'CC',
             'inchi': 'InChI=1S/C2H6/c1-2/h1-2H3',
             'inchikey': 'OTMSDBZUPAUEDD-UHFFFAOYSA-N',
-<<<<<<< HEAD
-=======
-            'sens': 0.0,
->>>>>>> a5061d21299b69e5b7a64c30b3437ea0267f3a06
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
             'hind_inc': 0.5235987755982988},
@@ -50,17 +46,15 @@ def test__spc_dct_build():
             'smiles': 'C[C@@H](O)Cl',
             'inchi': 'InChI=1S/C2H5ClO/c1-2(3)4/h2,4H,1H3/t2-/m1/s1',
             'inchikey': 'KJESGYZFVCIMDE-UWTATZPHSA-N',
-<<<<<<< HEAD
-=======
-            'sens': 0.0,
->>>>>>> a5061d21299b69e5b7a64c30b3437ea0267f3a06
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
             'hind_inc': 0.5235987755982988}}
 
     spc_dct = mechanalyzer.parser.spc.spc_dct_from_smiles(
         SMILES, stereo=True)
-    assert ref_spc_dct == spc_dct
+    assert set(ref_spc_dct.keys()) == set(spc_dct.keys())
+    for name in ref_spc_dct:
+        assert set(ref_spc_dct[name].keys()) == set(spc_dct[name].keys())
 
 
 # modify/add functionality
@@ -103,23 +97,14 @@ def test__mod_spc_dct_hof_basis():
     """
 
     spc_dct = {
-<<<<<<< HEAD
         'C4H9OH': {'inchi': 'InChI=1S/C4H10O/c1-2-3-4-5/h5H,2-4H2,1H3'},
-=======
-        'C2H5OH': {'inchi': 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3'},
->>>>>>> a5061d21299b69e5b7a64c30b3437ea0267f3a06
         'CH4': {'inchi': 'InChI=1S/CH4/h1H4'},
         'H2O': {'inchi': 'InChI=1S/H2O/h1H2'}
     }
 
     ref_spc_dct = {
-<<<<<<< HEAD
         'C4H9OH': {
             'inchi': 'InChI=1S/C4H10O/c1-2-3-4-5/h5H,2-4H2,1H3'},
-=======
-        'C2H5OH': {
-            'inchi': 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3'},
->>>>>>> a5061d21299b69e5b7a64c30b3437ea0267f3a06
         'CH4': {
             'inchi': 'InChI=1S/CH4/h1H4'},
         'H2O': {
@@ -128,10 +113,6 @@ def test__mod_spc_dct_hof_basis():
             'smiles': '[HH]',
             'inchi': 'InChI=1S/H2/h1H',
             'inchikey': 'UFHFLCQGNIYNRP-UHFFFAOYSA-N',
-<<<<<<< HEAD
-=======
-            'sens': 0.0,
->>>>>>> a5061d21299b69e5b7a64c30b3437ea0267f3a06
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
             'hind_inc': 0.5235987755982988},
@@ -139,10 +120,6 @@ def test__mod_spc_dct_hof_basis():
             'smiles': 'CC',
             'inchi': 'InChI=1S/C2H6/c1-2/h1-2H3',
             'inchikey': 'OTMSDBZUPAUEDD-UHFFFAOYSA-N',
-<<<<<<< HEAD
-=======
-            'sens': 0.0,
->>>>>>> a5061d21299b69e5b7a64c30b3437ea0267f3a06
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
             'hind_inc': 0.5235987755982988},
@@ -150,7 +127,6 @@ def test__mod_spc_dct_hof_basis():
             'smiles': 'CO',
             'inchi': 'InChI=1S/CH4O/c1-2/h2H,1H3',
             'inchikey': 'OKKJLVBELUTLKV-UHFFFAOYSA-N',
-<<<<<<< HEAD
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
             'hind_inc': 0.5235987755982988},
@@ -158,9 +134,6 @@ def test__mod_spc_dct_hof_basis():
             'smiles': 'CCC',
             'inchi': 'InChI=1S/C3H8/c1-3-2/h3H2,1-2H3',
             'inchikey': 'ATUOYWHBWRKTHZ-UHFFFAOYSA-N',
-=======
-            'sens': 0.0,
->>>>>>> a5061d21299b69e5b7a64c30b3437ea0267f3a06
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
             'hind_inc': 0.5235987755982988},
@@ -168,17 +141,12 @@ def test__mod_spc_dct_hof_basis():
             'smiles': 'CCO',
             'inchi': 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3',
             'inchikey': 'LFQSCWFLJHTTHZ-UHFFFAOYSA-N',
-<<<<<<< HEAD
-=======
-            'sens': 0.0,
->>>>>>> a5061d21299b69e5b7a64c30b3437ea0267f3a06
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
             'hind_inc': 0.523598775598298}
     }
 
     spc_dct = mechanalyzer.parser.spc.add_heat_of_formation_basis(
-<<<<<<< HEAD
         spc_dct, ref_schemes=('cbh0', 'cbh1', 'cbh2'))
     spc_dct2 = mechanalyzer.parser.spc.add_heat_of_formation_basis(
         spc_dct, ref_schemes=('cbh0', 'cbh1', 'cbh2'))
@@ -188,14 +156,6 @@ def test__mod_spc_dct_hof_basis():
     for name in ref_spc_dct:
         assert set(ref_spc_dct[name].keys()) == set(spc_dct[name].keys())
         assert set(ref_spc_dct[name].keys()) == set(spc_dct2[name].keys())
-=======
-        spc_dct, ref_schemes=('cbh0', 'cbh1', 'cbh2'), parallel=False)
-    spc_dct2 = mechanalyzer.parser.spc.add_heat_of_formation_basis(
-        spc_dct, ref_schemes=('cbh0', 'cbh1', 'cbh2'), parallel=True)
-
-    assert ref_spc_dct == spc_dct
-    assert ref_spc_dct == spc_dct2
->>>>>>> a5061d21299b69e5b7a64c30b3437ea0267f3a06
 
 
 def test__mod_spc_dct_stereo():
@@ -210,24 +170,25 @@ def test__mod_spc_dct_stereo():
     }
 
     ref_spc_dct = {
-        'CC(O)Cl': {'inchi': 'InChI=1S/C2H5ClO/c1-2(3)4/h2,4H,1H3/t2-/m0/s1'},
-        'CC=CC': {'inchi': 'InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3/b4-3+'},
-        'OC=CN': {'inchi': 'InChI=1S/C2H5NO/c3-1-2-4/h1-2,4H,3H2/b2-1-'},
-        'CC': {'inchi': 'InChI=1S/C2H6/c1-2/h1-2H3'}
+        'CC(O)Cl': {
+            'inchi': 'InChI=1S/C2H5ClO/c1-2(3)4/h2,4H,1H3/t2-/m0/s1',
+            'inchikey': 'KJESGYZFVCIMDE-REOHCLBHSA-N'
+        },
+        'CC=CC': {
+            'inchi': 'InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3/b4-3+',
+            'inchikey': 'IAQRGUVFOMOMEM-ONEGZZNKSA-N'
+        },
+        'OC=CN': {
+            'inchi': 'InChI=1S/C2H5NO/c3-1-2-4/h1-2,4H,3H2/b2-1-',
+            'inchikey': 'UEVZOFFYIPNZNW-UPHRSURJSA-N'
+        },
+        'CC': {
+            'inchi': 'InChI=1S/C2H6/c1-2/h1-2H3',
+            'inchikey': 'OTMSDBZUPAUEDD-UHFFFAOYSA-N'
+        }
     }
 
     spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
-<<<<<<< HEAD
         ref_spc_dct, all_stereo=False)
-=======
-        ref_spc_dct, allstereo=False)
->>>>>>> a5061d21299b69e5b7a64c30b3437ea0267f3a06
+    
     assert ref_spc_dct == spc_dct
-
-
-if __name__ == '__main__':
-    # test__csv_io()
-    # test__spc_dct_build()
-    # test__mod_spc_dct_atomcount()
-    test__mod_spc_dct_hof_basis()
-    # test__mod_spc_dct_stereo() to fix
