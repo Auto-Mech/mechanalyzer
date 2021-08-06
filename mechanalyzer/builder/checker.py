@@ -6,7 +6,7 @@ from chemkin_io.writer._util import format_rxn_name
 
 
 def run_all_checks(rxn_param_dct, rxn_ktp_dct, k_thresholds,
-                   rxn_num_threshold, filename=None):
+                   rxn_num_threshold):
     """ Run all mechanism checks and output a string describing the results.
         Optionally write a text file with the string.
 
@@ -21,8 +21,6 @@ def run_all_checks(rxn_param_dct, rxn_ktp_dct, k_thresholds,
         :param rxn_num_threshold: # of reactions at and below
             which a species is considered "lone"
         :type rxn_num_threshold: int
-        :param filename: filename for output file; if None, no file written
-        :type filename: str
         :return total_str: description of all the checks performed
         :rtype: str
     """
@@ -278,8 +276,8 @@ def get_missing_spcs(rxn_param_dct, spc_dct):
         :type rxn_param_dct: dct
             {rxn1: (param_tuple1, param_tuple2, ...), rxn2: ...}
         :param spc_dct: info on species
-        :type spc_dct: dct {spc1: info_dct1, spc2: ...} 
-        :return missing_from_csv: list of species missing from the spc_csv 
+        :type spc_dct: dct {spc1: info_dct1, spc2: ...}
+        :return missing_from_csv: list of species missing from the spc_csv
         :rtype: list [spc1, spc2, ...]
         :return missing_from_mech: list of species missing from the mechanism
         :rtype: list [spc1, spc2, ...]
@@ -287,7 +285,7 @@ def get_missing_spcs(rxn_param_dct, spc_dct):
     def strip_thrd_bod(thrd_bod, rxn):
         """ Strip the third body notation from a species name
         """
-        if thrd_bod == '(+M)' or thrd_bod == '+M':
+        if thrd_bod in ('(+M)', '+M'):
             stripped_thrd_bod = None
         elif thrd_bod[0] == '(':
             stripped_thrd_bod = thrd_bod[2:-1]
@@ -553,17 +551,19 @@ def write_mismatches(mismatched_rxns):
 
 
 def write_missing_spcs(missing_from_csv, missing_from_mech):
-
-    missing_spcs_str = '\nSPECIES MISSING FROM CSV OR MECHANISM\n\n'
-    missing_spcs_str += 'These species are missing from the spc.csv file:\n'
+    """ Write a string saying what species are missing from the
+        species.csv or mechanism.dat file.
+    """
+    missing_spc_str = '\nSPECIES MISSING FROM CSV OR MECHANISM\n\n'
+    missing_spc_str += 'These species are missing from the spc.csv file:\n'
     for spc in missing_from_csv:
-        missing_spcs_str += spc + '\n'
-    missing_spcs_str += '\nThese species are missing from the mechanism file:\n'
+        missing_spc_str += spc + '\n'
+    missing_spc_str += '\nThese species are missing from the mechanism file:\n'
     for spc in missing_from_mech:
-        missing_spcs_str += spc + '\n'
-    missing_spcs_str += '\n\n'
+        missing_spc_str += spc + '\n'
+    missing_spc_str += '\n\n'
 
-    return missing_spcs_str
+    return missing_spc_str
 
 
 def _write_rxn_ktp_dct(rxn_ktp_dct):

@@ -5,7 +5,7 @@
 import tempfile
 import numpy as np
 from mechanalyzer.plotter import rates
-from mechanalyzer.plotter import _util
+from mechanalyzer.plotter._util import build_pdf
 
 
 TMP_DIR = tempfile.mkdtemp()
@@ -31,14 +31,14 @@ def test_build_plots():
     """ Test the build_plots function
     """
     figs = rates.build_plots(ALGN_RXN_KTP_DCT)
-    _util.build_pdf(figs, FILENAME, TMP_DIR) 
+    build_pdf(figs, FILENAME, TMP_DIR)
 
 
 def test_build_plots_ratio_sort():
     """ Test the build_plots function with sorting by ratio
     """
     figs = rates.build_plots(ALGN_RXN_KTP_DCT, ratio_sort=True)
-    _util.build_pdf(figs, FILENAME, TMP_DIR) 
+    build_pdf(figs, FILENAME, TMP_DIR)
 
 
 if __name__ == '__main__':

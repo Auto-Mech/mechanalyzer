@@ -4,7 +4,7 @@
 import tempfile
 import numpy as np
 from mechanalyzer.plotter import thermo
-from mechanalyzer.plotter import _util
+from mechanalyzer.plotter._util import build_pdf
 
 TMP_DIR = tempfile.mkdtemp()
 FILENAME = 'thermo_comparison.pdf'
@@ -17,9 +17,10 @@ S_T = np.array([-5000, -4000, -3000])
 G_T = np.array([-5000, -4000, -3000])
 
 ALGN_SPC_THERM_DCT = {
-    'H': [[TEMPS, H_T, CP_T, S_T, G_T],
-          [TEMPS, 1.5 * H_T, 1.5 * CP_T, 1.5 * S_T, 1.5 * G_T],
-         ]
+    'H': [
+        [TEMPS, H_T, CP_T, S_T, G_T],
+        [TEMPS, 1.5 * H_T, 1.5 * CP_T, 1.5 * S_T, 1.5 * G_T],
+    ]
 }
 
 
@@ -27,7 +28,7 @@ def test_build_plots():
     """ Test the build_plots function
     """
     figs = thermo.build_plots(ALGN_SPC_THERM_DCT)
-    _util.build_pdf(figs, FILENAME, TMP_DIR)
+    build_pdf(figs, FILENAME, TMP_DIR)
 
 
 if __name__ == '__main__':

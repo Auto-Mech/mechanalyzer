@@ -5,7 +5,8 @@ Functions for mechanism reading and sorting
 import autoparse.pattern as app
 import ioformat.ptt
 from mechanalyzer.parser import ckin_ as ckin
-from mechanalyzer.parser._util import get_ich_dct, get_fml
+from mechanalyzer.parser.spc import name_inchi_dct
+from mechanalyzer.parser._util import get_fml
 
 
 # Parse mechanism files
@@ -57,7 +58,7 @@ def mech_info(rxn_param_dct, spc_dct):
     rct_names, prd_names, thrdbdy_lst = list(rcts), list(prds), list(thrdbdy)
 
     # formulas and reaction names (repplace with the mech info from ckin
-    ich_dct = get_ich_dct(spc_dct)
+    ich_dct = name_inchi_dct(spc_dct)
     formula_dct, formula_str, rxn_name = _inf(rct_names, prd_names, ich_dct)
 
     return [formula_dct, formula_str,

@@ -12,7 +12,7 @@ def expand_mech_stereo(rxn_dct, spc_dct):
     """
 
     # Dictionaries to map inchi <-> name
-    name_ich_dct = mechanalyzer.parser.get_ich_dct(spc_dct)
+    name_ich_dct = mechanalyzer.parser.spc.name_inchi_dct(spc_dct)
     ich_name_dct = automol.util.dict_.invert(name_ich_dct)
 
     # Get lists of the reactions

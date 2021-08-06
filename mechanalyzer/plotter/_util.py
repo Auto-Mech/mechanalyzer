@@ -22,4 +22,3 @@ def build_pdf(figs, filename='output.pdf', path=None):
     for fig in figs:
         pdf.savefig(fig)
     pdf.close()
-
