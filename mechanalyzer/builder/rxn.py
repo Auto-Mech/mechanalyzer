@@ -21,7 +21,6 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series):
     for sidx, series in enumerate(rxn_series):
 
         rct1_set, rct2_set, allowed_prds, rxn_typs = series
-        print('allowed prds', allowed_prds)
 
         print('Generating Reactions for Series {}'.format(sidx+1))
 
@@ -30,16 +29,16 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series):
         for rtyp in rxn_typs:
 
             # Determine reactants to generate reactions for
-            rct_ichs = _determine_reactants(
+            rct_ichs, rct_names = _determine_reactants(
                 mech_spc_dct, rct1_set, rct2_set, rtyp, rct1_lst=new_spc_lst)
             allowed_prd_ichs = _determine_allowed_products(
                 mech_spc_dct, allowed_prds)
 
-            # Print info message for generating reactions usings SMILES strings
+            # Use SMILES to print info message for what reactions generating
             print('\nTrying to find {} products for reactants'.format(rtyp))
-            for ichs in rct_ichs:
+            for ichs, names in zip(rct_ichs, rct_names):
                 _rct_smis = tuple(map(automol.inchi.smiles, ichs))
-                print(_rct_smis)
+                print('{} = {}'.format(names, _rct_smis))
             print('')
             if allowed_prd_ichs:
                 allow_str = ' '.join(allowed_prd_ichs)
@@ -99,51 +98,66 @@ def _determine_reactants(spc_dct, rct1_set, rct2_set, rtyp, rct1_lst=None):
             reactant 1 or reactant 2
         """
 
+        # Check if string id of class of species (e.g., 'all', 'radicals'), or
+        # simply list of species name given 
         if isinstance(spc_set, str):
 
             # Build ini list from input or spc dct
-            if rct1_lst is not None:
-                spc_ichs = rct1_lst
-            else:
-                spc_ichs = tuple(dct['inchi'] for dct in spc_dct.values())
+            # if rct1_lst is not None:
+            #     spc_ichs = rct1_lst
+            # else:
+            # Get inchis for everything
+            spc_names, spc_ichs = (), ()
+            for name, dct in spc_dct.items():
+                spc_names += (name,)
+                spc_ichs += (dct['inchi'],)
 
             # Trim the list if needed
             if spc_set == 'radicals':
-                spc_ichs = _radicals(spc_ichs)
+                spc_ichs, spc_names = _radicals(spc_ichs, spc_names)
 
         else:
+            spc_names = spc_set
             spc_ichs = tuple(spc_dct[name]['inchi'] for name in spc_set)
 
-        return spc_ichs
+        return spc_ichs, spc_names
 
-    rct1_ichs = _gen_set(spc_dct, rct1_set)
+    rct1_ichs, rct1_names = _gen_set(spc_dct, rct1_set)
     if automol.par.isbimol(rtyp):
-        rct2_ichs = _gen_set(spc_dct, rct2_set)
+        rct2_ichs, rct2_names = _gen_set(spc_dct, rct2_set)
         rxn_ichs = tuple(itertools.product(rct1_ichs, rct2_ichs))
+        rxn_names = tuple(itertools.product(rct1_names, rct2_names))
     else:
         rxn_ichs = tuple((ich,) for ich in rct1_ichs)
+        rxn_names = tuple((name,) for name in rct1_names)
 
-    return rxn_ichs
+    return rxn_ichs, rxn_names
 
 
 def _determine_allowed_products(spc_dct, allowed_prds):
-    """ get the inchis for what products are allowed
+    """ Takes a list of species mechanism names for the products
+        that must be produced in a reaction for a generated reaction
+        to be saved and generates the corresponding InChI strings.
     """
     if allowed_prds is not None:
         spc_ichs = tuple(spc_dct[name]['inchi'] for name in allowed_prds)
     else:
-        spc_ichs = ()
+        spc_ichs, spc_names = (), ()
 
     return spc_ichs
 
 
 # Helper functions
-def _radicals(ich_lst):
+def _radicals(ich_lst, name_lst):
     """ Determine the radicals
     """
-    return tuple(
-        ich for ich in ich_lst
-        if automol.graph.radical_species(automol.inchi.graph(ich)))
+    rad_ichs, rad_names = (), ()
+    for ich, name in zip(ich_lst, name_lst):
+        if automol.graph.radical_species(automol.inchi.graph(ich)):
+            rad_ichs += (ich,)
+            rad_names += (name,)
+    
+    return rad_ichs, rad_names
 
 
 def _rct_gras(rct_ichs):
@@ -170,7 +184,6 @@ def _prd_ichs(rct_gras, rxn_class_typ, check=True):
     for rxn in rxns:
         prd_gras_ = automol.reac.product_graphs(rxn)
         prd_ichs_ = tuple(map(automol.graph.inchi, prd_gras_))
-        prd_ichs_ = tuple(map(automol.inchi.add_stereo, prd_ichs_))
         prd_ichs += (prd_ichs_,)
 
         if check:

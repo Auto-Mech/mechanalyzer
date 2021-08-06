@@ -1,5 +1,5 @@
-'Name','SMILES','inchi','mult','charge','sens'
-H,'','InChI=1S/H',2,0,0
+'name','SMILES','inchi','mult','charge','sens'
+H,'stuff','InChI=1S/H',2,0,0
 OH,'','InChI=1S/HO/h1H',2,0,0
 O,'','InChI=1S/O',3,0,0
 H2,'','InChI=1S/H2/h1H',1,0,0

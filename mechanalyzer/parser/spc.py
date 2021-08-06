@@ -137,7 +137,7 @@ def reorder_by_atomcount(spc_dct):
 
 def add_heat_of_formation_basis(spc_dct,
                                 ref_schemes=('cbh0', 'cbh1', 'cbh2'),
-                                parallel=False):
+                                nprocs='auto'):
     """ Adds all species required to form the basis set for requested CBHn
         heat-of-formation calculations for all species in the mechanism
         species dictionary.
@@ -170,11 +170,12 @@ def add_heat_of_formation_basis(spc_dct,
     # Find all references
     cbh_smiles = []
     for ref_scheme in ref_schemes:
-        _, cbh_ref_dct = thermfit.prepare_refs(
-            ref_scheme, spc_dct, list(spc_dct.keys()),
-            repeats=True, parallel=parallel)
+        basis_dct = thermfit.prepare_basis(
+            ref_scheme, spc_dct, tuple(spc_dct.keys()),
+            nprocs=nprocs, print_log=True)
+        uniref_dct = thermfit.unique_basis_species(basis_dct, spc_dct)
         nonred_dct, cbh_smiles = _filter_redundant_basis(
-            cbh_ref_dct, ref_scheme, cbh_smiles)
+            uniref_dct, ref_scheme, cbh_smiles)
         spc_dct.update(nonred_dct)
 
     return spc_dct
@@ -266,15 +267,18 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
 
         # Add name and inchi info to string
         spc_dct_keys = tuple(key for key in init_dct[name].keys()
-                             if key != 'inchi')
-        for idx, ich_wstereo in enumerate(ste_ichs):
+                             if key not in ('inchi', 'inchikey'))
+        for idx, ste_ich in enumerate(ste_ichs):
             # name gen wrong, should use formula builder
             sname = name+'({})'.format(str(idx+1)) if idx != 0 else name
-            new_dct[sname] = {'inchi': ich_wstereo}
+            new_dct[sname] = {
+                'inchi': ste_ich,
+                'inchikey': automol.inchi.inchi_key(ste_ich)
+            }
             for key in spc_dct_keys:
                 new_dct[sname][key] = init_dct[name][key]
 
-    output_queue.put(new_dct)
+    output_queue.put((new_dct,))
     print('Processor {} finished'.format(os.getpid()))
 
 

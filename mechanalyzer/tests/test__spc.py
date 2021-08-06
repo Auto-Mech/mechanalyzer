@@ -39,7 +39,6 @@ def test__spc_dct_build():
             'smiles': 'CC',
             'inchi': 'InChI=1S/C2H6/c1-2/h1-2H3',
             'inchikey': 'OTMSDBZUPAUEDD-UHFFFAOYSA-N',
-            'sens': 0.0,
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
             'hind_inc': 0.5235987755982988},
@@ -47,7 +46,6 @@ def test__spc_dct_build():
             'smiles': 'C[C@@H](O)Cl',
             'inchi': 'InChI=1S/C2H5ClO/c1-2(3)4/h2,4H,1H3/t2-/m1/s1',
             'inchikey': 'KJESGYZFVCIMDE-UWTATZPHSA-N',
-            'sens': 0.0,
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
             'hind_inc': 0.5235987755982988}}
@@ -97,14 +95,14 @@ def test__mod_spc_dct_hof_basis():
     """
 
     spc_dct = {
-        'C2H5OH': {'inchi': 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3'},
+        'C4H9OH': {'inchi': 'InChI=1S/C4H10O/c1-2-3-4-5/h5H,2-4H2,1H3'},
         'CH4': {'inchi': 'InChI=1S/CH4/h1H4'},
         'H2O': {'inchi': 'InChI=1S/H2O/h1H2'}
     }
 
     ref_spc_dct = {
-        'C2H5OH': {
-            'inchi': 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3'},
+        'C4H9OH': {
+            'inchi': 'InChI=1S/C4H10O/c1-2-3-4-5/h5H,2-4H2,1H3'},
         'CH4': {
             'inchi': 'InChI=1S/CH4/h1H4'},
         'H2O': {
@@ -113,7 +111,6 @@ def test__mod_spc_dct_hof_basis():
             'smiles': '[HH]',
             'inchi': 'InChI=1S/H2/h1H',
             'inchikey': 'UFHFLCQGNIYNRP-UHFFFAOYSA-N',
-            'sens': 0.0,
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
             'hind_inc': 0.5235987755982988},
@@ -121,7 +118,6 @@ def test__mod_spc_dct_hof_basis():
             'smiles': 'CC',
             'inchi': 'InChI=1S/C2H6/c1-2/h1-2H3',
             'inchikey': 'OTMSDBZUPAUEDD-UHFFFAOYSA-N',
-            'sens': 0.0,
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
             'hind_inc': 0.5235987755982988},
@@ -129,7 +125,13 @@ def test__mod_spc_dct_hof_basis():
             'smiles': 'CO',
             'inchi': 'InChI=1S/CH4O/c1-2/h2H,1H3',
             'inchikey': 'OKKJLVBELUTLKV-UHFFFAOYSA-N',
-            'sens': 0.0,
+            'charge': 0, 'mult': 1,
+            'mc_nsamp': (True, 3, 1, 3, 100, 12),
+            'hind_inc': 0.5235987755982988},
+        'cbh2_CCC': {
+            'smiles': 'CCC',
+            'inchi': 'InChI=1S/C3H8/c1-3-2/h3H2,1-2H3',
+            'inchikey': 'ATUOYWHBWRKTHZ-UHFFFAOYSA-N',
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
             'hind_inc': 0.5235987755982988},
@@ -137,16 +139,15 @@ def test__mod_spc_dct_hof_basis():
             'smiles': 'CCO',
             'inchi': 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3',
             'inchikey': 'LFQSCWFLJHTTHZ-UHFFFAOYSA-N',
-            'sens': 0.0,
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
             'hind_inc': 0.523598775598298}
     }
 
     spc_dct = mechanalyzer.parser.spc.add_heat_of_formation_basis(
-        spc_dct, ref_schemes=('cbh0', 'cbh1', 'cbh2'), parallel=False)
+        spc_dct, ref_schemes=('cbh0', 'cbh1', 'cbh2'))
     spc_dct2 = mechanalyzer.parser.spc.add_heat_of_formation_basis(
-        spc_dct, ref_schemes=('cbh0', 'cbh1', 'cbh2'), parallel=True)
+        spc_dct, ref_schemes=('cbh0', 'cbh1', 'cbh2'))
 
     assert set(ref_spc_dct.keys()) == set(spc_dct.keys())
     assert set(ref_spc_dct.keys()) == set(spc_dct2.keys())
@@ -174,7 +175,7 @@ def test__mod_spc_dct_stereo():
     }
 
     spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
-        ref_spc_dct, allstereo=False)
+        ref_spc_dct, all_stereo=False)
     assert ref_spc_dct == spc_dct
 
 
