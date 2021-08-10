@@ -50,7 +50,7 @@ def _prepare_basis(ref_scheme, spc_dct, zrxn, print_log,
 
     # Begin prints
     if print_log:
-        print('Process {} preppng species: {}'.format(os.getpid(), spc_str))
+        print('Process {} prepping species: {}'.format(os.getpid(), spc_str))
 
     # Print the message
     msg = '\nDetermining reference molecules for scheme: {}'.format(ref_scheme)
