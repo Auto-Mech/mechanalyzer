@@ -74,10 +74,13 @@ def generate_reactions(rct_ichs, allowed_prd_ichs, rtyp):
     # Build list of generated reactions including reactants and products
     rxn_ichs = ()
     for pidx, prds in enumerate(prd_ichs):
-        # Move ahead in loop if requested products not found
+        # Don't add if requested products not found
         if allowed_prd_ichs:
             if not all(prd in prds for prd in allowed_prd_ichs):
                 continue
+        # Don't add if self reaction was generated; weak check: ignores stereo
+        if set(rct_ichs) == set(prds):
+            continue
         # If continue not hit, save reaction to list and print to stdout
         _prd_smis = tuple(map(automol.inchi.smiles, prds))
         print('Found Product(s) {}: {}'.format(pidx+1, _prd_smis))
