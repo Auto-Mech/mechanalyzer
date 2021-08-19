@@ -39,9 +39,9 @@ if any(string is None for string in (spc_str, mech_str, sort_str)):
     sys.exit()
 
 # Build sorted mechanism files
-isolate_spc, sort_list = mparser.parse_sort(sort_str)
+isolate_spc, sort_lst = mparser.parse_sort(sort_str)
 param_dct_sort, _, spc_dct, cmts_dct, elems = sorter.sorted_mech(
-    spc_str, mech_str, isolate_spc, sort_str)
+    spc_str, mech_str, isolate_spc, sort_lst)
 
 # Write the output files (need to make general at some point)
 sortd_mech_str = chemkin_io.writer.mechanism.write_chemkin_file(

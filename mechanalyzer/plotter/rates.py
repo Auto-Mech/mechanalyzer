@@ -1,17 +1,19 @@
-""" Plot the contents of an algn_rxn_ktp_dct, with comparison to other mechanisms as appropriate
+""" Plot the contents of an algn_rxn_ktp_dct, with comparison
+    to other mechanisms as appropriate
 """
 
-import os
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib.ticker import FormatStrFormatter
-import matplotlib.backends.backend_pdf as plt_pdf
 import numpy
 from chemkin_io.writer import _util as writer
 
+
 LINES = ['-', '--', '-.', ':']  # for plot formatting
-K_UNITS_DCT = {1: '(s$^{-1}$)', 2: '(cm$^3$ mol$^{-1}$ s$^{-1}$)',
-               3: '(cm$^6$ mol$^{-2}$ s$^{-1}$)', 4: '(cm$^9$ mol$^{-3}$ s$^{-1}$)'}
+K_UNITS_DCT = {1: '(s$^{-1}$)',
+               2: '(cm$^3$ mol$^{-1}$ s$^{-1}$)',
+               3: '(cm$^6$ mol$^{-2}$ s$^{-1}$)',
+               4: '(cm$^9$ mol$^{-3}$ s$^{-1}$)'}
 
 
 def build_plots(algn_rxn_ktp_dct, mech_names=None, ratio_sort=False):
@@ -87,6 +89,9 @@ def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
         :param format_dct: dct containing color and label for each pressure
         :type: dct {pressure1: (color1, label1), pressure2: ...}
     """
+
+    # Gr
+
     ratios_plotted = False
     for mech_idx, ktp_dct in enumerate(ktp_dcts):
         if ktp_dct is not None:
@@ -101,9 +106,9 @@ def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
                             linestyle=LINES[mech_idx])
 
                 # Plot the ratios if they exist
-                if ratio_dcts[mech_idx] is not None: 
-                    if pressure in ratio_dcts[mech_idx].keys(): 
-                    #if ratio_dcts[mech_idx][pressure] is not None:
+                if ratio_dcts[mech_idx] is not None:
+                    if pressure in ratio_dcts[mech_idx].keys():
+                    # if ratio_dcts[mech_idx][pressure] is not None:
                         (_, ratios) = ratio_dcts[mech_idx][pressure]
                         ratios_plotted = True
                         axs[1].plot(1000 / temps,
@@ -111,14 +116,18 @@ def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
                                     color=_color,
                                     linestyle=LINES[mech_idx])
             # Check for the 'max_to_high' case
-            if ratio_dcts[mech_idx] is not None:    
+            # Grab set of temps to calculate ratio
+            # BELOW CODE ASSUMES ALL TEMP RANGES IN KTP DCT THE SAME
+            ratio_temps = tuple(ktp_dct.values())[0][1]
+            if ratio_dcts[mech_idx] is not None:
                 if 'max_to_high' in ratio_dcts[mech_idx].keys():
                     (_, ratios) = ratio_dcts[mech_idx]['max_to_high']
                     ratios_plotted = True
                     _color = 'k'
                     _label = 'max to P-indep, ' + mech_names[mech_idx]
-                    axs[1].plot(1000/temps, np.log10(ratios), label=_label,
-                                color=_color, linestyle=LINES[mech_idx])
+                    axs[1].plot(1000/ratio_temps, numpy.log10(ratios),
+                                label=_label, color=_color,
+                                linestyle=LINES[mech_idx])
 
     # Do some formatting
     axs[0].legend(fontsize=12, loc='upper right')
@@ -206,24 +215,28 @@ def get_algn_rxn_ratio_dct(algn_rxn_ktp_dct):
                         _, ref_kts = ref_ktp_dct[pressure]
                         ratios = kts / ref_kts
                         ratio_dct[pressure] = (temps, ratios)
-                # If the ratio_dct is still empty, one has 'high' and one has 
+                # If the ratio_dct is still empty, one has 'high' and one has
                 # numerical pressures (e.g., PLOG and Troe); calculate
                 # using the highest numerical pressure
+
+                # Grab set of temps to calculate ratio
+                # BELOW CODE ASSUMES ALL TEMP RANGES IN KTP DCT THE SAME
+                ratio_temps = tuple(ktp_dct.values())[0][1]
                 if ratio_dct == {}:
                     if 'high' in ref_ktp_dct.keys():
                         _, ref_kts = ref_ktp_dct['high']
                         max_pressure = max(ktp_dct.keys())
                         _, kts = ktp_dct[max_pressure]
                         ratios = kts / ref_kts
-                        ratio_dct['max_to_high'] = (temps, ratios)
+                        ratio_dct['max_to_high'] = (ratio_temps, ratios)
                     elif 'high' in ktp_dct.keys():
                         max_pressure = max(ref_ktp_dct.keys())
                         _, ref_kts = ref_ktp_dct[max_pressure]
                         _, kts = ktp_dct['high']
                         ratios = kts / ref_kts
-                        ratio_dct['max_to_high'] = (temps, ratios)
-                # Catch case when ratio_dct is still empty 
-                if ratio_dct == {}:  
+                        ratio_dct['max_to_high'] = (ratio_temps, ratios)
+                # Catch case when ratio_dct is still empty
+                if ratio_dct == {}:
                     ratio_dct = None
             ratio_dcts.append(ratio_dct)  # store
         algn_rxn_ratio_dct[rxn] = ratio_dcts  # store
@@ -232,7 +245,8 @@ def get_algn_rxn_ratio_dct(algn_rxn_ktp_dct):
 
 
 def get_pressures(algn_rxn_ktp_dct):
-    """ Get all the unique  pressure values in an algn_rxn_ktp_dct ('high' is excluded)
+    """ Get all the unique  pressure values in an algn_rxn_ktp_dct
+        ('high' is excluded).
 
         :param algn_rxn_ktp_dct: aligned dct containing rates for each mech
         :type algn_rxn_ktp_dct: dct {rxn1: [ratio_dct_mech1, ratio_dct_mech2, ...], rxn2: ...}
@@ -259,14 +273,15 @@ def get_molecularity(rxn):
 
         :param rxn: rxn tuple describing the reaction
         :type rxn: tuple (rcts, prds, third_bods)
-        :return molecularity: the molecularity of the reaction; 1 = unimolec., 2 = bimolec., etc.
+        :return molecularity: molecularity of reaction; 1=unimol, 2=bimol, etc.
         :rtype: int
     """
     rcts, _, third_bods = rxn
     num_rcts = len(rcts)
     third_bod = third_bods[0]
     if third_bod is not None:
-        if third_bod[0:2] == '(+':  # if the third body does not count toward molecularity
+        # if the third body does not count toward molecularity
+        if third_bod[0:2] == '(+':
             molecularity = num_rcts
         else:  # if the third body counts as another species
             molecularity = num_rcts + 1
@@ -291,7 +306,7 @@ def get_format_dct(pressures):
         colors = cm.get_cmap('rainbow')(numpy.linspace(0, 1, len(pressures)))
     format_dct = {}
     for idx, pressure in enumerate(pressures):
-        format_dct[pressure] = (colors[idx % 6], str(pressure) + ' atm')  
+        format_dct[pressure] = (colors[idx % 6], str(pressure) + ' atm')
     format_dct['high'] = ('k', 'P-indep')
 
     return format_dct
@@ -300,10 +315,10 @@ def get_format_dct(pressures):
 def build_fig_and_axs(molecularity, ratio_dcts, mech_names):
     """ Build a figure with two axes
 
-        :param molecularity: molecularity of a reaction 
+        :param molecularity: molecularity of a reaction
         :type molecularity: int
         :param ratio_dcts: ratio_dcts for this reaction
-        :param mech_names: short names for mechs 
+        :param mech_names: short names for mechs
         :return:
     """
     # Set up the y labels for the rate plot and the ratios plot
@@ -313,7 +328,8 @@ def build_fig_and_axs(molecularity, ratio_dcts, mech_names):
     for mech_idx, ratio_dct in enumerate(ratio_dcts):
         if ratio_dct is not None:
             ref_mech_name = mech_names[mech_idx-1]
-            ratio_label = 'log$_{10}$ of $k$ ratio relative to' + f' {ref_mech_name}'
+            ratio_label = ('log$_{10}$ of $k$ ratio relative to' +
+                           f' {ref_mech_name}')
             break
 
     # Set up the figure and axes
@@ -333,24 +349,3 @@ def build_fig_and_axs(molecularity, ratio_dcts, mech_names):
     axs[1].yaxis.set_major_formatter(FormatStrFormatter('%0.2f'))
 
     return fig, axs
-
-
-def build_pdf(figs, filename, path):
-    """ Produce a PDF with one reaction per page
-
-        :param figs: list of figure objects
-        :type figs: list [fig1, fig2, ...]
-        :param filename: filename for the output pdf; default is 'rate_comparison.pdf'
-        :type filename: str
-        :param path: path for the output pdf; default is the current directory
-        :type path: str
-    """
-    print('Producing PDF...')
-    if filename is None:
-        filename = 'rate_comparison.pdf'
-    if path is not None:
-        filename = os.path.join(path, filename)
-    pdf = plt_pdf.PdfPages(filename)
-    for fig in figs:
-        pdf.savefig(fig)
-    pdf.close()

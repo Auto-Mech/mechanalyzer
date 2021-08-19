@@ -265,6 +265,7 @@ def _read_csv_fml(data, idxs):
         spc_dct = dict(zip(idxs, data.fml))
     else:
         ichs_lst = list(spc_dct_inchis.values())
+        print(ichs_lst)
         fml = [_fml_inchi(ichs) for ichs in ichs_lst]
         spc_dct = dict(zip(idxs, fml))
 
@@ -306,10 +307,13 @@ def _check_csv(data):
         proper = False
         print('Repeat names found')
 
-    for idx, row in data.iterrows():
-        if row.count() != num_headers:
-            print ('Error: The number of items for species', name, 
-                    'does not match the number of headers')
+    for _, row in data.iterrows():
+        # Have to add number of non-NaNs and NaN values
+        if (row.count() + row.isna().sum()) != num_headers:
+            name = row['name']
+            print(
+                'Error: The number of items for species', name,
+                'does not match the number of headers')
             proper = False
 
     # Check validity of inchi and multiplicity combinations (and chg?)
@@ -349,6 +353,8 @@ def _read_csv(csv_str):
     # Read in csv file while removing whitespace and make all chars lowercase
     csv_file = StringIO(csv_str)
     data = pandas.read_csv(csv_file, comment='!', quotechar="'")
+
+    # Want way to fill empty fields with None
 
     # Parse CSV string into data columns
     data.columns = data.columns.str.strip()

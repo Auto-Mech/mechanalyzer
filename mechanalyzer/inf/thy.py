@@ -2,6 +2,7 @@
   Handles data objects
 """
 
+import elstruct
 from mechanalyzer import par
 
 
@@ -51,26 +52,10 @@ def modify_orb_label(thy_info, spc_info):
 
     # Modify the label denoting the orbital restriction
     orb_label = value(thy_info, par.THY.ORB_RESTRICT)
-    mod_thy_info += (_mod_orbital_label(orb_label, mult),)
+    mod_thy_info += (
+        elstruct.util.set_orbital_restriction_label(orb_label, mult),)
 
     return mod_thy_info
-
-
-def _mod_orbital_label(orb_label, mult):
-    """ orbital restriction logical
-    """
-
-    if orb_label == 'RR':
-        mod_orb_label = 'R'
-    elif orb_label == 'UU':
-        mod_orb_label = 'U'
-    elif orb_label == 'RU':
-        if mult == 1:
-            mod_orb_label = 'R'
-        else:
-            mod_orb_label = 'U'
-
-    return mod_orb_label
 
 
 # Getters

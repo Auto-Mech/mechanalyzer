@@ -1,8 +1,8 @@
-# cmd: conda build .  -c auto-mech -c psi4 -c rdkit -c openbabel -c conda-forge
+# cmd: conda build . -c auto-mech -c psi4 -c rdkit -c openbabel -c conda-forge
 
 package:
     name: mechanalyzer
-    version: "0.2.5b"
+    version: "0.3.0"
 
 source:
     path: .

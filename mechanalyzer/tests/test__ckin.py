@@ -5,11 +5,14 @@ import os
 import numpy
 from mechanalyzer.parser import ckin_ as ckin
 
+
+# Set paths
+PATH = os.path.dirname(os.path.realpath(__file__))
+DAT_PATH = os.path.join(PATH, 'data')
+
 # File locations
-MECH_FILENAMES = ['data/mech3.txt', 'data/mech3.txt']
-THERMO_FILENAMES = ['data/thermo3.txt', 'data/thermo3.txt']
-#SPC_FILENAMES = ['data/spc1.txt', 'data/spc2.txt']
-JOB_PATH = os.getcwd()
+MECH_FILENAMES = ['mech3.txt', 'mech3.txt']
+THERMO_FILENAMES = ['thermo3.txt', 'thermo3.txt']
 
 # Values, etc.
 TEMPS = numpy.array([500, 1000, 1500])
@@ -26,7 +29,7 @@ def test_load_rxn_ktp_dcts():
     """ Tests the load_rxn_ktp_dcts function
     """
 
-    rxn_ktp_dcts = ckin.load_rxn_ktp_dcts(MECH_FILENAMES, JOB_PATH, TEMPS,
+    rxn_ktp_dcts = ckin.load_rxn_ktp_dcts(MECH_FILENAMES, DAT_PATH, TEMPS,
                                           PRESSURES)
     assert len(rxn_ktp_dcts) == 2
     for rxn_ktp_dct in rxn_ktp_dcts:
@@ -39,7 +42,7 @@ def test_load_rxn_param_dcts():
     """ Tests the load_rxn_param_dcts function
     """
 
-    rxn_param_dcts = ckin.load_rxn_param_dcts(MECH_FILENAMES, JOB_PATH)
+    rxn_param_dcts = ckin.load_rxn_param_dcts(MECH_FILENAMES, DAT_PATH)
     assert len(rxn_param_dcts) == 2
     for rxn_param_dct in rxn_param_dcts:
         assert tuple(rxn_param_dct.keys()) == CORRECT_RXN
@@ -50,7 +53,7 @@ def test_load_rxn_param_dcts():
 def test_load_spc_therm_dcts():
     """ Tests the load_spc_therm_dcts function
     """
-    spc_therm_dcts = ckin.load_spc_therm_dcts(THERMO_FILENAMES, JOB_PATH, TEMPS)
+    spc_therm_dcts = ckin.load_spc_therm_dcts(THERMO_FILENAMES, DAT_PATH, TEMPS)
     assert len(spc_therm_dcts) == 2
     for spc_therm_dct in spc_therm_dcts:
         assert tuple(spc_therm_dct.keys()) == CORRECT_SPCS
