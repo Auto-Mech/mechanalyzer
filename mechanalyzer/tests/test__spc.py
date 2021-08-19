@@ -190,4 +190,5 @@ def test__mod_spc_dct_stereo():
 
     spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
         ref_spc_dct, all_stereo=False)
+    
     assert ref_spc_dct == spc_dct
