@@ -307,12 +307,12 @@ def _check_csv(data):
         proper = False
         print('Repeat names found')
 
-    for _, row in data.iterrows():
+    for idx, row in data.iterrows():
         # Have to add number of non-NaNs and NaN values
         if (row.count() + row.isna().sum()) != num_headers:
             name = row['name']
             print(
-                'Error: The number of items for species', name,
+                'Error: The number of items for species', idx, name,
                 'does not match the number of headers')
             proper = False
 
