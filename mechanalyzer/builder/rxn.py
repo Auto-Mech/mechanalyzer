@@ -102,63 +102,6 @@ def _determine_reactants(spc_dct, rct1_set, rct2_set, rtyp):
         """
 
         # Check if string id of class of species (e.g., 'all', 'radicals'), or
-        # simply list of species name given 
-        if isinstance(spc_set, str):
-
-            # Build ini list from input or spc dct
-            spc_names, spc_ichs = (), ()
-            for name, dct in spc_dct.items():
-                spc_names += (name,)
-                spc_ichs += (dct['inchi'],)
-
-            # Trim the list if needed
-            if spc_set == 'radicals':
-                spc_ichs, spc_names = _radicals(spc_ichs, spc_names)
-
-        else:
-            spc_names = spc_set
-            spc_ichs = tuple(spc_dct[name]['inchi'] for name in spc_set)
-
-=======
-def generate_reactions(rct_ichs, allowed_prd_ichs, rtyp):
-    """ For a given reactants
-    """
-
-    _rct_smis = tuple(map(automol.inchi.smiles, rct_ichs))
-    print('Generating Reactions for {}...'.format(_rct_smis))
-
-    # Generate the products with the desired reactant and reaction type
-    rct_gras = _rct_gras(rct_ichs)
-    prd_ichs = _prd_ichs(rct_gras, rtyp)
-
-    # Build list of generated reactions including reactants and products
-    rxn_ichs = ()
-    for pidx, prds in enumerate(prd_ichs):
-        # Move ahead in loop if requested products not found
-        if allowed_prd_ichs:
-            if not all(prd in prds for prd in allowed_prd_ichs):
-                continue
-        # If continue not hit, save reaction to list and print to stdout
-        _prd_smis = tuple(map(automol.inchi.smiles, prds))
-        print('Found Product(s) {}: {}'.format(pidx+1, _prd_smis))
-
-        rxn_ichs += ((rct_ichs, prds, (None,)),)
-
-    return rxn_ichs
-
-
-# Functions to set lists for mech building step
-def _determine_reactants(spc_dct, rct1_set, rct2_set, rtyp):
-    """ Determine a list of reactants for one or more reactions
-        these could be unimolecular or bimolecular.
-    """
-
-    def _gen_set(spc_dct, spc_set):
-        """ Make the list of species that will serve as
-            reactant 1 or reactant 2
-        """
-
-        # Check if string id of class of species (e.g., 'all', 'radicals'), or
         # simply list of species name given
         if isinstance(spc_set, str):
 
@@ -176,7 +119,6 @@ def _determine_reactants(spc_dct, rct1_set, rct2_set, rtyp):
             spc_names = spc_set
             spc_ichs = tuple(spc_dct[name]['inchi'] for name in spc_set)
 
->>>>>>> 9ac76b5dd199a1256224e96c54c6067b33716c13
         return spc_ichs, spc_names
 
     rct1_ichs, rct1_names = _gen_set(spc_dct, rct1_set)
