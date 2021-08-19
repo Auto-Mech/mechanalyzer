@@ -93,7 +93,7 @@ def _prepare_basis(ref_scheme, spc_dct, zrxn, print_log,
         # msg += '\nInChIs for basis set: {}'.format('\n  '.join(ste_basis))
 
         # Add to the dct containing info on the species basis
-        basis_dct[spc_name] = (spc_basis, coeff_basis)
+        basis_dct[spc_name] = (ste_basis, coeff_basis)
 
     # Print log message if it is desired
     if print_log:

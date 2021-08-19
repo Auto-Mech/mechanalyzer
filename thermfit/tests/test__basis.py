@@ -1,4 +1,6 @@
 """ Test prepare refs
+
+    Need to add a species that has a basis molecule with stereochemistry.
 """
 
 import numpy
