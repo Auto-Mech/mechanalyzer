@@ -199,7 +199,7 @@ def stereochemical_spc_dct(spc_dct, nprocs='auto', all_stereo=False):
     for dct in ste_dcts:
         ste_spc_dct.update(dct)
     if not all_stereo:
-        ste_spc_dct_ord = {name: ste_spc_dct[name] for name in init_names}
+        ste_spc_dct_ord = {name: ste_spc_dct[name] for name in init_names if name in ste_spc_dct}
     else:
         ste_spc_dct_ord = copy.deepcopy(ste_spc_dct)
 
@@ -216,23 +216,27 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
     """
 
     # Functions for calling automol for ring counts and stereo add'n
-    @timeout(30)
-    def _nrings(name, dct):
-        """ Count the number of rings
-        """
-        try:
-            nrings = len(automol.graph.rings(
-                automol.inchi.graph(dct['inchi'])))
-        except:
-            print('Cannot produce graph for {} '.format(name))
-            nrings = 2000
-        return nrings
+    # @timeout(30)
+    # def _nrings(name, dct):
+    #     """ Count the number of rings
+    #     """
+    #     try:
+    #         nrings = len(automol.graph.rings(
+    #             automol.inchi.graph(dct['inchi'])))
+    #     except:
+    #         print('Cannot produce graph for {} '.format(name))
+    #         nrings = 2000
+    #     return nrings
 
-    @timeout(200)
+    @timeout(2000)
     def _generate_stereo(name, ich, all_stereo=False):
         """ stereo
         """
         ret_ichs, worked = [ich], True
+        print('inchi test:', name, ich)
+        print('complete inchi test:', automol.inchi.is_complete(ich))
+        print('add_stereo  inchi test:', automol.inchi.add_stereo(ich))
+        print('expand_stereo inchi test:', automol.inchi.expand_stereo(ich))
         try:
             if not automol.inchi.is_complete(ich):
                 ret_ichs = (
@@ -248,10 +252,10 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
                                                        ', '.join(names)))
     good_names = []
     for name in names:
-        if _nrings(name, init_dct[name]) < 2:
-            good_names.append(name)
-        else:
-            print('{} has >2 rings; stereo not implemented'.format(name))
+        # if _nrings(name, init_dct[name]) < 10:
+        good_names.append(name)
+        # else:
+        #    print('{} has >10 rings; stereo not implemented'.format(name))
 
     # Construct a new dictionary with stereochemical inchi strings
     new_dct = {}
