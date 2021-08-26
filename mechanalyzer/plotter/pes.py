@@ -284,3 +284,133 @@ def _position_text(xp2, xp1, ene, name_vshift):
 #     for k in range(0, Molecule.species_count):
 #         tmp = '$' + name[k] + '$'
 #         name[k] = tmp
+
+
+# Sorting functions
+def resort_names(ene_dct, conn_lst):
+    """ Discern a new sorting for the names of the ene dct
+        so that the plotter can make a plot that is readable
+    """
+
+    def _connected_partners(spc, conn_lst):
+        """ Get names of all PES parts that spc is connected to. """
+        conns = []
+        for conn in conn_lst:
+            if spc in conn:
+                lconn, rconn = conn
+                partner = lconn if spc != lconn else rconn
+                conns.append(partner)
+        return conns
+
+    def _remove_listed(name_lst, plot_lst):
+        """ Return name_lst entries not already accounted for in plot_lst """
+        return [name for name in name_lst if name not in plot_lst]
+
+    def _unchecked_wells(plot_lst, conn_lst, min_well, side):
+        """ Find any leftward wells in plot list whose connections have not
+            been checked.
+        """
+
+        chk_lst = plot_lst if side == 'left' else reversed(plot_lst)
+
+        _wells = []
+        for name in chk_lst:
+            # Stop at the minimum-well to avoid going to opposite side
+            if name == min_well:
+                break
+            if 'W' in name:
+                _wells.append(name)  # wrong need check
+
+        _unchked_wells = []
+        for _well in _wells:
+            conn_spc = _connected_partners(_well, conn_lst)
+            conn_spc = _remove_listed(conn_spc, plot_lst)
+            if conn_spc:
+                _unchked_wells.append(_well)
+
+        return _unchked_wells
+
+    def _add_spc(well, plot_lst, side):
+        """ Add barriers and then products to side
+        """
+        print(side)
+        conn_spc = _connected_partners(well, conn_lst)
+        conn_spc = _remove_listed(conn_spc, plot_lst)
+        if conn_spc:
+            for spc in conn_spc:
+                # Add barrier to list
+                if side == 'left':
+                    plot_lst.insert(0, spc)
+                else:
+                    plot_lst.append(spc)
+                # Add products (wells or products)
+                conn_spc2 = _connected_partners(spc, conn_lst)
+                conn_spc2 = _remove_listed(conn_spc2, plot_lst)
+                for spc2 in conn_spc2:
+                    if side == 'left':
+                        plot_lst.insert(0, spc2)
+                    else:
+                        plot_lst.append(spc2)
+
+        return plot_lst
+
+    # Initialize list that will have the PES components in plot order
+    plot_names = []
+
+    # Find the deepest well
+    min_ene, min_well = 10000.0, None
+    for name, ene in ene_dct.items():
+        if 'W' in name and ene < min_ene:
+            min_ene = ene
+            min_well = name
+    plot_names.append(min_well)
+
+    # Find the barriers the min-well is connected, add to list
+    # conn_spc = _connected_partners(min_well, conn_lst)
+    # for i, spc in enumerate(conn_spc):
+    #     if (i+1) % 2 == 1:
+    #         plot_names.insert(0, spc)
+    #     else:
+    #         plot_names.append(spc)
+    # print('plot names 1', plot_names)
+
+    # Now build out the left and right
+    # left_well = None
+    # for name in plot_names:
+    #     if 'W' in name:
+    #         left_well = name
+    # right_well = None
+    # for name in reversed(plot_names):
+    #     if 'W' in name:
+    #         right_well = name
+
+    # Build out left side of list
+    left_well = min_well
+    left_finished = False
+    while not left_finished:
+        plot_names = _add_spc(left_well, plot_names, 'left')
+        unchecked_names = _unchecked_wells(
+            plot_names, conn_lst, min_well, 'left')
+        if unchecked_names:
+            left_well = unchecked_names[0]
+        else:
+            left_finished = True
+
+    # Build out right side of list
+    right_well = min_well
+    right_finished = False
+    while not right_finished:
+        plot_names = _add_spc(right_well, plot_names, 'right')
+        unchecked_names = _unchecked_wells(
+            plot_names, conn_lst, min_well, 'right')
+        if unchecked_names:
+            right_well = unchecked_names[0]
+        else:
+            right_finished = True
+
+    # Build a new ene_dct with the ordered plot names
+    ord_ene_dct = {name: ene_dct[name] for name in plot_names}
+
+    print(plot_names)
+    print(ord_ene_dct)
+    return ord_ene_dct
