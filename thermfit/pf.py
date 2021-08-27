@@ -36,6 +36,7 @@ def combine(pfs, coeffs, operators):
                 coeff = abs(coeff)
                 if operator == 'multiply':
                     operator = 'divide'
+            print(pf2)
             final_pf = _combine_pfs(final_pf, pf2, coeff, operator)
 
     return final_pf
@@ -56,7 +57,6 @@ def _combine_pfs(pfa, pfb, coeff, operator):
 
     tempsa, logqa, dq_dta, d2q_dt2a = pfa
     _, logqb, dq_dtb, d2q_dt2b = pfb
-
     if operator == 'multiply':
         logq = [a+b+numpy.log(coeff) for a, b in zip(logqa, logqb)]
         dq_dt = [a+b+numpy.log(coeff) for a, b in zip(dq_dta, dq_dtb)]
@@ -94,7 +94,7 @@ def q_rotational(i_a, i_b, i_c, sigma, temp, linear=False):
         i_c = i_c * phycon.AMU2KG * phycon.BOHR2CM**2 / 100**2
         return ((phycon.KB * temp / phycon.H)**(3/2) * numpy.pi**(1/2)
                 * (_A(i_a) * _A(i_b) * _A(i_c))**(-1/2) / sigma)
-    
+
     if linear:
         q_rot = _q_rotational_linear(i_a, i_b, i_c, sigma, temp)
     else:
@@ -185,7 +185,7 @@ def internal_energy_from_pf(pf_fun, temp):
 
 
 #def evaluate_gibbs(geo, freqs):
-    
+
     # for temp in [200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500]:
     #     temp_range = numpy.arange(temp, temp+20, .05)
     #     heat_cap = 0
@@ -283,5 +283,100 @@ def fake_mess_rrho_partition_function(geo, freqs, hform0, temps):
     csh_t_dct = thermp_io.reader.properties_temp_dct(thermp_output_strs[0])
     print(csh_t_dct)
 
-    
+
     # write_mess_output(formula_string, pf_arrays, rundir)
+
+
+
+def from_ln_partition_function(lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple):
+    """Translate partition functions as natural logs into
+        nonlogged partition functions
+    """
+    pf_tuple = ()
+    dqdt_tuple = ()
+    d2qdt2_tuple = ()
+    for lnq, dlnqdt, d2lnqdt2 in zip(lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple):
+        pf_tuple += (numpy.exp(lnq),)
+        dqdt_tuple += (numpy.exp(lnq) * dlnqdt,)
+        d2qdt2_tuple += (numpy.exp(lnq) * (dlnqdt**2 + d2lnqdt2),)
+    return (pf_tuple, dqdt_tuple, d2qdt2_tuple,)
+
+
+def to_ln_partition_function(pf_tuple, dqdt_tuple, d2qdt2_tuple):
+    """Translate partition functions to natural logs from
+       nonlogged partition functions
+    """
+    lnq_tuple = ()
+    dlnqdt_tuple = ()
+    d2lnqdt2_tuple = ()
+    for pf_val, dqdt, d2qdt2 in zip(pf_tuple, dqdt_tuple, d2qdt2_tuple):
+        lnq_tuple += (numpy.log(pf_val),)
+        dlnqdt_tuple += (dqdt / pf_val,)
+        d2lnqdt2_tuple += (d2qdt2/pf_val - dqdt**2/pf_val**2,)
+    return (lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple,)
+
+
+def additive_pf_combination_at_temp(pf_arrays_lst, weight_lst, idx):
+    """additively combine nonlog pfs, for one temperature idx, where
+        each pf is given a weight
+    """
+    pf_tot_t = 0
+    dqdt_tot_t = 0
+    d2qdt2_tot_t = 0
+    for weight_i, (pf_i, dqdt_i, d2qdt_i) in zip(weight_lst, pf_arrays_lst):
+        pf_i_t, dqdt_i_t, d2qdt_i_t = pf_i[idx], dqdt_i[idx], d2qdt_i[idx]
+        pf_tot_t += weight_i * pf_i_t
+        dqdt_tot_t += weight_i * dqdt_i_t
+        d2qdt2_tot_t += weight_i * d2qdt_i_t
+    return (pf_tot_t, dqdt_tot_t, d2qdt2_tot_t,)
+
+
+def weights_at_temp(pf_arrays_lst, hf_lst, temps, idx):
+    """ Calculate the weight of each conformer given a list
+        of partition functions and 0 K heats 
+        of formations for thtose conformers and a temperature
+    """
+    pfs_t_lst = []
+    temp = temps[idx]
+    hf_lst = [hf_i * phycon.EH2KJ * 1000 for hf_i in hf_lst]
+    knt = phycon.KB * phycon.NAVO * temp
+    for pf_array in pf_arrays_lst:
+        pfs_t_lst.append(pf_array[0][idx])
+
+    denominator = 0.
+    h_zero = min(hf_lst)
+    for q_val_i, h_val_i in zip(pfs_t_lst, hf_lst):
+        exponent = numpy.exp((h_zero - h_val_i) / knt)
+        denominator += q_val_i * exponent
+
+    weight_lst = []
+    for q_val_i, h_val_i in zip(pfs_t_lst, hf_lst):
+        exponent = numpy.exp((h_zero - h_val_i) / knt)
+        weight_lst.append(q_val_i * exponent / denominator)
+
+    return weight_lst
+ 
+
+def boltzmann_pf_combination(ln_pf_arrays_lst, hf_lst):
+    """combine pfs
+    """
+    pf_arrays_lst = []
+    for ln_pf_array in ln_pf_arrays_lst:
+        temps, lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple = ln_pf_array
+        pf_arrays_lst.append(
+            from_ln_partition_function(
+                lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple))
+    total_pf_arrays = ([], [], [])
+    print('Weights:\n', 'Temperature (K)', 'Conformer Weight')
+    for idx, temp in enumerate(temps):
+        weight_lst = weights_at_temp(pf_arrays_lst, hf_lst, temps, idx)
+        print(temp, '    ', '    '.join(['{:.3f}'.format(w) for w in weight_lst]))
+        pf_arrays_i = additive_pf_combination_at_temp(
+            pf_arrays_lst, weight_lst, idx)
+        total_pf_arrays[0].append(pf_arrays_i[0])
+        total_pf_arrays[1].append(pf_arrays_i[1])
+        total_pf_arrays[2].append(pf_arrays_i[2])
+    final_ln_pf_arrays = to_ln_partition_function(*total_pf_arrays)
+    final_ln_pf_arrays_with_temps = (temps, *final_ln_pf_arrays)
+
+    return final_ln_pf_arrays_with_temps
