@@ -233,10 +233,10 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
         """ stereo
         """
         ret_ichs, worked = [ich], True
-        print('inchi test:', name, ich)
-        print('complete inchi test:', automol.inchi.is_complete(ich))
-        print('add_stereo  inchi test:', automol.inchi.add_stereo(ich))
-        print('expand_stereo inchi test:', automol.inchi.expand_stereo(ich))
+        # print('inchi test:', name, ich)
+        # print('complete inchi test:', automol.inchi.is_complete(ich))
+        # print('add_stereo  inchi test:', automol.inchi.add_stereo(ich))
+        # print('expand_stereo inchi test:', automol.inchi.expand_stereo(ich))
         try:
             if not automol.inchi.is_complete(ich):
                 ret_ichs = (
