@@ -194,8 +194,8 @@ def sort_by_max_diff(algn_spc_diff_dct, algn_spc_therm_dct, sort_instr='h',
             if diff_array is not None:
                 # If a sort_temp was provided, use the corresponding temp_idx
                 if sort_temp_idx is not None:
-                    if diff_array[sort_idx][sort_temp_idx] > max_diff:
-                        max_diff = diff_array[sort_idx][sort_temp_idx]
+                    if abs(diff_array[sort_idx][sort_temp_idx]) > max_diff:
+                        max_diff = abs(diff_array[sort_idx][sort_temp_idx])
                 # Otherwise, just look for the maximum among all values
                 else:
                     if max(abs(diff_array[sort_idx])) > max_diff:

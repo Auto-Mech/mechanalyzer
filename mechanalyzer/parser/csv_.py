@@ -3,12 +3,14 @@ Read the csv file
 """
 
 
+import sys
 from io import StringIO
 import pandas
 from automol.smiles import inchi as _inchi
 from automol.inchi import smiles as _smiles
 from automol.inchi import formula as _fml_inchi
 from automol.inchi import low_spin_multiplicity as _low_spin_mult
+from automol.inchi import recalculate
 
 
 # What columns are allowed in the CSV file
@@ -104,7 +106,18 @@ def _read_csv_inchi(data, idxs):
         spc_dct = dict(zip(idxs, data.inchi))
     elif hasattr(data, 'smiles'):
         print('No inchi column in csv file, getting inchi from SMILES')
-        ichs = [_inchi(smiles) for smiles in data.smiles]
+        ichs = []
+        for idx, smiles in enumerate(data.smiles):
+            ich = _inchi(smiles)
+            # print('smiles to ich test:', data.name[idx], smiles, ich, data.mult[idx])
+            try:
+                recalculate(ich)
+            except TypeError:
+                print('smiles to ich test:', data.name[idx], smiles, ich, data.mult[idx])
+                print('exiting code due to bad species')
+                sys.exit()
+            ichs.append(ich)
+        # ichs = [_inchi(smiles) for smiles in data.smiles]
         spc_dct = dict(zip(idxs, ichs))
     else:
         spc_dct = {}
