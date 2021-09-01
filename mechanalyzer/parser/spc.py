@@ -265,9 +265,12 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
 
         # Generate ichs with stereo and hashes
         ich = init_dct[name]['inchi']
+        print('working on ich:', name, ich)
         ste_ichs, success = _generate_stereo(name, ich, all_stereo=all_stereo)
         if not success:
+            print('failed on ich:', name, ich)
             continue
+        print('succeeded to produce full ich for:', name, ich, ste_ichs)
 
         # Add name and inchi info to string
         spc_dct_keys = tuple(key for key in init_dct[name].keys()
