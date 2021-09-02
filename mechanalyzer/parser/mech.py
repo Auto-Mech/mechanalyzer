@@ -22,7 +22,10 @@ def parse_mechanism(mech_str, mech_type, spc_dct):
         raise NotImplementedError
 
     # Build mech_info object to pass along to various functions
-    _mech_info = mech_info(rxn_param_dct, spc_dct)
+    if rxn_param_dct is not None:
+        _mech_info = mech_info(rxn_param_dct, spc_dct)
+    else:
+        _mech_info = None
 
     return rxn_param_dct, _mech_info, elem_tuple
 
