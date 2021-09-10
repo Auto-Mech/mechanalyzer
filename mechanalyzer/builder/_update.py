@@ -66,8 +66,9 @@ def update_rxn_dct(rxn_lst, rxn_dct, spc_dct):
             rxn_wname = _rxn_ich_to_name(rxn, spc_dct)
             print('Adding reaction {} to param dct'.format(rxn_wname))
 
-            rxn_dct[rxn_wname] = (
-                ((1.0, 0.0, 0.0), None, None, None, None, None),)
+            # rxn_dct[rxn_wname] = (
+            #    ((1.0, 0.0, 0.0), None, None, None, None, None),)
+            rxn_dct[rxn_wname] = (((1.0, 0.0, 0.0),),)
 
     return rxn_dct
 
@@ -99,7 +100,6 @@ def _spc_from_reactions(rxns):
     """ Build a species dictionary from a list of reactions
         which define a reaction using the inchi strings
     """
-
     rgts = ()
     for rxn in rxns:
         rgts += tuple(itertools.chain(*rxn))
@@ -146,6 +146,17 @@ def _rxn_ich_to_name(rxn, spc_dct):
     )
 
     return rxn2
+
+
+def rxn_name_str(rxn, newline=False):
+    """ get a reaction name string
+    """
+    if newline:
+        rstr = ' =\n       '.join((' + '.join(rxn[0]), ' + '.join(rxn[1])))
+    else:
+        rstr = ' = '.join((' + '.join(rxn[0]), ' + '.join(rxn[1])))
+
+    return rstr
 
 
 def _ich_name_dct(spc_dct):

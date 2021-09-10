@@ -16,7 +16,7 @@ def _read_file(file_name):
 PATH = os.path.dirname(os.path.realpath(__file__))
 DATA_PATH = os.path.join(PATH, 'data')
 MECH_NAME = 'ste.txt'
-CSV_NAME = 'ste.csv'
+CSV_NAME = 'ste2.csv'
 
 MECH_STR = _read_file(
     os.path.join(DATA_PATH, MECH_NAME))
@@ -27,21 +27,25 @@ CSV_STR = _read_file(
 SPC_DCT = mechanalyzer.parser.spc.build_spc_dct(CSV_STR, 'csv')
 
 # Get the reactions
-REACTION_BLOCK = chemkin_io.parser.mechanism.reaction_block(
+RXN_BLOCK = chemkin_io.parser.mechanism.reaction_block(
     MECH_STR)
-REACTION_DCT = chemkin_io.parser.reaction.data_dct(
-    REACTION_BLOCK)
+RXN_DCT = chemkin_io.parser.reaction.param_dct(
+    RXN_BLOCK, 'cal/mole', 'moles')
 
 
 def test__():
     """ test
     """
 
-    STE = mechanalyzer.parser.expand_mech_stereo(
-        REACTION_DCT, SPC_DCT)
-    print('STE', STE)
-    # STE_MECH_DCT, STE_SPC_DCT = mechanalyzer.parser.expand_mech_stereo(
-    #     REACTION_DCT, SPC_DCT)
+    ste_rxn_dct, ste_spc_dct = mechanalyzer.builder.expand_mech_stereo(
+        RXN_DCT, SPC_DCT)
+    print('\nrxn dct')
+    for rxn, pars in ste_rxn_dct.items():
+        print(rxn)
+        print(pars)
+    print('\nspc dct')
+    for spc in ste_spc_dct:
+        print(spc, ste_spc_dct[spc]['inchi'])
 
 
 if __name__ == '__main__':
