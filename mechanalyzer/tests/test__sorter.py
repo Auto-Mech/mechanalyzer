@@ -85,33 +85,34 @@ AL_KTP_DCT = {
 def test__sort_with_input():
     """ sort by using the auxlilary input files to specify parameters
     """
+
     results = [
         [(('C2H4',), ('H2', 'H2CC'), ('(+M)',)),
-         '! class: N_COH.subpes _NR _rxn type  2004.0 _1 _Decomposition'],
+         '! pes:1,1,2 ! class: n_ClSNCOH.subpes _NR _rxn type  2004.01 _1 _Decomposition'],
         [(('C2H3', 'H'), ('C2H4',), ('(+M)',)),
-         '! class: N_COH.subpes _NR _rxn type  2004.0 _2 _Recombination H'],
+         '! pes:1,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2004.01 _2 _Recombination H'],
         [(('C2H4', 'H'), ('C2H5',), ('(+M)',)),
-         '! class: N_COH.subpes _NR _rxn type  2005.0 _2 _Addition H'],
+         '! pes:2,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2005.01 _2 _Addition H'],
         [(('C2H4', 'H'), ('C2H3', 'H2'), (None,)),
-         '! class: N_COH.subpes _NR _rxn type  2005.01 _2 _H abstraction'],
+         '! pes:2,2,2 ! class: n_ClSNCOH.subpes _NR _rxn type  2005.02 _2 _H abstraction'],
         [(('CH2(S)', 'CH3'), ('C2H4', 'H'), (None,)),
-         '! class: N_COH.subpes _NR _rxn type  2005.02 _2 _Addition-decomposition - propagation'],
+         '! pes:2,3,3 ! class: n_ClSNCOH.subpes _NR _rxn type  2005.03 _2 _Addition-decomposition - propagation'],
         [(('C2H5', 'H'), ('C2H4', 'H2'), (None,)),
-         '! class: N_COH.subpes _NR _rxn type  2006.0 _2 _Recombination-decomposition - termination'],
+         '! pes:3,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2006.01 _2 _Recombination-decomposition - termination'],
         [(('C2H4', 'O'), ('CH3', 'HCO'), (None,)),
-         '! class: N_COH.subpes _NR _rxn type  2104.0 _2 _Addition-decomposition - branching'],
+         '! pes:4,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2104.01 _2 _Addition-decomposition - branching'],
         [(('C2H4', 'OH'), ('PC2H4OH',), (None,)),
-         '! class: N_COH.subpes _NR _rxn type  2105.0 _2 _Addition OH'],
+         '! pes:5,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2105.01 _2 _Addition OH'],
         [(('C2H5', 'OH'), ('C2H4', 'H2O'), (None,)),
-         '! class: N_COH.subpes _NR _rxn type  2106.0 _2 _Recombination-decomposition - termination'],
+         '! pes:6,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2106.01 _2 _Recombination-decomposition - termination'],
         [(('C2H4', 'O2'), ('C2H3', 'HO2'), (None,)),
-         '! class: N_COH.subpes _NR _rxn type  2204.0 _2 _H abstraction'],
+         '! pes:7,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2204.01 _2 _H abstraction'],
         [(('C2H5O2',), ('C2H4', 'HO2'), (None,)),
-         '! class: N_COH.subpes _NR _rxn type  2205.0 _1 _Beta-scission +HO2'],
+         '! pes:8,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2205.01 _1 _Beta-scission +HO2'],
         [(('C2H4', 'CH3'), ('C2H3', 'CH4'), (None,)),
-         '! class: N_COH.subpes _NR _rxn type  3007.0 _2 _H abstraction'],
+         '! pes:9,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  3007.01 _2 _H abstraction'],
         [(('C3H4-A', 'O'), ('C2H4', 'CO'), (None,)),
-         '! class: N_COH.subpes _NR _rxn type  3104.0 _2 _Addition-decomposition - termination']
+         '! pes:10,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  3104.01 _2 _Addition-decomposition - termination']
     ]
 
     # Read the mechanism files into strings
@@ -131,7 +132,7 @@ def test__sort_with_input():
     for rxn in param_dct_sort.keys():
         assert [rxn, cmts_dct[rxn]['cmts_inline']] == results[index]
         index += 1
-
+    print('ok')
 
 def test__readwrite_thirdbody():
     """ test mechanalyzer.parser.sort
@@ -180,7 +181,7 @@ def test__readwrite_thirdbody():
         spc_str, mech_str, isolate_spc, sort_lst)
 
     assert param_dct_sort == trd_bdy_dct
-
+    print('ok')
 
 def test__sortby_mult():
     """ test mechanalyzer.parser.sort
@@ -212,7 +213,7 @@ def test__sortby_mult():
 
     for rxn in param_dct_sort.keys():
         assert cmts_dct[rxn]['cmts_inline'][-1] == results[rxn]
-
+    print('ok')
 
 def test__sortby_molec_r1():
     """ test mechanalyzer.parser.sort
@@ -249,7 +250,7 @@ def test__sortby_molec_r1():
         comments.append(''.join(cmts_dct[rxn]['cmts_inline'].split()[-2:]))
 
     assert comments == comments_results
-
+    print('ok')
 
 def test_sortby_pes_dct():
     """ test mechanalyzer.parser.sort
@@ -259,11 +260,11 @@ def test_sortby_pes_dct():
     pes_dct_result = {
         ('C8H17', 0, 0): ((0, (('IC8-1R',), ('IC8-5R',))),),
         ('C8H18', 1, 0): ((0, (('IC8',), ('NEOC5H11', 'IC3H7'))),),
-        ('C8H17O2', 2, 0): ((0, (('IC8OOH1-1AR',), ('IC8O1-1A', 'OH'))),
-                            (1, (('IC8OOH1-1AR',), ('IC4H7OOH', 'IC4H9'))),
-                            (2, (('IC8OOH1-1AR',), ('CH2O', 'I24C7D1', 'OH'))),
-                            (3, (('IC8-1R', 'O2'), ('IC8-1O2R',))),
-                            (4, (('IC8-1O2R',), ('IC8OOH1-1AR',)))),
+        ('C8H17O2', 2, 0): ((0, (('IC8-1O2R',), ('IC8OOH1-1AR',))),
+                            (1, (('IC8-1R', 'O2'), ('IC8-1O2R',))),
+                            (2, (('IC8OOH1-1AR',), ('IC4H7OOH', 'IC4H9'))),
+                            (3, (('IC8OOH1-1AR',), ('IC8O1-1A', 'OH'))),
+                            (4, (('IC8OOH1-1AR',), ('CH2O', 'I24C7D1', 'OH')))),
         ('C8H17O2', 2, 1): ((5, (('IC8-3O2R',), ('IC8D3', 'HO2'))),),
         ('C8H17O2', 2, 2): ((6, (('IC8-3R', 'O2'), ('IC8D3', 'HO2'))),),
         ('C8H18O2', 3, 0): ((0, (('IC8OOH1',), ('IC8-1OR', 'OH'))),),
@@ -287,6 +288,9 @@ def test_sortby_pes_dct():
     print('test pes dct functionality:')
 
     pes_dct = sorter.sorted_pes_dct(
+        spc_str, mech_str, isolate_spc, sort_lst)
+
+    pes_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     assert pes_dct == pes_dct_result
@@ -367,15 +371,15 @@ def test__sortby_species_subpes():
     """
     results = [
         [(('IC8',), ('NEOC5H11', 'IC3H7'), (None,)),
-         '! subclass: N_COH.subpes  8018.00'],
+         '! subclass: n_ClSNCOH.subpes  8018.01'],
         [(('IC8', 'O2'), ('IC8-1R', 'HO2'), (None,)),
-         '! subclass: N_COH.subpes  8218.00'],
+         '! subclass: n_ClSNCOH.subpes  8218.01'],
         [(('IC8-1R',), ('IC8-5R',), (None,)),
-         '! subclass: N_COH.subpes  8017.00'],
+         '! subclass: n_ClSNCOH.subpes  8017.01'],
         [(('IC8-1R', 'O2'), ('IC8-1O2R',), (None,)),
-         '! subclass: N_COH.subpes  8217.00'],
+         '! subclass: n_ClSNCOH.subpes  8217.01'],
         [(('IC8-1R', 'CH3O2'), ('IC8-1OR', 'CH3O'), (None,)),
-         '! subclass: N_COH.subpes  9220.00'],
+         '! subclass: n_ClSNCOH.subpes  9220.01'],
     ]
     # Read mechanism files into strings
     spc_path = os.path.join(CWD, 'data', 'LLNL_species.csv')
@@ -412,35 +416,35 @@ def test__sortby_submech_class():
     """
     results = [
         [(('IC8',), ('NEOC5H11', 'IC3H7'), (None,)),
-         '  FUEL _8018.0 _Bond fission'],
+         '  FUEL _8018.01 _Bond fission'],
         [(('IC8', 'O2'), ('IC8-1R', 'HO2'), (None,)),
-         '  FUEL _8218.01 _H abstraction'],
+         '  FUEL _8218.02 _H abstraction'],
         [(('IC8OOH1',), ('IC8-1OR', 'OH'), (None,)),
-         '  FUEL_ADD_O2 _8218.0 _Bond fission +OH'],
+         '  FUEL_ADD_O2 _8218.01 _Bond fission +OH'],
         [(('IC8-1O2R', 'HO2'), ('IC8OOH1', 'O2'), (None,)),
-         '  FUEL_ADD_O2 _8418.0 _Recombination-decomposition - termination'],
+         '  FUEL_ADD_O2 _8418.01 _Recombination-decomposition - termination'],
         [(('IC8-1O2R', 'H2O2'), ('IC8OOH1', 'HO2'), (None,)),
-         '  FUEL_ADD_O2 _8419.0 _H abstraction'],
+         '  FUEL_ADD_O2 _8419.01 _H abstraction'],
         [(('IC8-1R',), ('IC8-5R',), (None,)),
-         '  FUEL_RAD _8017.0 _Isomerization'],
+         '  FUEL_RAD _8017.01 _Isomerization'],
         [(('IC8-1R', 'O2'), ('IC8-1O2R',), (None,)),
-         '  FUEL_RAD _8217.0 _Recombination O2'],
+         '  FUEL_RAD _8217.01 _Recombination O2'],
         [(('IC8-3R', 'O2'), ('IC8D3', 'HO2'), (None,)),
-         '  FUEL_RAD _8217.02 _Recombination-decomposition - termination'],
+         '  FUEL_RAD _8217.03 _Recombination-decomposition - termination'],
         [(('IC8-1R', 'CH3O2'), ('IC8-1OR', 'CH3O'), (None,)),
-         '  FUEL_RAD _9220.0 _Recombination-decomposition - propagation'],
+         '  FUEL_RAD _9220.01 _Recombination-decomposition - propagation'],
         [(('IC8OOH1-1AR',), ('IC4H7OOH', 'IC4H9'), (None,)),
-         '  R_O2 _8217.0 _Beta-scission'],
+         '  R_O2 _8217.01 _Beta-scission'],
         [(('IC8OOH1-1AR',), ('IC8O1-1A', 'OH'), (None,)),
-         '  R_O2 _8217.0 _Beta-scission +OH'],
+         '  R_O2 _8217.01 _Beta-scission +OH'],
         [(('IC8OOH1-1AR',), ('CH2O', 'I24C7D1', 'OH'), (None,)),
-         '  R_O2 _8217.0 _Decomposition(lumped)'],
+         '  R_O2 _8217.01 _Decomposition(lumped)'],
         [(('IC8-1O2R',), ('IC8OOH1-1AR',), (None,)),
-         '  R_O2 _8217.0 _Isomerization'],
+         '  R_O2 _8217.01 _Isomerization'],
         [(('IC8-3O2R',), ('IC8D3', 'HO2'), (None,)),
-         '  R_O2 _8217.01 _Beta-scission +HO2'],
+         '  R_O2 _8217.02 _Beta-scission +HO2'],
         [(('IC8OOH1-1AR', 'O2'), ('IC8OOH1-1AO2R',), (None,)),
-         '  R_O2 _8417.0 _Recombination O2']
+         '  R_O2 _8417.01 _Recombination O2']
     ]
 
     # Read mechanism files into strings
@@ -510,7 +514,7 @@ def test_sort_ktp():
         newdct[rxn] = cmts_dct[rxn]['cmts_inline'].split('ratio')[1].strip()
 
     assert newdct == results
-
+    print('ok')
 
 # Helper function
 def _read_files(spc_path, mech_path, sort_path):
@@ -533,7 +537,7 @@ def _read_files(spc_path, mech_path, sort_path):
 
 
 if __name__ == '__main__':
-   __sort_with_input()
+   test__sort_with_input()
    test__readwrite_thirdbody()
    test__sortby_mult()
    test__sortby_molec_r1()

@@ -94,7 +94,7 @@ class SortMech:
                         'rxn_class_broad', 'rxn_class_graph',
                         'rxn_max_vals', 'rxn_max_ratio']
         labels_all = ['NR', 'N_of_prods', 'SPECIES',
-                      'N_COH_PES', 'N_COH.subpes', 'SUBMECH',
+                      'n_ClSNCOH', 'n_ClSNCOH.subpes', 'SUBMECH',
                       'Heavier rct', 'Total multiplicity',
                       'rxn type', 'rxn class', 'max val', 'max ratio']
 
@@ -140,7 +140,8 @@ class SortMech:
         # 1. Sort
         # series: ascending/descending values
         asc_val = [True]*len(criteria_all + ['rxn_names'])
-        asc_val[-3:] = [False, False, False] # rxn vals, ratio and names are descending
+        # rxn vals, ratio and names are descending
+        asc_val[-3:] = [False, False, False]
         asc_series = pd.Series(asc_val, index=criteria_all + ['rxn_names'])
 
         try:
@@ -217,9 +218,10 @@ class SortMech:
         pes_index = 0
         pes_dct_df = pd.DataFrame(
             index=self.mech_df.index,
-            columns=['pes_dct'],
+            columns=['pes_dct', 'pes_chnl_tuple', 'pes_chnl'],
             dtype=object)
         for fml, peslist in self.mech_df.groupby('pes'):
+            idx_start = 0
             # Set the names lists for the rxns and species needed below
             peslist = peslist.sort_values(by=['rxn_names'])
             pes_rct_names_lst = peslist['rct_names_lst'].values
@@ -232,10 +234,18 @@ class SortMech:
                 rxns = peslist.iloc[value].index
                 fml_num = fml + key/100
                 conn_chn_df['subpes'][rxns] = fml_num
+
                 # store in pes_dct_df
                 fml_str = self.mech_df['formulas'][rxns].values[0]
-                for rxn in rxns:
+
+                for chnl_idx, rxn in enumerate(rxns):
+                    rxn_name = tuple((peslist['rct_names_lst'][rxn], peslist['prd_names_lst'][rxn]))
                     pes_dct_df['pes_dct'][rxn] = (fml_str, pes_index, key)
+                    pes_dct_df['pes_chnl_tuple'][rxn] = (chnl_idx+idx_start, rxn_name)
+                    pes_dct_df['pes_chnl'][rxn] = ','.join(
+                        [str(pes_index+1), str(key+1), str(chnl_idx+idx_start+1)])
+
+                idx_start += len(rxns)
 
             pes_index += 1
 
@@ -500,6 +510,10 @@ class SortMech:
                 'of criteria to use for class headers')
             sys.exit()
 
+        # if subpes sorting: add 0.01 to all - 1-indexing just in comments!
+        if 'subpes' in hierarchy:
+            self.mech_df['subpes'] += 1/100
+
         # Write topheader comments
         if n_headers > 0:
             for name, rdf in self.mech_df.groupby(hierarchy[:n_headers]):
@@ -521,6 +535,12 @@ class SortMech:
                 rxnclass = cmts_string(
                     name, labels[hierarchy[n_headers:-1]], 'class')
                 df_cmts_inline['cmts_inline'][rdf.index] = rxnclass
+
+                if 'subpes' in hierarchy:
+                    for rxn in rdf.index:
+                        pes_idx = self.mech_df['pes_chnl'][rxn]
+                        df_cmts_inline['cmts_inline'][rxn] = '! pes:' + \
+                            pes_idx + ' ' + rxnclass
 
         # Concatenate DFs
         self.mech_df = pd.concat(
@@ -556,7 +576,7 @@ class SortMech:
     def return_pes_dct(self):
         """ returns a PES dictionary
 
-            chn idx is set to to OVERALL PES, not the SUB_PES
+            chn idx is set to the OVERALL PES, not the SUB_PES
 
         :returns: pes_dct: {(fml, n_pes, n_subpes): ((chn_idx, (rcts, prds)),)}
         :rtype: dct{tuple: tuple}
@@ -572,27 +592,16 @@ class SortMech:
 
         # get the pes dictionary
         pes_dct = {}
-        # self.mech_df.sort_values(
-        #        by=['pes', 'subpes'])
+
         for _, pes_all_df in self.mech_df.groupby('pes'):
-            idx_start = 0
+
             for _, pes_dct_df in pes_all_df.groupby('subpes'):
                 # Get the ('fml', n_pes, n_subpes) for dict key
+                pes_dct_df = pes_dct_df.sort_values(by='pes_chnl_tuple')
                 pes_dct_key = pes_dct_df['pes_dct'].values[0]
-
-                # Get the names of the reaction reagents
-                rct_names = pes_dct_df['rct_names_lst'].values
-                prd_names = pes_dct_df['prd_names_lst'].values
-
-                rxn_names = tuple(zip(rct_names, prd_names))
-
-                # Build the full channel list for the SUB-PES
-                chnl_lst = tuple((idx+idx_start, rxn)
-                                 for idx, rxn in enumerate(rxn_names))
-
+                pes_chnl_tuples = pes_dct_df['pes_chnl_tuple'].values
+                chnl_lst = tuple(pes_chnl_tuples)
                 pes_dct[pes_dct_key] = chnl_lst
-                # update idx start
-                idx_start += len(chnl_lst)
 
         return pes_dct
 
@@ -706,14 +715,32 @@ def cmts_string(name, label, cltype):
     # assing top headers:
     tophead = '!!!!!!!!! class !!!!!!!!!\n'
     bottomhead = '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n'
-    if isinstance(name, str):
-        name = [name]
-    elif isinstance(name, int):
-        name = [str(name)]
-    elif isinstance(name, float):
-        name = ['{:.2f}'.format(name)]
+
+    try:
+        labeldct = dict(zip(name, label.values))
+    except TypeError:
+        labeldct = dict(zip([name], [label.values]))
+
+    def formatname(name):
+        if isinstance(name, int):
+            name = str(name)
+        elif isinstance(name, numpy.int64):
+            name = str(name)
+        elif isinstance(name, float):
+            if labeldct[name] not in ['max val', 'max ratio']:
+                name = '{:.2f}'.format(name)
+            else:
+                name = str(name)
+
+        return name
+
+    if isinstance(name, tuple):
+        namenew = []
+        for nm in name:
+            namenew.append(formatname(nm))
+        name = namenew
     else:
-        name = numpy.array(name, dtype=str)
+        name = [formatname(name)]
 
     if cltype == 'class_head':
         cmtlabel = '!       '+'_'.join(label)

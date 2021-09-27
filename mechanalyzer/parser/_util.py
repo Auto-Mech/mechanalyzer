@@ -53,16 +53,17 @@ def order_rct_bystoich(rct_names_lst, spc_dct=None):
 
 
 def count_atoms(fml_list):
-    """ Count S, N, C, O, H atoms in formula list
+    """ Count Cl, S, N, C, O, H atoms in formula list
 
         :param fml_list: stoich chemical formula
         :type fml_list: list of dictionaries [dict[str:int], ]
-        :rtype: list [int, ], int = nCnOnH
+        :rtype: list [int, ], int = nClnSnNnCnOnH
     """
     fml_num_list = []
     for fml in fml_list:
-        fml_num = (1e5*n_el(fml, 'S')+1e4*n_el(fml, 'N')+1e3 *
-                   n_el(fml, 'C')+1e2*n_el(fml, 'O')+n_el(fml, 'H'))
+
+        fml_num = (1e7*n_el(fml, 'Cl')+1e6*n_el(fml, 'S')+1e5*n_el(fml, 'N')
+                   + 1e3*n_el(fml, 'C')+1e2*n_el(fml, 'O')+n_el(fml, 'H'))
         fml_num_list.append(fml_num)
 
     return fml_num_list
