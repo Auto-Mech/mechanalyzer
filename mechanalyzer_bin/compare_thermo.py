@@ -17,19 +17,24 @@ import mechanalyzer.parser.ckin_ as ckin_parser
 # #THERMO_FILENAMES = ['NUIGMech1.2.THERM', 'zpe_fa.ckin', 'zpe_f.ckin', 'zpe_hr.ckin', 'min_f.ckin']
 # THERMO_FILENAMES = ['fa_24.ckin', 'fa_26.ckin', 'fa_28.ckin', 'fa_min.ckin']
 # THERMO_FILENAMES = ['fa_24_1-19.ckin', 'fa_26_1-19.ckin', 'fa_28_1-19.ckin', 'fa_min_1-19.ckin', 'fa_orig_1-19.ckin']
-THERMO_FILENAMES = ['hr_24_1-19.ckin', 'hr_26_1-19.ckin', 'hr_28_1-19.ckin', 'hr_min_1-19.ckin', 'hr_orig_1-19.ckin']
+# THERMO_FILENAMES = ['hr_24_1-19.ckin', 'hr_26_1-19.ckin', 'hr_28_1-19.ckin', 'hr_min_1-19.ckin', 'hr_orig_1-19.ckin']
 # THERMO_FILENAMES = ['f_24_1-19.ckin', 'f_26_1-19.ckin', 'f_28_1-19.ckin', 'f_min_1-19.ckin', 'f_orig_1-19.ckin']
 # THERMO_FILENAMES = ['NUIGMech1.2.THERM', 'fa_28_1-19.ckin', 'f_28_1-19.ckin', 'hr_28_1-19.ckin']
 # THERMO_FILENAMES = ['NUIGMech1.2.THERM', 'fa_orig_1-19.ckin', 'f_orig_1-19.ckin', 'hr_orig_1-19.ckin']
 # THERMO_FILENAMES = ['NUIGMech1.2.THERM', 'fa_min_1-19.ckin', 'f_min_1-19.ckin', 'hr_min_1-19.ckin']
-SPC_CSV_FILENAMES = ['species_nostereo.csv', 'species_nostereo.csv', 'species_nostereo.csv', 'species_nostereo.csv', 'species_nostereo.csv']
+# SPC_CSV_FILENAMES = ['species_nostereo.csv', 'species_nostereo.csv', 'species_nostereo.csv', 'species_nostereo.csv', 'species_nostereo.csv']
+THERMO_FILENAMES = ['qtc_ckin.txt','automech_ckins.txt']
+SPC_CSV_FILENAMES = ['species_ckin.csv','species_auto.csv']
+MECH_NAMES = ['ref_qtc','noHB_auto']
+# THERMO_FILENAMES = ['qtc_ckin2.txt','automech_ckins.txt']
+# SPC_CSV_FILENAMES = ['qtc_species2.csv','species_auto.csv']
 # SPC_CSV_FILENAMES = ['NUIG_species.csv', 'species_nostereo.csv', 'species_nostereo.csv', 'species_nostereo.csv']
 # MECH_NAMES = ['NUIG', 'fa_min', 'f_min', 'hr_min']
 # MECH_NAMES = ['NUIG', 'fa_orig', 'f_orig', 'hr_orig']
 # MECH_NAMES = ['NUIG', 'fa_28', 'f_28', 'hr_28']
 # MECH_NAMES = ['f_24', 'f_26', 'f_28', 'f_min', 'f_orig']
 # MECH_NAMES = ['fa_24', 'fa_26', 'fa_28', 'fa_min', 'fa_orig']
-MECH_NAMES = ['hr_24', 'hr_26', 'hr_28', 'hr_min', 'hr_orig']
+# MECH_NAMES = ['hr_24', 'hr_26', 'hr_28', 'hr_min', 'hr_orig']
 #SPC_CSV_FILENAMES = ['NUIG_species.csv', 'NUIG_species.csv', 'NUIG_species.csv', 'NUIG_species.csv']
 # SPC_CSV_FILENAMES = ['NUIG_stereo.csv', 'C5-C8_species.csv', 'C5-C8_species.csv', 'C5-C8_species.csv']
 # thermo_filenames = ['nc5_fa_07.THERM', 'NUIG_nc5.THERM']
@@ -77,7 +82,8 @@ OUTPUT_FILENAME = 'compare_thermo.pdf'
 TEMPS = numpy.linspace(300,1000, 15)
 
 # Options
-SORT = True
+SORT = False
+# SORT = True
 SORT_INSTR = 'g' # either 'h', 'cp', 's', 'g', or None
 SORT_TEMP = 700  # can be (1) None to sort by max difference or (2) a number
 REMOVE_LONERS = True

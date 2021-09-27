@@ -239,6 +239,7 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
         # print('expand_stereo inchi test:', automol.inchi.expand_stereo(ich))
         try:
             if not automol.inchi.is_complete(ich):
+                print('testing stereo if block:')
                 ret_ichs = (
                     [automol.inchi.add_stereo(ich)] if not all_stereo else
                     automol.inchi.expand_stereo(ich))
