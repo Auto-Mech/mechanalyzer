@@ -251,12 +251,10 @@ def get_rename_instr(spc_dct1, spc_dct2):
 
         :param spc_dct1: the reference spc_dct
         :type spc_dct1: dct {spc1: ident_array1, spc2: ...}
-        :param spc_dct2: the spc_dct to be renamed (and also added)
+        :param spc_dct2: the spc_dct to be renamed
         :type spc_dct2: dct {spc1: ident_array1, spc2: ...}
         :return rename_instr: instructions for renaming the species in spc_dct2
-        :rtype: dct {spc_to_be_renamed1: new_spc_name1, ...}
-        :return comb_spc_dct: spc_dct1 plus any species unique to spc_dct2
-        :rtype: dct {spc1: ident_array1, spc2: ...}
+        :rtype: dct {spc_to_be_renamed1: new_spc_name1, spc_to_be_renamed2: ...}
     """
 
     rename_instr = {}
@@ -275,8 +273,7 @@ def get_rename_instr(spc_dct1, spc_dct2):
 
             # If species are identical
             if ich1 == ich2 and mlt1 == mlt2 and chg1 == chg2:
-                # if spc names different, add to rename instructions
-                if spc_name1 != spc_name2:
+                if spc_name1 != spc_name2:  # if spc names different, add to rename instructions
                     rename_instr[spc_name2] = spc_name1
 
             # If species are different but have same name

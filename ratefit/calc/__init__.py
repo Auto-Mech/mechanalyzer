@@ -9,7 +9,7 @@ from ratefit.calc._rates import lowp_limit
 from ratefit.calc._rates import lindemann
 from ratefit.calc._rates import troe
 from ratefit.calc._rates import plog
-from ratefit.calc._rates import chebyshev
+from ratefit.calc._rates import cheb
 from ratefit.calc._rates import p_to_m
 
 
@@ -21,6 +21,6 @@ __all__ = [
     'lindemann',
     'troe',
     'plog',
-    'chebyshev',
+    'cheb',
     'p_to_m',
 ]

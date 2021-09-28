@@ -301,7 +301,7 @@ def initialize_fig_and_axes(spc, smiles=None, inchi=None):
     # For formatting
     plot_placements = [(0, 2, 0), (2, 3, 0), (4, 6, 0), (6, 7, 0), (0, 2, 1),
                        (2, 3, 1), (4, 6, 1), (6, 7, 1)]
-    plot_titles = ('Enthalpy (kcal/mol)', 'Heat capacity, (cal/mol-K)',
+    plot_titles = ('Enthalpy (kcal/mol)', 'Heat capacity (cal/mol-K)',
                    'Entropy (cal/mol-K)', 'Gibbs free energy (kcal/mol)')
 
     # Create each axis, with some formatting

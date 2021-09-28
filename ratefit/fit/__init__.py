@@ -16,7 +16,10 @@ from ratefit.fit._wellextend import well_lumped_input_file
 from ratefit.fit import arrhenius
 from ratefit.fit import troe
 from ratefit.fit import chebyshev
-
+from ratefit.fit import arr
+from ratefit.fit import new_err
+from ratefit.fit import fit_new
+from ratefit.fit import plog
 
 __all__ = [
     'pressure_dependent_ktp_dct',
@@ -33,4 +36,8 @@ __all__ = [
     'arrhenius',
     'troe',
     'chebyshev',
+    'arr',
+    'new_err',
+    'fit_new',
+    'plog',
 ]
