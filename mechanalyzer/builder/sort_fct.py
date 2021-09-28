@@ -109,15 +109,18 @@ class SortMech:
                       'Heavier_rct', 'Totalmultiplicity',
                       'rxntype', 'rxnclass', 'maxval', 'maxratio']
 
-        # check on pes/subpes criteria: 
+        # check on pes/subpes criteria:
         # if subpes alone, also add pes
-        if 'subpes' in hierarchy and 'pes' not in hierarchy:
-            idx_insert_pes = hierarchy.index('subpes')
+        if (('subpes' in hierarchy and 'pes' not in hierarchy) or
+                ('chnl' in hierarchy and ['pes', 'subpes'] not in hierarchy)):
+            try:
+                idx_insert_pes = hierarchy.index('subpes')
+            except ValueError:
+                idx_insert_pes = hierarchy.index('chnl')
             hierarchy.insert(idx_insert_pes, 'pes')
             # chenge N of headers if necessary
-            hierarchy[-1] += 1*(hierarchy[-1]>idx_insert_pes)
-            print('pes criterion added: necessary for subpes')
-            
+            hierarchy[-1] += 1*(hierarchy[-1] > idx_insert_pes)
+            print('pes criterion added: necessary for subpes/chnls')
 
         # if species_list is not empty: pre-process the mechanism
         if len(species_list) > 0:
@@ -286,7 +289,7 @@ class SortMech:
             df_optn = self.conn_chn(df_optn)
             return df_optn
 
-        else: # no need to do anything; put empty df to avoid duplicate indexing
+        else:  # no need to do anything; put empty df to avoid duplicate indexing
             chnl_df = pd.DataFrame(
                 index=self.mech_df.index, columns=[''])
             return chnl_df
@@ -423,7 +426,7 @@ class SortMech:
             self.mech_df = pd.concat([self.mech_df, df_optn], axis=1)
 
         # 2. Graph classification or each subpes
-        for _, subpes_df in self.mech_df.groupby(['pes','subpes']):
+        for _, subpes_df in self.mech_df.groupby(['pes', 'subpes']):
             # sort by molecularity: analyze first unimolecular isomerizations,
             # unimolecular decompositions, and then bimolecular reactions
             subpes_df = subpes_df.sort_values(
