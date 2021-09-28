@@ -615,10 +615,10 @@ def _get_rcts_prds(rxn_param_dct):
 def get_molecularity(rxn):
     """ Get the molecularity of a reaction
 
-    :param rxn:
-    :type rxn:
-    :return molecularity: molecularity of reaction; 1=unimol, 2=bimol, etc.
-    :rtype: int
+        :param rxn: tuple describing reactants, products, and third body
+        :type rxn: tuple ((rct1, rct2, ...), (prd1, prd2, ...), (thirdbod,))
+        :return molecularity: molecularity of reaction; 1=unimol, 2=bimol, etc.
+        :rtype: int
     """
 
     rcts, _, third_bods = rxn

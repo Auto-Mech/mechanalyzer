@@ -93,7 +93,30 @@ def reaction(ktp_dct, temps, tdeg=6, pdeg=4, a_conv_factor=1.0):
 
 
 def conv_dct_to_array(ktp_dct, temps, a_conv_factor=1.0):
-    """ Convert a numpy
+    """ Converts the contents of a ktp_dct (excluding the 'high' entry) to an
+        array of shape (num_temps, num_pressures)
+
+    """
+
+    # Check the first pressure to get the number of temps (should all be same)
+    num_temps = len(ktp_dct[list(ktp_dct.keys())[0]][0])
+    num_pressures = len(ktp_dct)
+    pt_array = np.ndarray([num_pressures, num_temps])
+
+    for pidx, (_, kts) in enumerate(ktp_dct.values()):
+        pt_array[pidx, :] = kts
+
+    tp_array = np.transpose(pt_array)
+
+    print('tp_array:\n', tp_array)
+    print(type(tp_array))
+    print(np.shape(tp_array))
+
+    return tp_array
+
+
+def conv_dct_to_array_old(ktp_dct, temps, a_conv_factor=1.0):
+    """ This is Kevin's original version
     """
 
     # Calculate the fitting parameters from the filtered T,k lists
@@ -123,3 +146,4 @@ def conv_dct_to_array(ktp_dct, temps, a_conv_factor=1.0):
     tp_array = tp_array * a_conv_factor
 
     return tp_array
+

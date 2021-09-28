@@ -3,8 +3,9 @@ Test the mechanalyzer.calculator.rates functions
 """
 
 import numpy as np
-import ratefit.ktpdct
+#import ratefit.ktpdct
 from mechanalyzer.calculator import rates
+from autoreact.params import RxnParams
 
 
 PRESSURES = np.array([0.316, 1.0, 10.0, 100.0])
@@ -13,6 +14,7 @@ TEMPS2 = np.array([300.0, 500.0, 1000.0])  # only for Chebyshev test
 LOW_P_RXN = (('N2O',), ('N2', 'O'), ('+M',))
 HIGH_P_RXN = (('N2O',), ('N2', 'O'), ('(+M)',))
 LOW_P_PARAMS = [1.04E+15, 0, 59810]
+LOW_P_PARAMS_NEW = {'arr':[[1.04E+15, 0, 59810],]}  # for the new RxnParams obj
 HIGH_P_PARAMS = [1.26E+12, 0, 62620]
 HIGH_P_PARAMS2 = [1.18, 1E-30, 7900]
 
@@ -96,6 +98,16 @@ def test__arrhenius():
     assert np.allclose(calc_rates, ARRHENIUS_KTS, rtol=1e-3)
 
 
+def test_new_arrhenius():
+    """ Test the new Arrhenius stuff
+    """
+    params = RxnParams(LOW_P_PARAMS_NEW)
+    ktp_dct = rates.eval_params(params, PRESSURES, TEMPS)
+    print(ktp_dct)
+    calc_rates = ktp_dct['high'][1] 
+    assert np.allclose(calc_rates, ARRHENIUS_KTS, rtol=1e-3)
+
+
 def test__lindemann():
     """ Test the Lindemann calculator
     """
@@ -151,7 +163,8 @@ def test__dup_plog():
 
 
 if __name__ == '__main__':
-    test__arrhenius()
+    #test__arrhenius()
+    test_new_arrhenius()
     # test__lindemann()
     # test__troe()
     # test__plog()
