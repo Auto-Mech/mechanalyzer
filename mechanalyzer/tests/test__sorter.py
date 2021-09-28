@@ -88,31 +88,31 @@ def test__sort_with_input():
 
     results = [
         [(('C2H4',), ('H2', 'H2CC'), ('(+M)',)),
-         '! pes:1,1,2 ! class: n_ClSNCOH.subpes _NR _rxn type  2004.01 _1 _Decomposition'],
+         '! pes.subpes.NR.rxntype  1.1.1.Decomposition'],
         [(('C2H3', 'H'), ('C2H4',), ('(+M)',)),
-         '! pes:1,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2004.01 _2 _Recombination H'],
+         '! pes.subpes.NR.rxntype  1.1.2.Recombination H'],
         [(('C2H4', 'H'), ('C2H5',), ('(+M)',)),
-         '! pes:2,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2005.01 _2 _Addition H'],
+         '! pes.subpes.NR.rxntype  2.1.2.Addition H'],
         [(('C2H4', 'H'), ('C2H3', 'H2'), (None,)),
-         '! pes:2,2,2 ! class: n_ClSNCOH.subpes _NR _rxn type  2005.02 _2 _H abstraction'],
+         '! pes.subpes.NR.rxntype  2.2.2.H abstraction'],
         [(('CH2(S)', 'CH3'), ('C2H4', 'H'), (None,)),
-         '! pes:2,3,3 ! class: n_ClSNCOH.subpes _NR _rxn type  2005.03 _2 _Addition-decomposition - propagation'],
+         '! pes.subpes.NR.rxntype  2.3.2.Addition-decomposition - propagation'],
         [(('C2H5', 'H'), ('C2H4', 'H2'), (None,)),
-         '! pes:3,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2006.01 _2 _Recombination-decomposition - termination'],
+         '! pes.subpes.NR.rxntype  3.1.2.Recombination-decomposition - termination'],
         [(('C2H4', 'O'), ('CH3', 'HCO'), (None,)),
-         '! pes:4,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2104.01 _2 _Addition-decomposition - branching'],
+         '! pes.subpes.NR.rxntype  5.1.2.Addition-decomposition - branching'],
         [(('C2H4', 'OH'), ('PC2H4OH',), (None,)),
-         '! pes:5,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2105.01 _2 _Addition OH'],
+         '! pes.subpes.NR.rxntype  6.1.2.Addition OH'],
         [(('C2H5', 'OH'), ('C2H4', 'H2O'), (None,)),
-         '! pes:6,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2106.01 _2 _Recombination-decomposition - termination'],
+         '! pes.subpes.NR.rxntype  7.1.2.Recombination-decomposition - termination'],
         [(('C2H4', 'O2'), ('C2H3', 'HO2'), (None,)),
-         '! pes:7,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2204.01 _2 _H abstraction'],
+         '! pes.subpes.NR.rxntype  9.1.2.H abstraction'],
         [(('C2H5O2',), ('C2H4', 'HO2'), (None,)),
-         '! pes:8,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  2205.01 _1 _Beta-scission +HO2'],
+         '! pes.subpes.NR.rxntype  10.1.1.Beta-scission +HO2'],
         [(('C2H4', 'CH3'), ('C2H3', 'CH4'), (None,)),
-         '! pes:9,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  3007.01 _2 _H abstraction'],
+         '! pes.subpes.NR.rxntype  11.1.2.H abstraction'],
         [(('C3H4-A', 'O'), ('C2H4', 'CO'), (None,)),
-         '! pes:10,1,1 ! class: n_ClSNCOH.subpes _NR _rxn type  3104.01 _2 _Addition-decomposition - termination']
+         '! pes.subpes.NR.rxntype  12.1.2.Addition-decomposition - termination']
     ]
 
     # Read the mechanism files into strings
@@ -134,37 +134,38 @@ def test__sort_with_input():
         index += 1
     print('ok')
 
+
 def test__readwrite_thirdbody():
     """ test mechanalyzer.parser.sort
 
         Checks read/write of a small set of rxns involving third bodies
     """
-
+    # warning suspicious double square bracked in the hplim section
     trd_bdy_dct = {
         (('H', 'OH'), ('H2O',), ('+M',)):
-        (([3.5e+22, -2.0, 0.0], None, None, None, None,
+        (([[3.5e+22, -2.0, 0.0]], None, None, None, None,
           {'H2': 0.73, 'H2O': 3.65, 'CH4': 2.0, 'C2H6': 3.0, 'AR': 0.38}),),
         (('H', 'OH', 'AR'), ('H2O', 'AR'), (None,)):
-        (([3.5e+22, -2.0, 0.0], None, None, None, None, None),),
+        (([[3.5e+22, -2.0, 0.0]], None, None, None, None, None),),
         (('H', 'O2'), ('HO2',), ('(+HE)',)):
-        (([4650000000000.0, 0.44, 0.0], [9.19e+18, -1.2, 0.0],
+        (([[4650000000000.0, 0.44, 0.0]], [9.19e+18, -1.2, 0.0],
           [0.59, 1e-30, 1e+30, 1e+30], None, None, None),),
         (('CH3', 'IC4H7'), ('AC5H10',), ('(+M)',)):
-        (([150000000000000.0, -0.32, -262.3],
+        (([[150000000000000.0, -0.32, -262.3]],
           [5.86e+60, -12.81, 6250.0],
             [0.104, 1606.0, 60000.0, 6118.0], None, None,
             {'H2': 2.0, 'H2O': 6.0, 'CH4': 2.0, 'CO': 1.5,
              'CO2': 2.0, 'C2H6': 3.0, 'AR': 0.7}),),
         (('C5H10-2',), ('C4H71-3', 'CH3'), ('(+M)',)):
-        (([6.486e+19, -1.367, 76320], [1.53e+104, -24.826, 94800.0],
+        (([[6.486e+19, -1.367, 76320]], [1.53e+104, -24.826, 94800.0],
           [0.005301, 143.7, 16770000000000.0, 3671.0], None, None, None),),
         (('C5H11-1',), ('C2H4', 'NC3H7'), (None,)):
-        (([8.06e+20, -2.628, 29232], None, None, None,
+        (([[8.06e+20, -2.628, 29232]], None, None, None,
           {0.1: [4410.0, 2.192, 18827.0],
            1.0: [8.06e+20, -2.628, 29232.0],
-           10.0: [2.17e+28, -4.578, 34864.0],
-           100.0: [6.47e+24, -3.383, 34388.0],
-           1000.0: [2.34e+17, -1.123, 31176.0]}, None),)}
+            10.0: [2.17e+28, -4.578, 34864.0],
+            100.0: [6.47e+24, -3.383, 34388.0],
+            1000.0: [2.34e+17, -1.123, 31176.0]}, None),)}
 
     # Read the mechanism files into strings
     spc_path = os.path.join(CWD, 'data', 'NUIG_species.csv')
@@ -182,6 +183,7 @@ def test__readwrite_thirdbody():
 
     assert param_dct_sort == trd_bdy_dct
     print('ok')
+
 
 def test__sortby_mult():
     """ test mechanalyzer.parser.sort
@@ -215,16 +217,17 @@ def test__sortby_mult():
         assert cmts_dct[rxn]['cmts_inline'][-1] == results[rxn]
     print('ok')
 
+
 def test__sortby_molec_r1():
     """ test mechanalyzer.parser.sort
 
         Sort by first (heavier) reactant and molecularity of the reaction
     """
     comments_results = [
-        'C2H3_2', 'C2H3_2', 'C2H3_2', 'C2H3_2', 'C2H3_2', 'C2H3_2',
-        'C2H3OO_1', 'C2H3OO_1', 'C2H4_1', 'C2H4_2', 'C2H4_2', 'C2H4_2',
-        'C2H4_2', 'C2H4_2', 'C2H4_2', 'C2H5_2', 'C2H5_2', 'C2H5_2',
-        'C2H5O2_1', 'C2H6_2', 'C3H4-A_2', 'CH3_2', 'CH3_2', 'HOCH2CO_1']
+        'C2H3.2', 'C2H3.2', 'C2H3.2', 'C2H3.2', 'C2H3.2', 'C2H3.2',
+        'C2H3OO.1', 'C2H3OO.1', 'C2H4.1', 'C2H4.2', 'C2H4.2', 'C2H4.2',
+        'C2H4.2', 'C2H4.2', 'C2H4.2', 'C2H5.2', 'C2H5.2', 'C2H5.2',
+        'C2H5O2.1', 'C2H6.2', 'C3H4-A.2', 'CH3.2', 'CH3.2', 'HOCH2CO.1']
 
     # Read mechanism files into strings
     spc_path = os.path.join(CWD, 'data', 'LLNL_species.csv')
@@ -236,21 +239,22 @@ def test__sortby_molec_r1():
     # Sort mechanism by R1-molecularity - No Headers Included
     isolate_spc = []
     sort_lst = ['r1', 'molecularity', 0]  # NO HEADERS INCLUDED
-    sort_lst_2 = ['molecularity', 0]  # ONLY BY MOLEC- CHECK HEADERS WITH INT NUMBER
+    # ONLY BY MOLEC- CHECK HEADERS WITH INT NUMBER
+    sort_lst_2 = ['molecularity', 0]
 
     param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     param_dct_sort_2, _, _, cmts_dct_2, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst_2)
-        # NO NEED TO CALL IT AFTERWARDS
+    # NO NEED TO CALL IT AFTERWARDS
 
     comments = []
     for rxn in param_dct_sort.keys():
-        comments.append(''.join(cmts_dct[rxn]['cmts_inline'].split()[-2:]))
-
+        comments.append(''.join(cmts_dct[rxn]['cmts_inline'].split()[-1:]))
     assert comments == comments_results
     print('ok')
+
 
 def test_sortby_pes_dct():
     """ test mechanalyzer.parser.sort
@@ -290,9 +294,6 @@ def test_sortby_pes_dct():
     pes_dct = sorter.sorted_pes_dct(
         spc_str, mech_str, isolate_spc, sort_lst)
 
-    pes_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
-        spc_str, mech_str, isolate_spc, sort_lst)
-
     assert pes_dct == pes_dct_result
     print('ok')
 
@@ -307,33 +308,33 @@ def test_sortby_rxnclass():
     """
     results = [
         [(('C2H5', 'H'), ('C2H6',), ('(+M)',)),
-         '  addition _Recombination H'],
+         '  addition.Recombination H'],
         [(('C2H3', 'H'), ('C2H4',), ('(+M)',)),
-         '  addition _Recombination H'],
+         '  addition.Recombination H'],
         [(('HOCH2CO',), ('CH2OH', 'CO'), (None,)),
-         '  beta scission _Decomposition'],
+         '  beta scission.Decomposition'],
         [(('C2H3OO',), ('CH2O', 'HCO'), (None,)),
-         '  elimination _Beta-scission'],
+         '  elimination.Beta-scission'],
         [(('C2H5O2',), ('C2H4', 'HO2'), (None,)),
-         '  elimination _Beta-scission +HO2'],
+         '  elimination.Beta-scission +HO2'],
         [(('C2H4',), ('H2', 'H2CC'), ('(+M)',)),
-         '  elimination _Decomposition'],
+         '  elimination.Decomposition'],
         [(('C2H4', 'H'), ('C2H3', 'H2'), (None,)),
-         '  hydrogen abstraction _H abstraction'],
+         '  hydrogen abstraction.H abstraction'],
         [(('C2H5', 'H'), ('C2H4', 'H2'), (None,)),
-         '  hydrogen abstraction _Recombination-decomposition - termination'],
+         '  hydrogen abstraction.Recombination-decomposition - termination'],
         [(('C2H3', 'O2'), ('C2H2', 'HO2'), (None,)),
-         '  hydrogen abstraction _Recombination-decomposition - termination'],
+         '  hydrogen abstraction.Recombination-decomposition - termination'],
         [(('C3H5-A',), ('C3H5-T',), (None,)),
-         '  hydrogen migration _Isomerization'],
+         '  hydrogen migration.Isomerization'],
         [(('C3H5-A',), ('C3H5-S',), (None,)),
-         '  hydrogen migration _Isomerization'],
+         '  hydrogen migration.Isomerization'],
         [(('CH2(S)', 'CH3'), ('C2H4', 'H'), (None,)),
-         '  substitution _Addition-decomposition - propagation'],
+         '  substitution.Addition-decomposition - propagation'],
         [(('CH3', 'CH3'), ('H', 'C2H5'), (None,)),
-         '  substitution _Recombination-decomposition - propagation'],
+         '  substitution.Recombination-decomposition - propagation'],
         [(('C3H4-A', 'O'), ('C2H4', 'CO'), (None,)),
-         '  unclassified _Addition-decomposition - termination']
+         '  unclassified.Addition-decomposition - termination']
     ]
     # Read mechanism files into strings
     spc_path = os.path.join(CWD, 'data', 'LLNL_species.csv')
@@ -371,15 +372,15 @@ def test__sortby_species_subpes():
     """
     results = [
         [(('IC8',), ('NEOC5H11', 'IC3H7'), (None,)),
-         '! subclass: n_ClSNCOH.subpes  8018.01'],
+         '! pes.subpes  26.1'],
         [(('IC8', 'O2'), ('IC8-1R', 'HO2'), (None,)),
-         '! subclass: n_ClSNCOH.subpes  8218.01'],
+         '! pes.subpes  28.1'],
         [(('IC8-1R',), ('IC8-5R',), (None,)),
-         '! subclass: n_ClSNCOH.subpes  8017.01'],
+         '! pes.subpes  25.1'],
         [(('IC8-1R', 'O2'), ('IC8-1O2R',), (None,)),
-         '! subclass: n_ClSNCOH.subpes  8217.01'],
+         '! pes.subpes  27.1'],
         [(('IC8-1R', 'CH3O2'), ('IC8-1OR', 'CH3O'), (None,)),
-         '! subclass: n_ClSNCOH.subpes  9220.01'],
+         '! pes.subpes  32.1'],
     ]
     # Read mechanism files into strings
     spc_path = os.path.join(CWD, 'data', 'LLNL_species.csv')
@@ -407,6 +408,70 @@ def test__sortby_species_subpes():
     print('ok')
 
 
+def test__sortby_submech_subpes_chnl():
+    """ test mechanalyzer.parser.sort
+
+        sort by fuel submechanism: extract reactions of
+        fuel, fuel radicals, R+O2, R+O4
+        then order by subpes and broad class
+    """
+    results = [
+        [(('IC8-1R',), ('IC8-5R',), (None,)),
+         '! pes.subpes.channel  1.1.1'],
+        [(('IC8',), ('NEOC5H11', 'IC3H7'), (None,)),
+         '! pes.subpes.channel  2.1.1'],
+        [(('IC8-1O2R',), ('IC8OOH1-1AR',), (None,)),
+         '! pes.subpes.channel  3.1.1'],
+        [(('IC8-1R', 'O2'), ('IC8-1O2R',), (None,)),
+         '! pes.subpes.channel  3.1.2'],
+        [(('IC8OOH1-1AR',), ('IC4H7OOH', 'IC4H9'), (None,)),
+         '! pes.subpes.channel  3.1.3'],
+        [(('IC8OOH1-1AR',), ('IC8O1-1A', 'OH'), (None,)),
+         '! pes.subpes.channel  3.1.4'],
+        [(('IC8OOH1-1AR',), ('CH2O', 'I24C7D1', 'OH'), (None,)),
+         '! pes.subpes.channel  3.1.5'],
+        [(('IC8-3O2R',), ('IC8D3', 'HO2'), (None,)),
+         '! pes.subpes.channel  3.2.6'],
+        [(('IC8-3R', 'O2'), ('IC8D3', 'HO2'), (None,)),
+         '! pes.subpes.channel  3.3.7'],
+        [(('IC8OOH1',), ('IC8-1OR', 'OH'), (None,)),
+         '! pes.subpes.channel  4.1.1'],
+        [(('IC8', 'O2'), ('IC8-1R', 'HO2'), (None,)),
+         '! pes.subpes.channel  4.2.2'],
+        [(('IC8OOH1-1AR', 'O2'), ('IC8OOH1-1AO2R',), (None,)),
+         '! pes.subpes.channel  5.1.1'],
+        [(('IC8-1O2R', 'HO2'), ('IC8OOH1', 'O2'), (None,)),
+         '! pes.subpes.channel  6.1.1'],
+        [(('IC8-1O2R', 'H2O2'), ('IC8OOH1', 'HO2'), (None,)),
+         '! pes.subpes.channel  7.1.1'],
+        [(('IC8-1R', 'CH3O2'), ('IC8-1OR', 'CH3O'), (None,)),
+         '! pes.subpes.channel  8.1.1']
+    ]
+
+    # Read mechanism files into strings
+    spc_path = os.path.join(CWD, 'data', 'LLNL_species.csv')
+    mech_path = os.path.join(CWD, 'data', 'LLNL_IC8_red_mech.dat')
+    sort_path = None
+
+    spc_str, mech_str, _ = _read_files(spc_path, mech_path, sort_path)
+
+    # Sort with headers for species subset
+    isolate_spc = []
+    sort_lst = ['subpes', 'chnl', 0]
+
+    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+        spc_str, mech_str, isolate_spc, sort_lst)
+
+    print('Sort by submech-subpes-classbroad test:')
+    sorted_results = []
+    for rxn in param_dct_sort.keys():
+        sorted_results.append(
+            [rxn, cmts_dct[rxn]['cmts_inline']])
+
+    assert results == sorted_results
+    print('ok')
+
+
 def test__sortby_submech_class():
     """ test mechanalyzer.parser.sort
 
@@ -416,35 +481,36 @@ def test__sortby_submech_class():
     """
     results = [
         [(('IC8',), ('NEOC5H11', 'IC3H7'), (None,)),
-         '  FUEL _8018.01 _Bond fission'],
+         '  FUEL.2.1.Bond fission'],
         [(('IC8', 'O2'), ('IC8-1R', 'HO2'), (None,)),
-         '  FUEL _8218.02 _H abstraction'],
+         '  FUEL.4.2.H abstraction'],
         [(('IC8OOH1',), ('IC8-1OR', 'OH'), (None,)),
-         '  FUEL_ADD_O2 _8218.01 _Bond fission +OH'],
+         '  FUEL_ADD_O2.4.1.Bond fission +OH'],
         [(('IC8-1O2R', 'HO2'), ('IC8OOH1', 'O2'), (None,)),
-         '  FUEL_ADD_O2 _8418.01 _Recombination-decomposition - termination'],
+         '  FUEL_ADD_O2.6.1.Recombination-decomposition - termination'],
         [(('IC8-1O2R', 'H2O2'), ('IC8OOH1', 'HO2'), (None,)),
-         '  FUEL_ADD_O2 _8419.01 _H abstraction'],
+         '  FUEL_ADD_O2.7.1.H abstraction'],
         [(('IC8-1R',), ('IC8-5R',), (None,)),
-         '  FUEL_RAD _8017.01 _Isomerization'],
+         '  FUEL_RAD.1.1.Isomerization'],
         [(('IC8-1R', 'O2'), ('IC8-1O2R',), (None,)),
-         '  FUEL_RAD _8217.01 _Recombination O2'],
+         '  FUEL_RAD.3.1.Recombination O2'],
         [(('IC8-3R', 'O2'), ('IC8D3', 'HO2'), (None,)),
-         '  FUEL_RAD _8217.03 _Recombination-decomposition - termination'],
+         '  FUEL_RAD.3.3.Recombination-decomposition - termination'],
         [(('IC8-1R', 'CH3O2'), ('IC8-1OR', 'CH3O'), (None,)),
-         '  FUEL_RAD _9220.01 _Recombination-decomposition - propagation'],
+         '  FUEL_RAD.8.1.Recombination-decomposition - propagation'],
         [(('IC8OOH1-1AR',), ('IC4H7OOH', 'IC4H9'), (None,)),
-         '  R_O2 _8217.01 _Beta-scission'],
+         '  R_O2.3.1.Beta-scission'],
         [(('IC8OOH1-1AR',), ('IC8O1-1A', 'OH'), (None,)),
-         '  R_O2 _8217.01 _Beta-scission +OH'],
+         '  R_O2.3.1.Beta-scission +OH'],
         [(('IC8OOH1-1AR',), ('CH2O', 'I24C7D1', 'OH'), (None,)),
-         '  R_O2 _8217.01 _Decomposition(lumped)'],
+         '  R_O2.3.1.Decomposition(lumped)'],
         [(('IC8-1O2R',), ('IC8OOH1-1AR',), (None,)),
-         '  R_O2 _8217.01 _Isomerization'],
+         '  R_O2.3.1.Isomerization'],
         [(('IC8-3O2R',), ('IC8D3', 'HO2'), (None,)),
-         '  R_O2 _8217.02 _Beta-scission +HO2'],
+         '  R_O2.3.2.Beta-scission +HO2'],
         [(('IC8OOH1-1AR', 'O2'), ('IC8OOH1-1AO2R',), (None,)),
-         '  R_O2 _8417.01 _Recombination O2']
+         '  R_O2.5.1.Recombination O2'],
+
     ]
 
     # Read mechanism files into strings
@@ -465,7 +531,7 @@ def test__sortby_submech_class():
     sorted_results = []
     for rxn in param_dct_sort.keys():
         sorted_results.append(
-            [rxn, cmts_dct[rxn]['cmts_inline'].split('type')[1]])
+            [rxn, cmts_dct[rxn]['cmts_inline'].split('rxntype')[1]])
 
     assert results == sorted_results
     print('ok')
@@ -477,13 +543,13 @@ def test_sort_ktp():
         sort ktp dictionary according to highest rate values/ratios
     """
     results = {
-        (('H2', 'O'), ('OH', 'H'), (None,)): '2.72670689e+149 _22.692539074854153',
-        (('H', 'O'), ('OH',), ('(+M)',)): '2.72670689e+149 _4.619780379447244e-16',
-        (('H', 'O'), ('OH',), (None,)): '2.72670689e+149 _3.973593578206074e-39',
-        (('H', 'O2'), ('OH', 'O'), (None,)): '2.72670689e+149 _1.3017843126207617e-89',
-        (('H2', 'O'), ('OH', 'OH'), (None,)): '2.72670689e+149 _0.0',
-        (('H2', 'O2'), ('HO2V', 'H'), (None,)): '2.72670689e+149 _0.0',
-        (('H2', 'O(S)'), ('OH', 'H'), (None,)): '4.79926202e+143 _0.0'
+        (('H2', 'O'), ('OH', 'H'), (None,)): '2.73e+149.2.27e+01',
+        (('H', 'O'), ('OH',), ('(+M)',)): '2.73e+149.4.62e-16',
+        (('H', 'O'), ('OH',), (None,)): '2.73e+149.3.97e-39',
+        (('H', 'O2'), ('OH', 'O'), (None,)): '2.73e+149.1.30e-89',
+        (('H2', 'O'), ('OH', 'OH'), (None,)): '2.73e+149.0.00e+00',
+        (('H2', 'O2'), ('HO2V', 'H'), (None,)): '2.73e+149.0.00e+00',
+        (('H2', 'O(S)'), ('OH', 'H'), (None,)): '4.80e+143.0.00e+00'
     }
 
     # Read mechanism files into strings
@@ -517,6 +583,8 @@ def test_sort_ktp():
     print('ok')
 
 # Helper function
+
+
 def _read_files(spc_path, mech_path, sort_path):
     """ read file names
     """
@@ -537,12 +605,13 @@ def _read_files(spc_path, mech_path, sort_path):
 
 
 if __name__ == '__main__':
-   test__sort_with_input()
-   test__readwrite_thirdbody()
-   test__sortby_mult()
-   test__sortby_molec_r1()
-   test_sortby_pes_dct()
-   test_sortby_rxnclass()
-   test__sortby_species_subpes()
-   test__sortby_submech_class()
-   test_sort_ktp()
+    # test__sort_with_input()
+    # test__readwrite_thirdbody()
+    # test__sortby_mult()
+    # test__sortby_molec_r1()
+    # test_sortby_pes_dct()
+    # test_sortby_rxnclass()
+    # test__sortby_species_subpes()
+    test__sortby_submech_subpes_chnl()
+    # test__sortby_submech_class()
+    # test_sort_ktp()
