@@ -1,4 +1,4 @@
-name: mechanalyzer-env
+name: mechanalyzer2-env
 
 channels:
     - auto-mech
@@ -41,3 +41,6 @@ dependencies:
     - auto-mech::thermp
     - auto-mech::autoio-interfaces
     - auto-mech::autofile
+    # - pip
+    # - pip:
+    #     - pyswarms
