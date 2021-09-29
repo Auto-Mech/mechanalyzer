@@ -6,7 +6,6 @@ import copy
 import numpy
 from phydat import phycon
 import ratefit.calc
-from autoreact.params import RxnParams  # do I actually need this?
 
 RC = phycon.RC_CAL  # gas constant in cal/(mol.K)
 RC2 = phycon.RC_ATM  # gas constant in cm^3.atm/(mol.K)
@@ -23,13 +22,12 @@ def eval_rxn_param_dct(rxn_param_dct, pressures, temps):
         :type temps:
     """
 
-
     ratefit.ktpdct.check_p_t(pressures, temps)  # enforce formatting rules
     rxn_ktp_dct = {}
     for rxn, param_tups in rxn_param_dct.items():
         ktp_dct = {}
         for param_tup in param_tups:
-            new_ktp_dct = eval_param_tup(param_tup, pressures, temps)
+            new_ktp_dct = eval_params(param_tup, pressures, temps)
             ktp_dct = add_ktp_dcts(ktp_dct, new_ktp_dct)
         rxn_ktp_dct[rxn] = ktp_dct
 
@@ -71,10 +69,11 @@ def eval_params(params, pressures, temps, t_ref=1.0):
             alpha = cheb_dct['alpha']
             tlim = cheb_dct['tlim']
             plim = cheb_dct['plim']
-            new_ktp_dct = ratefit.calc.cheb(alpha, tlim, plim, temps, pressures)
+            new_ktp_dct = ratefit.calc.cheb(
+                alpha, tlim, plim, temps, pressures)
 
         # Allow for summations of ktp_dcts in case of more than one rxn_form
-        ktp_dct = add_ktp_dcts(new_ktp_dct, ktp_dct)                
+        ktp_dct = add_ktp_dcts(new_ktp_dct, ktp_dct)
 
 # DON'T DELETE THIS
 #    elif params[2] is not None:  # Troe
@@ -133,9 +132,9 @@ def add_ktp_dcts(ktp_dct1, ktp_dct2):
     """
 
     # If either starting dct is empty, simply copy the other
-    if ktp_dct1 == {}: 
+    if ktp_dct1 == {}:
         added_dct = copy.deepcopy(ktp_dct2)
-    elif ktp_dct2 == {}: 
+    elif ktp_dct2 == {}:
         added_dct = copy.deepcopy(ktp_dct1)
     # Otherwise, add the dcts
     else:

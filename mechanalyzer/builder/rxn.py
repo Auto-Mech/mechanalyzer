@@ -22,7 +22,7 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series):
 
         rct1_set, rct2_set, allowed_prds, rxn_typs = series
 
-        print('Generating Reactions for Series {}'.format(sidx+1))
+        print(f'Generating Reactions for Series {sidx+1}')
 
         # Generate the reactions from the reactants
         rxns = ()
@@ -35,14 +35,14 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series):
                 mech_spc_dct, allowed_prds)
 
             # Use SMILES to print info message for what reactions generating
-            print('\nTrying to find {} products for reactants'.format(rtyp))
+            print(f'\nTrying to find {rtyp} products for reactants')
             for ichs, names in zip(rct_ichs, rct_names):
                 _rct_smis = tuple(map(automol.inchi.smiles, ichs))
-                print('{} = {}'.format(names, _rct_smis))
+                print(f'{names} = {_rct_smis}')
             print('')
             if allowed_prd_ichs:
                 allow_str = ' '.join(allowed_prd_ichs)
-                print('\nEach reaction must produce {}'.format(allow_str))
+                print(f'\nEach reaction must produce {allow_str}')
                 print('')
 
             # Generate Reactions
@@ -65,7 +65,7 @@ def generate_reactions(rct_ichs, allowed_prd_ichs, rtyp):
     """
 
     _rct_smis = tuple(map(automol.inchi.smiles, rct_ichs))
-    print('Generating Reactions for {}...'.format(_rct_smis))
+    print(f'Generating Reactions for {_rct_smis}...')
 
     # Generate the products with the desired reactant and reaction type
     rct_gras = _rct_gras(rct_ichs)
@@ -83,7 +83,7 @@ def generate_reactions(rct_ichs, allowed_prd_ichs, rtyp):
             continue
         # If continue not hit, save reaction to list and print to stdout
         _prd_smis = tuple(map(automol.inchi.smiles, prds))
-        print('Found Product(s) {}: {}'.format(pidx+1, _prd_smis))
+        print(f'Found Product(s) {pidx+1}: {_prd_smis}')
 
         rxn_ichs += ((rct_ichs, prds, (None,)),)
 

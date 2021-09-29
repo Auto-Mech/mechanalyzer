@@ -581,10 +581,10 @@ def _write_rxn_ktp_dct(rxn_ktp_dct):
             output_str += f'\nPressure: {pressure} atm\n'
             output_str += '    Temperature (K)\n    '
             for temp in temps:
-                output_str += ('{0:<12.1f}'.format(temp))
+                output_str += (f'{temp:<12.1f}')
             output_str += '\n    Rate constant\n    '
             for rate in kts:
-                output_str += ('{0:<12.3E}'.format(rate))
+                output_str += (f'{rate:<12.3E}')
         output_str += '\n\n\n'
 
     return output_str

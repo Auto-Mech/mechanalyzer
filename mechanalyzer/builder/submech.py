@@ -149,9 +149,9 @@ def classify_unimol(rcts, prds, spc_dct):
         # check product composition
         # give priority to the second product (should be the lightest)
         if any(prds_fmls[1] == FMLS_SET):
-            rxn_class_broad += ' +{}'.format(prds[1])
+            rxn_class_broad += f' +{prds[1]}'
         elif any(prds_fmls[0] == FMLS_SET):
-            rxn_class_broad += ' +{}'.format(prds[0])
+            rxn_class_broad += f' +{prds[0]}'
 
     elif len(prds) > 2:
         rxn_class_broad = 'Decomposition(lumped)'
@@ -201,9 +201,9 @@ def classify_bimol(rcts, prds, spc_dct):
         # check reactant composition
         # give priority to the second reactant (should be the lightest)
         if any(rcts_fmls[1] == FMLS_SET):
-            rxn_class_broad += ' {}'.format(rcts[1])
+            rxn_class_broad += f' {rcts[1]}'
         elif any(rcts_fmls[0] == FMLS_SET):
-            rxn_class_broad += ' {}'.format(rcts[0])
+            rxn_class_broad += f' {rcts[0]}'
 
     elif len(prds) == 2:
 

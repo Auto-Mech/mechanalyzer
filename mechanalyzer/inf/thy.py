@@ -28,8 +28,7 @@ def from_dct(dct):
     """
 
     assert set(THY_PROPS) <= set(dct), (
-        'Properties {} not in dict'.format(
-            ' '.join(THY_PROPS))
+        f'Properties {" ".join(THY_PROPS)} not in dict'
     )
 
     inf_obj = tuple()
@@ -64,8 +63,7 @@ def value(inf_obj, val):
     """
 
     assert val in THY_PROPS, (
-        'Desired value {} not in thy info object'.format(
-            val)
+        f'Desired value {val} not in thy info object'
     )
 
     return inf_obj[THY_PROPS.index(val)]
