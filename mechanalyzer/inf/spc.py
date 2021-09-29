@@ -37,8 +37,7 @@ def from_dct(dct):
     """
 
     assert set(SPC_PROPS) <= set(dct), (
-        'Properties {} not in dict'.format(
-            ' '.join(SPC_PROPS))
+        f'Properties {" ".join(SPC_PROPS)} not in dict'
     )
 
     inf_obj = tuple()
@@ -58,10 +57,7 @@ def value(inf_obj, val):
         :rtype: str/int
     """
 
-    assert val in SPC_PROPS, (
-        'Desired value {} not in spc info object'.format(
-            val)
-    )
+    assert val in SPC_PROPS, f'Desired value {val} not in spc info object'
 
     return inf_obj[SPC_PROPS.index(val)]
 

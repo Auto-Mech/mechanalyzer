@@ -5,7 +5,6 @@
 """
 
 import numpy
-import tempfile
 
 from phydat import phycon
 import automol.geom
@@ -80,20 +79,26 @@ def q_rotational(i_a, i_b, i_c, sigma, temp, linear=False):
     """ Caulculate the rotational partition function
     """
 
-    def _A(i_x):
+    def _aval(i_x):
+        """ Convert moment of inertia to rot constant
+        """
         return phycon.H / (8*numpy.pi**2 * i_x)
 
     def _q_rotational_linear(i_a, i_b, i_c, sigma, temp):
+        """ Calculate linear term and convert from amu*bohr^2 in kg*m^2
+        """
         i_a = max(i_a, i_b, i_c)
-        i_a = i_a * phycon.AMU2KG * phycon.BOHR2CM**2 / 100**2 # amu*bohr^2 to kg m^2
-        return (phycon.KB * temp) / (phycon.H * _A(i_a) * sigma)
+        i_a = i_a * phycon.AMU2KG * phycon.BOHR2CM**2 / 100**2
+        return (phycon.KB * temp) / (phycon.H * _aval(i_a) * sigma)
 
     def _q_rotational_nonlinear(i_a, i_b, i_c, sigma, temp):
-        i_a = i_a * phycon.AMU2KG * phycon.BOHR2CM**2 / 100**2 # amu*bohr^2 to kg m^2
+        """ Calculate nonlinear term and convert from amu*bohr^2 in kg*m^2
+        """
+        i_a = i_a * phycon.AMU2KG * phycon.BOHR2CM**2 / 100**2
         i_b = i_b * phycon.AMU2KG * phycon.BOHR2CM**2 / 100**2
         i_c = i_c * phycon.AMU2KG * phycon.BOHR2CM**2 / 100**2
         return ((phycon.KB * temp / phycon.H)**(3/2) * numpy.pi**(1/2)
-                * (_A(i_a) * _A(i_b) * _A(i_c))**(-1/2) / sigma)
+                * (_aval(i_a) * _aval(i_b) * _aval(i_c))**(-1/2) / sigma)
 
     if linear:
         q_rot = _q_rotational_linear(i_a, i_b, i_c, sigma, temp)
@@ -107,8 +112,8 @@ def q_vibrational(freqs, temp):
     """
     q_vib = 1.
     for freq in freqs:
-    #    nu_i = freq * phycon.WAVEN2EH * phycon.EH2KJ * 1000.  # put freqs in J/mol
-        nu_i = freq * phycon.SOLMS * 100.   # put freqs in 1/s
+        # nu_i = freq * phycon.WAVEN2EH * phycon.EH2KJ * 1000.  # in J/mol
+        nu_i = freq * phycon.SOLMS * 100.   # in 1/s
         # numerator = numpy.exp(-(phycon.H * nu_i) / (2 * phycon.KB * temp))
         numerator = 1.
         denominator = 1 - numpy.exp(-(phycon.H * nu_i) / (phycon.KB * temp))
@@ -132,17 +137,17 @@ def rrho_partition_function(geo, freqs, temp_range=None, nlog=0):
         q_rot = q_rotational(*moms, sigma, temp, linear=linear)
         q_vib = q_vibrational(freqs, temp)
         q_all = q_elec * q_trans * q_rot * q_vib
-        if nlog==0:
+        if nlog == 0:
             q_total[round(temp, 4)] = q_all
-        elif nlog==1:
+        elif nlog == 1:
             q_total[round(temp, 4)] = numpy.log(q_all)
-        elif nlog==2:
+        elif nlog == 2:
             q_total[round(numpy.log(temp), 4)] = numpy.log(q_all)
     return q_total
 
 
 def pf_polys(pf_temp_dct, order=3):
-    """
+    """ Fit partition function to polynomial and take the derivatives?
     """
     pf_array, temp_array = list(pf_temp_dct.values()), list(pf_temp_dct.keys())
     poly = numpy.polyfit(temp_array, pf_array, order)
@@ -153,7 +158,7 @@ def pf_polys(pf_temp_dct, order=3):
 
 
 def heat_capacity_from_pf(lnq, dlnqdt, d2lnqdt2, temp):
-    """
+    """ Calculate the heat capacity from the partition functon. [units?]
     """
     return (
         phycon.NAVO * phycon.KB
@@ -162,13 +167,15 @@ def heat_capacity_from_pf(lnq, dlnqdt, d2lnqdt2, temp):
 
 
 def enthalpy_from_pf(pf_fun, dqdt, temp):
-    """
+    """ Calculate the enthalpy from the partition functon. [units?]
     """
     return phycon.RC_KCAL * temp * (temp / pf_fun(temp) * dqdt(temp) + 1)
 
 
 def entropy_from_pf(pf_fun, dqdt, temp):
-    """ NOT WORKING
+    """ Calculate the entropy from the partition functon. [units?]
+
+        NOT WORKING
     """
     entropy = phycon.NAVO * phycon.KB * (
         temp/pf_fun(temp)*dqdt(temp)
@@ -178,29 +185,30 @@ def entropy_from_pf(pf_fun, dqdt, temp):
 
 
 def internal_energy_from_pf(pf_fun, temp):
-    """
+    """ Calculate the internal energy from the partition functon. [units?]
     """
     energy = - phycon.NAVO * phycon.KB * temp * numpy.log(pf_fun(temp))
     return energy * phycon.J2CAL / 1000.
 
 
-#def evaluate_gibbs(geo, freqs):
-
-    # for temp in [200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500]:
-    #     temp_range = numpy.arange(temp, temp+20, .05)
-    #     heat_cap = 0
-    #     if temp > 20:
-    #         lnq_total = rrho_partition_function(geo, freqs, temp_range, nlog=1)
-    #         lnq_lnt = rrho_partition_function(geo, freqs, temp_range, nlog=2)
-    #         _, dlnqdlnt, _ = pf_polys(lnq_lnt)
-    #         lnq, dlnqdt, d2lnqdt2 = pf_polys(lnq_total)
-    #         heat_cap = heat_capacity_from_pf(lnq, dlnqdlnt, d2lnqdt2, temp)
-    #     q_total = rrho_partition_function(geo, freqs, temp_range, nlog=0)
-    #     pf_fun, dqdt, d2qdt2 = pf_polys(q_total)
-    #         heat_cap = heat_capacity_from_pf(lnq, dlnqdlnt, d2lnqdt2, temp)
-    #     entropy = entropy_from_pf(pf_fun, dqdt, temp)
-    #     enthalpy = enthalpy_from_pf(pf_fun, dqdt, temp)
-    # return entropy
+# def evaluate_gibbs(geo, freqs):
+#     """ Calculate the Gibbs energy from the partition functon. [units?]
+#     """
+#     for temp in [200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500]:
+#         temp_range = numpy.arange(temp, temp+20, .05)
+#         heat_cap = 0
+#         if temp > 20:
+#             lnq_total = rrho_partition_function(geo, freqs, temp_range, nlog=1)
+#             lnq_lnt = rrho_partition_function(geo, freqs, temp_range, nlog=2)
+#             _, dlnqdlnt, _ = pf_polys(lnq_lnt)
+#             lnq, dlnqdt, d2lnqdt2 = pf_polys(lnq_total)
+#             heat_cap = heat_capacity_from_pf(lnq, dlnqdlnt, d2lnqdt2, temp)
+#         q_total = rrho_partition_function(geo, freqs, temp_range, nlog=0)
+#         pf_fun, dqdt, d2qdt2 = pf_polys(q_total)
+#             heat_cap = heat_capacity_from_pf(lnq, dlnqdlnt, d2lnqdt2, temp)
+#         entropy = entropy_from_pf(pf_fun, dqdt, temp)
+#         enthalpy = enthalpy_from_pf(pf_fun, dqdt, temp)
+#     return entropy
 
 
 # def gibbs_from_property_dct(csh_t_dct, hform0k):
@@ -250,7 +258,8 @@ def fake_mess_rrho_partition_function(geo, freqs, hform0, temps):
             d2qdt2_tuple += (d2qdt2_func(temp),)
             d2lnqdlnt2_tuple += (d2lnqdlnt2_func(temp),)
 
-            heat_cap_i = heat_capacity_from_pf(lnq_func, dlnqdlnt_func, d2lnqdt2_func, temp)
+            heat_cap_i = heat_capacity_from_pf(
+                lnq_func, dlnqdlnt_func, d2lnqdt2_func, temp)
             entropy_i = entropy_from_pf(q_func, dqdt_func, temp)
             enthalpy_i = enthalpy_from_pf(q_func, dqdt_func, temp)
             heat_cap += (heat_cap_i,)
@@ -273,7 +282,7 @@ def fake_mess_rrho_partition_function(geo, freqs, hform0, temps):
     pf_str = mess_io.writer.pf_output(formula_str, *pf_arrays)
     rundir = 'tmp'
     print(pf_arrays)
-    #with tempfile.TemporaryDirectory() as rundir:
+    # with tempfile.TemporaryDirectory() as rundir:
     thermp_script_str = autorun.SCRIPT_DCT['thermp']
     _, thermp_output_strs = thermp_direct(
         thermp_script_str, rundir,
@@ -282,10 +291,7 @@ def fake_mess_rrho_partition_function(geo, freqs, hform0, temps):
     print(temps[:-1])
     csh_t_dct = thermp_io.reader.properties_temp_dct(thermp_output_strs[0])
     print(csh_t_dct)
-
-
     # write_mess_output(formula_string, pf_arrays, rundir)
-
 
 
 def from_ln_partition_function(lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple):
@@ -333,7 +339,7 @@ def additive_pf_combination_at_temp(pf_arrays_lst, weight_lst, idx):
 
 def weights_at_temp(pf_arrays_lst, hf_lst, temps, idx):
     """ Calculate the weight of each conformer given a list
-        of partition functions and 0 K heats 
+        of partition functions and 0 K heats
         of formations for thtose conformers and a temperature
     """
     pfs_t_lst = []
@@ -355,7 +361,7 @@ def weights_at_temp(pf_arrays_lst, hf_lst, temps, idx):
         weight_lst.append(q_val_i * exponent / denominator)
 
     return weight_lst
- 
+
 
 def boltzmann_pf_combination(ln_pf_arrays_lst, hf_lst):
     """combine pfs
@@ -370,7 +376,7 @@ def boltzmann_pf_combination(ln_pf_arrays_lst, hf_lst):
     print('Weights:\n', 'Temperature (K)', 'Conformer Weight')
     for idx, temp in enumerate(temps):
         weight_lst = weights_at_temp(pf_arrays_lst, hf_lst, temps, idx)
-        print(temp, '    ', '    '.join(['{:.3f}'.format(w) for w in weight_lst]))
+        print(temp, '    ', '    '.join([f'{w:.3f}' for w in weight_lst]))
         pf_arrays_i = additive_pf_combination_at_temp(
             pf_arrays_lst, weight_lst, idx)
         total_pf_arrays[0].append(pf_arrays_i[0])

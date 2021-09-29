@@ -72,7 +72,7 @@ def reference_enthalpy(ich_lookup, ref_set, temp, rxn=False):
 
     # Find the energy value for the given species and enery type
     hf_val = None
-    with open(thermodb_file, 'r') as db_file:
+    with open(thermodb_file, mode='r', encoding='utf-8') as db_file:
         reader = csv.DictReader(db_file)
         for row in reader:
             if row['inchi'] == ich_lookup:
@@ -88,7 +88,7 @@ def reference_enthalpy(ich_lookup, ref_set, temp, rxn=False):
             hf_val *= phycon.KJ2EH
     else:
         print('No Heat for Formation exists:')
-        print('SPC:{} Set:{} Temp:{}K'.format(ich_lookup, ref_set, temp))
+        print(f'SPC:{ich_lookup} Set:{ref_set} Temp:{temp}K')
 
     return hf_val
 
@@ -122,8 +122,8 @@ def _thermo_database(temp, rxn=False):
     """
 
     if rxn:
-        thermodb_name = 'tsthermodb_{}K.csv'.format(str(int(temp)))
+        thermodb_name = f'tsthermodb_{str(int(temp))}K.csv'
     else:
-        thermodb_name = 'Hfdb_{}K.csv'.format(str(int(temp)))
+        thermodb_name = f'Hfdb_{str(int(temp))}K.csv'
 
     return os.path.join(SRC_PATH, 'thermdb', thermodb_name)

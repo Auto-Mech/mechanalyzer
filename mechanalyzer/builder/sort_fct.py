@@ -178,7 +178,7 @@ class SortMech:
         except KeyError as err:
             print(
                 'WARNING: Reactions not sorted according ',
-                'to all criteria: missing {}'.format(err))
+                f'to all criteria: missing {err}')
             sys.exit()
 
         # 2. assign class headers
@@ -244,10 +244,10 @@ class SortMech:
         pes_dct_df = pd.DataFrame(
             index=self.mech_df.index,
             columns=['chnl', 'pes_chnl_tuple'],
-            #columns=['pes_dct', 'pes_chnl_tuple', 'pes_chnl'],
+            # columns=['pes_dct', 'pes_chnl_tuple', 'pes_chnl'],
             dtype=object)
 
-        for pes_index, peslist in self.mech_df.groupby('pes'):
+        for _, peslist in self.mech_df.groupby('pes'):
             idx_start = 0
             # Set the names lists for the rxns and species needed below
             peslist = peslist.sort_values(by=['rxn_names'])
@@ -265,13 +265,15 @@ class SortMech:
 
                 for chnl_idx, rxn in enumerate(rxns):
                     rxn_name = tuple(
-                        (peslist['rct_names_lst'][rxn], peslist['prd_names_lst'][rxn]))
+                        (peslist['rct_names_lst'][rxn],
+                         peslist['prd_names_lst'][rxn]))
                     pes_dct_df['chnl'][rxn] = chnl_idx+idx_start+1
-                    #pes_dct_df['pes_dct'][rxn] = (fml_str, pes_index, key)
+                    # pes_dct_df['pes_dct'][rxn] = (fml_str, pes_index, key)
                     pes_dct_df['pes_chnl_tuple'][rxn] = (
                         chnl_idx+idx_start, rxn_name)
                     # pes_dct_df['pes_chnl'][rxn] = ','.join(
-                    #    [str(pes_index+1), str(key+1), str(chnl_idx+idx_start+1)])
+                    #    [str(pes_index+1), str(key+1),
+                    #     str(chnl_idx+idx_start+1)])
 
                 idx_start += len(rxns)
 
@@ -279,20 +281,17 @@ class SortMech:
 
         return conn_chn_df
 
-    def chnl(self, chnl_df):
+    def chnl(self):
         """ Calls subpes if not done
         """
-
         if 'subpes' not in self.mech_df.columns:
             df_optn = pd.DataFrame(
                 index=self.mech_df.index, columns=['subpes'])
-            df_optn = self.conn_chn(df_optn)
-            return df_optn
-
-        else:  # no need to do anything; put empty df to avoid duplicate indexing
-            chnl_df = pd.DataFrame(
+            ret_df = self.conn_chn(df_optn)
+        else:  # no need to do anything; put empty df to avoid duplicate idxing
+            ret_df = pd.DataFrame(
                 index=self.mech_df.index, columns=[''])
-            return chnl_df
+        return ret_df
 
     def group_species(self, reac_sp_df):
         """ Checks if the reactions in self.mech_df contain any species
@@ -671,8 +670,8 @@ def classify_graph(spc_dct, rct_names, prd_names):
             except AssertionError:
                 rxn_classes = ('AssertionError', )
             except TypeError:
-                print('geoms of rxn classifier fail for rxn: {} = {}'.format(
-                    rct_ichs, prd_ichs))
+                print('geoms of rxn classifier fail for rxn: '
+                      f'{rct_ichs} = {prd_ichs}')
                 rxn_classes = ('TypeError', )
 
             if rxn_classes:
@@ -759,16 +758,16 @@ def cmts_string(name, label, cltype):
             name = str(name)
         elif isinstance(name, float):
             if labeldct[name] not in ['maxval', 'maxratio']:
-                name = '{:.2f}'.format(name)
+                name = f'{name:.2f}'
             else:
-                name = '{:.2e}'.format(name)
+                name = f'{name:.2e}'
 
         return name
 
     if isinstance(name, tuple):
         namenew = []
-        for nm in name:
-            namenew.append(formatname(nm))
+        for _nm in name:
+            namenew.append(formatname(_nm))
         name = namenew
     else:
         name = [formatname(name)]

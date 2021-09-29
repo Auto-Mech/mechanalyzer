@@ -17,7 +17,7 @@ def intersec(lst1, lst2):
         if atm in lst2:
             ret = atm
     assert ret is not None, (
-        'brk_key {} and frm_key {} do not intersect'.format(lst1, lst2))
+        f'brk_key {lst1} and frm_key {lst2} do not intersect')
     return ret
 
 
@@ -35,7 +35,7 @@ def xor(lst1, lst2):
         if atm not in lst2:
             ret = atm
     assert ret is not None, (
-        'problem with bond_key {}'.format(lst1))
+        f'problem with bond_key {lst1}')
 
     return ret
 

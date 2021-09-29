@@ -24,8 +24,7 @@ def expand_mech_stereo(mech_rxn_dct, mech_spc_dct, nprocs='auto'):
         """
         srxns = ()
         for rxn in rxns:
-            print(' - Expanding Stereo for Reaction: '
-                  '{}'.format(rxn_name_str(rxn)))
+            print(f' - Expanding Stereo for Reaction: {rxn_name_str(rxn)}')
             rxn_ich = _rxn_ich(rxn, name_ich_dct)
 
             # Get a list of reactions with stereochemistry
@@ -35,7 +34,7 @@ def expand_mech_stereo(mech_rxn_dct, mech_spc_dct, nprocs='auto'):
             # Filter unneccseary reactions
             # ste_rxns_ich_filt = _remove_unneeded_reactions(ste_rxns_ich)
             print(' - Stereochemical Versions of Reaction: '
-                  '{}'.format(rxn_name_str(rxn)))
+                  f'{rxn_name_str(rxn)}')
             for srxn in ste_rxns_ich_filt:
                 # print(_rxn_smiles(x))
                 print('    ', rxn_name_str(srxn, newline=True))
@@ -44,7 +43,7 @@ def expand_mech_stereo(mech_rxn_dct, mech_spc_dct, nprocs='auto'):
             srxns += ste_rxns_ich_filt
 
         output_queue.put(srxns)
-        print('Processor {} finished'.format(os.getpid()))
+        print(f'Processor {os.getpid()} finished')
 
     # Dictionaries to map name to inchi
     name_ich_dct = mechanalyzer.parser.spc.name_inchi_dct(mech_spc_dct)
@@ -71,7 +70,7 @@ def _ste_rxn_lsts(rxn_ich):
         rxn_ich[0], rxn_ich[1])
     rxn_obj = rxn_obj_sets[0][0]  # expand just with rxn object
 
-    print(' - Reaction identified as {}.'.format(rxn_obj.class_))
+    print(f' - Reaction identified as {rxn_obj.class_}.')
 
     # Build a list of
     ste_rxn_ichs = ()
@@ -95,7 +94,7 @@ def _ste_rxn_lsts2(rxn_ich):
         rxn_ich[0], rxn_ich[1])
     rxn, _, rct_geos, prd_geos = rxn_obj_sets[0]
 
-    print(' - Reaction identified as {}.'.format(rxn.class_))
+    print(f' - Reaction identified as {rxn.class_}')
 
     srxn = automol.reac.add_stereo_from_geometries(rxn, rct_geos, prd_geos)
 
