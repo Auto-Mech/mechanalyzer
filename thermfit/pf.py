@@ -1,7 +1,6 @@
-""" Handle arithmetic operations for partition functions and related
-    information.
-
-    only works for one value for pfs?
+""" Handle arithmetic operations for partition functions and 
+    thermodynamic quantities derived from them, including
+    enthalpy, entropy, gibbs, etc
 """
 
 import numpy
