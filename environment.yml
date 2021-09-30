@@ -1,4 +1,4 @@
-name: mechanalyzer2-env
+name: mechanalyzer-env
 
 channels:
     - auto-mech
