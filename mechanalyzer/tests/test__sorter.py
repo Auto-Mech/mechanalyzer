@@ -264,11 +264,11 @@ def test_sortby_pes_dct():
     pes_dct_result = {
         ('C8H17', 0, 0): ((0, (('IC8-1R',), ('IC8-5R',))),),
         ('C8H18', 1, 0): ((0, (('IC8',), ('NEOC5H11', 'IC3H7'))),),
-        ('C8H17O2', 2, 0): ((0, (('IC8-1O2R',), ('IC8OOH1-1AR',))),
-                            (1, (('IC8-1R', 'O2'), ('IC8-1O2R',))),
-                            (2, (('IC8OOH1-1AR',), ('IC4H7OOH', 'IC4H9'))),
-                            (3, (('IC8OOH1-1AR',), ('IC8O1-1A', 'OH'))),
-                            (4, (('IC8OOH1-1AR',), ('CH2O', 'I24C7D1', 'OH')))),
+        ('C8H17O2', 2, 0): ((0, (('IC8OOH1-1AR',), ('IC8O1-1A', 'OH'))),
+                            (1, (('IC8OOH1-1AR',), ('IC4H7OOH', 'IC4H9'))),
+                            (2, (('IC8OOH1-1AR',), ('CH2O', 'I24C7D1', 'OH'))),
+                            (3, (('IC8-1R', 'O2'), ('IC8-1O2R',))),
+                            (4, (('IC8-1O2R',), ('IC8OOH1-1AR',)))),
         ('C8H17O2', 2, 1): ((5, (('IC8-3O2R',), ('IC8D3', 'HO2'))),),
         ('C8H17O2', 2, 2): ((6, (('IC8-3R', 'O2'), ('IC8D3', 'HO2'))),),
         ('C8H18O2', 3, 0): ((0, (('IC8OOH1',), ('IC8-1OR', 'OH'))),),
@@ -420,16 +420,16 @@ def test__sortby_submech_subpes_chnl():
          '! pes.subpes.channel  1.1.1'],
         [(('IC8',), ('NEOC5H11', 'IC3H7'), (None,)),
          '! pes.subpes.channel  2.1.1'],
-        [(('IC8-1O2R',), ('IC8OOH1-1AR',), (None,)),
-         '! pes.subpes.channel  3.1.1'],
-        [(('IC8-1R', 'O2'), ('IC8-1O2R',), (None,)),
-         '! pes.subpes.channel  3.1.2'],
-        [(('IC8OOH1-1AR',), ('IC4H7OOH', 'IC4H9'), (None,)),
-         '! pes.subpes.channel  3.1.3'],
         [(('IC8OOH1-1AR',), ('IC8O1-1A', 'OH'), (None,)),
-         '! pes.subpes.channel  3.1.4'],
+         '! pes.subpes.channel  3.1.1'] ,
+        [(('IC8OOH1-1AR',), ('IC4H7OOH', 'IC4H9'), (None,)),
+         '! pes.subpes.channel  3.1.2'] ,
         [(('IC8OOH1-1AR',), ('CH2O', 'I24C7D1', 'OH'), (None,)),
-         '! pes.subpes.channel  3.1.5'],
+         '! pes.subpes.channel  3.1.3'] ,
+        [(('IC8-1R', 'O2'), ('IC8-1O2R',), (None,)),
+         '! pes.subpes.channel  3.1.4'] ,
+        [(('IC8-1O2R',), ('IC8OOH1-1AR',), (None,)),
+         '! pes.subpes.channel  3.1.5'] ,
         [(('IC8-3O2R',), ('IC8D3', 'HO2'), (None,)),
          '! pes.subpes.channel  3.2.6'],
         [(('IC8-3R', 'O2'), ('IC8D3', 'HO2'), (None,)),
@@ -605,13 +605,13 @@ def _read_files(spc_path, mech_path, sort_path):
 
 
 if __name__ == '__main__':
-    # test__sort_with_input()
-    # test__readwrite_thirdbody()
-    # test__sortby_mult()
-    # test__sortby_molec_r1()
-    # test_sortby_pes_dct()
-    # test_sortby_rxnclass()
-    # test__sortby_species_subpes()
+    test__sort_with_input()
+    #test__readwrite_thirdbody()
+    test__sortby_mult()
+    test__sortby_molec_r1()
+    test_sortby_pes_dct()
+    #test_sortby_rxnclass()
+    test__sortby_species_subpes()
     test__sortby_submech_subpes_chnl()
-    # test__sortby_submech_class()
-    # test_sort_ktp()
+    test__sortby_submech_class()
+    test_sort_ktp()
