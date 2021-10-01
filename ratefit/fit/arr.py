@@ -7,7 +7,6 @@ from autoreact.params import RxnParams
 from phydat import phycon
 from ratefit.fit import err
 
-
 RC = phycon.RC_CAL  # universal gas constant in cal/mol-K
 GUESS_BNDS = ((1, 1e4), (0.1, 20), (1, 100))  # guess bounds for double fitting
 
@@ -36,6 +35,7 @@ def get_params(ktp_dct, dbltol=15, dbl_iter=1, tref=1.0):
     pressure = list(ktp_dct.keys())[0]  # get first (and only) pressure
 
     # Perform single fit and assess its errors
+    #
     (temps, kts) = ktp_dct[pressure]  # read data
     sing_params = single_arr(temps, kts)
     sing_err_dct = err.get_err_dct(ktp_dct, sing_params)
