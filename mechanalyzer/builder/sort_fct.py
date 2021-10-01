@@ -259,7 +259,8 @@ class SortMech:
 
             # Write subpes in conn_chn_df
             for key, value in connchnls.items():
-                rxns = peslist.iloc[value].index
+                rxns = peslist.iloc[value].sort_values(
+                    by=['rxn_names'], ascending=False).index
                 conn_chn_df['subpes'][rxns] = key+1
                 # reorder by rxn name before assigning the channel index
 
