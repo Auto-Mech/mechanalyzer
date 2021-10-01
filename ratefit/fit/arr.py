@@ -7,6 +7,7 @@ from autoreact.params import RxnParams
 from phydat import phycon
 from ratefit.fit import err
 
+
 RC = phycon.RC_CAL  # universal gas constant in cal/mol-K
 GUESS_BNDS = ((1, 1e4), (0.1, 20), (1, 100))  # guess bounds for double fitting
 
