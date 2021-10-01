@@ -258,7 +258,7 @@ def _resid_func(curr_guess, temps, kts, tref):
         :rtype: Numpy.ndarray of shape (num_temps,)
     """
 
-    # Compute the fitted rate constant
+    # Compute the fitted rate constants
     k_fit1 = curr_guess[0] * numpy.exp(
         curr_guess[1] * numpy.log(temps / tref) - curr_guess[2] / (RC * temps))
     k_fit2 = curr_guess[3] * numpy.exp(
