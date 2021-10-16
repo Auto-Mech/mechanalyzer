@@ -213,5 +213,6 @@ def create_spec(ich, charge=0,
         'charge': charge,
         'mult': mult,
         'mc_nsamp': mc_nsamp,
-        'hind_inc': hind_inc * phycon.DEG2RAD
+        'hind_inc': hind_inc * phycon.DEG2RAD,
+        'hbond_cutoffs': (4.55, 1.92)
     }

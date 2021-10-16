@@ -73,7 +73,7 @@ def q_translational(mass, temp):
     """ Caulculate the translational partition function
     """
     return ((2 * numpy.pi * (mass * phycon.AMU2KG) * phycon.KB * temp)**(3/2)
-            * (phycon.H * 100.)**(-3))
+            * (phycon.H * 100)**(-3))
 
 
 def q_rotational(i_a, i_b, i_c, sigma, temp, linear=False):
@@ -122,10 +122,12 @@ def rrho_partition_function(geo, freqs, temp_range=None, nlog=0):
     q_total = {}
     if temp_range is None:
         temp_range = list(range(300, 3000, 100))
-    mass = automol.geom.total_mass(geo)
+    mass = automol.geom.total_mass(geo) 
     moms = automol.geom.moments_of_inertia(geo)
     linear = automol.geom.is_linear(geo)
-    sigma = automol.geom.external_symmetry_factor(geo)
+    ext_symm = automol.geom.external_symmetry_factor(geo)
+    int_symm, _ = automol.symm.oxygenated_hydrocarbon_symm_num(geo)
+    sigma = int_symm * ext_symm
     for temp in temp_range:
         q_elec = 1.
         q_trans = q_translational(mass, temp)
@@ -168,39 +170,96 @@ def enthalpy_from_pf(pf_fun, dqdt, temp):
 
 
 def entropy_from_pf(pf_fun, dqdt, temp):
-    """ NOT WORKING
+    """ WORKS with mystical 5.4 number
     """
     entropy = phycon.NAVO * phycon.KB * (
         temp/pf_fun(temp)*dqdt(temp)
         + numpy.log(pf_fun(temp))
-        - numpy.log(phycon.NAVO) + 1)
+        - numpy.log(phycon.NAVO) + 5.4
+        #- numpy.log(phycon.NAVO) + 1
+        + numpy.log(temp))
     return entropy * phycon.J2CAL
 
 
-def internal_energy_from_pf(pf_fun, temp):
+def gibbs_energy_from_pf(pf_fun, temp):
     """
     """
     energy = - phycon.NAVO * phycon.KB * temp * numpy.log(pf_fun(temp))
     return energy * phycon.J2CAL / 1000.
 
 
-#def evaluate_gibbs(geo, freqs):
+def rel_gibbs_energy_from_pf(pf_fun, temp, zero_ene):
+    """
+    """
+    rel_pf = pf_fun(temp) * numpy.exp(-zero_ene / (phycon.KB * phycon.NAVO * temp))
+    energy = - phycon.NAVO * phycon.KB * temp * numpy.log(rel_pf)
+    return energy * phycon.J2CAL / 1000.
 
-    # for temp in [200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500]:
-    #     temp_range = numpy.arange(temp, temp+20, .05)
-    #     heat_cap = 0
-    #     if temp > 20:
-    #         lnq_total = rrho_partition_function(geo, freqs, temp_range, nlog=1)
-    #         lnq_lnt = rrho_partition_function(geo, freqs, temp_range, nlog=2)
-    #         _, dlnqdlnt, _ = pf_polys(lnq_lnt)
-    #         lnq, dlnqdt, d2lnqdt2 = pf_polys(lnq_total)
-    #         heat_cap = heat_capacity_from_pf(lnq, dlnqdlnt, d2lnqdt2, temp)
-    #     q_total = rrho_partition_function(geo, freqs, temp_range, nlog=0)
-    #     pf_fun, dqdt, d2qdt2 = pf_polys(q_total)
-    #         heat_cap = heat_capacity_from_pf(lnq, dlnqdlnt, d2lnqdt2, temp)
-    #     entropy = entropy_from_pf(pf_fun, dqdt, temp)
-    #     enthalpy = enthalpy_from_pf(pf_fun, dqdt, temp)
-    # return entropy
+
+def rrho_del_enthalpy(geo, freqs, temp=298.15):
+    temp_range = numpy.arange(temp, temp+20, .05)
+    q_total = rrho_partition_function(geo, freqs, temp_range, nlog=0)
+    pf_fun, dqdt, d2qdt2 = pf_polys(q_total)
+    enthalpy = enthalpy_from_pf(pf_fun, dqdt, temp)
+    return enthalpy
+
+
+def rrho_entropy(geo, freqs, temp=298.15):
+    temp_range = numpy.arange(temp, temp+20, .05)
+    q_total = rrho_partition_function(geo, freqs, temp_range, nlog=0)
+    pf_fun, dqdt, d2qdt2 = pf_polys(q_total)
+    entropy = entropy_from_pf(pf_fun, dqdt, temp)
+    return entropy
+
+
+def rrho_heat_capacity(geo, freqs, temp=298.15):
+    temp_range = numpy.arange(temp, temp+20, .05)
+    heat_cap = None
+    if temp > 20:
+        lnq_total = rrho_partition_function(geo, freqs, temp_range, nlog=1)
+        lnq, dlnqdt, d2lnqdt2 = pf_polys(lnq_total)
+        lnq_lnt = rrho_partition_function(geo, freqs, temp_range, nlog=2)
+        _, dlnqdlnt, _ = pf_polys(lnq_lnt)
+        heat_cap = heat_capacity_from_pf(lnq, dlnqdlnt, d2lnqdt2, temp)
+    return heat_cap
+
+
+def rrho_gibbs(geo, freqs, temp=298.15):
+    temp_range = numpy.arange(temp, temp+20, .05)
+    q_total = rrho_partition_function(geo, freqs, temp_range, nlog=0)
+    pf_fun, _, _ = pf_polys(q_total)
+    gibbs = gibbs_energy_from_pf(pf_fun, temp)
+    return gibbs
+
+
+def rrho_gibbs_factor(geo, freqs, zero_ene, temp):
+    zero_ene = zero_ene * 1000. / phycon.J2CAL
+    temp_range = numpy.arange(temp, temp+20, .05)
+    q_total = rrho_partition_function(geo, freqs, temp_range, nlog=0)
+    pf_fun, _, _ = pf_polys(q_total)
+    return rel_gibbs_energy_from_pf(pf_fun, temp, zero_ene)
+
+
+def rrho_properties(geo, freqs, temps=None):
+    if temps is None:
+        temps = [200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500]
+    for temp in temps:
+        temp_range = numpy.arange(temp, temp+20, .05)
+        heat_cap = 0
+        if temp > 20:
+            lnq_total = rrho_partition_function(geo, freqs, temp_range, nlog=1)
+            lnq, dlnqdt, d2lnqdt2 = pf_polys(lnq_total)
+            # print('Q:', temp, lnq(temp), dlnqdt(temp), d2lnqdt2(temp))
+            lnq_lnt = rrho_partition_function(geo, freqs, temp_range, nlog=2)
+            _, dlnqdlnt, _ = pf_polys(lnq_lnt)
+            heat_cap = heat_capacity_from_pf(lnq, dlnqdlnt, d2lnqdt2, temp)
+        q_total = rrho_partition_function(geo, freqs, temp_range, nlog=0)
+        pf_fun, dqdt, d2qdt2 = pf_polys(q_total)
+        entropy = entropy_from_pf(pf_fun, dqdt, temp)
+        enthalpy = enthalpy_from_pf(pf_fun, dqdt, temp)
+        # gibbs = enthalpy - entropy * temp / 1000.
+        print('Prop:', temp, heat_cap, entropy, enthalpy)
+    return enthalpy, entropy, heat_cap 
 
 
 # def gibbs_from_property_dct(csh_t_dct, hform0k):
