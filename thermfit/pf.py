@@ -188,7 +188,7 @@ def entropy_from_pf(pf_fun, dqdt, temp):
 
 def gibbs_energy_from_pf(pf_fun, temp):
     """
-    """
+    """ Calculate the internal energy from the partition functon. [units?]
     energy = - phycon.NAVO * phycon.KB * temp * numpy.log(pf_fun(temp))
     return energy * phycon.J2CAL / 1000.
 
