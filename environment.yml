@@ -1,4 +1,4 @@
-name: mechanalyzer2-env
+name: mechanalyzer-env
 
 channels:
     - auto-mech
@@ -23,11 +23,15 @@ dependencies:
     - psi4::psi4
     - rdkit::rdkit
     - openbabel::openbabel
-    - conda-forge::python=3.9
-    - conda-forge::numpy=1.21.2
-    - conda-forge::scipy=1.7.1
+    - conda-forge::python=3.7
+    - conda-forge::numpy=1.15.4
+    - conda-forge::scipy=1.5.0
+    # - conda-forge::python=3.9
+    # - conda-forge::numpy=1.21.2
+    # - conda-forge::scipy=1.7.1
     - conda-forge::pyyaml
     - conda-forge::mako
+    - conda-forge::python-igraph
     - conda-forge::networkx
     - conda-forge::matplotlib
     - conda-forge::pytest
