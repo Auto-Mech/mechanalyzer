@@ -1,4 +1,4 @@
-""" Handle arithmetic operations for partition functions and 
+""" Handle arithmetic operations for partition functions and
     thermodynamic quantities derived from them, including
     enthalpy, entropy, gibbs, etc
 """
@@ -126,7 +126,7 @@ def rrho_partition_function(geo, freqs, temp_range=None, nlog=0):
     q_total = {}
     if temp_range is None:
         temp_range = list(range(300, 3000, 100))
-    mass = automol.geom.total_mass(geo) 
+    mass = automol.geom.total_mass(geo)
     moms = automol.geom.moments_of_inertia(geo)
     linear = automol.geom.is_linear(geo)
     ext_symm = automol.geom.external_symmetry_factor(geo)
@@ -181,14 +181,14 @@ def entropy_from_pf(pf_fun, dqdt, temp):
         temp/pf_fun(temp)*dqdt(temp)
         + numpy.log(pf_fun(temp))
         - numpy.log(phycon.NAVO) + 5.4
-        #- numpy.log(phycon.NAVO) + 1
+        # - numpy.log(phycon.NAVO) + 1
         + numpy.log(temp))
     return entropy * phycon.J2CAL
 
 
 def gibbs_energy_from_pf(pf_fun, temp):
-    """
     """ Calculate the internal energy from the partition functon. [units?]
+    """
     energy = - phycon.NAVO * phycon.KB * temp * numpy.log(pf_fun(temp))
     return energy * phycon.J2CAL / 1000.
 
@@ -264,7 +264,7 @@ def rrho_properties(geo, freqs, temps=None):
         enthalpy = enthalpy_from_pf(pf_fun, dqdt, temp)
         # gibbs = enthalpy - entropy * temp / 1000.
         print('Prop:', temp, heat_cap, entropy, enthalpy)
-    return enthalpy, entropy, heat_cap 
+    return enthalpy, entropy, heat_cap
 
 
 # def gibbs_from_property_dct(csh_t_dct, hform0k):
