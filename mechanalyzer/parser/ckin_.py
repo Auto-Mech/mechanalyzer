@@ -159,7 +159,7 @@ def parse_rxn_param_dct(mech_str):
     """
     ea_units, a_units = parser_mech.reaction_units(mech_str)
     rxn_block_str = parser_mech.reaction_block(mech_str)
-    rxn_param_dct = parser_rxn.param_dct(rxn_block_str, ea_units, a_units)
+    rxn_param_dct = parser_rxn.get_rxn_param_dct(rxn_block_str, ea_units, a_units)
 
     return rxn_param_dct
 

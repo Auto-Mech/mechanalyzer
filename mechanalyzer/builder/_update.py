@@ -44,7 +44,7 @@ def update_spc_dct(spc_ichs, spc_dct):
 
             # Add to the overall mechanism spc_dct and new species lst
             smi = automol.inchi.smiles(ich)
-            print('Adding species {} = {} = {}'.format(name, smi, ich))
+            print(f'Adding species {name} = {smi} = {ich}')
 
             spc_dct.update({name: rgt_dct})
             new_spc_ichs += (ich,)
@@ -64,7 +64,7 @@ def update_rxn_dct(rxn_lst, rxn_dct, spc_dct):
 
             # Convert to names and print message
             rxn_wname = _rxn_ich_to_name(rxn, spc_dct)
-            print('Adding reaction {} to param dct'.format(rxn_wname))
+            print(f'Adding reaction {rxn_wname} to param dct')
 
             # rxn_dct[rxn_wname] = (
             #    ((1.0, 0.0, 0.0), None, None, None, None, None),)

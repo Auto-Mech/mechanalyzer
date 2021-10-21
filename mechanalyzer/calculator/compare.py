@@ -149,7 +149,7 @@ def align_dcts(list_of_dcts):
 def write_output_file(rename_instr_lst):
     """ Write the output of a comparison to a text file
     """
-    with open("comparison_output.txt", "w") as fid:
+    with open("comparison_output.txt", mode="w", encoding='utf-8') as fid:
         for mech_idx, rename_instr in enumerate(rename_instr_lst):
             fid.write(
                 f"Rename instructions for converting mech {mech_idx+2} to mech {mech_idx+1}:\n"
@@ -158,7 +158,7 @@ def write_output_file(rename_instr_lst):
                 f"First column: mech {mech_idx+2} name, Second column: mech {mech_idx+1} name\n"
             )
             for spc_name2, spc_name1 in rename_instr.items():
-                fid.write(('{0:<1s}, {1:<5s}\n').format(spc_name2, spc_name1))
+                fid.write(f'{spc_name2:<1s}, {spc_name1:<5s}\n')
             fid.write("\n\n")
 # need to fix with new third body methods
 #    if algn_rxn_ktp_dct:

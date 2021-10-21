@@ -50,16 +50,16 @@ def _prepare_basis(ref_scheme, spc_dct, zrxn, print_log,
 
     # Begin prints
     if print_log:
-        print('Process {} prepping species: {}'.format(os.getpid(), spc_str))
+        print(f'Process {os.getpid()} prepping species: {spc_str}')
 
     # Print the message
-    msg = '\nDetermining reference molecules for scheme: {}'.format(ref_scheme)
+    msg = f'\nDetermining reference molecules for scheme: {ref_scheme}'
     msg += '\n'
 
     basis_dct = {}
     for spc_name, spc_ich in zip(spc_names, spc_ichs):
 
-        msg += '\nDetermining basis for species: {}'.format(spc_name)
+        msg += f'\nDetermining basis for species: {spc_name}'
 
         # Build the basis set and coefficients for spc/TS
         if zrxn is not None:
@@ -140,13 +140,13 @@ def unique_basis_species(basis_dct, spc_dct):
             # bas spc is (1) string = species, (2) ((str,), (str,))
             if isinstance(bas, str):
                 if _spc_ref_unique(bas, mech_ichs):
-                    ref_name = 'REF_{}'.format(cnt)
+                    ref_name = f'REF_{cnt}'
                     unique_refs_dct[ref_name] = create_spec(bas)
                     mech_ichs += (bas,)
                     cnt += 1
             else:
                 if _ts_ref_unique(bas, mech_ichs):
-                    ref_name = 'TS_REF_{}'.format(cnt)
+                    ref_name = f'TS_REF_{cnt}'
                     unique_refs_dct[ref_name] = create_ts_spc(
                         bas, spc_dct, spc_dct[name]['mult'])
                     mech_ichs += (bas,)

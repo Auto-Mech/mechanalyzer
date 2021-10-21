@@ -244,13 +244,14 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
                     [automol.inchi.add_stereo(ich)] if not all_stereo else
                     automol.inchi.expand_stereo(ich))
         except:
-            print('{} timed out in stereo generation'.format(name))
+            print(f'{name} timed out in stereo generation')
             worked = False
         return ret_ichs, worked
 
     # Assess the species the code is able to add stereochemistry to
-    print('Processor {} will check species: {}'.format(os.getpid(),
-                                                       ', '.join(names)))
+    names_str = ', '.join(names)
+    print(f'Processor {os.getpid()} will check species: {names_str}')
+
     good_names = []
     for name in names:
         # if _nrings(name, init_dct[name]) < 10:
@@ -260,8 +261,8 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
 
     # Construct a new dictionary with stereochemical inchi strings
     new_dct = {}
-    print('Processor {} will add stereo to species: {}'.format(
-        os.getpid(), ', '.join(good_names)))
+    good_names_str = ', '.join(good_names)
+    print(f'Processor {os.getpid()} will check species: {good_names_str}')
     for name in good_names:
 
         # Generate ichs with stereo and hashes
@@ -278,7 +279,7 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
                              if key not in ('inchi', 'inchikey'))
         for idx, ste_ich in enumerate(ste_ichs):
             # name gen wrong, should use formula builder
-            sname = name+'({})'.format(str(idx+1)) if idx != 0 else name
+            sname = name+f'({str(idx+1)})' if idx != 0 else name
             new_dct[sname] = {
                 'inchi': ste_ich,
                 'inchikey': automol.inchi.inchi_key(ste_ich)
@@ -287,7 +288,7 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
                 new_dct[sname][key] = init_dct[name][key]
 
     output_queue.put((new_dct,))
-    print('Processor {} finished'.format(os.getpid()))
+    print(f'Processor {os.getpid()} finished')
 
 
 # HELPER FUNCTIONS
@@ -335,7 +336,7 @@ def assign_unique_name(fml, fml_count_dct):
 
     if fml in fml_count_dct:
         fml_count_dct[fml] += 1
-        fml = fml + '({})'.format(fml_count_dct[fml])
+        fml = fml + f'({fml_count_dct[fml]})'
     else:
         fml_count_dct[fml] = 1
 
