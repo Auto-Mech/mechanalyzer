@@ -8,7 +8,7 @@ source:
     path: .
 
 requirements:
-    host:
+    build:
         - conda-forge::python=3.7
     run:
         - auto-mech::autoio-base

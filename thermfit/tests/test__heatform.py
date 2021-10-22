@@ -39,7 +39,7 @@ def test__hform():
     """ test thermfit.heatform.calc_hform_0k
     """
 
-    ref_hf0k = -0.08992931992116837
+    ref_hf0k = -0.08993069717524804
 
     hf0k = thermfit.heatform.calc_hform_0k(
         C3H7OH_H0, C3H7OH_BASIS_H0, C3H7OH_BASIS, C3H7OH_CFFS, REF_SET1)
@@ -54,7 +54,6 @@ def test__ref_enthalpy():
 
     # Species
     ref_hf0k_1 = -0.08780432505395637
-    ref_hf0k_2 = 0.0
     ref_hf0k_3 = -0.08785677661265853
 
     hf0k_1 = thermfit.heatform.reference_enthalpy(
@@ -64,7 +63,7 @@ def test__ref_enthalpy():
     hf0k_3 = thermfit.heatform.reference_enthalpy(
         C3H7OH_ICH, REF_SET3, TEMP1, rxn=False)
     assert numpy.isclose(ref_hf0k_1, hf0k_1)
-    assert numpy.isclose(ref_hf0k_2, hf0k_2)
+    assert hf0k_2 is None
     assert numpy.isclose(ref_hf0k_3, hf0k_3)
 
     # Transition State
