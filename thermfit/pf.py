@@ -7,10 +7,10 @@ import numpy
 
 from phydat import phycon
 import automol.geom
-import autorun
-from autorun.thermp import direct as thermp_direct
-import thermp_io
-import mess_io
+# import autorun
+# from autorun.thermp import direct as thermp_direct
+# import thermp_io
+# import mess_io
 
 
 def combine(pfs, coeffs, operators):
@@ -161,6 +161,7 @@ def pf_polys(pf_temp_dct, order=3):
 def heat_capacity_from_pf(lnq, dlnqdt, d2lnqdt2, temp):
     """ Calculate the heat capacity from the partition functon. [units?]
     """
+    _ = lnq  # to get by pylint, remove lnq from function args???
     return (
         phycon.NAVO * phycon.KB
         * (temp**2 * d2lnqdt2(temp) + 2 * dlnqdt(numpy.log(temp)) + 1)
@@ -194,35 +195,43 @@ def gibbs_energy_from_pf(pf_fun, temp):
 
 
 def rel_gibbs_energy_from_pf(pf_fun, temp, zero_ene):
+    """ Calcluate the relative Gibbs energy from pf
     """
-    """
-    rel_pf = pf_fun(temp) * numpy.exp(-zero_ene / (phycon.KB * phycon.NAVO * temp))
+    rel_pf = (
+        pf_fun(temp) * numpy.exp(-zero_ene / (phycon.KB * phycon.NAVO * temp))
+    )
     energy = - phycon.NAVO * phycon.KB * temp * numpy.log(rel_pf)
     return energy * phycon.J2CAL / 1000.
 
 
 def rrho_del_enthalpy(geo, freqs, temp=298.15):
+    """ Get enthalpy from RRHO?
+    """
     temp_range = numpy.arange(temp, temp+20, .05)
     q_total = rrho_partition_function(geo, freqs, temp_range, nlog=0)
-    pf_fun, dqdt, d2qdt2 = pf_polys(q_total)
+    pf_fun, dqdt, _ = pf_polys(q_total)
     enthalpy = enthalpy_from_pf(pf_fun, dqdt, temp)
     return enthalpy
 
 
 def rrho_entropy(geo, freqs, temp=298.15):
+    """ Entropy from RRHO?
+    """
     temp_range = numpy.arange(temp, temp+20, .05)
     q_total = rrho_partition_function(geo, freqs, temp_range, nlog=0)
-    pf_fun, dqdt, d2qdt2 = pf_polys(q_total)
+    pf_fun, dqdt, _ = pf_polys(q_total)
     entropy = entropy_from_pf(pf_fun, dqdt, temp)
     return entropy
 
 
 def rrho_heat_capacity(geo, freqs, temp=298.15):
+    """ Heat Capacity from RRHO?
+    """
     temp_range = numpy.arange(temp, temp+20, .05)
     heat_cap = None
     if temp > 20:
         lnq_total = rrho_partition_function(geo, freqs, temp_range, nlog=1)
-        lnq, dlnqdt, d2lnqdt2 = pf_polys(lnq_total)
+        lnq, _, d2lnqdt2 = pf_polys(lnq_total)
         lnq_lnt = rrho_partition_function(geo, freqs, temp_range, nlog=2)
         _, dlnqdlnt, _ = pf_polys(lnq_lnt)
         heat_cap = heat_capacity_from_pf(lnq, dlnqdlnt, d2lnqdt2, temp)
@@ -230,6 +239,8 @@ def rrho_heat_capacity(geo, freqs, temp=298.15):
 
 
 def rrho_gibbs(geo, freqs, temp=298.15):
+    """ RRHO Gibbs function
+    """
     temp_range = numpy.arange(temp, temp+20, .05)
     q_total = rrho_partition_function(geo, freqs, temp_range, nlog=0)
     pf_fun, _, _ = pf_polys(q_total)
@@ -238,6 +249,8 @@ def rrho_gibbs(geo, freqs, temp=298.15):
 
 
 def rrho_gibbs_factor(geo, freqs, zero_ene, temp):
+    """ RRHO Gibbs factor
+    """
     zero_ene = zero_ene * 1000. / phycon.J2CAL
     temp_range = numpy.arange(temp, temp+20, .05)
     q_total = rrho_partition_function(geo, freqs, temp_range, nlog=0)
@@ -246,6 +259,8 @@ def rrho_gibbs_factor(geo, freqs, zero_ene, temp):
 
 
 def rrho_properties(geo, freqs, temps=None):
+    """ RRHO Props
+    """
     if temps is None:
         temps = [200, 300, 400, 500, 600, 700, 800, 900, 1000, 1500]
     for temp in temps:
@@ -253,13 +268,13 @@ def rrho_properties(geo, freqs, temps=None):
         heat_cap = 0
         if temp > 20:
             lnq_total = rrho_partition_function(geo, freqs, temp_range, nlog=1)
-            lnq, dlnqdt, d2lnqdt2 = pf_polys(lnq_total)
+            lnq, _, d2lnqdt2 = pf_polys(lnq_total)
             # print('Q:', temp, lnq(temp), dlnqdt(temp), d2lnqdt2(temp))
             lnq_lnt = rrho_partition_function(geo, freqs, temp_range, nlog=2)
             _, dlnqdlnt, _ = pf_polys(lnq_lnt)
             heat_cap = heat_capacity_from_pf(lnq, dlnqdlnt, d2lnqdt2, temp)
         q_total = rrho_partition_function(geo, freqs, temp_range, nlog=0)
-        pf_fun, dqdt, d2qdt2 = pf_polys(q_total)
+        pf_fun, dqdt, _ = pf_polys(q_total)
         entropy = entropy_from_pf(pf_fun, dqdt, temp)
         enthalpy = enthalpy_from_pf(pf_fun, dqdt, temp)
         # gibbs = enthalpy - entropy * temp / 1000.
@@ -273,81 +288,84 @@ def rrho_properties(geo, freqs, temps=None):
 #     gibbs_t_dct = {}
 #     for temp in csh_t_dct:
 #         _, entropy, enthalpy = csh_t_dct[temp]
-
-def fake_mess_rrho_partition_function(geo, freqs, hform0, temps):
-    """
-    """
-    def _pf_arrays(geo, freqs, temps):
-        temps_tuple = ()
-        lnq_tuple = ()
-        dlnqdt_tuple = ()
-        d2lnqdt2_tuple = ()
-        #####
-        q_tuple = ()
-        dqdt_tuple = ()
-        d2qdt2_tuple = ()
-        dlnqdlnt_tuple = ()
-        entropy = ()
-        enthalpy = ()
-        heat_cap = ()
-        for temp in temps:
-            temp_range = numpy.arange(temp-20, temp+50, .01)
-            lnq_temp_dct = rrho_partition_function(
-                geo, freqs, temp_range, nlog=1)
-            lnq_func, dlnqdt_func, d2lnqdt2_func = pf_polys(
-                lnq_temp_dct, order=3)
-            temps_tuple += (temp,)
-            lnq_tuple += (lnq_func(temp),)
-            dlnqdt_tuple += (dlnqdt_func(temp),)
-            d2lnqdt2_tuple += (d2lnqdt2_func(temp),)
-            #####
-            q_temp_dct = rrho_partition_function(
-                geo, freqs, temp_range, nlog=0)
-            lnq_lnt_dct = rrho_partition_function(
-                geo, freqs, temp_range, nlog=2)
-            q_func, dqdt_func, d2qdt2_func = pf_polys(
-                q_temp_dct, order=3)
-            _, dlnqdlnt, _ = pf_polys(
-                lnq_lnt_dct, order=2)
-            q_tuple += (q_func(temp),)
-            dqdt_tuple += (dqdt_func(temp),)
-            d2qdt2_tuple += (d2qdt2_func(temp),)
-            d2lnqdlnt2_tuple += (d2lnqdlnt2_func(temp),)
-
-            heat_cap_i = heat_capacity_from_pf(
-                lnq_func, dlnqdlnt_func, d2lnqdt2_func, temp)
-            entropy_i = entropy_from_pf(q_func, dqdt_func, temp)
-            enthalpy_i = enthalpy_from_pf(q_func, dqdt_func, temp)
-            heat_cap += (heat_cap_i,)
-            entropy += (entropy_i,)
-            enthalpy += (enthalpy_i,)
-        print('Partition Function')
-        for temp, y_val, dydx, d2ydx2 in zip(temps_tuple, q_tuple, dqdt_tuple, d2qdt2_tuple):
-            print(temp, y_val, dydx, d2ydx2)
-        print('LOG Partition Function')
-        for temp, y_val, dydx, d2ydx2 in zip(temps_tuple, lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple):
-            print(temp, y_val, dydx, d2ydx2)
-        print('Temp', 'Heat Cap', 'Entropy', 'Enthalpy')
-        for temp, heat_cap_i, entropy_i, enthalpy_i in zip(temps_tuple, entropy, enthalpy, heat_cap):
-            print(temp, heat_cap_i, entropy_i, enthalpy_i)
-        return temps_tuple, lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple
-
-    formula_str = automol.geom.formula_string(geo)
-    temps.append(298.15)
-    pf_arrays = _pf_arrays(geo, freqs, temps)
-    pf_str = mess_io.writer.pf_output(formula_str, *pf_arrays)
-    rundir = 'tmp'
-    print(pf_arrays)
-    # with tempfile.TemporaryDirectory() as rundir:
-    thermp_script_str = autorun.SCRIPT_DCT['thermp']
-    _, thermp_output_strs = thermp_direct(
-        thermp_script_str, rundir,
-        pf_str, formula_str, hform0, temps[:-1])
-    print(thermp_output_strs[0])
-    print(temps[:-1])
-    csh_t_dct = thermp_io.reader.properties_temp_dct(thermp_output_strs[0])
-    print(csh_t_dct)
-    # write_mess_output(formula_string, pf_arrays, rundir)
+# def fake_mess_rrho_partition_function(geo, freqs, hform0, temps):
+#     """
+#     """
+#     def _pf_arrays(geo, freqs, temps):
+#         temps_tuple = ()
+#         lnq_tuple = ()
+#         dlnqdt_tuple = ()
+#         d2lnqdt2_tuple = ()
+#         #####
+#         q_tuple = ()
+#         dqdt_tuple = ()
+#         d2qdt2_tuple = ()
+#         dlnqdlnt_tuple = ()
+#         entropy = ()
+#         enthalpy = ()
+#         heat_cap = ()
+#         for temp in temps:
+#             temp_range = numpy.arange(temp-20, temp+50, .01)
+#             lnq_temp_dct = rrho_partition_function(
+#                 geo, freqs, temp_range, nlog=1)
+#             lnq_func, dlnqdt_func, d2lnqdt2_func = pf_polys(
+#                 lnq_temp_dct, order=3)
+#             temps_tuple += (temp,)
+#             lnq_tuple += (lnq_func(temp),)
+#             dlnqdt_tuple += (dlnqdt_func(temp),)
+#             d2lnqdt2_tuple += (d2lnqdt2_func(temp),)
+#             #####
+#             q_temp_dct = rrho_partition_function(
+#                 geo, freqs, temp_range, nlog=0)
+#             lnq_lnt_dct = rrho_partition_function(
+#                 geo, freqs, temp_range, nlog=2)
+#             q_func, dqdt_func, d2qdt2_func = pf_polys(
+#                 q_temp_dct, order=3)
+#             _, dlnqdlnt, _ = pf_polys(
+#                 lnq_lnt_dct, order=2)
+#             q_tuple += (q_func(temp),)
+#             dqdt_tuple += (dqdt_func(temp),)
+#             d2qdt2_tuple += (d2qdt2_func(temp),)
+#             d2lnqdlnt2_tuple += (d2lnqdlnt2_func(temp),)
+#
+#             heat_cap_i = heat_capacity_from_pf(
+#                 lnq_func, dlnqdlnt_func, d2lnqdt2_func, temp)
+#             entropy_i = entropy_from_pf(q_func, dqdt_func, temp)
+#             enthalpy_i = enthalpy_from_pf(q_func, dqdt_func, temp)
+#             heat_cap += (heat_cap_i,)
+#             entropy += (entropy_i,)
+#             enthalpy += (enthalpy_i,)
+#         print('Partition Function')
+#         _inf1 = zip(temps_tuple, q_tuple, dqdt_tuple, d2qdt2_tuple)
+#         _inf2 = zip(temps_tuple, lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple)
+#         _inf3 = zip(temps_tuple, entropy, enthalpy, heat_cap)
+#         print('Partition Function')
+#         for temp, y_val, dydx, d2ydx2 in _inf1:
+#             print(temp, y_val, dydx, d2ydx2)
+#         print('LOG Partition Function')
+#         for temp, y_val, dydx, d2ydx2 in _inf2:
+#             print(temp, y_val, dydx, d2ydx2)
+#         print('Temp', 'Heat Cap', 'Entropy', 'Enthalpy')
+#         for temp, heat_cap_i, entropy_i, enthalpy_i in _inf3:
+#             print(temp, heat_cap_i, entropy_i, enthalpy_i)
+#         return temps_tuple, lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple
+#
+#     formula_str = automol.geom.formula_string(geo)
+#     temps.append(298.15)
+#     pf_arrays = _pf_arrays(geo, freqs, temps)
+#     pf_str = mess_io.writer.pf_output(formula_str, *pf_arrays)
+#     rundir = 'tmp'
+#     print(pf_arrays)
+#     # with tempfile.TemporaryDirectory() as rundir:
+#     thermp_script_str = autorun.SCRIPT_DCT['thermp']
+#     _, thermp_output_strs = thermp_direct(
+#         thermp_script_str, rundir,
+#         pf_str, formula_str, hform0, temps[:-1])
+#     print(thermp_output_strs[0])
+#     print(temps[:-1])
+#     csh_t_dct = thermp_io.reader.properties_temp_dct(thermp_output_strs[0])
+#     print(csh_t_dct)
+#     # write_mess_output(formula_string, pf_arrays, rundir)
 
 
 def from_ln_partition_function(lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple):

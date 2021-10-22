@@ -260,7 +260,8 @@ def test__unique():
             'inchikey': 'OKKJLVBELUTLKV-UHFFFAOYSA-N',
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
-            'hind_inc': 0.5235987755982988
+            'hind_inc': 0.5235987755982988,
+            'hbond_cutoffs': (4.55, 1.92)
         },
         'TS_REF_2': {
             'reacs': ['InChI=1S/CH3/h1H3', 'InChI=1S/H2O2/c1-2/h1-2H'],
@@ -287,8 +288,9 @@ def test__unique():
             'inchikey': 'XLYOFNOQVPJJNP-UHFFFAOYSA-N',
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
-            'hind_inc': 0.5235987755982988
-        },
+            'hind_inc': 0.5235987755982988,
+            'hbond_cutoffs': (4.55, 1.92)
+            },
         'TS_REF_5': {
             'reacs': ['InChI=1S/CH3/h1H3', 'InChI=1S/H2O/h1H2'],
             'prods': ['InChI=1S/CH4/h1H4', 'InChI=1S/HO/h1H'],
