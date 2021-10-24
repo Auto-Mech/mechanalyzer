@@ -21,7 +21,7 @@ dependencies:
     - auto-mech::thermp
     - cantera::cantera
     - psi4::psi4
-    - rdkit::rdkit
+    - rdkit::rdkit=2020.09.1.0
     - openbabel::openbabel
     - conda-forge::python=3.7
     - conda-forge::numpy=1.15.4
@@ -42,7 +42,7 @@ dependencies:
     - conda-forge::nglview
     - conda-forge::pypdf2
     - conda-forge::qcelemental
-    - conda-forge::cmake=3.21.3
+    - conda-forge::cmake=3.20.2
     - conda-forge::gcc_linux-64=7.5.0
     - conda-forge::gxx_linux-64=7.5.0
     - conda-forge::gfortran_linux-64=7.5.0
