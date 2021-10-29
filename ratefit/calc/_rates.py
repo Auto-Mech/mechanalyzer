@@ -16,11 +16,11 @@ def single_arrhenius(a_par, n_par, ea_par,
     """ Calculates T-dependent rate constants [k(T)]s using
         a single Arrhenius functional expression.
 
-        :param a_par: pre-exponential A parmater
+        :param a_par: pre-exponential A parameter
         :type a_par: float
-        :param n_par: temperature exponent n parmater
+        :param n_par: temperature exponent n parameter
         :type n_par: float
-        :param ea_par: activation energy Ea parmater (kcal.mol-1)
+        :param ea_par: activation energy Ea parameter (kcal.mol-1)
         :type ea_par: float
         :param t_ref: Reference temperature (K)
          :type t_ref: float
@@ -39,17 +39,17 @@ def double_arrhenius(a_par1, n_par1, ea_par1,
     """ Calculates T-dependent rate constants [k(T)]s using
         a double Arrhenius functional expression.
 
-        :param a_par1: 1st pre-exponential A parmater
+        :param a_par1: 1st pre-exponential A parameter
         :type a_par1: float
-        :param n_par1: 1st temperature exponent n parmater
+        :param n_par1: 1st temperature exponent n parameter
         :type n_par1: float
-        :param ea_par1: 1st activation energy Ea parmater (kcal.mol-1)
+        :param ea_par1: 1st activation energy Ea parameter (kcal.mol-1)
         :type ea_par1: float
-        :param a_par2: 2nd pre-exponential A parmater
+        :param a_par2: 2nd pre-exponential A parameter
         :type a_par2: float
-        :param n_par2: 2nd temperature exponent n parmater
+        :param n_par2: 2nd temperature exponent n parameter
         :type n_par2: float
-        :param ea_par2: 2nd activation energy Ea parmater (kcal.mol-1)
+        :param ea_par2: 2nd activation energy Ea parameter (kcal.mol-1)
         :type ea_par2: float
         :param t_ref: Reference temperature (K)
         :type t_ref: float
@@ -65,25 +65,25 @@ def double_arrhenius(a_par1, n_par1, ea_par1,
     return kts
 
 
-def arrhenius(arr_params, temps, t_ref, rval=RC):
+def arrhenius(arr_tuples, temps, t_ref, rval=RC):
     """ Calculates T-dependent rate constants [k(T)]s using a list of any number
             of Arrhenius parameters
 
-         :param arr_params: fitting parameters
-         :type arr_params: list [[A1, n1, Ea1], [A2, n2, Ea2], ...]
-         :param temps: temperatures at which to do calculations (K)
-         :type temps: numpy.ndarray
-         :param t_ref: reference temperature (K)
-         :type t_ref: float
-         :return kts: T-dependent rate constants
-         :rtype: numpy.ndarray
+        :param arr_tuples: Arrhenius fit parameters
+        :type arr_tuples: tuple ((A1, n1, Ea1), (A2, n2, Ea2), ...)
+        :param temps: temperatures at which to do calculations (K)
+        :type temps: numpy.ndarray
+        :param t_ref: reference temperature (K)
+        :type t_ref: float
+        :return kts: T-dependent rate constants
+        :rtype: numpy.ndarray
     """
 
     kts = np.zeros_like(temps)
-    for arr_param in arr_params:
-        assert len(arr_param) == 3, (
-            f'Length of Arrhenius params should be 3 but is {len(arr_param)}')
-        a_par, n_par, ea_par = arr_param
+    for arr_tuple in arr_tuples:
+        assert len(arr_tuple) == 3, (
+            f'Length of each Arrhenius tuple should be 3, not {len(arr_tuple)}')
+        a_par, n_par, ea_par = arr_tuple
         new_kts = a_par * ((temps/t_ref)**n_par) * np.exp(-ea_par/(rval*temps))
         kts = np.add(kts, new_kts, out=kts, casting='unsafe')  # stops Np errs
 
