@@ -1,7 +1,7 @@
 import time
 import numpy
 from ratefit.fit import plog
-from ratefit.fit import new_err
+from ratefit.fit import new_err as err
 
 TEMPS = numpy.linspace(400, 900, 11)
 TEMPS_SHORT = numpy.linspace(450, 900, 10)  # used with KTS1 since no 400 K val
@@ -22,21 +22,20 @@ KTS4 = numpy.array([12.9012, 101.173, 430.225, 1199.49,
 KTS5 = numpy.array([51.9327, 655.99, 4402.47, 18140.5, 
                     51929.1, 114477, 213629, 362666, 
                     589511, 946634, 1.84E+06,])
-
 KTP_DCT = {
     0.01:  (TEMPS_SHORT, KTS1),
     0.1:   (TEMPS, KTS2),
     1.0:   (TEMPS, KTS3),
     10.0:  (TEMPS, KTS4),
-    100.0: (TEMPS, KTS5),
-}
+    100.0: (TEMPS, KTS5),}
 
-time1 = time.time()
-PARAMS_1 = plog.get_params(KTP_DCT, dbl_tol=15, dbl_iter=100)
-time2 = time.time()
 
-print(f'time:\n{time2 - time1:.1f}')
-print(PARAMS_1.plog)
-#ERR_DCT = new_err.get_err_dct(KTP_DCT, PARAMS_1)
-#print(ERR_DCT)
+def test_plog():
 
+    params, err_dct = plog.get_params(KTP_DCT, dbl_tol=15, dbl_iter=1)
+    max_err = err.get_max_err(err_dct)
+    assert max_err < 25  # error in %
+
+
+if __name__ == '__main__':
+    test_plog()

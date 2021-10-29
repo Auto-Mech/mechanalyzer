@@ -1,9 +1,8 @@
-import time
 import numpy
-import ratefit
+from ratefit.fit import arr
+from ratefit.fit import new_err as err
 
-
-
+# Define stuff for testing single fitting
 # KTS_1 and TEMPS_1 are from experimental data on N2O + Ar = N2 + O + Ar
 KTS_1 = numpy.array([
     3.78e6, 5.22e6, 1.12e7, 1.77e7, 1.83e7, 2.76e7, 3.50e7, 6.58e7, 1.33e8, 2.21e8,
@@ -11,8 +10,10 @@ KTS_1 = numpy.array([
 TEMPS_1 = numpy.array([
     1546, 1576, 1640, 1681, 1688, 1729, 1754, 1821, 1894, 1954,
     1997, 2112, 2230, 2326, 2476])
+KTP_DCT_1 = {'high': (TEMPS_1, KTS_1)}
 
 
+# Define stuff for testing double fitting
 # KTS_2 and TEMPS_2 are from the expressions given by Joshi and Wang for 
 # CO + OH = CO2 + H 
 TEMPS_2 = numpy.array([
@@ -29,17 +30,25 @@ KTS_2 = numpy.array([
     8.77E+10, 8.84E+10, 9.29E+10, 9.88E+10, 1.07E+11, 1.18E+11, 1.32E+11, 1.48E+11, 1.66E+11, 1.87E+11,
     2.11E+11, 2.37E+11, 2.65E+11, 2.96E+11, 3.29E+11, 3.65E+11, 4.03E+11, 4.43E+11, 4.86E+11, 5.31E+11,
     5.78E+11, 6.28E+11, 6.80E+11, 7.34E+11])
-
-KTP_DCT_1 = {'high': (TEMPS_1, KTS_1)}
-PARAMS_1 = ratefit.fit.arr.get_params(KTP_DCT_1)
-print(PARAMS_1.arr)
-
 KTP_DCT_2 = {'high': (TEMPS_2, KTS_2)}
-time1 = time.time()
-PARAMS_2 = ratefit.fit.arr.get_params(KTP_DCT_2)
-time2 = time.time()
-print(f'time:\n{time2 - time1:.1f}')
-print(PARAMS_2.arr)
-ERR_DCT_2 = ratefit.fit.new_err.get_err_dct(KTP_DCT_2, PARAMS_2)
-print(ERR_DCT_2)
 
+
+def test_single():
+    """ Test the double Arrhenius fitter
+    """
+    params, err_dct = arr.get_params(KTP_DCT_1)
+    max_err = err.get_max_err(err_dct) 
+    assert max_err < 5  # %
+
+
+def test_double():
+    """ Test the double Arrhenius fitter
+    """
+    params, err_dct = arr.get_params(KTP_DCT_2)
+    max_err = err.get_max_err(err_dct) 
+    assert max_err < 1  # %
+
+
+if __name__ == '__main__':
+    test_single()
+    test_double()

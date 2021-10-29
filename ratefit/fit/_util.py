@@ -164,3 +164,24 @@ def set_a_conversion_factor(reaction):
     """
     [lab_i, _] = reaction.split('=')
     return phycon.NAVO if 'W' not in lab_i else 1.00
+
+
+def get_temps_and_pressures(ktp_dct):
+    """ Reads a ktp_dct and gets the list of pressure and corresponding list of
+        temperature arrays
+
+        :param ktp_dct: k(T,P) values
+        :type ktp_dct: dict {pressure: (temps, kts)}
+        :return temps_lst: list of temperature arrays at each pressure (K)
+        :rtype: list [numpy.ndarray1, numpy.ndarray2, ...]
+        :return pressures: list of pressures (atm)
+        :rtype: list
+    """
+
+    temps_lst = []
+    pressures = []
+    for pressure, (temps, kts) in ktp_dct.items():
+        temps_lst.append(temps)
+        pressures.append(pressure)
+        
+    return temps_lst, pressures

@@ -3,7 +3,7 @@
 
 import numpy
 from ratefit.fit import cheb
-from ratefit.fit import new_err
+from ratefit.fit import new_err as err
 
 
 # Data to fit
@@ -63,7 +63,7 @@ KTP_DCT = {
 TDEG, PDEG = 6, 4
 
 
-def test__chebyshev_fit():
+def test_cheb():
     """ test ratefit.fit.chebyshev.reaction
     """
 
@@ -79,14 +79,14 @@ def test__chebyshev_fit():
     ref_pmin = 0.1
     ref_pmax = 100
 
-    params = cheb.get_params(KTP_DCT, tdeg=TDEG, pdeg=PDEG)
+    params, err_dct = cheb.get_params(KTP_DCT, tdeg=TDEG, pdeg=PDEG)
 
     assert numpy.allclose(params.cheb['alpha'], ref_alpha)
     assert numpy.allclose(params.cheb['tlim'], (ref_tmin, ref_tmax))
     assert numpy.allclose(params.cheb['plim'], (ref_pmin, ref_pmax))
 
-    err_dct = new_err.get_err_dct(KTP_DCT, params)
-    print(err_dct)
+    max_err = err.get_max_err(err_dct)
+    assert max_err < 5
 
 if __name__ == '__main__':
-    test__chebyshev_fit()
+    test_cheb()
