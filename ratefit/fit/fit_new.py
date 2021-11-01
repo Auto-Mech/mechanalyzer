@@ -12,7 +12,7 @@ DEFAULT_PDEP = {
     'tol': 20.0,
     'plow': None,
     'phigh': None,
-    'pval': 1.0,}
+    'pval': 1.0}
 DEFAULT_ARR = {  # also used for PLOG fitting
     'dbltol': 15.0,
     'dbl_iter': 30}
@@ -60,12 +60,15 @@ def fit_rxn_ktp_dct(rxn_ktp_dct, fit_method, pdep_dct=None, arrfit_dct=None,
     rxn_param_dct = {}
     rxn_err_dct = {}
     for rxn, ktp_dct in rxn_ktp_dct.items():
+        print(f'Fitting Reaction: {rxn}')
         params, err_dct = fit_ktp_dct(ktp_dct, fit_method, pdep_dct=pdep_dct,
                                       arrfit_dct=arrfit_dct,
                                       chebfit_dct=chebfit_dct,
                                       troefit_dct=troefit_dct)
-        rxn_param_dct[rxn] = params
-        rxn_err_dct[rxn] = err_dct
+        if all(x is not None for x in (params, err_dct)):
+            rxn_param_dct[rxn] = params
+            rxn_err_dct[rxn] = err_dct
+        print('--------------------------------\n')
 
     return rxn_param_dct, rxn_err_dct
 
@@ -100,42 +103,37 @@ def fit_ktp_dct(ktp_dct, fit_method, pdep_dct=None, arrfit_dct=None,
     chebfit_dct = chebfit_dct or DEFAULT_CHEB
     troefit_dct = troefit_dct or DEFAULT_TROE
 
-    # Get the pdep_version of the ktp_dct
-    assess_temps = pdep_dct['temps']
-    tol = pdep_dct['tol']
-    plow = pdep_dct['plow']
-    phigh = pdep_dct['phigh']
-    pval = pdep_dct['pval']
-    pdep_ktp_dct = get_pdep_ktp_dct(ktp_dct, assess_temps=assess_temps,
-                                    tol=tol, plow=plow, phigh=phigh, pval=pval)
+    # If rates exist, fit them to desired functional form
+    params, err_dct = None, None
+    if ktp_dct:
+        # Get the pdep_version of the ktp_dct
+        pdep_ktp_dct = get_pdep_ktp_dct(
+            ktp_dct, assess_temps=pdep_dct['temps'],
+            tol=pdep_dct['tol'],
+            plow=pdep_dct['plow'], phigh=pdep_dct['phigh'],
+            pval=pdep_dct['pval'])
 
-    # Check the ktp_dct and the fit_method to see how to fit rates
-    actual_fit_method = assess_fit_method(pdep_ktp_dct, fit_method)
+        # Check the ktp_dct and the fit_method to see how to fit rates
+        actual_fit_method = assess_fit_method(pdep_ktp_dct, fit_method)
 
-    # Get the desired fit as an instance of the RxnParams class, and the err_dct
-    if actual_fit_method is None:  # occurs when the ktp_dct is empty
-        params = None
-        err_dct = None
-    elif actual_fit_method == 'troe':
-        print('Troe not implemented. Not doing a fit')
-        params = None
-        err_dct = None
-    elif actual_fit_method == 'arr':
-        dbltol = arrfit_dct['dbltol']
-        #dbl_iter = arrfit_dct.get('dbl_iter')  # unused for now
-        params, err_dct = arr.get_params(
-            pdep_ktp_dct, dbltol=dbltol)
-    elif actual_fit_method == 'plog':
-        dbltol = arrfit_dct['dbltol']
-        #dbl_iter = arrfit_dct.get('dbl_iter')  # unused for now
-        params, err_dct = plog.get_params(
-            pdep_ktp_dct, dbltol=dbltol)
-    elif actual_fit_method == 'cheb':
-        tdeg = chebfit_dct['tdeg']
-        pdeg = chebfit_dct['pdeg']
-        tol = chebfit_dct['tol']
-        params, err_dct = cheb.get_params(
-            pdep_ktp_dct, tdeg=tdeg, pdeg=pdeg, tol=tol)
+        # Get desired fit as instance of the RxnParams class, and the err_dct
+        if actual_fit_method == 'troe':
+            print('Troe not implemented. Not doing a fit')
+        elif actual_fit_method == 'arr':
+            # dbl_iter = arrfit_dct.get('dbl_iter')  # unused for now
+            params, err_dct = arr.get_params(
+                pdep_ktp_dct, dbltol=arrfit_dct['dbltol'])
+        elif actual_fit_method == 'plog':
+            # dbl_iter = arrfit_dct.get('dbl_iter')  # unused for now
+            params, err_dct = plog.get_params(
+                pdep_ktp_dct, dbltol=arrfit_dct['dbltol'])
+        elif actual_fit_method == 'cheb':
+            params, err_dct = cheb.get_params(
+                pdep_ktp_dct,
+                tdeg=chebfit_dct['tdeg'], pdeg=chebfit_dct['pdeg'],
+                tol=chebfit_dct['tol'])
+    else:
+        print('No rate constants to fit.')
 
     return params, err_dct
 
@@ -155,19 +153,16 @@ def assess_fit_method(pdep_ktp_dct, fit_method):
         :rtype: str
     """
 
-    if pdep_ktp_dct:
-        pressures = list(pdep_ktp_dct.keys())
-        npressures = len(pressures)
-        if npressures == 1 or (npressures == 2 and 'high' in pressures):
-            actual_fit_method = 'arr'
-        else:
-            # If the fit_method is Arrhenius but there are multiple pressures
-            if fit_method == 'arr':
-                actual_fit_method = 'plog'
-            else:
-                actual_fit_method = fit_method
+    pressures = list(pdep_ktp_dct.keys())
+    npressures = len(pressures)
+    if npressures == 1 or (npressures == 2 and 'high' in pressures):
+        actual_fit_method = 'arr'
     else:
-        actual_fit_method = None
+        # If the fit_method is Arrhenius but there are multiple pressures
+        if fit_method == 'arr':
+            actual_fit_method = 'plog'
+        else:
+            actual_fit_method = fit_method
 
     # If Chebyshev was requested and granted, check that it is viable to do
     # Chebyshev based on the number of k(T) values at each pressure
@@ -182,7 +177,7 @@ def assess_fit_method(pdep_ktp_dct, fit_method):
         if actual_fit_method == 'plog':
             # If changed to PLOG from Arrhenius
             if fit_method == 'arr':
-                print('\nPressure dependence detected. Fitting to PLOG form...')
+                print('\nPressure dependence found. Fitting to PLOG form...')
             elif fit_method == 'cheb':
                 print('\nRates invalid for Chebyshev. Fitting to PLOG form...')
         else:  # if changed to Arrhenius from anything else
@@ -232,20 +227,20 @@ def get_pdep_ktp_dct(ktp_dct, assess_temps=DEFAULT_PDEP['temps'],
     else:
         # If pval is in the dct, return kts at that pressure
         if pval in ktp_dct:
-            pdep_ktp_dct = {'high': ktp_dct[pval]}
+            pdep_ktp_dct = {pval: ktp_dct[pval]}
             print(f'No pressure dependence. Grabbing k(T)s at {pval} atm.')
         # Otherwise, get kts at some other pressure
         else:
             print(f'No pressure dependence, but no k(T)s at {pval} atm.')
             pressures = [pressure for pressure in ktp_dct
                          if pressure != 'high']
-            if pressures == []:
-                pdep_ktp_dct = {'high': ktp_dct['high']}
-                print('No numerical pressures. Grabbing "high" kts.')
-            else:
+            if pressures:
                 pressure = pressures[-1]
                 pdep_ktp_dct = {pressure: ktp_dct[pressure]}
                 print(f'Grabbing kts at {pressure} atm.')
+            else:
+                pdep_ktp_dct = {'high': ktp_dct['high']}
+                print('No numerical pressures. Grabbing "high" kts.')
 
     return pdep_ktp_dct
 
