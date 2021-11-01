@@ -1,5 +1,7 @@
 """
   Code to expand the mechanism using stereochemistry
+
+    maybe remove all inchis that are not incomplete?
 """
 
 import os
