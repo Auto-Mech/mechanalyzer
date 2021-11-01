@@ -32,7 +32,7 @@ KTP_DCT = {
 
 def test_plog():
 
-    params, err_dct = plog.get_params(KTP_DCT, dbl_tol=15, dbl_iter=1)
+    params, err_dct = plog.get_params(KTP_DCT, dbltol=15, dbl_iter=1)
     max_err = err.get_max_err(err_dct)
     assert max_err < 25  # error in %
 

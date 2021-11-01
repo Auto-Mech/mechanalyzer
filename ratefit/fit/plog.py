@@ -31,13 +31,13 @@ def get_params(ktp_dct, dbltol=15, dbl_iter=1, tref=1.0):
     plog_dct = {}
     err_dct = {}
     for pressure in pressures:
-        fake_ktp_dct = {}
-        fake_ktp_dct['high'] = ktp_dct[pressure]  # store with 'high' for arr
-        fake_params, fake_err_dct = arr.get_params(
-            fake_ktp_dct, dbltol=dbltol, dbl_iter=dbl_iter, tref=tref)
-        arr_params = fake_params.arr  # get the Arrhenius parameters
-        plog_dct[pressure] = arr_params  # store in the plog_dct
-        err_dct[pressure] = fake_err_dct['high']
+        # Create a ktp_dct with only one pressure for use with Arrhenius fitter
+        temp_ktp_dct = {pressure: ktp_dct[pressure]}
+        temp_params, temp_err_dct = arr.get_params(
+            temp_ktp_dct, dbltol=dbltol, dbl_iter=dbl_iter, tref=tref)
+        arr_params = temp_params.arr  # get the Arrhenius parameters
+        plog_dct[pressure] = arr_params  # update the plog_dct
+        err_dct[pressure] = temp_err_dct[pressure]  # update the err_dct
 
     params = RxnParams(plog_dct=plog_dct)  # instantiate RxnParams
 

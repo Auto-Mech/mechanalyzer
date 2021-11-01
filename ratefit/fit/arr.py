@@ -30,11 +30,12 @@ def get_params(ktp_dct, dbltol=15, dbl_iter=1, tref=1.0):
         :rtype: dict {pressure: (temps, errs)}
     """
 
-    assert len(ktp_dct) == 1 and ktp_dct.get('high') is not None, (
-        "There should only be one pressure, 'high' in the ktp_dct")
+    assert len(ktp_dct) == 1, (
+        f'ktp_dct for Arrhenius fit needs only 1 pressure, not {len(ktp_dct)}')
+    pressure = list(ktp_dct.keys())[0]  # get first (and only) pressure
 
     # Perform single fit and assess its errors
-    (temps, kts) = ktp_dct['high']  # read data
+    (temps, kts) = ktp_dct[pressure]  # read data
     sing_params = single_arr(temps, kts)
     sing_err_dct = err.get_err_dct(ktp_dct, sing_params)
     sing_max_err = err.get_max_err(sing_err_dct)
@@ -201,6 +202,8 @@ def double_arr(temps, kts, sing_params, tref=1.0, dbltol=15, dbl_iter=1):
     # Make a maximum of dbl_iter attempts at a double fit
     max_errs = []
     prev_params = []
+    # Note: using 'high' here in place of the actual pressure; doesn't matter
+    # since this ref_ktp_dct never gets returned
     ref_ktp_dct = {'high': (temps, kts)}  # used for err_dct later
     for guess_idx in range(dbl_iter):
         # Use SJK's guesses as first try

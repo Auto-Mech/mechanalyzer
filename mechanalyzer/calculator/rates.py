@@ -60,12 +60,14 @@ def eval_params(params, temps_lst, pressures, tref=1.0):
             # Pick the temperatures to use in the Arrhenius assessment
             if 'high' in pressures:
                 temps = temps_lst[pressures.index('high')]
+                pressure = 'high'
             else:
                 temps = temps_lst[-1]  # use the last pressure
+                pressure = pressures[-1]
 
             arr_tuples = params.arr
             kts = arr(arr_tuples, temps, tref)
-            new_ktp_dct['high'] = (temps, kts)
+            new_ktp_dct[pressure] = (temps, kts)
 
         elif form == 'plog':
             plog_dct = params.plog
