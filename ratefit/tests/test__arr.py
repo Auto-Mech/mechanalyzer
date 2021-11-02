@@ -1,6 +1,6 @@
 import numpy
 from ratefit.fit import arr
-from ratefit.fit import new_err as err
+from ratefit.fit import err
 
 # Define stuff for testing single fitting
 # KTS_1 and TEMPS_1 are from experimental data on N2O + Ar = N2 + O + Ar

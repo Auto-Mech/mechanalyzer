@@ -3,7 +3,7 @@
 
 import numpy as np
 from autoreact.params import RxnParams
-from ratefit.fit import new_err as err
+from ratefit.fit import err
 
 KTP_DCT1 = {
    0.01:  (np.array([1000., 1500.]),

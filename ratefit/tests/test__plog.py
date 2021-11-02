@@ -1,7 +1,7 @@
 import time
 import numpy
 from ratefit.fit import plog
-from ratefit.fit import new_err as err
+from ratefit.fit import err
 
 TEMPS = numpy.linspace(400, 900, 11)
 TEMPS_SHORT = numpy.linspace(450, 900, 10)  # used with KTS1 since no 400 K val

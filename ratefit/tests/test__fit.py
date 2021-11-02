@@ -1,5 +1,5 @@
 import numpy
-from ratefit.fit import fit_new as fit
+from ratefit.fit import _fit as fit
 
 # Define things for the assess_fit_method test
 PDEP_KTP_DCT = { 
