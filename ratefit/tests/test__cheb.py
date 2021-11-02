@@ -3,7 +3,7 @@
 
 import numpy
 from ratefit.fit import cheb
-from ratefit.fit import new_err as err
+from ratefit.fit import err
 
 
 # Data to fit

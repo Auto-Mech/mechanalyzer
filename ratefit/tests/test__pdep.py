@@ -1,7 +1,7 @@
 """ Tests the pdep functions in ratefit.fit
 """
 
-from ratefit.fit import fit_new as fit
+from ratefit.fit import _fit as fit
 
 KTP_DCT = {
     0.1:    ((500.0, 1000.0), (1.020, 1.050)),
@@ -37,9 +37,10 @@ def test_get_pdep_ktp_dct():
         10.0: ((500.0, 1000.0), (1.04, 2.08)),
         100.0: ((500.0, 1300.0, 1000.0), (1.05, 1.5, 2.09)),
         'high': ((500.0, 1000.0), (1.06, 3.04))}
-    ref2 = {'high': ((300.0, 500.0, 1000.0), (1.0, 1.03, 1.06))}
+    ref2 = {1.0: ((300.0, 500.0, 1000.0), (1.0, 1.03, 1.06))}
     ref3 = {100.0: ((500.0, 1300.0, 1000.0), (1.05, 1.5, 2.09))}
 
+    print(fit.get_pdep_ktp_dct(KTP_DCT, assess_temps=TEMPS))
     assert fit.get_pdep_ktp_dct(KTP_DCT) == ref1
     assert fit.get_pdep_ktp_dct(KTP_DCT, assess_temps=TEMPS) == ref2
     assert fit.get_pdep_ktp_dct(KTP_DCT, assess_temps=TEMPS, pval=PVAL) == ref3

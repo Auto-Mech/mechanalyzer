@@ -5,7 +5,7 @@ import numpy
 from scipy.special import eval_chebyt
 from autoreact.params import RxnParams
 from ratefit.fit import arr
-from ratefit.fit import new_err as err
+from ratefit.fit import err
 
 RCOND = -1  # a parameter for the Numpy least squares fitting
 
