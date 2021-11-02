@@ -41,11 +41,11 @@ if any(string is None for string in (spc_str, mech_str, sort_str)):
 
 # Build sorted mechanism files
 isolate_spc, sort_lst = mparser.parse_sort(sort_str)
+print('sort lst', sort_lst)
 param_dct_sort, _, mech_spc_dct, cmts_dct, elems = sorter.sorted_mech(
     spc_str, mech_str, isolate_spc, sort_lst)
 rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(
     rxn_sort_dct=cmts_dct)
-print(rxn_cmts_dct)
 
 # Write the output files (need to make general at some point)
 headers = sparser.csv_headers(mech_spc_dct)

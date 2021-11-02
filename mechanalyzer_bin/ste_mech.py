@@ -52,7 +52,7 @@ mech_spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
 
 print('Mechanism species with stereo added')
 for name, dct in mech_spc_dct.items():
-    print('Name: {0:<25s} InChI: {1}'.format(name, dct['inchi']))
+    print(f'Name: {name:<25s} InChI: {dct["inchi"]}')
 
 # Expand the reactions in the mechanism to include stereochemical variants
 print('\n---- Expanding the list of mechanism reactions to include all'
@@ -71,7 +71,7 @@ csv_str = mechanalyzer.parser.spc.csv_string(ste_mech_spc_dct_sort, HEADERS)
 # Write initial string to call the sorter
 mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
     elem_tuple=None,
-    spc_dct=ste_mech_spc_dct_sort,
+    mech_spc_dct=ste_mech_spc_dct_sort,
     spc_nasa7_dct=None,
     rxn_param_dct=rxn_param_dct,
     rxn_cmts_dct=None)
@@ -79,6 +79,8 @@ mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
 # Use strings to generate ordered objects
 param_dct_sort, _, ste_mech_spc_dct_sort, cmts_dct, elems = sorter.sorted_mech(
     csv_str, mech_str, isolate_spc, sort_lst)
+rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(
+    rxn_sort_dct=cmts_dct)
 
 # WRITE OUTPUT AND EXIT
 
@@ -90,7 +92,7 @@ mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
     mech_spc_dct=ste_mech_spc_dct_sort,
     spc_nasa7_dct=None,
     rxn_param_dct=param_dct_sort,
-    rxn_cmts_dct=cmts_dct)
+    rxn_cmts_dct=rxn_cmts_dct)
 
 # Write the species and mechanism files
 ioformat.pathtools.write_file(csv_str, CWD, FILE_DCT['out_spc'])
