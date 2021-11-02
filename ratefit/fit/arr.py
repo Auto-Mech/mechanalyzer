@@ -67,6 +67,11 @@ def get_params(ktp_dct, dbltol=15, dbl_iter=1, tref=1.0):
             print('Double fit error is worse than single; using single fit.')
             params = sing_params
             err_dct = sing_err_dct
+        # Use single fit if double fit contains infinite values
+        elif check_for_inf(doub_params):
+            print('Double fit error contains inf values; using single fit.')
+            params = sing_params
+            err_dct = sing_err_dct
         # Otherwise, use the double fit
         else:
             params = doub_params
@@ -262,3 +267,23 @@ def _resid_func(curr_guess, temps, kts, tref):
     resid = numpy.log10(kts) - numpy.log10(k_fit)
 
     return resid
+
+
+def check_for_inf(params):
+    """ Checks for infinite values in fitted Arrhenius parameters
+
+        :param params: fitted Arrhenius parameters
+        :type params: autoreact.RxnParams object
+        :return contains_inf: whether Arrhenius parameters contain infinity
+        :rtype: Bool
+    """
+
+    arr_tuples = params.arr
+    contains_inf = False
+    for arr_tuple in arr_tuples:
+        for element in arr_tuple:
+            if numpy.isinf(element):
+                contains_inf = True
+                break
+
+    return contains_inf
