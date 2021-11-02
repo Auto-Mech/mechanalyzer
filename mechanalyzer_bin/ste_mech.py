@@ -37,9 +37,9 @@ SORT_STR = ioformat.pathtools.read_file(
     remove_comments='#', remove_whitespace=True)
 
 # Build the initial dictionaries
-spc_dct = mechanalyzer.parser.spc.build_spc_dct(INP_SPC_STR, 'csv')
+mech_spc_dct = mechanalyzer.parser.spc.build_spc_dct(INP_SPC_STR, 'csv')
 rxn_param_dct, _, _ = mechanalyzer.parser.mech.parse_mechanism(
-    INP_MECH_STR, 'chemkin', spc_dct)
+    INP_MECH_STR, 'chemkin', mech_spc_dct)
 isolate_spc, sort_lst = mechanalyzer.parser.mech.parse_sort(SORT_STR)
 
 # ADD STEREO TO SPC AND REACTIONS
@@ -47,49 +47,50 @@ print('\n---- Adding stereochemistry to InChIs of mechanism'
       ' species where needed ---\n')
 
 # Add the stereochemical labels to the species
-spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
-    spc_dct, nprocs='auto', all_stereo=False)
+mech_spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
+    mech_spc_dct, nprocs='auto', all_stereo=False)
 
 print('Mechanism species with stereo added')
-for name, dct in spc_dct.items():
+for name, dct in mech_spc_dct.items():
     print('Name: {0:<25s} InChI: {1}'.format(name, dct['inchi']))
 
 # Expand the reactions in the mechanism to include stereochemical variants
 print('\n---- Expanding the list of mechanism reactions to include all'
       ' valid, stereoselective permutations ---\n')
-ste_rxn_dct, ste_spc_dct = mechanalyzer.builder.expand_mech_stereo(
-    rxn_param_dct, spc_dct)
+ste_rxn_dct, ste_mech_spc_dct = mechanalyzer.builder.expand_mech_stereo(
+    rxn_param_dct, mech_spc_dct)
 
 # OBTAIN SORTED SPECIES AND MECHANISMS
 
 # Write the new (sorted) species dictionary to a string
 HEADERS = ('smiles', 'inchi', 'inchikey', 'mult', 'charge')
-ste_spc_dct_sort = mechanalyzer.parser.spc.reorder_by_atomcount(ste_spc_dct)
-csv_str = mechanalyzer.parser.spc.csv_string(ste_spc_dct_sort, HEADERS)
+ste_mech_spc_dct_sort = mechanalyzer.parser.spc.reorder_by_atomcount(
+    ste_mech_spc_dct)
+csv_str = mechanalyzer.parser.spc.csv_string(ste_mech_spc_dct_sort, HEADERS)
 
 # Write initial string to call the sorter
 mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
     elem_tuple=None,
-    spc_dct=ste_spc_dct_sort,
+    spc_dct=ste_mech_spc_dct_sort,
     spc_nasa7_dct=None,
     rxn_param_dct=rxn_param_dct,
-    comments=None)
+    rxn_cmts_dct=None)
 
 # Use strings to generate ordered objects
-param_dct_sort, _, ste_spc_dct_sort, cmts_dct, elems = sorter.sorted_mech(
+param_dct_sort, _, ste_mech_spc_dct_sort, cmts_dct, elems = sorter.sorted_mech(
     csv_str, mech_str, isolate_spc, sort_lst)
 
 # WRITE OUTPUT AND EXIT
 
 # Write the dictionaries to ordered strings
 csv_str = mechanalyzer.parser.spc.csv_string(
-    ste_spc_dct_sort, FILE_DCT['headers'])
+    ste_mech_spc_dct_sort, FILE_DCT['headers'])
 mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
     elem_tuple=elems,
-    spc_dct=ste_spc_dct_sort,
+    mech_spc_dct=ste_mech_spc_dct_sort,
     spc_nasa7_dct=None,
     rxn_param_dct=param_dct_sort,
-    comments=cmts_dct)
+    rxn_cmts_dct=cmts_dct)
 
 # Write the species and mechanism files
 ioformat.pathtools.write_file(csv_str, CWD, FILE_DCT['out_spc'])
@@ -98,5 +99,5 @@ ioformat.pathtools.write_file(mech_str, CWD, FILE_DCT['out_mech'])
 # Compute script run time and print to screen
 tf = time.time()
 print('\n\nScript executed successfully.')
-print('Time to complete: {:.2f}'.format(tf-t0))
+print(f'Time to complete: {tf-t0:.2f}')
 print('Exiting...')

@@ -71,5 +71,5 @@ ioformat.pathtools.write_file(csv_str, CWD, OPTS['output'])
 # Compute script run time and print to screen
 tf = time.time()
 print('\n\nScript executed successfully.')
-print('Time to complete: {:.2f}'.format(tf-t0))
+print(f'Time to complete: {tf-t0:.2f}')
 print('Exiting...')
