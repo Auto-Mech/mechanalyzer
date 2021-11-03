@@ -76,8 +76,9 @@ def load_spc_therm_dcts(thermo_filenames, direc, temps):
 
 
 def load_rxn_ktp_dct(mech_filename, direc, temps, pressures):
-    """ Read a Chemkin-formatted mechanism file and calculate rates at the indicated
-        pressures and temperatures. Return a rxn_ktp_dct.
+    """ Read a Chemkin-formatted mechanism file and
+        calculate rates at the indicated pressures and temperatures.
+        Return a rxn_ktp_dct.
 
         :param mech_filename: Chemkin mechanism filename
         :type mech_filename: str
