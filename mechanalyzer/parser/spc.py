@@ -18,6 +18,17 @@ import thermfit
 from mechanalyzer.parser.csv_ import csv_dct
 
 
+# LIST SETTING THE STANDARD ORDER OF HEADERS
+STD_HEADERS = (
+    'name',
+    'smiles',
+    'inchi',
+    'inchikey',
+    'mult',
+    'charge'
+)
+
+
 # Write a spc_dct to a CSV string
 def csv_string(spc_dct, headers):
     """ Convert a mechanism species dictionary to a CSV file formatted
@@ -51,6 +62,28 @@ def csv_string(spc_dct, headers):
         quoting=csv.QUOTE_NONNUMERIC)
 
     return _csv_str
+
+
+# headers function i will probably move inside the function above
+def csv_headers(spc_dct):
+    """ Determine what the headers should be for writing a csv string dct
+    """
+
+    # Build spc sub dct of just info in the headers
+    headers = []
+    for dct in spc_dct.values():
+        headers += list(dct.keys())
+
+    # Turn to set to remove duplicates
+    # headers = ('name',) + tuple(set(headers))
+    headers = tuple(set(headers))
+
+    # Sort the headers by the standard list
+    print('headers', headers)
+    headers = automol.util.sort_by_list(
+        headers, STD_HEADERS, include_missing=False)
+
+    return headers
 
 
 # Build spc_dct from file/string i/o
@@ -199,7 +232,8 @@ def stereochemical_spc_dct(spc_dct, nprocs='auto', all_stereo=False):
     for dct in ste_dcts:
         ste_spc_dct.update(dct)
     if not all_stereo:
-        ste_spc_dct_ord = {name: ste_spc_dct[name] for name in init_names if name in ste_spc_dct}
+        ste_spc_dct_ord = {name: ste_spc_dct[name] for name in init_names
+                           if name in ste_spc_dct}
     else:
         ste_spc_dct_ord = copy.deepcopy(ste_spc_dct)
 

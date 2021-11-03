@@ -24,7 +24,7 @@ temps = numpy.linspace(400, 700, 31)
 pressures = numpy.array([1, 10])
 
 # options
-sort_method = 'ratios' # either 'ratios' or None
+sort_method = 'ratios'  # either 'ratios' or None
 rev_rates = True
 remove_loners = True
 write_file = False
@@ -50,14 +50,9 @@ algn_rxn_ktp_dct = compare.get_algn_rxn_ktp_dct(
     remove_loners=remove_loners, write_file=write_file
 )
 
-if sort_method == 'ratios':
-    ratio_sort = True
-else:
-    ratio_sort = False
-
 # Run the plotter
-figs = plot_rates.build_plots(algn_rxn_ktp_dct, mech_names=mech_nicknames,
-                              ratio_sort=ratio_sort)
+figs = plot_rates.build_plots(
+    algn_rxn_ktp_dct,
+    mech_names=mech_nicknames,
+    ratio_sort=bool(sort_method == 'ratios'))
 util.build_pdf(figs, filename=output_filename, path=JOB_PATH)
-
-

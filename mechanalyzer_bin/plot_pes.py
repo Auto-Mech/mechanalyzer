@@ -8,7 +8,7 @@ import os
 import argparse
 import ioformat
 import mess_io.reader
-import mechanalyzer.plotter
+# import mechanalyzer.plotter
 
 
 # Set useful global variables
@@ -26,7 +26,7 @@ OPTS = vars(PAR.parse_args())
 INP_PES_STR = ioformat.pathtools.read_file(CWD, OPTS['input'])
 
 if INP_PES_STR is None:
-    print('ERROR: Input PES file {} not found'.format(OPTS['input']))
+    print(f'ERROR: Input PES file {OPTS["input"]} not found')
     sys.exit()
 
 # Parse the MESS for information required to plot the PES
@@ -35,18 +35,18 @@ ene_dct, conn_lst, _ = mess_io.reader.pes(INP_PES_STR, read_fake=False)
 print('Information parsed from MESS input file')
 print('Energies of species:')
 for name, ene in ene_dct.items():
-    print('{}: {} kcal/mol'.format(name, ene))
+    print(f'{name}: {ene} kcal/mol')
 
 print('Connections:')
 for conn in conn_lst:
-    print('{} - {}'.format(conn[0], conn[1]))
+    print(f'{conn[0]} - {conn[1]}')
 
 # Try and resort to make plot nice
 # ord_ene_dct = mechanalyzer.plotter.pes.resort_names(ene_dct, conn_lst)
 # print('fin', list(ord_ene_dct.keys()))
 
 # Produce the PES plot
-mechanalyzer.plotter.new_pes.make_graph(ene_dct, conn_lst)
+# mechanalyzer.plotter.new_pes.make_graph(ene_dct, conn_lst)
 # mechanalyzer.plotter.pes.build(ene_dct, conn_lst)
 
 # Exit

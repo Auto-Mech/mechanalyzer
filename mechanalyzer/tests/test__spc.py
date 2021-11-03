@@ -41,20 +41,23 @@ def test__spc_dct_build():
             'inchikey': 'OTMSDBZUPAUEDD-UHFFFAOYSA-N',
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
-            'hind_inc': 0.5235987755982988},
+            'hind_inc': 0.5235987755982988,
+            'hbond_cutoffs': (4.55, 1.92)},
         'C2H5ClO': {
             'smiles': 'C[C@@H](O)Cl',
             'inchi': 'InChI=1S/C2H5ClO/c1-2(3)4/h2,4H,1H3/t2-/m1/s1',
             'inchikey': 'KJESGYZFVCIMDE-UWTATZPHSA-N',
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
-            'hind_inc': 0.5235987755982988}}
+            'hind_inc': 0.5235987755982988,
+            'hbond_cutoffs': (4.55, 1.92)}
+    }
 
     spc_dct = mechanalyzer.parser.spc.spc_dct_from_smiles(
         SMILES, stereo=True)
     assert set(ref_spc_dct.keys()) == set(spc_dct.keys())
-    for name in ref_spc_dct:
-        assert set(ref_spc_dct[name].keys()) == set(spc_dct[name].keys())
+    for name, ref_dct in ref_spc_dct.items():
+        assert set(ref_dct.keys()) == set(spc_dct[name].keys())
 
 
 # modify/add functionality
@@ -115,35 +118,40 @@ def test__mod_spc_dct_hof_basis():
             'inchikey': 'UFHFLCQGNIYNRP-UHFFFAOYSA-N',
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
-            'hind_inc': 0.5235987755982988},
+            'hind_inc': 0.5235987755982988,
+            'hbond_cutoffs': (4.55, 1.92)},
         'cbh1_CC': {
             'smiles': 'CC',
             'inchi': 'InChI=1S/C2H6/c1-2/h1-2H3',
             'inchikey': 'OTMSDBZUPAUEDD-UHFFFAOYSA-N',
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
-            'hind_inc': 0.5235987755982988},
+            'hind_inc': 0.5235987755982988,
+            'hbond_cutoffs': (4.55, 1.92)},
         'cbh1_CO': {
             'smiles': 'CO',
             'inchi': 'InChI=1S/CH4O/c1-2/h2H,1H3',
             'inchikey': 'OKKJLVBELUTLKV-UHFFFAOYSA-N',
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
-            'hind_inc': 0.5235987755982988},
+            'hind_inc': 0.5235987755982988,
+            'hbond_cutoffs': (4.55, 1.92)},
         'cbh2_CCC': {
             'smiles': 'CCC',
             'inchi': 'InChI=1S/C3H8/c1-3-2/h3H2,1-2H3',
             'inchikey': 'ATUOYWHBWRKTHZ-UHFFFAOYSA-N',
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
-            'hind_inc': 0.5235987755982988},
+            'hind_inc': 0.5235987755982988,
+            'hbond_cutoffs': (4.55, 1.92)},
         'cbh2_CCO': {
             'smiles': 'CCO',
             'inchi': 'InChI=1S/C2H6O/c1-2-3/h3H,2H2,1H3',
             'inchikey': 'LFQSCWFLJHTTHZ-UHFFFAOYSA-N',
             'charge': 0, 'mult': 1,
             'mc_nsamp': (True, 3, 1, 3, 100, 12),
-            'hind_inc': 0.523598775598298}
+            'hind_inc': 0.523598775598298,
+            'hbond_cutoffs': (4.55, 1.92)}
     }
 
     spc_dct = mechanalyzer.parser.spc.add_heat_of_formation_basis(
@@ -153,9 +161,9 @@ def test__mod_spc_dct_hof_basis():
 
     assert set(ref_spc_dct.keys()) == set(spc_dct.keys())
     assert set(ref_spc_dct.keys()) == set(spc_dct2.keys())
-    for name in ref_spc_dct:
-        assert set(ref_spc_dct[name].keys()) == set(spc_dct[name].keys())
-        assert set(ref_spc_dct[name].keys()) == set(spc_dct2[name].keys())
+    for name, ref_dct in ref_spc_dct.items():
+        assert set(ref_dct.keys()) == set(spc_dct[name].keys())
+        assert set(ref_dct.keys()) == set(spc_dct2[name].keys())
 
 
 def test__mod_spc_dct_stereo():
@@ -190,5 +198,5 @@ def test__mod_spc_dct_stereo():
 
     spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
         ref_spc_dct, all_stereo=False)
-    
+
     assert ref_spc_dct == spc_dct

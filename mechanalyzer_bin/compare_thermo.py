@@ -61,12 +61,39 @@ MECH_NAMES = ['ref_qtc','noHB_auto']
 # THERMO_FILENAMES = ['NUIG_nc3.THERM', 'all_therm.ckin_0']
 # SPC_CSV_FILENAMES = ['NUIG_nc3_species.csv', 'nc3_species.csv']
 
-# THERMO_FILENAMES = ['NUIG_nc3.THERM', 'all_therm.ckin_0', 'all_therm.ckin_1', 'all_therm.ckin_2', 'all_therm.ckin_3', 'all_therm.ckin_4']
-# SPC_CSV_FILENAMES = ['NUIG_nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv']
+# THERMO_FILENAMES = [
+#     'NUIG_nc3.THERM',
+#     'all_therm.ckin_0',
+#     'all_therm.ckin_1',
+#     'all_therm.ckin_2',
+#     'all_therm.ckin_3',
+#     'all_therm.ckin_4'
+# ]
+# SPC_CSV_FILENAMES = [
+#     'NUIG_nc3_species.csv',
+#     'nc3_species.csv',
+#     'nc3_species.csv',
+#     'nc3_species.csv',
+#     'nc3_species.csv',
+#     'nc3_species.csv'
+# ]
 
-# THERMO_FILENAMES = ['NUIG_nc3.THERM', '1-12_b3sp_fa.THERM', '1-12_b3sp_f.THERM', '1-12_b3sp_hr.THERM']
-# THERMO_FILENAMES = ['NUIG_nc3.THERM', '1-12_wbs_hr.THERM', '1-12_b3sp_hr.THERM']
-# SPC_CSV_FILENAMES = ['NUIG_nc3_species.csv', 'nc3_species.csv', 'nc3_species.csv']
+THERMO_FILENAMES = [
+    'NUIG_nc3.THERM',
+    '1-12_b3sp_fa.THERM',
+    '1-12_b3sp_f.THERM',
+    '1-12_b3sp_hr.THERM'
+]
+THERMO_FILENAMES = [
+    'NUIG_nc3.THERM',
+    '1-12_wbs_hr.THERM',
+    '1-12_b3sp_hr.THERM'
+]
+SPC_CSV_FILENAMES = [
+    'NUIG_nc3_species.csv',
+    'nc3_species.csv',
+    'nc3_species.csv'
+]
 
 OUTPUT_FILENAME = 'compare_thermo.pdf'
 # MECH_NAMES = ['NUIG', 'ANL_wbs_hr', 'ANL_b3_hr']
@@ -76,15 +103,15 @@ OUTPUT_FILENAME = 'compare_thermo.pdf'
 # MECH_NAMES = ['NUIG', 'wbs_hrfa', 'conf2', 'conf3', 'conf4', 'conf5']
 # MECH_NAMES = ['fa', 'f', 'hr', 'min']
 # MECH_NAMES = ['NUIG', 'zpe_fa', 'zpe_f', 'zpe_hr', 'min_f']
-#mech_nicknames = ['NUIG', 'ANL_fa_07', 'ANL_f', 'ANL_hr']
+# mech_nicknames = ['NUIG', 'ANL_fa_07', 'ANL_f', 'ANL_hr']
 
 # Conditions
-TEMPS = numpy.linspace(300,1000, 15)
+TEMPS = numpy.linspace(300, 1000, 15)
 
 # Options
 SORT = False
 # SORT = True
-SORT_INSTR = 'g' # either 'h', 'cp', 's', 'g', or None
+SORT_INSTR = 'g'  # either 'h', 'cp', 's', 'g', or None
 SORT_TEMP = 700  # can be (1) None to sort by max difference or (2) a number
 REMOVE_LONERS = True
 WRITE_FILE = False  # this currently does nothing
@@ -92,7 +119,7 @@ WRITE_FILE = False  # this currently does nothing
 # RUN FUNCTIONS
 # Fix temps to include the sort_temps if it doesn't already
 if SORT_TEMP is not None and SORT_TEMP not in TEMPS:
-   TEMPS = numpy.append(TEMPS, SORT_TEMP)
+    TEMPS = numpy.append(TEMPS, SORT_TEMP)
 
 # Get the job path and load the dcts
 if len(sys.argv) > 1:
@@ -101,7 +128,7 @@ if len(sys.argv) > 1:
 elif len(sys.argv) == 1:
     JOB_PATH = os.getcwd()
     print(f'No job path input; using the current directory, {JOB_PATH}')
-SPC_THERM_DCTS = ckin_parser.load_spc_therm_dcts(THERMO_FILENAMES, JOB_PATH, 
+SPC_THERM_DCTS = ckin_parser.load_spc_therm_dcts(THERMO_FILENAMES, JOB_PATH,
                                                  TEMPS)
 SPC_DCTS = spc_parser.load_spc_dcts(SPC_CSV_FILENAMES, JOB_PATH)
 

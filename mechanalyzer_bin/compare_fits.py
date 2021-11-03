@@ -39,12 +39,12 @@ elif len(sys.argv) == 1:
     JOB_PATH = os.getcwd()
     print(f'No job path input; using the current directory, {JOB_PATH}')
 
-# Get the therm and spc dcts for mechanism aligning 
+# Get the therm and spc dcts for mechanism aligning
 spc_therm_dcts = ckin_parser.load_spc_therm_dcts(
     thermo_filenames, JOB_PATH, temps)
 spc_dcts = spc_parser.load_spc_dcts(spc_csv_filenames, JOB_PATH)
 
-# Read the initial ktp dct and generate a new one with the fitter 
+# Read the initial ktp dct and generate a new one with the fitter
 rxn_ktp_dcts = ckin_parser.load_rxn_ktp_dcts(
     mech_filenames, JOB_PATH, temps, pressures)
 rxn_ktp_dct = rxn_ktp_dcts[0]
@@ -52,7 +52,7 @@ rxn_ktp_dct = rxn_ktp_dcts[0]
 new_rxn_ktp_dct = {}
 for rxn, ktp_dct in rxn_ktp_dct.items():
     # Dummy variables
-    fake_path = os.getcwd() 
+    fake_path = os.getcwd()
     reaction = 'W1=P1'  # to multiply by 1
     new_rxn_ktp_dct[rxn] = ratefit.fit.arrhenius.pes(
         ktp_dct, reaction, fake_path,
@@ -65,19 +65,18 @@ new_spc_dcts = [spc_dcts[0], spc_dcts[0]]
 
 # Get the algn_rxn_ktp_dct
 algn_rxn_ktp_dct = compare.get_algn_rxn_ktp_dct(
-    new_rxn_ktp_dcts, new_spc_therm_dcts, new_spc_dcts, temps, rev_rates=rev_rates,
-    remove_loners=remove_loners, write_file=write_file
+    new_rxn_ktp_dcts, new_spc_therm_dcts, new_spc_dcts, temps,
+    rev_rates=rev_rates,
+    remove_loners=remove_loners,
+    write_file=write_file
 )
 
 print(algn_rxn_ktp_dct)
 print(len(algn_rxn_ktp_dct))
 
-if sort_method == 'ratios':
-    ratio_sort = True
-else:
-    ratio_sort = False
-
 # Run the plotter
-figs = plot_rates.build_plots(algn_rxn_ktp_dct, mech_names=mech_nicknames,
-                              ratio_sort=ratio_sort)
+figs = plot_rates.build_plots(
+    algn_rxn_ktp_dct,
+    mech_names=mech_nicknames,
+    ratio_sort=bool(sort_method == 'ratios'))
 util.build_pdf(figs, filename=output_filename, path=JOB_PATH)
