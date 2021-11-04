@@ -8,19 +8,20 @@ RC = phycon.RC_CAL  # gas constant in cal/(mol.K)
 
 
 def create_spc_therm_dct(spc_nasa7_dct, temps, rval=RC):
-    """ Create a spc_therm_dct. If left with the default input rval=phycon.RC_cal, the
-        thermo quantities will have units of cal/mol for h(T) and g(T) and units of cal/mol-K
-        for cp(T) and s(T).
+    """ Create a spc_therm_dct. If left with default input rval=phycon.RC_cal,
+        thermo quantities will have units of cal/mol for h(T) and g(T) and
+        units of cal/mol-K for cp(T) and s(T).
 
-        :param spc_nasa7_dct: species dictionary describing the NASA-7 polynomials
+        :param spc_nasa7_dct: NASA-7 polynomial information for each species
         :type spc_nasa7_dct: dct {spc1: nasa7_dct1, spc2: ...}
-        :param temps: list of temperatures at which thermo is to be evaluated
-        :type temps: list
+        :param temps: temperatures at which to do calculations (K)
+        :type temps: numpy.ndarray
         :param rval: universal gas constant (units decided by the user)
         :type rval: float
-        :return spc_therm_dct: species dictionary with arrays of T, h(T), cp(T), s(T), and g(T)
-        :rtype: dct {spc1: thermo_array1, spc2: ...}
+        :return spc_therm_dct: arrays of T, h, cp, s, and g for each species
+        :rtype: dct {spc1: therm_array1, spc2: ...}
     """
+
     spc_therm_dct = {}
     for spc, nasa7_params in spc_nasa7_dct.items():
         h_t, cp_t, s_t, g_t, = [], [], [], []
@@ -30,8 +31,9 @@ def create_spc_therm_dct(spc_nasa7_dct, temps, rval=RC):
             s_t.append(entropy(nasa7_params, temp, rval=rval))
             g_t.append(gibbs(nasa7_params, temp, rval=rval))
 
-            if h_t[-1] is None or cp_t[-1] is None or s_t[-1] is None or g_t[-1] is None:
-                print(f'Failed to calculate thermo at {temp} K for {spc} due to an invalid temp.')
+            if not all((h_t[-1], cp_t[-1], s_t[-1], g_t[-1])):
+                print(f'Failed to calculate thermo at {temp} K for {spc} due '
+                      'to an invalid temp.')
 
         # Convert to numpy arrays
         temps = numpy.array(temps, dtype=float)
@@ -51,13 +53,14 @@ def enthalpy(nasa7_params, temp, rval=RC):
 
         :param nasa7_params: values describing a NASA-7 polynomial
         :type nasa7_params: list
-        :param temp: temperature to calculate the enthalpy (K)
+        :param temp: temperature at which to do calculation (K)
         :type temp: float
         :param rval: universal gas constant (units decided by the user)
         :type rval: float
-        :return h_t: value for the enthalpy (units same as the input rval)
+        :return h_t: value for the enthalpy (units same as rval)
         :rtype: float
     """
+
     cfts = coeffs_for_specific_temp(nasa7_params, temp)
     if cfts:
         h_t = (
@@ -81,13 +84,14 @@ def heat_capacity(nasa7_params, temp, rval=RC):
 
         :param nasa7_params: values describing a NASA-7 polynomial
         :type nasa7_params: list
-        :param temp: temperature to calculate heat capacity (K)
+        :param temp: temperature at which to do calculation (K)
         :type temp: float
         :param rval: universal gas constant (units decided by the user)
         :type rval: float
-        :return cp_t: value for the heat capacity (units same as the input rval)
+        :return cp_t: value for the heat capacity (units same as rval)
         :rtype: float
     """
+
     cfts = coeffs_for_specific_temp(nasa7_params, temp)
     if cfts:
         cp_t = (
@@ -110,13 +114,14 @@ def entropy(nasa7_params, temp, rval=RC):
 
         :param nasa7_params: values describing a NASA-7 polynomial
         :type nasa7_params: list
-        :param float temp: temperature to calculate the entropy (K)
+        :param temp: temperature at which to do calculation (K)
         :type temp: float
         :param rval: universal gas constant (units decided by the user)
         :type rval: float
-        :return s_t: value for the entropy (units same as the input rval)
+        :return s_t: value for the entropy (units same as rval)
         :rtype: float
     """
+
     cfts = coeffs_for_specific_temp(nasa7_params, temp)
     if cfts is not None:
         s_t = (
@@ -140,13 +145,14 @@ def gibbs(nasa7_params, temp, rval=RC):
 
         :param nasa7_params: values describing a NASA-7 polynomial
         :type nasa7_params: list
-        :param temp: temperature to calculate the Gibbs free energy
+        :param temp: temperature at which to do calculation (K)
         :type temp: float
         :param rval: universal gas constant (units decided by the user)
         :type rval: float
-        :return g_t: value for the Gibbs free energy (units same as the input rval)
+        :return g_t: value for the Gibbs free energy (units same as rval)
         :rtype: float
     """
+
     h_t = enthalpy(nasa7_params, temp, rval=rval)
     s_t = entropy(nasa7_params, temp, rval=rval)
     if h_t is not None and s_t is not None:
@@ -163,13 +169,14 @@ def coeffs_for_specific_temp(nasa7_params, temp):
 
         :param nasa7_params: values describing a NASA-7 polynomial
         :type nasa7_params: list
-        :param temp: temperature to calculate the Gibbs free energy
+        :param temp: temperature at which to do calculation (K)
         :type temp: float
         :return cfts: NASA-7 polynomial coefficients at the correct temperature
         :rtype: list [cft1, cft2, ...]
     """
+
     cutoff_temps = nasa7_params[3]
-    low_temp, high_temp, mid_temp = cutoff_temps  # the order seems odd, but it's the NASA format
+    low_temp, high_temp, mid_temp = cutoff_temps  # order is odd but correct
 
     if low_temp <= temp <= mid_temp:
         cfts = nasa7_params[4][1]

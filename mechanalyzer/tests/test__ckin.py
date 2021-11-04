@@ -15,8 +15,9 @@ MECH_FILENAMES = ['mech3.txt', 'mech3.txt']
 THERMO_FILENAMES = ['thermo3.txt', 'thermo3.txt']
 
 # Values, etc.
-TEMPS = numpy.array([500, 1000, 1500])
-PRESSURES = numpy.array([1, 10])
+TEMPS_LST = [numpy.array([500, 1000, 1500]),]
+TEMPS = TEMPS_LST[0]  # used for thermo calls, which take a single Numpy array
+PRESSURES = [1, 10]
 CORRECT_RATES = numpy.array([2.166e+07, 4.746e+10, 6.164e+11])  # Hong
 CORRECT_RXN = ((('H', 'O2'), ('OH', 'O'), (None,)),)
 CORRECT_PARAMS = [1.04e14, 0, 15286]
@@ -29,13 +30,13 @@ def test_load_rxn_ktp_dcts():
     """ Tests the load_rxn_ktp_dcts function
     """
 
-    rxn_ktp_dcts = ckin.load_rxn_ktp_dcts(MECH_FILENAMES, DAT_PATH, TEMPS,
+    rxn_ktp_dcts = ckin.load_rxn_ktp_dcts(MECH_FILENAMES, DAT_PATH, TEMPS_LST,
                                           PRESSURES)
     assert len(rxn_ktp_dcts) == 2
     for rxn_ktp_dct in rxn_ktp_dcts:
         assert tuple(rxn_ktp_dct.keys()) == CORRECT_RXN
         for ktp_dct in rxn_ktp_dct.values():
-            assert numpy.allclose(ktp_dct['high'][1], CORRECT_RATES, rtol=1e-2)
+            assert numpy.allclose(ktp_dct[10][1], CORRECT_RATES, rtol=1e-2)
 
 
 def test_load_rxn_param_dcts():
@@ -46,8 +47,10 @@ def test_load_rxn_param_dcts():
     assert len(rxn_param_dcts) == 2
     for rxn_param_dct in rxn_param_dcts:
         assert tuple(rxn_param_dct.keys()) == CORRECT_RXN
-        for param_tuple in rxn_param_dct.values():
-            assert param_tuple[0][0] == CORRECT_PARAMS
+        for params in rxn_param_dct.values():
+            arr_tuples = params.arr
+            for arr_tuple in arr_tuples: 
+                assert numpy.allclose(arr_tuple, CORRECT_PARAMS)
 
 
 def test_load_spc_therm_dcts():
@@ -64,10 +67,10 @@ def test_parse_rxn_ktp_dct():
     """ Tests the parse_rxn_ktp_dct function
     """
 
-    rxn_ktp_dct = ckin.parse_rxn_ktp_dct(MECH_STR, TEMPS, PRESSURES)
+    rxn_ktp_dct = ckin.parse_rxn_ktp_dct(MECH_STR, TEMPS_LST, PRESSURES)
     assert tuple(rxn_ktp_dct.keys()) == CORRECT_RXN
     for ktp_dct in rxn_ktp_dct.values():
-        assert numpy.allclose(ktp_dct['high'][1], CORRECT_RATES, rtol=1e-2)
+        assert numpy.allclose(ktp_dct[10][1], CORRECT_RATES, rtol=1e-2)
 
 
 if __name__ == '__main__':
