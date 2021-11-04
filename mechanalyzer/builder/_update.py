@@ -73,6 +73,40 @@ def update_rxn_dct(rxn_lst, rxn_dct, spc_dct):
     return rxn_dct
 
 
+# Removal functions
+def remove_spc_not_in_reactions(rxn_param_dct, mech_spc_dct):
+    """ Remove species from the spc dct not currently
+        in the list of reactions in the rxn_dct
+    """
+
+    spc_in_rxns = ()
+    for rxn in rxn_param_dct:
+        spc_in_rxns += rxn[0]
+        spc_in_rxns += rxn[1]
+    spc_in_rxns = set(spc_in_rxns)
+
+    return {name: dct for name, dct in mech_spc_dct.items()
+            if name in spc_in_rxns}
+
+
+def remove_improper_reactions(rxn_param_dct, mech_spc_dct, stereo=True):
+    """ Remove reactions from the mechanism that do not correspond
+        to proper, physical elementary step reactions.
+    """
+
+    ste_rxn_param_dct = {}
+    for rxn, params in rxn_param_dct.items():
+        rcts_ich = tuple(mech_spc_dct[rct]['inchi'] for rct in rxn[0])
+        prds_ich = tuple(mech_spc_dct[prd]['inchi'] for prd in rxn[1])
+
+        rxn_obj_sets = automol.reac.rxn_objs_from_inchi(
+            rcts_ich, prds_ich, stereo=stereo)
+        if rxn_obj_sets is not None:
+            ste_rxn_param_dct[rxn] = params
+
+    return ste_rxn_param_dct
+
+
 def _unique_reaction(rxn, rxn_dct):
     """ Determine if a reaction is in the parameter_dictionary
 
