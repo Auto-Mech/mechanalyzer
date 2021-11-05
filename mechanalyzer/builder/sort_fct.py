@@ -282,7 +282,7 @@ class SortMech:
 
         return conn_chn_df
 
-    def chnl(self):
+    def chnl(self, _):
         """ Calls subpes if not done
         """
         if 'subpes' not in self.mech_df.columns:
