@@ -138,7 +138,8 @@ def spc_dct_from_smiles(smiles_lst, stereo=False):
 
         # Generate Name
         fml = automol.inchi.formula_string(ich)
-        name, fml_count_dct = assign_unique_name(fml, fml_count_dct)
+        name, fml_count_dct = assign_unique_name(
+            fml, fml_count_dct, spc_dct)
 
         # Add species dictionary
         spc_dct.update({name: thermfit.create_spec(ich)})
@@ -350,12 +351,12 @@ def formula_count_dct(spc_dct):
     for dct in spc_dct.values():
         fml_str = automol.inchi.formula_string(dct['inchi'])
         _, fml_count_dct = assign_unique_name(
-            fml_str, fml_count_dct)
+            fml_str, fml_count_dct, spc_dct)
 
     return fml_count_dct
 
 
-def assign_unique_name(fml, fml_count_dct):
+def assign_unique_name(fml_str, fml_count_dct, spc_dct):
     """ Generate a unique name for a species with the
         given formula that corresponds to
 
@@ -368,13 +369,20 @@ def assign_unique_name(fml, fml_count_dct):
         formula appears in some mechanism.
     """
 
-    if fml in fml_count_dct:
-        fml_count_dct[fml] += 1
-        fml = fml + f'({fml_count_dct[fml]})'
+    if fml_str in fml_count_dct:
+        fml_count_dct[fml_str] += 1
+        # If the number is in the dictionary, increase by one
+        # happen when you have A(5), A(6), A(9)...A(7) miss throws off count
+        fml_count = fml_count_dct[fml_str]
+        name = fml_str + f'({fml_count})'
+        while name in spc_dct:
+            fml_count += 1
+            name = fml_str + f'({fml_count})'
     else:
-        fml_count_dct[fml] = 1
+        fml_count_dct[fml_str] = 1
+        name = fml_str
 
-    return fml, fml_count_dct
+    return name, fml_count_dct
 
 
 # add functions like adding the hashkey
@@ -388,3 +396,26 @@ def add_hashkey(spc_dct):
         dct.update({'inchikey': ick})
 
     return spc_dct
+
+
+if __name__ == '__main__':
+    test_spc_dct = {
+        'A(1)': {},
+        'A(2)': {},
+        'A(3)': {},
+        'A(7)': {},
+        'A(8)': {},
+    }
+    _fml_count_dct = {'A': 5}
+    print('init')
+    print(test_spc_dct)
+    print(_fml_count_dct)
+    for i in range(3):
+        print('---')
+        print(i)
+        _name, _fml_count_dct = assign_unique_name(
+            'A', _fml_count_dct, test_spc_dct)
+        print(_name)
+        test_spc_dct.update({_name: {}})
+        print(_fml_count_dct)
+        print(test_spc_dct)
