@@ -146,7 +146,7 @@ def unique_basis_species(basis_dct, spc_dct):
                     cnt += 1
             else:
                 if _ts_ref_unique(bas, mech_ichs):
-                    ref_name = f'TS_REF_{cnt}'
+                    ref_name = f'TS_REF_{cnt}_0'
                     unique_refs_dct[ref_name] = create_ts_spc(
                         bas, spc_dct, spc_dct[name]['mult'])
                     mech_ichs += (bas,)

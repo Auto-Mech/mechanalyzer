@@ -4,6 +4,7 @@
 
 import itertools
 import automol
+from autoreact.params import RxnParams
 import thermfit
 import mechanalyzer
 
@@ -37,7 +38,7 @@ def update_spc_dct(spc_ichs, spc_dct):
             # Generate unique name with formula, update formula dct
             fml = automol.inchi.formula_string(ich)
             name, fml_count_dct = mechanalyzer.parser.spc.assign_unique_name(
-                fml, fml_count_dct)
+                fml, fml_count_dct, spc_dct)
 
             # Generate the data dct
             rgt_dct = thermfit.create_spec(ich)
@@ -66,11 +67,55 @@ def update_rxn_dct(rxn_lst, rxn_dct, spc_dct):
             rxn_wname = _rxn_ich_to_name(rxn, spc_dct)
             print(f'Adding reaction {rxn_wname} to param dct')
 
-            # rxn_dct[rxn_wname] = (
-            #    ((1.0, 0.0, 0.0), None, None, None, None, None),)
-            rxn_dct[rxn_wname] = (((1.0, 0.0, 0.0),),)
+            rxn_dct[rxn_wname] = RxnParams(
+                arr_dct={'arr_tuples': ((1.0, 0.0, 0.0),)})
 
     return rxn_dct
+
+
+# Removal functions
+def remove_spc_not_in_reactions(rxn_param_dct, mech_spc_dct):
+    """ Remove species from the spc dct not currently
+        in the list of reactions in the rxn_dct
+    """
+
+    # spc_in_rxns = _spc_from_reactions(rxns)
+    spc_in_rxns = ()
+    for rxn in rxn_param_dct:
+        spc_in_rxns += rxn[0]
+        spc_in_rxns += rxn[1]
+    spc_in_rxns = set(spc_in_rxns)
+
+    new_mech_spc_dct = {}
+    for name, dct in mech_spc_dct.items():
+        if name in spc_in_rxns:
+            new_mech_spc_dct[name] = dct
+        elif any(x in name for x in ('cbh0_', 'cbh1_', 'cbh2_', 'cbh_3')):
+            new_mech_spc_dct[name] = dct
+        else:
+            print(f'Remove species: {name}')
+
+    return new_mech_spc_dct
+
+
+def remove_improper_reactions(rxn_param_dct, mech_spc_dct, stereo=True):
+    """ Remove reactions from the mechanism that do not correspond
+        to proper, physical elementary step reactions.
+    """
+
+    ste_rxn_param_dct = {}
+    for rxn, params in rxn_param_dct.items():
+        rcts_ich = tuple(mech_spc_dct[rct]['inchi'] for rct in rxn[0])
+        prds_ich = tuple(mech_spc_dct[prd]['inchi'] for prd in rxn[1])
+
+        rxn_obj_sets = automol.reac.rxn_objs_from_inchi(
+            rcts_ich, prds_ich, stereo=stereo)
+        if rxn_obj_sets is not None:
+            ste_rxn_param_dct[rxn] = params
+        else:
+            print(f'Removing reaction {rcts_ich}->{prds_ich}')
+
+    return ste_rxn_param_dct
 
 
 def _unique_reaction(rxn, rxn_dct):
@@ -138,7 +183,6 @@ def _rxn_ich_to_name(rxn, spc_dct):
     """
 
     ich_name_dct = _ich_name_dct(spc_dct)
-
     rxn2 = (
         tuple(ich_name_dct[rgt] for rgt in rxn[0]),
         tuple(ich_name_dct[rgt] for rgt in rxn[1]),

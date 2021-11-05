@@ -45,11 +45,8 @@ isolate_spc, sort_lst = mechanalyzer.parser.mech.parse_sort(SORT_STR)
 # ADD STEREO TO SPC AND REACTIONS
 print('\n---- Adding stereochemistry to InChIs of mechanism'
       ' species where needed ---\n')
-
-# Add the stereochemical labels to the species
 mech_spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
-    mech_spc_dct, nprocs='auto', all_stereo=False)
-
+    mech_spc_dct, nprocs='auto', all_stereo=True)
 print('Mechanism species with stereo added')
 for name, dct in mech_spc_dct.items():
     print(f'Name: {name:<25s} InChI: {dct["inchi"]}')
@@ -59,6 +56,14 @@ print('\n---- Expanding the list of mechanism reactions to include all'
       ' valid, stereoselective permutations ---\n')
 ste_rxn_dct, ste_mech_spc_dct = mechanalyzer.builder.expand_mech_stereo(
     rxn_param_dct, mech_spc_dct)
+
+# Remove species and reactions that should not be there
+print('\n Removing stereo improper reactions')
+ste_rxn_dct = mechanalyzer.builder.remove_improper_reactions(
+    ste_rxn_dct, ste_mech_spc_dct)
+print('\n Removing species not in the reactions')
+ste_mech_spc_dct = mechanalyzer.builder.remove_spc_not_in_reactions(
+    ste_rxn_dct, ste_mech_spc_dct)
 
 # OBTAIN SORTED SPECIES AND MECHANISMS
 

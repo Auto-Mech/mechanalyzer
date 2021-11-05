@@ -87,32 +87,6 @@ def _ste_rxn_lsts(rxn_ich):
     return ste_rxn_ichs
 
 
-def _ste_rxn_lsts2(rxn_ich):
-    """ Build reaction onjects
-    """
-
-    # Build reaction objects
-    rxn_obj_sets = automol.reac.util.rxn_objs_from_inchi(
-        rxn_ich[0], rxn_ich[1])
-    rxn, _, rct_geos, prd_geos = rxn_obj_sets[0]
-
-    print(f' - Reaction identified as {rxn.class_}')
-
-    srxn = automol.reac.add_stereo_from_geometries(rxn, rct_geos, prd_geos)
-
-    # Build a list of
-    ste_rxn_ichs = ()
-    for ste_rxn in automol.reac.expand_product_stereo(srxn):
-        rct_gras = automol.reac.reactant_graphs(ste_rxn)
-        prd_gras = automol.reac.product_graphs(ste_rxn)
-        rct_ichs = tuple(map(automol.graph.stereo_inchi, rct_gras))
-        prd_ichs = tuple(map(automol.graph.stereo_inchi, prd_gras))
-
-        ste_rxn_ichs += ((rct_ichs, prd_ichs, (None,)),)
-
-    return ste_rxn_ichs
-
-
 # Functions to check and sort the reactions by stereochemistry
 def _remove_unneeded_reactions(srxns):
     """ Take all reactions that occur from stereochemically
