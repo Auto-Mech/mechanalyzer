@@ -194,7 +194,8 @@ def create_ts_spc(ref, spc_dct, mult):
         'inchi': '',
         'mult': mult,
         'ts_locs': (0,),
-        'rxn_info': rinfo.from_data(rxn_ichs, rxn_chgs, rxn_muls, mult)
+        'rxn_info': rinfo.from_data(rxn_ichs, rxn_chgs, rxn_muls, mult),
+        'hbond_cutoffs': (4.55, 1.92)
     }
 
 
