@@ -35,6 +35,7 @@ def get_params(ktp_dct, dbltol=15, dbl_iter=1, tref=1.0):
     pressure = list(ktp_dct.keys())[0]  # get first (and only) pressure
 
     # Perform single fit and assess its errors
+    #
     (temps, kts) = ktp_dct[pressure]  # read data
     sing_params = single_arr(temps, kts)
     sing_err_dct = err.get_err_dct(ktp_dct, sing_params)
@@ -258,7 +259,7 @@ def _resid_func(curr_guess, temps, kts, tref):
         :rtype: Numpy.ndarray of shape (num_temps,)
     """
 
-    # Compute the fitted rate constant
+    # Compute the fitted rate constants
     k_fit1 = curr_guess[0] * numpy.exp(
         curr_guess[1] * numpy.log(temps / tref) - curr_guess[2] / (RC * temps))
     k_fit2 = curr_guess[3] * numpy.exp(
