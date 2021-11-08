@@ -60,8 +60,8 @@ def get_params(ktp_dct, dbltol=15, dbl_iter=1, tref=1.0):
         # Assess errors
         doub_err_dct = err.get_err_dct(ktp_dct, doub_params)
         doub_max_err = err.get_max_err(doub_err_dct)
-        print(f'Double fit obtained with max error of {doub_max_err:.1f}% after'
-              f' {guess_idx + 1} iteration(s).')
+        print(f'Double fit obtained with max error of {doub_max_err:.1f}% '
+              f'after {guess_idx + 1} iteration(s).')
 
         # Use single fit if double fit is worse than single fit
         if doub_max_err > sing_max_err:
@@ -131,7 +131,7 @@ def single_arr(temps, kts, tref=1.0):
         a_fit, n_fit, ea_fit = numpy.exp(theta[0]), theta[1], theta[2]
 
     # Pack the parameters into an arr_dct and instantiate RxnParams
-    arr_dct = {'arr_tuples': [[a_fit, n_fit, ea_fit],]}
+    arr_dct = {'arr_tuples': [[a_fit, n_fit, ea_fit]]}
     params = RxnParams(arr_dct=arr_dct)
 
     return params
@@ -174,7 +174,8 @@ def double_arr(temps, kts, sing_params, tref=1.0, dbltol=15, dbl_iter=1):
         """
 
         # Unpack the single Arrhenius params
-        sing_a, sing_n, sing_ea = sing_params.arr[0]  # get first (& only) entry
+        # get first (& only) entry
+        sing_a, sing_n, sing_ea = sing_params.arr[0]
 
         # Get a new tref for the double fit: the logarithmic midpoint temp
         doub_tref = numpy.sqrt(max(temps) / min(temps)) * min(temps)

@@ -1,8 +1,9 @@
 """ Fits rate constants to a PLOG form
 """
 
-from ratefit.fit import arr
 from autoreact.params import RxnParams
+from ratefit.fit import arr
+
 
 def get_params(ktp_dct, dbltol=15, dbl_iter=1, tref=1.0):
     """ Gets the fitting parameters for a PLOG fit to rate constant data.

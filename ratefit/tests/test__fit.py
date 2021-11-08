@@ -1,14 +1,18 @@
+""" tests fitter
+"""
+
 import numpy
 from ratefit.fit import _fit as fit
 
+
 # Define things for the assess_fit_method test
-PDEP_KTP_DCT = { 
+PDEP_KTP_DCT = {
     0.1:    ((500.0, 1000.0), (1.020, 1.050)),
     1.0:    ((300.0, 500.0, 1000.0), (1.0, 1.030, 1.060)),
     10.0:   ((500.0, 1000.0), (1.040, 2.080)),
     100.0:  ((500.0, 1300.0, 1000.0), (1.050, 1.50, 2.090)),
     'high': ((500.0, 1000.0), (1.060, 3.040))}
-PDEP_KTP_DCT2 = { 
+PDEP_KTP_DCT2 = {
     0.1:    ((500.0, 1000.0), (1.020, 1.050)),
     1.0:    ((500.0, 1000.0), (1.0, 1.030)),
     10.0:   ((500.0, 1000.0), (1.040, 2.080)),
@@ -24,7 +28,8 @@ ASSESS_TEMPS = (500.0,)
 
 # Define things for the Arrhenius test
 ARR_KTS = numpy.array([
-    3.78e6, 5.22e6, 1.12e7, 1.77e7, 1.83e7, 2.76e7, 3.50e7, 6.58e7, 1.33e8, 2.21e8,
+    3.78e6, 5.22e6, 1.12e7, 1.77e7, 1.83e7,
+    2.76e7, 3.50e7, 6.58e7, 1.33e8, 2.21e8,
     3.08e8, 6.73e8, 1.37e9, 2.44e9, 5.40e9])
 ARR_TEMPS = numpy.array([
     1546, 1576, 1640, 1681, 1688, 1729, 1754, 1821, 1894, 1954,
@@ -32,25 +37,26 @@ ARR_TEMPS = numpy.array([
 ARR_KTP_DCT = {'high': (ARR_TEMPS, ARR_KTS)}
 
 # Define things for the PLOG test
-PLOG_TEMPS = numpy.linspace(400, 900, 11) 
-PLOG_TEMPS_SHORT = numpy.linspace(450, 900, 10)  # used with KTS1 since no 400 K val
-# Define rates at 0.01, 0.1, 1, 10, and 100 atm 
-PLOG_KTS1 = numpy.array([5.45E-05, 0.000126326, 0.000302054, 0.00107086, 
-                    0.00553726, 0.0416265, 0.369654, 3.08305, 
-                    20.4691, 130.603,])  # leaving off 400 K value
-PLOG_KTS2 = numpy.array([0.00373048, 0.0124119, 0.0307059, 0.066723, 
-                    0.162508, 0.489855, 2.14679, 13.2429, 
-                    87.8471, 462.577, 2226.93,])
-PLOG_KTS3 = numpy.array([0.508358, 2.4336, 7.23671, 16.2493, 
-                    33.3004, 68.2562, 161.142, 479.797, 
-                    1768.32, 6495.67, 23780,])
-PLOG_KTP_DCT = { 
+PLOG_TEMPS = numpy.linspace(400, 900, 11)
+# used with KTS1 since no 400 K val
+PLOG_TEMPS_SHORT = numpy.linspace(450, 900, 10)
+# Define rates at 0.01, 0.1, 1, 10, and 100 atm
+PLOG_KTS1 = numpy.array([5.45E-05, 0.000126326, 0.000302054, 0.00107086,
+                         0.00553726, 0.0416265, 0.369654, 3.08305,
+                         20.4691, 130.603])  # leaving off 400 K value
+PLOG_KTS2 = numpy.array([0.00373048, 0.0124119, 0.0307059, 0.066723,
+                         0.162508, 0.489855, 2.14679, 13.2429,
+                         87.8471, 462.577, 2226.93])
+PLOG_KTS3 = numpy.array([0.508358, 2.4336, 7.23671, 16.2493,
+                         33.3004, 68.2562, 161.142, 479.797,
+                         1768.32, 6495.67, 23780])
+PLOG_KTP_DCT = {
     0.01:  (PLOG_TEMPS_SHORT, PLOG_KTS1),
     0.1:   (PLOG_TEMPS, PLOG_KTS2),
-    1.0:   (PLOG_TEMPS, PLOG_KTS3),}
+    1.0:   (PLOG_TEMPS, PLOG_KTS3)}
 
 CHEB_TEMPS = numpy.arange(300.0, 2500, 100.0)  # only goes up to 2400
-CHEB_KTP_DCT = { 
+CHEB_KTP_DCT = {
     'high': (CHEB_TEMPS, [0, 0]),  # should be ignored
     0.1: (CHEB_TEMPS, numpy.array(
         [1.08450103e-06, 4.02056587e-02, 2.67879037e+01, 2.18532255e+03,
@@ -105,7 +111,7 @@ CHEB_KTP_DCT = {
 # Define things for the fit_rxn_ktp_dct test
 RXN1 = (('H', 'O2'), ('OH', 'O'), (None,))
 RXN2 = (('N', 'O2'), ('NO', 'O'), (None,))
-RXN_KTP_DCT = {RXN1: ARR_KTP_DCT, RXN2: ARR_KTP_DCT}  
+RXN_KTP_DCT = {RXN1: ARR_KTP_DCT, RXN2: ARR_KTP_DCT}
 
 
 def test_assess_fit_method():
@@ -116,40 +122,40 @@ def test_assess_fit_method():
     pdep_ktp_dct = fit.get_pdep_ktp_dct(PDEP_KTP_DCT)
     # Do some checks on the pressure-dependent dct
     fit_method1 = fit.assess_fit_method(pdep_ktp_dct, 'arr')
-    assert fit_method1 == 'plog' 
+    assert fit_method1 == 'plog'
     fit_method2 = fit.assess_fit_method(pdep_ktp_dct, 'plog')
-    assert fit_method2 == 'plog' 
+    assert fit_method2 == 'plog'
     fit_method3 = fit.assess_fit_method(pdep_ktp_dct, 'cheb')
     assert fit_method3 == 'plog'  # should switch to plog
     fit_method4 = fit.assess_fit_method(pdep_ktp_dct, 'troe')
-    assert fit_method4 == 'troe' 
+    assert fit_method4 == 'troe'
 
     # This dct is pressure independent (due to the changed assess_temps)
     non_pdep_ktp_dct = fit.get_pdep_ktp_dct(
         PDEP_KTP_DCT, assess_temps=ASSESS_TEMPS)
     # Do some checks on the pressure-independent dct
     fit_method5 = fit.assess_fit_method(non_pdep_ktp_dct, 'arr')
-    assert fit_method5 == 'arr' 
+    assert fit_method5 == 'arr'
     fit_method6 = fit.assess_fit_method(non_pdep_ktp_dct, 'plog')
-    assert fit_method6 == 'arr' 
+    assert fit_method6 == 'arr'
     fit_method7 = fit.assess_fit_method(non_pdep_ktp_dct, 'cheb')
     assert fit_method7 == 'arr'
     fit_method8 = fit.assess_fit_method(non_pdep_ktp_dct, 'troe')
-    assert fit_method8 == 'arr' 
+    assert fit_method8 == 'arr'
 
     # This dct is pressure dependent and also is valid for Chebyshev
-    pdep_ktp_dct2 = fit.get_pdep_ktp_dct(PDEP_KTP_DCT2) 
+    pdep_ktp_dct2 = fit.get_pdep_ktp_dct(PDEP_KTP_DCT2)
 
     # Do some checks on the Chebyshev-valid dct
     fit_method9 = fit.assess_fit_method(pdep_ktp_dct2, 'cheb')
-    assert fit_method9 == 'cheb' 
+    assert fit_method9 == 'cheb'
 
     # This dct is pressure dependent and is invalid for Chebyshev
-    pdep_ktp_dct3 = fit.get_pdep_ktp_dct(PDEP_KTP_DCT3) 
+    pdep_ktp_dct3 = fit.get_pdep_ktp_dct(PDEP_KTP_DCT3)
 
     # Do some checks on the Chebyshev-invalid dct
     fit_method10 = fit.assess_fit_method(pdep_ktp_dct3, 'cheb')
-    assert fit_method10 == 'plog' 
+    assert fit_method10 == 'plog'
 
 
 def test_fit_arr():
@@ -157,24 +163,24 @@ def test_fit_arr():
     """
 
     ref_arr_params = numpy.asarray((1651834009420615.0, -0.0582113, 59922.119))
-    params, err_dct = fit.fit_ktp_dct(ARR_KTP_DCT, 'plog')  # just for fun, specify plog
+    params, _ = fit.fit_ktp_dct(ARR_KTP_DCT, 'plog')  # for fun, specify plog
     assert numpy.allclose(ref_arr_params, params.arr)
- 
-   
+
+
 def test_fit_plog():
     """ Tests the fitting of a ktp_dct with the PLOG form
     """
 
     ref_plog_dct = {
-        0.01: ((2.6464e-233, 74.0887, -65453),), 
-        0.1: ((7.6153e-159, 51.2153, -41468),), 
+        0.01: ((2.6464e-233, 74.0887, -65453),),
+        0.1: ((7.6153e-159, 51.2153, -41468),),
         1.0: ((2.5969e-81, 27.2407, -17616),)}
 
     arrfit_dct = {'dbltol': 80, 'dbl_iter': 30}  # 80 for only single fits
     # Just for fun, specify arr; it should switch to plog
-    params, err_dct = fit.fit_ktp_dct(PLOG_KTP_DCT, 'arr', arrfit_dct=arrfit_dct)
+    params, _ = fit.fit_ktp_dct(PLOG_KTP_DCT, 'arr', arrfit_dct=arrfit_dct)
     for pressure, ref_params in ref_plog_dct.items():
-        fit_params = params.plog[pressure] 
+        fit_params = params.plog[pressure]
         assert numpy.allclose(ref_params[0], fit_params[0], rtol=1e-3)
 
 
@@ -194,7 +200,7 @@ def test_fit_cheb():
     ref_pmin = 0.1
     ref_pmax = 100
 
-    params, err_dct = fit.fit_ktp_dct(CHEB_KTP_DCT, 'cheb')
+    params, _ = fit.fit_ktp_dct(CHEB_KTP_DCT, 'cheb')
 
     assert numpy.allclose(params.cheb['alpha'], ref_alpha)
     assert numpy.allclose(params.cheb['tlim'], (ref_tmin, ref_tmax))
@@ -206,13 +212,13 @@ def test_fit_rxn_ktp_dct():
     """
 
     ref_arr_params = numpy.asarray((1651834009420615.0, -0.0582113, 59922.119))
-    rxn_param_dct, rxn_err_dct = fit.fit_rxn_ktp_dct(RXN_KTP_DCT, 'arr')
+    rxn_param_dct, _ = fit.fit_rxn_ktp_dct(RXN_KTP_DCT, 'arr')
     for params in rxn_param_dct.values():
         assert numpy.allclose(ref_arr_params, params.arr)
 
 
 if __name__ == '__main__':
-    test_assess_fit_method() 
+    test_assess_fit_method()
     test_fit_arr()
     test_fit_plog()
     test_fit_cheb()

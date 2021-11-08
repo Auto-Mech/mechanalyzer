@@ -37,6 +37,7 @@ WEIGHTS = (0.8, 0.2)
 HFS = (0., .2)
 WEIGHTS_COMP = (0.9484, 0.0516)
 
+
 def test__combine():
     """ test thermfit.pf.combine
     """
@@ -48,8 +49,10 @@ def test__combine():
 def test_to_and_from_ln_partition_function():
     """ test thermfit.pf.combine
     """
+
     _, lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple = PFS[0]
-    nonlog_pf_array = thermfit.pf.from_ln_partition_function(lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple)
+    nonlog_pf_array = thermfit.pf.from_ln_partition_function(
+        lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple)
     log_pf_array = thermfit.pf.to_ln_partition_function(*nonlog_pf_array)
     assert numpy.allclose(PFS[0][1], log_pf_array[0])
     assert numpy.allclose(PFS[0][2], log_pf_array[1])
@@ -58,16 +61,21 @@ def test_to_and_from_ln_partition_function():
 
 def test__additive_combo():
     pf_arrays_lst = (PFS[0][1:], PFS[1][1:])
-    assert numpy.allclose(thermfit.pf.additive_pf_combination_at_temp(pf_arrays_lst, WEIGHTS, 1), COMBO)
+    assert numpy.allclose(
+        thermfit.pf.additive_pf_combination_at_temp(pf_arrays_lst, WEIGHTS, 1),
+        COMBO)
 
 
 def test__compute_weights():
     pf_array_lst = []
     for pf_i in PFS:
         temps, lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple = pf_i
-        pf_array_lst.append(thermfit.pf.from_ln_partition_function(lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple))
-    assert numpy.allclose(thermfit.pf.weights_at_temp(pf_array_lst, HFS, temps, 1), WEIGHTS_COMP)
-    
+        pf_array_lst.append(thermfit.pf.from_ln_partition_function(
+            lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple))
+    assert numpy.allclose(
+        thermfit.pf.weights_at_temp(pf_array_lst, HFS, temps, 1),
+        WEIGHTS_COMP)
+
 
 def test__boltzman_partition_function():
     print(PFS)
@@ -75,7 +83,7 @@ def test__boltzman_partition_function():
 
 
 if __name__ == '__main__':
-    #test__combine()
+    # test__combine()
     # test_to_and_from_ln_partition_function()
     # test__additive_combo()
     # test__compute_weights()

@@ -63,7 +63,7 @@ def reaction(ktp_dct, troefit_path,
         alpha=alpha, ts1=ts1, ts2=ts2, ts3=ts3,
         fit_tol1=fit_tol1, fit_tol2=fit_tol2)
     troefit_inp_file = os.path.join(troefit_path, 'troefit.dat')
-    with open(troefit_inp_file, 'w') as troefit_infile:
+    with open(troefit_inp_file, 'w', encoding='utf-8') as troefit_infile:
         troefit_infile.write(ratefit_inp_str)
 
     # Run the ratefit program
@@ -72,7 +72,7 @@ def reaction(ktp_dct, troefit_path,
     # Parse the ratefit files for the Arrhenius fit parameters
     troename = 'troefit.out'
     troefit_out_file = os.path.join(troefit_path, troename)
-    with open(troefit_out_file, 'r') as troefit_outfile:
+    with open(troefit_out_file, 'r', encoding='utf-8') as troefit_outfile:
         troefit_out_str = troefit_outfile.read()
 
     fit_params = troefit_io.read_params(troefit_out_str, a_conv_factor)
