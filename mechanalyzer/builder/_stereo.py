@@ -65,7 +65,6 @@ def expand_mech_stereo(mech_rxn_dct, mech_spc_dct, nprocs='auto'):
     ste_rxns = execute_function_in_parallel(_expand, rxns, args, nprocs=nprocs)
 
     # Update the mechanism objects with unique spc and rxns
-    print(ste_rxns)
     mech_spc_dct, _ = update_spc_dct_from_reactions(ste_rxns, mech_spc_dct)
     mech_rxn_dct = update_rxn_dct(ste_rxns, mech_rxn_dct, mech_spc_dct)
 
