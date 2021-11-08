@@ -88,30 +88,29 @@ def _ste_rxn_lsts(rxn_ich):
 
 
 # Functions to check and sort the reactions by stereochemistry
-def _remove_unneeded_reactions(srxns):
+def _remove_redundant_enantiomer_reactions(ste_rxn_lst):
     """ Take all reactions that occur from stereochemically
         and determine which reactions should be kept and
         whihc are unneccessary
-
-        Keep E<->E, Z<->Z
-        Remove RtoR and StoS if only one stereocenter.
     """
-    pnums = ()
-    _srxns = ()
-    for srxn in srxns:
-        ste_lyr = automol.inchi.stereo_sublayers(srxn)
+    
+    # Get list of reactions without third body for filtering
+    _ste_rxn_lst = tuple((rxn[0], rxn[1]) for rxn in ste_rxn_lst)
+    third_body = ste_rxn_lst[0][2]
 
-        if 'b' not in ste_lyr:
-            if 't' in ste_lyr:
-                tlyr = ste_lyr.get('t')
-                # Only look for single stereo center
-                if ',' not in tlyr:
-                    num = tlyr.replace('+', '').replace('-', '')
-                    pnums += (num,)
-                    if num not in pnums:
-                        _srxns += srxn
+    # Remove redundant sets and rebuild proper list
+    _ste_rxn_lstf = automol.inchi.filter_enantiomer_reactions(_ste_rxn_lst)
+    ste_rxn_lstf = tuple((rxn[0], rxn[1], third_body)
+                         for rxn in filt_ste_rxn_lst)
 
-    return _srxns
+    # Print the removed reactions
+    removed_ste_rxn_lst = set(ste_rxn_lst) & set(ste_rxn_lstf)
+    if removed_ste_rxn_lst:
+        print('Found redundant, enantiomeric reactions. Removing...')
+        for ste_rxn in removed_ste_rxn_lst:
+            print(f'  {ste_rxn}')
+
+    return _ste_rxn_lst
 
 
 def _rxn_ich(rxn, ich_dct):
