@@ -7,7 +7,7 @@
 import os
 import automol
 from autorun import execute_function_in_parallel
-import mechanalyzer
+import mechanalyzer.parser
 from mechanalyzer.builder._update import update_spc_dct_from_reactions
 from mechanalyzer.builder._update import update_rxn_dct
 from mechanalyzer.builder._update import rxn_name_str

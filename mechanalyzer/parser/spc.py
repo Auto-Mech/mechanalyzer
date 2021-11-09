@@ -278,7 +278,7 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
                 ret_ichs = (
                     [automol.inchi.add_stereo(ich)] if not all_stereo else
                     automol.inchi.expand_stereo(ich))
-        except:
+        except:  # noqa: E722
             print(f'{name} timed out in stereo generation')
             worked = False
         return ret_ichs, worked

@@ -55,21 +55,21 @@ jobs:
                 no_output_timeout: 60m
                 command: |
                     source activate mechanalyzer-env
-                    # flake8 --max-line-length=100 --exit-zero ratefit
+                    flake8 --max-line-length=100 --exit-zero ratefit
                     pylint --rcfile=.pylintrc ratefit
             - run:
                 name: Assess thermfit PEP8
                 no_output_timeout: 60m
                 command: |
                     source activate mechanalyzer-env
-                    # flake8 --max-line-length=100 --exit-zero thermfit
+                    flake8 --max-line-length=100 --exit-zero thermfit
                     pylint --rcfile=.pylintrc thermfit
             - run:
                 name: Assess mechanalyzer PEP8
                 no_output_timeout: 60m
                 command: |
                     source activate mechanalyzer-env
-                    # flake8 --max-line-length=100 --exit-zero mechanalyzer
+                    flake8 --max-line-length=100 --exit-zero mechanalyzer
                     pylint --rcfile=.pylintrc mechanalyzer
             - store_artifacts:
                     path: ratefit/htmlcov

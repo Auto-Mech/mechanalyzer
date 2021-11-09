@@ -309,12 +309,12 @@ def get_comb_spc_dct(spc_dct1, spc_dct2):
             chg1 = spc_vals1['charge']
 
             if ich1 == ich2 and mlt1 == mlt2 and chg1 == chg2:
-                if spc_name2 in rename_instr.keys():
+                if spc_name2 in rename_instr:
                     unique = False
                 break
 
         if unique:
-            if spc_name2 in rename_instr.keys():
+            if spc_name2 in rename_instr:
                 comb_spc_dct[spc_name2 + rename_str] = spc_vals2
             else:
                 comb_spc_dct[spc_name2] = spc_vals2
