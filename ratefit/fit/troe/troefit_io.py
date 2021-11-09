@@ -42,7 +42,7 @@ def write_input(kpt_dct,
     """
 
     # Write the fitting parameters at the top of the file
-    fit_tol_str = '{0:<12.10f} {1:<12.10f}'.format(fit_tol1, fit_tol2)
+    fit_tol_str = f'{fit_tol1:<12.10f} {fit_tol2:<12.10f}'
 
     # Set the indices for what is fitted
     fit_idxs = ['1', '1', '1', '1', '1', '1', None, None, None, None]
@@ -54,23 +54,28 @@ def write_input(kpt_dct,
     fit_option_idx = 1
 
     # Write the parameters strings
-    highp_params_str = '{0:>8.5E} {1:>8.5E} {2:>8.5E}'.format(
-        *highp_guess)
-    lowp_params_str = '{0:>8.5E} {1:>8.5E} {2:>8.5E}'.format(
-        *lowp_guess)
-    troe_params_str = '{0:>8.5E} {1:>8.5E} {2:>8.5E} {3:>8.5E}'.format(
-        alpha, ts1, ts2, ts3)
+    highp_params_str = (
+        f'{highp_guess[0]:>8.5E} '
+        f'{highp_guess[1]:>8.5E} '
+        f'{highp_guess[2]:>8.5E}'
+    )
+    lowp_params_str = (
+        f'{lowp_guess[0]:>8.5E} '
+        f'{lowp_guess[1]:>8.5E} '
+        f'{lowp_guess[2]:>8.5E}'
+    )
+    troe_params_str = f'{alpha:>8.5E} {ts1:>8.5E} {ts2:>8.5E} {ts3:>8.5E}'
 
     # Write the rate constants
     num_tk = len(kpt_dct)
     kpt_str = ''
     for temp, pk_arr in kpt_dct.items():
         [pressures, rate_constants] = pk_arr
-        kpt_str += '{0:<8.2f}{1:<4d}\n'.format(temp, len(pressures))
+        kpt_str += f'{temp:<8.2f}{len(pressures):<4d}\n'
         for pressure, rate in zip(pressures, rate_constants):
             # use p_to_m function from calc/_rates.py  at some point
             density = pressure / (rval * temp)
-            kpt_str += '{0:<14.5E}{1:<14.8E}\n'.format(density, rate)
+            kpt_str += f'{density:<14.5E}{rate:<14.8E}\n'
 
     # Build the fill value dictionary
     fit_keys = {

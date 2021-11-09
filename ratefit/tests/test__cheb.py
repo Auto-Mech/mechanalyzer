@@ -88,5 +88,6 @@ def test_cheb():
     max_err = err.get_max_err(err_dct)
     assert max_err < 5
 
+
 if __name__ == '__main__':
     test_cheb()

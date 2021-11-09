@@ -3,24 +3,27 @@ Test the mechanalyzer.calculator.rates functions
 """
 
 import numpy as np
-from mechanalyzer.calculator import rates
 from autoreact.params import RxnParams
+from mechanalyzer.calculator import rates
+
 
 # Misc definitions used for various tests
 PRESSURES = [0.316, 1.0, 10.0, 100.0, 'high']
 PRESSURES_NO_HIGH = [0.316, 1.0, 10.0, 100.0]
 TEMPS = [np.array([1000.0, 1500.0, 2000.0])]
 TEMPS2 = [np.array([300.0, 500.0, 1000.0])]  # only for Chebyshev test
-TEMPS3 = [np.array([1000.0, 1500.0, 2000.0]), np.array([1000.0, 1500.0, 2000.0]),  # for PLOG test
-    np.array([1000.0, 1500.0, 2000.0]), np.array([1000.0, 1500.0, 2000.0, 2500.0]),
-    np.array([1000.0, 1500.0, 2000.0, 2500.0])]
+TEMPS3 = [np.array([1000.0, 1500.0, 2000.0]),
+          np.array([1000.0, 1500.0, 2000.0]),
+          np.array([1000.0, 1500.0, 2000.0]),
+          np.array([1000.0, 1500.0, 2000.0, 2500.0]),
+          np.array([1000.0, 1500.0, 2000.0, 2500.0])]  # for PLOG test
 LOW_P_RXN = (('N2O',), ('N2', 'O'), ('+M',))
 HIGH_P_RXN = (('N2O',), ('N2', 'O'), ('(+M)',))
 LOW_P_PARAMS = [[1.04E+15, 0, 59810]]  # for Troe and Lindemann
 HIGH_P_PARAMS = [[1.26E+12, 0, 62620]]  # for Troe and Lindemann
 
 # Define stuff for testing Arrhenius
-ARR_DCT = {'arr_tuples':[[1.04E+15, 0, 59810],]}
+ARR_DCT = {'arr_tuples': [[1.04E+15, 0, 59810]]}
 ARR_PARAMS = RxnParams(arr_dct=ARR_DCT)
 ARR_RXN_PARAM_DCT = {LOW_P_RXN: ARR_PARAMS}
 ARRHENIUS_KTS = np.array([8.8273E+1, 2.0086E+6, 3.0299E+8])
@@ -70,7 +73,7 @@ LIND_RXN_PARAM_DCT = {HIGH_P_RXN: LIND_PARAMS}
 LIND_10ATM_KTS = np.array([7.6096e-03, 1.3922e+02, 1.6753e+04])
 
 # Define stuff for testing duplicate Arrhenius
-DUP_ARR_DCT = {'arr_tuples':[[1.04E+15, 0, 59810], [1.04E+15, 0, 59810]]}
+DUP_ARR_DCT = {'arr_tuples': [[1.04E+15, 0, 59810], [1.04E+15, 0, 59810]]}
 DUP_ARR_PARAMS = RxnParams(arr_dct=DUP_ARR_DCT)
 DUP_ARR_RXN_PARAM_DCT = {LOW_P_RXN: DUP_ARR_PARAMS}
 
@@ -168,9 +171,12 @@ def test_check_p_t():
 def test_read_rxn_ktp_dct():
     """ Test the rxn_ktp_dct reader
     """
-    rxn_ktp_dct = {(('N2O',), ('N2', 'O'), ('+M',)):
-        {'high': (np.array([1000., 1500., 2000.]),
-         np.array([10.0, 100.0, 1000.0]))}}
+    rxn_ktp_dct = {
+        (('N2O',), ('N2', 'O'), ('+M',)): {
+            'high': (np.array([1000., 1500., 2000.]),
+                     np.array([10.0, 100.0, 1000.0]))
+            }
+    }
     calc_rates = rates.read_rxn_ktp_dct(rxn_ktp_dct, LOW_P_RXN, 'high', 'rates')
     temps = rates.read_rxn_ktp_dct(rxn_ktp_dct, LOW_P_RXN, 'high', 'temps')
     assert np.allclose(calc_rates, np.array([10.0, 100.0, 1000.0]))

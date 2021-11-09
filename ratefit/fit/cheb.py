@@ -104,9 +104,9 @@ def get_alpha(ktp_dct, tdeg=4, pdeg=6):
     pmin, pmax = min(pressures), max(pressures)
 
     # Get reduced temperatures and pressures
-    tred = (2 * temps**(-1) - tmin**(-1) - tmax**(-1))\
+    tred = (2*temps**(-1) - tmin**(-1) - tmax**(-1))\
         / (tmax**(-1) - tmin**(-1))
-    pred = (2 * numpy.log10(pressures) - numpy.log10(pmin) - numpy.log10(pmax))\
+    pred = (2*numpy.log10(pressures) - numpy.log10(pmin) - numpy.log10(pmax))\
         / (numpy.log10(pmax) - numpy.log10(pmin))
 
     # Convert the ktp_dct to a Numpy array of shape (num_temps, num_pressures)

@@ -6,7 +6,7 @@ import itertools
 import automol
 from autoreact.params import RxnParams
 import thermfit
-import mechanalyzer
+import mechanalyzer.parser
 
 
 # Handles Species Object Updates

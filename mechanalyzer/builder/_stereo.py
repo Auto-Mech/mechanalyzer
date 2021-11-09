@@ -7,7 +7,7 @@
 import os
 import automol
 from autorun import execute_function_in_parallel
-import mechanalyzer
+import mechanalyzer.parser
 from mechanalyzer.builder._update import update_spc_dct_from_reactions
 from mechanalyzer.builder._update import update_rxn_dct
 from mechanalyzer.builder._update import rxn_name_str
@@ -26,23 +26,32 @@ def expand_mech_stereo(mech_rxn_dct, mech_spc_dct, nprocs='auto'):
         """
         srxns = ()
         for rxn in rxns:
-            print(f' - Expanding Stereo for Reaction: {rxn_name_str(rxn)}')
+
+            log1 = f'\nExpanding Stereo for Reaction: {rxn_name_str(rxn)}\n'
+
+            # Reformat reaction to use InChI instead of mechanism name
             rxn_ich = _rxn_ich(rxn, name_ich_dct)
 
-            # Get a list of reactions with stereochemistry
-            ste_rxns_ich_filt = _ste_rxn_lsts(rxn_ich)
-            # ste_rxns_ich_filt = _ste_rxn_lsts2(rxn_ich)
+            # Build list of all stereochemically allowed versions of reaction
+            ste_rxns_lst, log2 = _ste_rxn_lsts(rxn_ich)
 
-            # Filter unneccseary reactions
-            # ste_rxns_ich_filt = _remove_unneeded_reactions(ste_rxns_ich)
-            print(' - Stereochemical Versions of Reaction: '
-                  f'{rxn_name_str(rxn)}')
-            for srxn in ste_rxns_ich_filt:
-                # print(_rxn_smiles(x))
-                print('    ', rxn_name_str(srxn, newline=True))
+            # Filter redundant reactions from each enantiomer pairs
+            ste_rxns_lst, removed_rxns_lst = _remove_enantiomer_reactions(
+                ste_rxns_lst)
+
+            # Appropriately format the reactions with third body
+            ste_rxns_lst = _add_third(ste_rxns_lst)
+            removed_rxns_lst = _add_third(removed_rxns_lst)
+
+            # Print final list of stereochemical reactions to potentially add
+            log3 = _stereo_results(rxn, ste_rxns_lst, removed_rxns_lst)
 
             # Add to overall stereo reactions list
-            srxns += ste_rxns_ich_filt
+            srxns += ste_rxns_lst
+
+            # Print log message for reaction
+            log = log1 + log2 + log3
+            print(log)
 
         output_queue.put(srxns)
         print(f'Processor {os.getpid()} finished')
@@ -72,9 +81,7 @@ def _ste_rxn_lsts(rxn_ich):
         rxn_ich[0], rxn_ich[1])
     rxn_obj = rxn_obj_sets[0][0]  # expand just with rxn object
 
-    print(f' - Reaction identified as {rxn_obj.class_}.')
-
-    # Build a list of
+    # Build a list of stereo reactions
     ste_rxn_ichs = ()
     for ste_rxn in automol.reac.expand_stereo(rxn_obj):
         rct_gras = automol.reac.reactant_graphs(ste_rxn)
@@ -82,36 +89,54 @@ def _ste_rxn_lsts(rxn_ich):
         rct_ichs = tuple(map(automol.graph.stereo_inchi, rct_gras))
         prd_ichs = tuple(map(automol.graph.stereo_inchi, prd_gras))
 
-        ste_rxn_ichs += ((rct_ichs, prd_ichs, (None,)),)
+        ste_rxn_ichs += ((rct_ichs, prd_ichs),)
 
-    return ste_rxn_ichs
+    # Set log message
+    log = f' - Reaction identified as {rxn_obj.class_}.\n'
+
+    return ste_rxn_ichs, log
 
 
 # Functions to check and sort the reactions by stereochemistry
-def _remove_unneeded_reactions(srxns):
+def _remove_enantiomer_reactions(ste_rxn_lst):
     """ Take all reactions that occur from stereochemically
         and determine which reactions should be kept and
         whihc are unneccessary
-
-        Keep E<->E, Z<->Z
-        Remove RtoR and StoS if only one stereocenter.
     """
-    pnums = ()
-    _srxns = ()
-    for srxn in srxns:
-        ste_lyr = automol.inchi.stereo_sublayers(srxn)
 
-        if 'b' not in ste_lyr:
-            if 't' in ste_lyr:
-                tlyr = ste_lyr.get('t')
-                # Only look for single stereo center
-                if ',' not in tlyr:
-                    num = tlyr.replace('+', '').replace('-', '')
-                    pnums += (num,)
-                    if num not in pnums:
-                        _srxns += srxn
+    # Remove redundant sets and rebuild proper list
+    f_ste_rxn_lst = automol.inchi.filter_enantiomer_reactions(ste_rxn_lst)
 
-    return _srxns
+    # Print the removed reactions
+    removed_ste_rxn_lst = set(ste_rxn_lst) - set(f_ste_rxn_lst)
+
+    return f_ste_rxn_lst, removed_ste_rxn_lst
+
+
+# Formatters and printers
+def _stereo_results(rxn, f_ste_rxns_lst, removed_ste_rxns_lst):
+    """ Print the final filtered reactions and those removed
+    """
+
+    # Print final list of reactions
+    log = f' - Stereochemical Versions of Reaction: {rxn_name_str(rxn)}\n'
+    for ste_rxn in f_ste_rxns_lst:
+        log += '    ' + rxn_name_str(ste_rxn, newline=True) + '\n'
+
+    # Print removed reactions
+    if removed_ste_rxns_lst:
+        log += (' - Redundant, enantiomeric reactions '
+                'precluded from final list\n')
+        for ste_rxn in removed_ste_rxns_lst:
+            log += '    ' + rxn_name_str(ste_rxn, newline=True) + '\n'
+
+    return log
+
+
+def _add_third(rxn_lst):
+    """ Format a rxn list to have the third-body added back
+    """
+    return tuple((rxn[0], rxn[1], (None,)) for rxn in rxn_lst)
 
 
 def _rxn_ich(rxn, ich_dct):

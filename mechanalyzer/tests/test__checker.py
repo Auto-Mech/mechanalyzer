@@ -1,10 +1,9 @@
 """ test mechanalyzer.builder.checker
 """
 
-import os
-import tempfile
 import numpy as np
 from mechanalyzer.builder import checker
+
 
 TEMPS = np.array([500, 1000, 1500])
 GOOD_KTS = ([1e9, 1e10, 1e10])
@@ -80,7 +79,7 @@ SPC_IDENT_DCT1 = {
     'O2': {'smiles': '', 'inchi': 'InChI=1S/O2/c1-2', 'inchikey': '', 'mult': 1, 'charge': 0,
            'sens': 0, 'fml': {'O': 2}},
     'OHV': {'smiles': '', 'inchi': 'InChI=1S/O', 'inchikey': '', 'mult': 1, 'charge': 0,
-             'sens': 0, 'fml': {'O': 1}},
+            'sens': 0, 'fml': {'O': 1}},
 }
 
 CORRECT_NEGATIVE_KTS_STR = (

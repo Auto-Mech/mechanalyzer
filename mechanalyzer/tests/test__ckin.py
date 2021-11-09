@@ -15,7 +15,7 @@ MECH_FILENAMES = ['mech3.txt', 'mech3.txt']
 THERMO_FILENAMES = ['thermo3.txt', 'thermo3.txt']
 
 # Values, etc.
-TEMPS_LST = [numpy.array([500, 1000, 1500]),]
+TEMPS_LST = [numpy.array([500, 1000, 1500])]
 TEMPS = TEMPS_LST[0]  # used for thermo calls, which take a single Numpy array
 PRESSURES = [1, 10]
 CORRECT_RATES = numpy.array([2.166e+07, 4.746e+10, 6.164e+11])  # Hong
@@ -49,7 +49,7 @@ def test_load_rxn_param_dcts():
         assert tuple(rxn_param_dct.keys()) == CORRECT_RXN
         for params in rxn_param_dct.values():
             arr_tuples = params.arr
-            for arr_tuple in arr_tuples: 
+            for arr_tuple in arr_tuples:
                 assert numpy.allclose(arr_tuple, CORRECT_PARAMS)
 
 

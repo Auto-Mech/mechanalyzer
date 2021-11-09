@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy
 
+
 LINES = ['-', '--', '-.', ':']  # for plot formatting
 SORT_DCT = {'h': 1, 'cp': 2, 's': 3, 'g': 4}
 
@@ -223,7 +224,7 @@ def sort_by_max_diff(algn_spc_diff_dct, algn_spc_therm_dct, sort_instr='h',
     # Reorder the algn_spc_diff_dct and algn_spc_therm_dct
     sorted_spc_diff_dct = {}
     sorted_spc_therm_dct = {}
-    for spc in sorted_dct.keys():
+    for spc in sorted_dct:
         sorted_spc_diff_dct[spc] = algn_spc_diff_dct[spc]
         sorted_spc_therm_dct[spc] = algn_spc_therm_dct[spc]
 

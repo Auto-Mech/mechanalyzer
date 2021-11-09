@@ -137,7 +137,7 @@ def cbh_basis(zrxn, scheme):
                 tsutil.xor(frm_key2, brk_key2),
                 tsutil.intersec(frm_key2, brk_key2),
                 tsutil.xor(brk_key2, frm_key2)]
-        except:
+        except:  # noqa: E722
             site = [
                 tsutil.xor(frm_key1, brk_key2),
                 tsutil.intersec(frm_key1, brk_key2),
@@ -302,7 +302,7 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
             try:
                 grai = automol.graph.explicit(grai)
                 key = 'exp_gra'
-            except:
+            except:  # noqa: E722
                 key = 'ts_gra'
             newname = None
             repeat = False
@@ -409,7 +409,7 @@ def cbhone_radradabs(gra, site1, site2, bal=True):
                 try:
                     grai = automol.graph.explicit(grai)
                     key = 'exp_gra'
-                except:
+                except:  # noqa: E722
                     key = 'ts_gra'
                 newname = None
                 repeat = False
@@ -553,7 +553,7 @@ def cbhzed_elim(gra, site1, site2, bal=True):
             try:
                 grai = automol.graph.explicit(grai)
                 key = 'exp_gra'
-            except:
+            except:  # noqa: E722
                 key = 'ts_gra'
             newname = None
             repeat = False
@@ -649,7 +649,7 @@ def cbhzed_habs(gra, site, bal=True):
             try:
                 grai = automol.graph.explicit(grai)
                 key = 'exp_gra'
-            except:
+            except:  # noqa: E722
                 key = 'ts_gra'
             newname = None
             repeat = False
@@ -773,7 +773,7 @@ def cbhone_elim(gra, site1, site2, bal=True):
                 try:
                     grai = automol.graph.explicit(grai)
                     key = 'exp_gra'
-                except:
+                except:  # noqa: E722
                     key = 'ts_gra'
                 newname = None
                 repeat = False
@@ -899,7 +899,7 @@ def cbhone_habs(gra, site, bal=True):
             try:
                 grai = automol.graph.explicit(grai)
                 key = 'exp_gra'
-            except:
+            except:  # noqa: E722
                 key = 'ts_gra'
             newname = None
             repeat = False

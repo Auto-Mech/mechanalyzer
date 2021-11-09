@@ -82,7 +82,7 @@ def arrhenius(arr_tuples, temps, t_ref, rval=RC):
     kts = np.zeros_like(temps)
     for arr_tuple in arr_tuples:
         assert len(arr_tuple) == 3, (
-            f'Length of each Arrhenius tuple should be 3, not {len(arr_tuple)}')
+            f'Length of Arrhenius tuples should be 3, not {len(arr_tuple)}')
         a_par, n_par, ea_par = arr_tuple
         new_kts = a_par * ((temps/t_ref)**n_par) * np.exp(-ea_par/(rval*temps))
         kts = np.add(kts, new_kts, out=kts, casting='unsafe')  # stops Np errs
@@ -387,11 +387,11 @@ def cheb(alpha, tlim, plim, temps, pressures):
             a Chebyshev functional expression, at a given pressure,
             across several temperatures.
         """
-    
+
         tmin, tmax = tlim
         pmin, pmax = plim
         alpha_nrows, alpha_ncols = alpha.shape
-    
+
         ktps = np.zeros(len(temps))
         for i, temp in enumerate(temps):
             ctemp = (
@@ -400,17 +400,16 @@ def cheb(alpha, tlim, plim, temps, pressures):
             cpress = (
                 (2.0 * np.log10(pressure) - np.log10(pmin) - np.log10(pmax)) /
                 (np.log10(pmax) - np.log10(pmin)))
-    
+
             logktp = 0.0
             for j in range(alpha_nrows):
                 for k in range(alpha_ncols):
                     logktp += (alpha[j][k] * eval_chebyt(j, ctemp) *
                                eval_chebyt(k, cpress))
-    
-            ktps[i] = 10**(logktp)
-    
-        return ktps
 
+            ktps[i] = 10**(logktp)
+
+        return ktps
 
     kp_dct = {}
     for pressure in pressures:

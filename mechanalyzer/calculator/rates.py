@@ -148,7 +148,7 @@ def handle_duplicates(params, temps_lst, pressures, tref=1.0):
                 lowp_arr = troe_dct['lowp_arr']
                 troe_params = troe_dct['troe_params']
                 new_ktp_dct = troe(highp_arr, lowp_arr, troe_params, temps_lst,
-                               pressures, tref=tref)
+                                   pressures, tref=tref)
                 dup_ktp_dct = add_ktp_dcts(new_ktp_dct, dup_ktp_dct)
 
         elif form == 'lind':
@@ -180,7 +180,7 @@ def arr(arr_tuples, temps, tref, rval=RC):
     kts = numpy.zeros(len(temps))
     for arr_tuple in arr_tuples:
         assert len(arr_tuple) == 3, (
-            f'Length of each Arrhenius tuple should be 3, not {len(arr_tuple)}')
+            f'Length of Arrhenius tuple should be 3, not {len(arr_tuple)}')
         a_par, n_par, ea_par = arr_tuple
         kts += a_par * ((temps/tref)**n_par) * numpy.exp(-ea_par/(rval*temps))
 
@@ -209,7 +209,7 @@ def plog(plog_dct, temps_lst, pressures, tref=1.0):
             across several temperatures.
         """
 
-        # Check if pressure is in plog dct; use plog pressure for numerical stab
+        # Check if pressure in plog dct; use plog pressure for numerical stab
         pressure_defined = False
         plog_pressures = list(plog_dct.keys())
         for plog_pressure in plog_pressures:
@@ -240,8 +240,10 @@ def plog(plog_dct, temps_lst, pressures, tref=1.0):
             kts_high = arr(phigh_params, temps, tref=tref)
 
             # Calculate K(T,P)s with PLOG expression
-            log_kts = (numpy.log10(kts_low) +
-                     ((numpy.log10(kts_high)-numpy.log10(kts_low)) * pres_term))
+            log_kts = (
+                numpy.log10(kts_low) +
+                ((numpy.log10(kts_high)-numpy.log10(kts_low)) * pres_term)
+            )
             kts = 10**(log_kts)
 
         return kts
@@ -304,6 +306,9 @@ def cheb(alpha, tlim, plim, temps_lst, pressures):
 
         tmin, tmax = tlim
         pmin, pmax = plim
+        logp = numpy.log10(pressure)
+        logpmin = numpy.log10(pmin)
+        logpmax = numpy.log10(pmax)
         alpha_nrows, alpha_ncols = alpha.shape
 
         kts = numpy.zeros(len(temps))
@@ -312,9 +317,8 @@ def cheb(alpha, tlim, plim, temps_lst, pressures):
                 (2.0 * temp**(-1) - tmin**(-1) - tmax**(-1)) /
                 (tmax**(-1) - tmin**(-1)))
             cpress = (
-                (2.0 * numpy.log10(pressure) - numpy.log10(pmin) - \
-                numpy.log10(pmax)) /
-                (numpy.log10(pmax) - numpy.log10(pmin)))
+                (2.0 * logp - logpmin - logpmax) /
+                (logpmax - logpmin))
 
             log_kt = 0.0
             for j in range(alpha_nrows):
@@ -410,7 +414,6 @@ def troe(highp_arr, lowp_arr, troe_params, temps_lst, pressures,
 
             return f_term
 
-
         # Calculate the high- and low-P rate constants
         highp_kts = arr(highp_arr, temps, tref=tref)
         lowp_kts = arr(lowp_arr, temps, tref=tref)
@@ -428,7 +431,6 @@ def troe(highp_arr, lowp_arr, troe_params, temps_lst, pressures,
             kts = highp_kts * (pr_term / (1.0 + pr_term)) * f_term
 
         return kts
-
 
     ktp_dct = {}
     for pidx, pressure in enumerate(pressures):
@@ -490,7 +492,6 @@ def lind(highp_arr, lowp_arr, temps_lst, pressures, collid_factor=1.0,
             kts = highp_kts * (pr_term / (1.0 + pr_term))
 
         return kts
-
 
     ktp_dct = {}
     for pidx, pressure in enumerate(pressures):
@@ -589,10 +590,7 @@ def p_to_m(pressure, temps, rval=RC2):
         :return mconc: concentration of gas (mol/cm^3)
         :rtype: float
     """
-
-    conc =  pressure / (rval * temps)
-
-    return conc
+    return pressure / (rval * temps)
 
 
 def _pr_term(highp_kts, lowp_kts, temps, pressure, collid_factor=1.0, rval=RC2):

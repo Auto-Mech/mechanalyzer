@@ -263,7 +263,7 @@ def test__unique():
             'hind_inc': 0.5235987755982988,
             'hbond_cutoffs': (4.55, 1.92)
         },
-        'TS_REF_2': {
+        'TS_REF_2_0': {
             'reacs': ['InChI=1S/CH3/h1H3', 'InChI=1S/H2O2/c1-2/h1-2H'],
             'prods': ['InChI=1S/CH4/h1H4', 'InChI=1S/HO2/c1-2/h1H'],
             'charge': 0, 'inchi': '', 'mult': 2,
@@ -271,9 +271,10 @@ def test__unique():
             'rxn_info': (
                 (('InChI=1S/CH3/h1H3', 'InChI=1S/H2O2/c1-2/h1-2H'),
                  ('InChI=1S/CH4/h1H4', 'InChI=1S/HO2/c1-2/h1H')),
-                ((0, 0), (0, 0)), ((2, 1), (1, 2)), 2)
+                ((0, 0), (0, 0)), ((2, 1), (1, 2)), 2),
+            'hbond_cutoffs': (4.55, 1.92)
         },
-        'TS_REF_3': {
+        'TS_REF_3_0': {
             'reacs': ['InChI=1S/C2H5/c1-2/h1H2,2H3', 'InChI=1S/H2O/h1H2'],
             'prods': ['InChI=1S/C2H6/c1-2/h1-2H3', 'InChI=1S/HO/h1H'],
             'charge': 0, 'inchi': '', 'mult': 2,
@@ -281,7 +282,9 @@ def test__unique():
             'rxn_info': (
                 (('InChI=1S/C2H5/c1-2/h1H2,2H3', 'InChI=1S/H2O/h1H2'),
                  ('InChI=1S/C2H6/c1-2/h1-2H3', 'InChI=1S/HO/h1H')),
-                ((0, 0), (0, 0)), ((2, 1), (1, 2)), 2)},
+                ((0, 0), (0, 0)), ((2, 1), (1, 2)), 2),
+            'hbond_cutoffs': (4.55, 1.92)
+        },
         'REF_4': {
             'smiles': 'O',
             'inchi': 'InChI=1S/H2O/h1H2',
@@ -291,7 +294,7 @@ def test__unique():
             'hind_inc': 0.5235987755982988,
             'hbond_cutoffs': (4.55, 1.92)
             },
-        'TS_REF_5': {
+        'TS_REF_5_0': {
             'reacs': ['InChI=1S/CH3/h1H3', 'InChI=1S/H2O/h1H2'],
             'prods': ['InChI=1S/CH4/h1H4', 'InChI=1S/HO/h1H'],
             'charge': 0, 'inchi': '', 'mult': 2,
@@ -299,8 +302,10 @@ def test__unique():
             'rxn_info': (
                 (('InChI=1S/CH3/h1H3', 'InChI=1S/H2O/h1H2'),
                  ('InChI=1S/CH4/h1H4', 'InChI=1S/HO/h1H')),
-                ((0, 0), (0, 0)), ((2, 1), (1, 2)), 2)}
+                ((0, 0), (0, 0)), ((2, 1), (1, 2)), 2),
+            'hbond_cutoffs': (4.55, 1.92)
         }
+    }
 
     bas_dct = {
         'ts_1_1_1': (

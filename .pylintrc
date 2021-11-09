@@ -17,4 +17,5 @@ disable=
     arguments-out-of-order,
     too-many-function-args,
     logging-fstring-interpolation,
-    no-self-use
+    no-self-use,
+    bare-except

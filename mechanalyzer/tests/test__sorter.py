@@ -302,7 +302,8 @@ def test_sortby_rxnclass():
          '  elimination.Beta-scission'],
         [(('C2H5O2',), ('C2H4', 'HO2'), (None,)),
          '  elimination.Beta-scission +HO2'],
-        #[(('C2H4',), ('H2', 'H2CC'), ('(+M)',)),  # removed because classifer is not working well right now
+        # removed because classifer is not working well right now
+        # [(('C2H4',), ('H2', 'H2CC'), ('(+M)',)),
         # '  elimination.Decomposition'],
         [(('C2H4', 'H'), ('C2H3', 'H2'), (None,)),
          '  hydrogen abstraction.H abstraction'],
@@ -318,8 +319,9 @@ def test_sortby_rxnclass():
          '  substitution.Addition-decomposition - propagation'],
         [(('CH3', 'CH3'), ('H', 'C2H5'), (None,)),
          '  substitution.Recombination-decomposition - propagation'],
-        #[(('C3H4-A', 'O'), ('C2H4', 'CO'), (None,)),  # removed because classifer is not working well right now
-        # '  unclassified.Addition-decomposition - termination']
+        # removed because classifer is not working well right now
+        # [(('C3H4-A', 'O'), ('C2H4', 'CO'), (None,)),
+        #  '  unclassified.Addition-decomposition - termination']
     ]
     # Read mechanism files into strings
     spc_path = os.path.join(CWD, 'data', 'LLNL_species.csv')
@@ -406,15 +408,15 @@ def test__sortby_submech_subpes_chnl():
         [(('IC8',), ('NEOC5H11', 'IC3H7'), (None,)),
          '! pes.subpes.channel  2.1.1'],
         [(('IC8OOH1-1AR',), ('IC8O1-1A', 'OH'), (None,)),
-         '! pes.subpes.channel  3.1.1'] ,
+         '! pes.subpes.channel  3.1.1'],
         [(('IC8OOH1-1AR',), ('IC4H7OOH', 'IC4H9'), (None,)),
-         '! pes.subpes.channel  3.1.2'] ,
+         '! pes.subpes.channel  3.1.2'],
         [(('IC8OOH1-1AR',), ('CH2O', 'I24C7D1', 'OH'), (None,)),
-         '! pes.subpes.channel  3.1.3'] ,
+         '! pes.subpes.channel  3.1.3'],
         [(('IC8-1R', 'O2'), ('IC8-1O2R',), (None,)),
-         '! pes.subpes.channel  3.1.4'] ,
+         '! pes.subpes.channel  3.1.4'],
         [(('IC8-1O2R',), ('IC8OOH1-1AR',), (None,)),
-         '! pes.subpes.channel  3.1.5'] ,
+         '! pes.subpes.channel  3.1.5'],
         [(('IC8-3O2R',), ('IC8D3', 'HO2'), (None,)),
          '! pes.subpes.channel  3.2.6'],
         [(('IC8-3R', 'O2'), ('IC8D3', 'HO2'), (None,)),
@@ -577,13 +579,13 @@ def _read_files(spc_path, mech_path, sort_path):
     spc_str, mech_str, sort_str = '', '', ''
 
     if spc_path is not None:
-        with open(spc_path) as fobj:
+        with open(spc_path, encoding='utf-8') as fobj:
             spc_str = fobj.read()
     if mech_path is not None:
-        with open(mech_path) as fobj:
+        with open(mech_path, encoding='utf-8') as fobj:
             mech_str = fobj.read()
     if sort_path is not None:
-        with open(sort_path) as fobj:
+        with open(sort_path, encoding='utf-8') as fobj:
             sort_str = fobj.read()
 
     return spc_str, mech_str, sort_str

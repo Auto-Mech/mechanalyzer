@@ -78,7 +78,7 @@ mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
     elem_tuple=None,
     mech_spc_dct=ste_mech_spc_dct_sort,
     spc_nasa7_dct=None,
-    rxn_param_dct=rxn_param_dct,
+    rxn_param_dct=ste_rxn_dct,
     rxn_cmts_dct=None)
 
 # Use strings to generate ordered objects
