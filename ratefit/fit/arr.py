@@ -186,6 +186,9 @@ def double_arr(temps, kts, sing_params, tref=1.0, dbltol=15, dbl_iter=1):
                       (sing_a * (1 - a_change)), (sing_n - n_change), sing_ea]
 
         # Perform a least-squares fit
+        # print('init_guess test', init_guess)
+        # print('kts', kts)
+        # print('tref', doub_tref)
         plsq = leastsq(_resid_func, init_guess,
                        args=(temps, kts, doub_tref),
                        ftol=1.0E-8, xtol=1.0E-8, maxfev=100000)
@@ -194,6 +197,7 @@ def double_arr(temps, kts, sing_params, tref=1.0, dbltol=15, dbl_iter=1):
         raw_params = list(plsq[0])  # a list of length 6
         raw_params[0] = raw_params[0] * (tref / doub_tref) ** raw_params[1]
         raw_params[3] = raw_params[3] * (tref / doub_tref) ** raw_params[4]
+        # print('raw_params test', raw_params)
 
         # Instantiate RxnParams
         arr_dct = {'arr_tuples': [raw_params[:3], raw_params[3:]]}
