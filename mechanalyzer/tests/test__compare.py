@@ -46,9 +46,9 @@ SPC_IDENT_DCT3 = {
     'HO2X': {'smiles': '', 'inchi': 'InChI=1S/HO2/c1-2/h1H', 'inchikey': '', 'mult': 2, 'charge': 0,
              'sens': 0, 'fml': {'H': 1, 'O': 2}},
     'O2X': {'smiles': '', 'inchi': 'InChI=1S/O2/c1-2', 'inchikey': '', 'mult': 1, 'charge': 0,
-           'sens': 0, 'fml': {'O': 2}},
+            'sens': 0, 'fml': {'O': 2}},
     'H2O': {'smiles': '', 'inchi': 'InChI=1S/H2O/h1H2', 'inchikey': '', 'mult': 1, 'charge': 0,
-           'sens': 0, 'fml': {'H': 2, 'O': 1}},
+            'sens': 0, 'fml': {'H': 2, 'O': 1}},
     'H2': {'smiles': '', 'inchi': 'InChI=1S/H2/h1H', 'inchikey': '', 'mult': 2, 'charge': 0,
            'sens': 0, 'fml': {'H': 2}},
 }
@@ -210,7 +210,7 @@ def test_rename_dcts():
     # Rename the rxn_ktp and spc_thermo dcts
     renamed_rxn_ktp_dcts, _ = compare.rename_dcts(rxn_ktp_dcts, spc_dcts, target_type='rxn')
     renamed_spc_therm_dcts, _ = compare.rename_dcts(spc_therm_dcts, spc_dcts,
-                                                     target_type='spc')
+                                                    target_type='spc')
     assert tuple(renamed_rxn_ktp_dcts[1].keys()) == CORRECT_RENAMED_RXN_KEYS
     assert tuple(renamed_spc_therm_dcts[1].keys()) == CORRECT_SPC_KEYS
 
@@ -226,7 +226,7 @@ def test_reverse_rxn_ktp_dcts():
     renamed_rxn_ktp_dcts, _ = compare.rename_dcts(rxn_ktp_dcts, spc_dcts,
                                                   target_type='rxn')
     renamed_spc_therm_dcts, _ = compare.rename_dcts(spc_therm_dcts, spc_dcts,
-                                                     target_type='spc')
+                                                    target_type='spc')
     # Check functionality of the full reversal
     reversed_rxn_ktp_dcts = compare.reverse_rxn_ktp_dcts(
         renamed_rxn_ktp_dcts, renamed_spc_therm_dcts, TEMPS, rev_rates=True
@@ -265,7 +265,7 @@ def test_align_rxn_ktp_dcts():
         rxn_ktp_dcts, spc_therm_dcts, spc_dcts, TEMPS, rev_rates=True, remove_loners=False,
         write_file=False
     )
-    #print('aligned:\n', algn_rxn_ktp_dct)
+
     # Try with removing loners
     no_loners_algn_rxn_ktp_dct = compare.get_algn_rxn_ktp_dct(
         rxn_ktp_dcts, spc_therm_dcts, spc_dcts, TEMPS, rev_rates=True, remove_loners=True,

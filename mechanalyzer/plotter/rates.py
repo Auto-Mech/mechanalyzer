@@ -107,8 +107,8 @@ def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
 
                 # Plot the ratios if they exist
                 if ratio_dcts[mech_idx] is not None:
-                    if pressure in ratio_dcts[mech_idx].keys():
                     # if ratio_dcts[mech_idx][pressure] is not None:
+                    if pressure in ratio_dcts[mech_idx].keys():
                         (_, ratios) = ratio_dcts[mech_idx][pressure]
                         ratios_plotted = True
                         axs[1].plot(1000 / temps,
@@ -180,7 +180,7 @@ def sort_by_max_ratio(algn_rxn_ratio_dct, algn_rxn_ktp_dct):
     # Reorder the algn_rxn_ratio_dct and algn_rxn_ktp_dct
     sorted_rxn_ratio_dct = {}
     sorted_rxn_ktp_dct = {}
-    for rxn in sorted_dct.keys():
+    for rxn in sorted_dct:
         sorted_rxn_ratio_dct[rxn] = algn_rxn_ratio_dct[rxn]
         sorted_rxn_ktp_dct[rxn] = algn_rxn_ktp_dct[rxn]
 
