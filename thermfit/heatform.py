@@ -34,7 +34,7 @@ def calc_hform_0k(spc_h0, basis_h0,
     for i, ich in enumerate(basis_ichs):
 
         # Read reference enthalpies for basis molecule
-        ref_h0 = reference_enthalpy(ich, ref_set, 0, rxn=rxn)
+        ref_h0 = reference_enthalpy(ich, ref_set, 0)
         ref_h0 = ref_h0 if ref_h0 is not None else 0.0  # break loop?
 
         # Add basis and reference energies to overall va
@@ -68,8 +68,14 @@ def reference_enthalpy(ich_lookup, ref_set, temp, rxn=False):
     """
 
     # Set path and name to thermo database file
+    rxn = True
+    if isinstance(ich_lookup, str):
+        rxn = False
     thermodb_file = _thermo_database(temp, rxn=rxn)
-
+    if rxn:
+        ich_lookup = '+'.join(ich_lookup[0]) + '=' + '+'.join(ich_lookup[1])
+        ref_set = 'ANL0'
+    print('its looking for ', ich_lookup, rxn)
     # Find the energy value for the given species and enery type
     hf_val = None
     with open(thermodb_file, mode='r', encoding='utf-8') as db_file:
