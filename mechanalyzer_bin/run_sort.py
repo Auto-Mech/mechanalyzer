@@ -44,12 +44,18 @@ isolate_spc, sort_lst = mparser.parse_sort(sort_str)
 print('sort lst', sort_lst)
 param_dct_sort, _, mech_spc_dct, cmts_dct, elems = sorter.sorted_mech(
     spc_str, mech_str, isolate_spc, sort_lst)
+print('cmts dct test:')
+for x, y in cmts_dct.items():
+    print(x, y)
 rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(
     rxn_sort_dct=cmts_dct)
 
 # Write the output files (need to make general at some point)
 headers = sparser.csv_headers(mech_spc_dct)
 sortd_csv_str = sparser.csv_string(mech_spc_dct, headers)
+print('param dct test')
+for x in param_dct_sort:
+    print(x)
 sortd_mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
     elem_tuple=elems,
     mech_spc_dct=mech_spc_dct,
