@@ -11,6 +11,8 @@ from mechanalyzer.builder import checker
 from mechanalyzer.builder import sorter
 from mechanalyzer.builder import submech
 from mechanalyzer.builder import sort_fct
+from mechanalyzer.builder import ped
+from mechanalyzer.builder import bf
 
 
 __all__ = [
@@ -23,4 +25,6 @@ __all__ = [
     'sorter',
     'submech',
     'sort_fct',
+    'ped',
+    'bf',
 ]
