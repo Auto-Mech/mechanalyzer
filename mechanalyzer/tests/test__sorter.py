@@ -600,5 +600,5 @@ if __name__ == '__main__':
     test_sortby_rxnclass()
     test__sortby_species_subpes()
     test__sortby_submech_subpes_chnl()
-    test__sortby_submech_class()
-    test_sort_ktp()
+    #test__sortby_submech_class()
+    #test_sort_ktp()
