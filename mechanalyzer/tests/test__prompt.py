@@ -31,7 +31,7 @@ ENERGY_DCT = {'W0': -6.0, 'RH': -2.2, 'NC3H7': -20.14, 'IC3H7': -23.18,
               'B0': -2.2, 'B1': 0.0, 'B2': -0.89}
 {'B0': ('W0', 'RH'), 'B1': ('W0', 'NC3H7'), 'B2': ('W0', 'IC3H7')}
 
-E_BW_DCT = {'RH->NC3H7': 17.94, 'RH->IC3H7': 20.98}
+ene_bw_dct = {'RH->NC3H7': 17.94, 'RH->IC3H7': 20.98}
 
 KTP_DCT = {'RH->NC3H7':
            {
@@ -83,7 +83,7 @@ class test_prompt:
         """ test statmodels.pedmodels.equip_simple
         """
         ped_df_frag1_dct = mechanalyzer.builder.ped.ped_frag1(
-            self.PED_DCT['RH->NC3H7'], 'CH3CH2CH2', 'H2O', ['equip_simple'], dof_info=self.DOF_DCT['RH->NC3H7'], E_BW=E_BW_DCT['RH->NC3H7'])
+            self.PED_DCT['RH->NC3H7'], 'CH3CH2CH2', 'H2O', ['equip_simple'], dof_info=self.DOF_DCT['RH->NC3H7'], ene_bw=ene_bw_dct['RH->NC3H7'])
         ped_600 = ped_df_frag1_dct['equip_simple'][1.0][600]
         ped_1200 = ped_df_frag1_dct['equip_simple'][1.0][1200]
         assert np.isclose((ped_600.iloc[100]), 0.10436991291189263)
@@ -95,7 +95,7 @@ class test_prompt:
         """ test statmodels.pedmodels.equip_phi
         """
         ped_df_frag1_dct = mechanalyzer.builder.ped.ped_frag1(
-            self.PED_DCT['RH->NC3H7'], 'CH3CH2CH2', 'H2O', ['equip_phi'], dof_info=self.DOF_DCT['RH->NC3H7'], E_BW=E_BW_DCT['RH->NC3H7'])
+            self.PED_DCT['RH->NC3H7'], 'CH3CH2CH2', 'H2O', ['equip_phi'], dof_info=self.DOF_DCT['RH->NC3H7'], ene_bw=ene_bw_dct['RH->NC3H7'])
         ped_600 = ped_df_frag1_dct['equip_phi'][1.0][600]
         ped_1200 = ped_df_frag1_dct['equip_phi'][1.0][1200]
         assert np.isclose((ped_600.iloc[500]), 0.046399200133238984)
@@ -107,7 +107,7 @@ class test_prompt:
         """ test statmodels.pedmodels.beta_phi1a
         """
         ped_df_frag1_dct = mechanalyzer.builder.ped.ped_frag1(
-            self.PED_DCT['RH->IC3H7'], 'CH3CHCH3', 'H2O', ['beta_phi1a'], dof_info=self.DOF_DCT['RH->IC3H7'], E_BW=E_BW_DCT['RH->IC3H7'])
+            self.PED_DCT['RH->IC3H7'], 'CH3CHCH3', 'H2O', ['beta_phi1a'], dof_info=self.DOF_DCT['RH->IC3H7'], ene_bw=ene_bw_dct['RH->IC3H7'])
         ped_400 = ped_df_frag1_dct['beta_phi1a'][1.0][400]
         ped_800 = ped_df_frag1_dct['beta_phi1a'][1.0][800]
         assert np.isclose((ped_400.iloc[500]), 0.0009891036253060362)
@@ -119,7 +119,7 @@ class test_prompt:
         """ test statmodels.pedmodels.beta_phi2a
         """
         ped_df_frag1_dct = mechanalyzer.builder.ped.ped_frag1(
-            self.PED_DCT['RH->IC3H7'], 'CH3CHCH3', 'H2O', ['beta_phi2a'], dof_info=self.DOF_DCT['RH->IC3H7'], E_BW=E_BW_DCT['RH->IC3H7'])
+            self.PED_DCT['RH->IC3H7'], 'CH3CHCH3', 'H2O', ['beta_phi2a'], dof_info=self.DOF_DCT['RH->IC3H7'], ene_bw=ene_bw_dct['RH->IC3H7'])
         ped_400 = ped_df_frag1_dct['beta_phi2a'][1.0][400]
         ped_800 = ped_df_frag1_dct['beta_phi2a'][1.0][800]
         assert np.isclose((ped_400.iloc[500]), 0.0004357549913514037)
@@ -131,7 +131,7 @@ class test_prompt:
         """ test statmodels.pedmodels.beta_phi3a
         """
         ped_df_frag1_dct = mechanalyzer.builder.ped.ped_frag1(
-            self.PED_DCT['RH->IC3H7'], 'CH3CHCH3', 'H2O', ['beta_phi3a'], dof_info=self.DOF_DCT['RH->IC3H7'], E_BW=E_BW_DCT['RH->IC3H7'])
+            self.PED_DCT['RH->IC3H7'], 'CH3CHCH3', 'H2O', ['beta_phi3a'], dof_info=self.DOF_DCT['RH->IC3H7'], ene_bw=ene_bw_dct['RH->IC3H7'])
         ped_400 = ped_df_frag1_dct['beta_phi3a'][1.0][400]
         ped_800 = ped_df_frag1_dct['beta_phi3a'][1.0][800]
         assert np.isclose((ped_400.iloc[500]), 0.0009891036253060362)
@@ -143,7 +143,7 @@ class test_prompt:
         """ test statmodels.pedmodels.beta_rovib_dos
         """
         ped_df_frag1_dct = mechanalyzer.builder.ped.ped_frag1(
-            self.PED_DCT['RH->IC3H7'], 'CH3CHCH3', 'H2O', ['rovib_dos'], dos_df=self.DOS_ROVIB, dof_info=self.DOF_DCT['RH->IC3H7'], E_BW=E_BW_DCT['RH->IC3H7'])
+            self.PED_DCT['RH->IC3H7'], 'CH3CHCH3', 'H2O', ['rovib_dos'], dos_df=self.DOS_ROVIB, dof_info=self.DOF_DCT['RH->IC3H7'], ene_bw=ene_bw_dct['RH->IC3H7'])
         ped_1800 = ped_df_frag1_dct['rovib_dos'][1.0][1800]
         ped_2000 = ped_df_frag1_dct['rovib_dos'][1.0][2000]
         assert np.isclose((ped_1800.iloc[500]), 0.016860110020388747)
@@ -156,7 +156,7 @@ class test_prompt:
             calls calculator.bf.bf_tp_df_full, bf_tp_df_todct
         """
         ped_df_frag1_dct = mechanalyzer.builder.ped.ped_frag1(
-            self.PED_DCT['RH->IC3H7'], 'CH3CHCH3', 'H2O', ['beta_phi1a'], dof_info=self.DOF_DCT['RH->IC3H7'], E_BW=E_BW_DCT['RH->IC3H7'])
+            self.PED_DCT['RH->IC3H7'], 'CH3CHCH3', 'H2O', ['beta_phi1a'], dof_info=self.DOF_DCT['RH->IC3H7'], ene_bw=ene_bw_dct['RH->IC3H7'])
         bf_tp_dct = mechanalyzer.builder.bf.bf_tp_dct(['beta_phi1a'], ped_df_frag1_dct, self.HOTEN_DCT['CH3CHCH3'], 0.1)
         assert np.allclose(bf_tp_dct['beta_phi1a']['CH3CHCH3'][1.0][1], 
             np.array([1., 0.99999461, 0.99904393, 0.88909341, 0.25846626, 0.01535025]))
