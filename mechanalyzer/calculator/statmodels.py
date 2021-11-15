@@ -112,7 +112,7 @@ def dos_trasl(m1, m2, E_grid, P, T):
 
 class ped_models:
 
-    def __init__(self, ped_df, hotfrg, otherfrg, dos_df=None, dof_info=None, E_BW=None):
+    def __init__(self, ped_df, hotfrg, otherfrg, dos_df=None, dof_info=None, ene_bw=None):
         """ initialize variables
             :param ped_df: dataframe(columns:P, rows:T) with the Series of energy distrib
             :type ped_df: dataframe(series(float))
@@ -130,7 +130,7 @@ class ped_models:
         self.ped_df = ped_df
         self.dos_df = dos_df
 
-        self.E_BW = E_BW
+        self.ene_bw = ene_bw
         self.prod1 = hotfrg
         self.prod2 = otherfrg
         self.dof_info = dof_info
@@ -224,17 +224,17 @@ class ped_models:
             c. integrate over dE: int(P(E',E)*PED(E)dE) = P(E')
         """
 
-        def norm_distr(E1, E, phi, E_BW):
-            """ P(E1; E) = exp(-(E1-phi*E)^2/(2^0.5*sigma(E_BW)))/((2*pi)^0.5*sigma(E_BW))
+        def norm_distr(E1, E, phi, ene_bw):
+            """ P(E1; E) = exp(-(E1-phi*E)^2/(2^0.5*sigma(ene_bw)))/((2*pi)^0.5*sigma(ene_bw))
                 mi = phi*E
-                sigma = f(E_BW, phi*E)
+                sigma = f(ene_bw, phi*E)
                 E1 is a number
                 E is a vector
             """
 
             mi = np.array(phi*E, dtype=float)
             # correlation from Danilack Goldsmith - I add the additional fraction of energy transferred to the products
-            sigma = np.array(0.87+0.04*(E_BW+phi*(E-E_BW)), dtype=float)
+            sigma = np.array(0.87+0.04*(ene_bw+phi*(E-ene_bw)), dtype=float)
             num = np.exp(-((E1-mi)/(2**0.5)/sigma)**2)
             den = np.power(2*np.pi, 0.5)*sigma
 
@@ -249,7 +249,7 @@ class ped_models:
             E1_vect_w0 = np.concatenate((np.array([0]), self.E1_vect))
             rho_rovib_prod2 = self.f_rho_rovib_prod2(E1_vect_w0)
             rho_trasl = dos_trasl(self.mw_dct[self.prod1],
-                self.mw_dct[self.prod2], E1_vect_w0, P*101325, T)     
+                self.mw_dct[self.prod2], E1_vect_w0, P*101325, T)
 
             # calculate rho_non1(E1_vect)
             rho_non1 = []
@@ -266,11 +266,11 @@ class ped_models:
             return rho_rovib_prod1, rho_non1
 
         def dos(idx_E1, idx_E_new):
-            
+
             P_E1E = []
             # loops over total energy: loop over the indexes where you find Etot in E1vect
-            for idx_E in idx_E_new: 
-                
+            for idx_E in idx_E_new:
+
                 if idx_E1 == idx_E:
                     # rho1(E1)*rhonon1(E-E1) = 0
                     P_E1E.append(0)
@@ -305,9 +305,9 @@ class ped_models:
                 E1_vect_low = np.linspace(E[0], E[0]-steps_to_zero*self.E1_step, steps_to_zero+1)[1:-1]
                 E1_vect_high = np.linspace(E[0], E[-1], num=round((E[-1]-E[0])/self.E1_step)+1) # includes Emax
                 self.E1_vect = np.sort(np.concatenate((E1_vect_low, E1_vect_high)))
-                
+
                 # idx_E_vect: indices in E1_vect corresponding to values of E: E[0]=self.E1_vect[idx_E_vect[0]]
-                idx_E_vect = np.arange(len(E1_vect_low), len(self.E1_vect), 3) # 
+                idx_E_vect = np.arange(len(E1_vect_low), len(self.E1_vect), 3) #
                 if distr_type == 'dos':
                     self.rho_rovib_prod1, self.rho_non1 = init_dos(P, T)
 
@@ -316,9 +316,9 @@ class ped_models:
                     #indexes from self.E1_vect: almost identical to energies in E, but more consistent
                     idx_E_new = idx_E_vect[idx_E_vect >= idx_E1]
                     E_new = self.E1_vect[idx_E_new]
-                    
+
                     if distr_type == 'phi':
-                        P_E1E = norm_distr(E1, E_new, self.phi, self.E_BW)
+                        P_E1E = norm_distr(E1, E_new, self.phi, self.ene_bw)
                     elif distr_type == 'dos':
                         P_E1E = dos(idx_E1, idx_E_new)
                     P_E1Etot_P_ped = P_E1E*ped_series.values[idx_E_vect >= idx_E1]
@@ -360,7 +360,7 @@ class ped_models:
         return ped_df_prod
 
     def beta_phi1a(self):
-        """ Derive the energy distribution of 1 product from 
+        """ Derive the energy distribution of 1 product from
             statistical model phi1a Danilack Goldsmith PROCI 2020
 
             :return ped_df_prod: energy distribution of the product prod
@@ -379,7 +379,7 @@ class ped_models:
         return ped_df_prod
 
     def beta_phi2a(self):
-        """ Derive the energy distribution of 1 product from 
+        """ Derive the energy distribution of 1 product from
             statistical model phi2a Danilack Goldsmith PROCI 2020
 
             :return ped_df_prod: energy distribution of the product prod
@@ -396,7 +396,7 @@ class ped_models:
         return ped_df_prod
 
     def beta_phi3a(self):
-        """ Derive the energy distribution of 1 product from 
+        """ Derive the energy distribution of 1 product from
             statistical model phi2a Danilack Goldsmith PROCI 2020
 
             :return ped_df_prod: energy distribution of the product prod
@@ -414,7 +414,7 @@ class ped_models:
         return ped_df_prod
 
     def rovib_dos(self):
-        """ Derive the energy distribution of 1 product from the 
+        """ Derive the energy distribution of 1 product from the
             convolution of the density of states
 
             :return ped_df_prod: probability distribution of the energy of prod1

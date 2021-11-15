@@ -56,7 +56,7 @@ energy_dct, _, conn_lst_dct, _ = mess_io.reader.pes(me_ped_inp)
 
 # 1. INFO FROM rate_ped.out and ke_ped.out: rate dct, energy barriers, dofs, fragment names
 ktp_dct = {}
-E_BW_dct = {}
+ene_bw_dct = {}
 dof_dct = {}
 fragments_dct = {}
 # get the rates for all set of pedspecies
@@ -68,9 +68,9 @@ for species in pedspecies:
     # find the corresponding energy barrier
     barrier_label = mess_io.reader.find_barrier(conn_lst_dct, reacs, prods)
     try:
-        E_BW_dct[label] = energy_dct[barrier_label]-energy_dct[prods]
+        ene_bw_dct[label] = energy_dct[barrier_label]-energy_dct[prods]
     except KeyError:
-        E_BW_dct[label] = energy_dct[reacs]-energy_dct[prods]
+        ene_bw_dct[label] = energy_dct[reacs]-energy_dct[prods]
     # derive dofs involved
     dof_info = mechanalyzer.calculator.statmodels.get_dof_info(species_blocks_ped[prods], ask_for_ts=True)
     dof_dct[label] = dof_info
@@ -102,7 +102,7 @@ rxns = {}
 for species in pedspecies:
     label = '->'.join(species)
     ped_df = ped_dct[label]
-    E_BW = E_BW_dct[label]
+    ene_bw = ene_bw_dct[label]
     # select the fregment of which you want the PED: it is the one in common with hotspecies
     fragments = fragments_dct[label]
     try:
@@ -114,7 +114,7 @@ for species in pedspecies:
         sys.exit()
     # DERIVE PED OF THE HOT FRAGMENT
     ped_df_frag1_dct = mechanalyzer.builder.ped.ped_frag1(
-        ped_df, frag1, frag2, modeltype_list, dos_df=dos_df, dof_info=dof_dct[label], E_BW=E_BW)
+        ped_df, frag1, frag2, modeltype_list, dos_df=dos_df, dof_info=dof_dct[label], ene_bw=ene_bw)
 
     # JOIN PED AND HOTEN -> DERIVE PRODUCTS BF
     bf_tp_dct = mechanalyzer.builder.bf.bf_tp_dct(modeltype_list, ped_df_frag1_dct, hoten_dct[frag1], bf_threshold, savefile=True)

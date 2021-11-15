@@ -111,7 +111,7 @@ print(ktp_dct,'\n')
 print(pedspecies, energy_dct)
 # energies_sp, energies_ts = mess_io.reader.rates.energies(me_ped_out)
 # print(energies_sp, energies_ts)
-#_, E_BW = mess_io.reader.rates.barriers(energies_ts, energies_sp, reacs, prods)
+#_, ene_bw = mess_io.reader.rates.barriers(energies_ts, energies_sp, reacs, prods)
 
 # 1. READ THE PEDOUTPUT file and reconstruct the energy distribution
 pedoutput_str = read_file(os.path.join(CWD, pedoutput))
@@ -140,7 +140,7 @@ hoten_dct = mess_io.reader.hotenergies.extract_hot_branching(
 
 for modeltype in modeltype_list:
     ped_df_prod1 = mess_io.reader.ped.ped_prod1(
-        ped_df, rad_name[0], modeltype, dos_df=dos_df, dof_info=dof_info, E_BW=E_BW)
+        ped_df, rad_name[0], modeltype, dos_df=dos_df, dof_info=dof_info, ene_bw=ene_bw)
 
 
     # 3. DERIVE T,P DEPENDENT PRODUCT BRANCHING FRACTIONS and decide which species to keep
