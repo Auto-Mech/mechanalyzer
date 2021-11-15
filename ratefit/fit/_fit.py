@@ -56,11 +56,15 @@ def fit_rxn_ktp_dct(rxn_ktp_dct, fit_method, pdep_dct=None, arrfit_dct=None,
         :return rxn_err_dct: fitting errors for each reaction
         :rtype: dict {rxn: err_dct}
     """
+    def rxn_name_str(rxn, newline=False):
+        """ get a reaction name string
+        """
+        return ' = '.join((' + '.join(rxn[0]), ' + '.join(rxn[1])))
 
     rxn_param_dct = {}
     rxn_err_dct = {}
     for rxn, ktp_dct in rxn_ktp_dct.items():
-        print(f'Fitting Reaction: {rxn}')
+        print(f'\nFitting Reaction: {rxn_name_str(rxn)}')
         params, err_dct = fit_ktp_dct(ktp_dct, fit_method, pdep_dct=pdep_dct,
                                       arrfit_dct=arrfit_dct,
                                       chebfit_dct=chebfit_dct,
