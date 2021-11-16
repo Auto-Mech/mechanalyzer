@@ -1,5 +1,6 @@
 """ build the ped of prompt products
 """
+
 from mechanalyzer.calculator import statmodels
 
 
@@ -30,7 +31,7 @@ def ped_frag1(ped_df, hotfrg, otherfrg, modeltype_list,
     """
 
     # call class
-    ped_prod1_fct = statmodels.ped_models(
+    ped_prod1_fct = statmodels.PEDModels(
         ped_df, hotfrg, otherfrg,
         dos_df=dos_df, dof_info=dof_info, ene_bw=ene_bw)
 

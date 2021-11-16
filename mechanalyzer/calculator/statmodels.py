@@ -1,11 +1,14 @@
+""" Compute product energy distribution according to
+    different statistical models
 """
-    Compute product energy distribution according to different statistical models
-"""
+
 import sys
 import numpy as np
 import pandas as pd
 from scipy.interpolate import interp1d
+from phydat import phycon
 from autoparse import find
+
 
 MW_dct_elements = {
     'C': 12e-3,
@@ -25,7 +28,8 @@ def get_dof_info(block, ask_for_ts=False):
         :type block: list(str1, str2)
         :param ask_for_ts: build the dof info also for the ts
         :type ask_for_ts: bool
-        :return dof_info: dataframe with vibrat/rot degrees of freedom and molecular weight
+        :return dof_info: dataframe with vibrat/rot degrees of freedom
+            and molecular weight
         :rtype: dataframe(index=species, columns=['vib dof', 'rot dof', 'mw'])
     """
     info_array = np.zeros((2+int(ask_for_ts), 3))
@@ -37,39 +41,40 @@ def get_dof_info(block, ask_for_ts=False):
         where_name = find.where_in('Species', info)[0]
         where_hind = find.where_in('Hindered', info)
         where_geom = find.where_in('Geometry', info)[0]
-        N_atoms = int(info[where_geom].strip().split()[1])
-        atoms_ts += N_atoms
+        num_atoms = int(info[where_geom].strip().split()[1])
+        atoms_ts += num_atoms
 
         key = info[where_name].strip().split()[1]
         keys.append(key)
         try:
             where_freq = find.where_in('Frequencies', info)[0]
-            N_dof = int(info[where_freq].strip().split()[1]) + len(where_hind)
-            if 3*N_atoms - N_dof == 6:
+            num_dof = (
+                int(info[where_freq].strip().split()[1]) + len(where_hind)
+            )
+            if 3*num_atoms - num_dof == 6:
                 rot_dof = 3
             else:
                 rot_dof = 2
         except IndexError:
             # if 1 atom only: no 'Frequencies', set to 0
-            N_dof = 0
+            num_dof = 0
             rot_dof = 0
         # this allows to get 3N-5 or 3N-6 without analyzing the geometry
-        info_array[i, 0] = N_dof
+        info_array[i, 0] = num_dof
         info_array[i, 1] = rot_dof
 
         # MW from type of atoms:
         geom_in = where_geom+1
-        geom_fin = geom_in+N_atoms
+        geom_fin = geom_in+num_atoms
         atoms_array = np.array([geomline.strip().split()[0]
                                 for geomline in info[geom_in:geom_fin]])
 
-        mw = np.sum(np.array([MW_dct_elements[at]
-                              for at in atoms_array], dtype=float))
-        info_array[i, 2] = mw
+        info_array[i, 2] = np.sum(np.array([MW_dct_elements[at]
+                                  for at in atoms_array], dtype=float))
 
-    # if ask for ts: assume the first 2 blocks are 2 reactants of a bimol reaction
+    # if ask for ts: assume first 2 blocks are 2 reactants of bimol reaction
     # and derive the DOFs of the TS
-    if ask_for_ts == True:
+    if ask_for_ts:
         keys.append('TS')
 
         # assume there are no linear TSs
@@ -82,39 +87,43 @@ def get_dof_info(block, ask_for_ts=False):
     return dof_info
 
 
-def dos_trasl(m1, m2, E_grid, P, T):
+def dos_trasl(mass1, mass2, ene_grid, pressure, temp):
     """ Compute the translational density of states per unit volume
-        m1, m2: MW in kg/mol
-        E_grid: energy grid in kcal/mol (array)
+        mass1, mass2: MW in kg/mol
+        ene_grid: energy grid in kcal/mol (array)
         P, T: pressure and temperature in SI units [Pa, K]
         :return dos_tr_series: dos in mol/kcal
         :rtype: array
     """
+
     # conversions
-    NAVO = 6.022e+23  # molec/mol
-    E_grid_J = E_grid*4184/NAVO  # kcal/mol*J/kcal/NAVO=J
-    m1 /= NAVO  # kg/mol/(molecule/mol)
-    m2 /= NAVO
-    red_mass = (m1 * m2) / (m1 + m2)    # kg
-    h = 6.626e-34   # Planck's constant, J*s
+    ene_grid_j = ene_grid*4184/phycon.NAVO  # kcal/mol*J/kcal/NAVO=J
+    mass1 /= phycon.NAVO  # kg/mol/(molecule/mol)
+    mass2 /= phycon.NAVO
+    red_mass = (mass1 * mass2) / (mass1 + mass2)    # kg
+
     # 1 molecule
     # rhotr/V = pi/4*(8m/h2)^3/2*e^1/2
-    rho = (np.pi/4*np.power(8*red_mass/h**2, 3/2) *
-           np.power(E_grid_J, 1/2))  # unit: 1/m3/J
+    rho = (np.pi/4*np.power(8*red_mass/phycon.H**2, 3/2) *
+           np.power(ene_grid_j, 1/2))  # unit: 1/m3/J
 
     # consider the molar volume RT/P [m3/1]
-    V_mol = 1.38e-23*T/P  # m3/1 for ideal gases
+    v_mol = 1.38e-23*temp/pressure  # m3/1 for ideal gases
     # 1/m3*(m3/1)/J*(J/kcal)*(mol) = mol/kcal
-    rho_kcal_mol = rho*V_mol*4184/NAVO
+    rho_kcal_mol = rho*v_mol*4184/phycon.NAVO
 
     return rho_kcal_mol
 
 
-class ped_models:
+class PEDModels:
+    """ Statistical models for Product Energy Distributions
+    """
 
-    def __init__(self, ped_df, hotfrg, otherfrg, dos_df=None, dof_info=None, ene_bw=None):
+    def __init__(self, ped_df, hotfrg, otherfrg,
+                 dos_df=None, dof_info=None, ene_bw=None):
         """ initialize variables
-            :param ped_df: dataframe(columns:P, rows:T) with the Series of energy distrib
+            :param ped_df: dataframe(columns:P, rows:T)
+                with the Series of energy distrib
             :type ped_df: dataframe(series(float))
             :param hotfrg: selected hot fragment between frag1 and frag2
             :type hotfrg: str
@@ -134,6 +143,15 @@ class ped_models:
         self.prod1 = hotfrg
         self.prod2 = otherfrg
         self.dof_info = dof_info
+
+        self.phi = None
+        self.ene1_step = None
+        self.ene1_vect = None
+        self.rho_rovib_prod1 = None
+        self.rho_non1 = None
+        self.ene_dos0 = None
+        self.f_rho_rovib_prod1 = None
+        self.f_rho_rovib_prod2 = None
 
         try:
             self.mw_dct = dof_info['mw']
@@ -157,12 +175,14 @@ class ped_models:
 
         try:
             ped_df_prod = self.models_dct[modeltype]()
-            return ped_df_prod
-
         except KeyError:
-            print('*Error: model not available. Please select among \n {} \n'.format(
-                '\n'.join(self.models_dct.keys())))
-            exit()
+            ped_df_prod = None
+            _mods = '\n'.join(self.models_dct.keys())
+            print('*Error: model not available. '
+                  f'Please select among \n {_mods} \n')
+            sys.exit()
+
+        return ped_df_prod
 
     def get_dofs(self):
         """ get dofs from dof_info
@@ -182,38 +202,45 @@ class ped_models:
             vibdof_ts = self.vibdof_dct['TS']
             rotdof_ts = self.rotdof_dct['TS']
         except KeyError:
-            print('incomplete degrees of freedom info: species are \n {} \
-              \n while dof info is available for \n  {} \n Exiting ...'.format(
-                ' '.join([self.prod1, self.prod2]), ' '.join(self.vibdof_dct.keys())))
-        return vibdof_prod1, rotdof_prod1, vibdof_prod2, rotdof_prod2, vibdof_ts, rotdof_ts
+            _str1 = ' '.join([self.prod1, self.prod2])
+            _str2 = ' '.join(self.vibdof_dct.keys())
+            print(f'incomplete degrees of freedom info: species are \n {_str1}'
+                  f'\n while dof info is available for \n {_str2} \n '
+                  'Exiting ...')
+        return (vibdof_prod1, rotdof_prod1,
+                vibdof_prod2, rotdof_prod2,
+                vibdof_ts, rotdof_ts)
 
     def equip_simple(self):
-        """ Derive the energy distribution of 1 product from the energy equipartition theorem
+        """ Derive the energy distribution of 1 product from the
+            energy equipartition theorem
 
             :return ped_df_prod: energy distribution of the product prod
             :rtype: dataframe(series(float))
         """
-        vibdof_prod1, rotdof_prod1, vibdof_prod2, rotdof_prod2, _, _ = self.get_dofs()
+        dofs = self.get_dofs()
+        vibdof_prod1, rotdof_prod1, vibdof_prod2, rotdof_prod2, _, _ = dofs
 
         beta_prod = (vibdof_prod1+rotdof_prod1/2) / \
             (vibdof_prod1+vibdof_prod2+(3+rotdof_prod1+rotdof_prod2)/2)
         # 3/2: 1/2kbT for each rotation, no trasl (ts trasl energy preserved)
         # 9/2: 1/2kbT*6 rotational dofs for products, +3 for relative trasl
-        print(
-            'fraction of energy transferred to products: {:.2f}'.format(beta_prod))
+        print(f'Fraction of energy transferred to products: {beta_prod:.2f}')
+
         # rescale all energies with beta: allocate values in new dataframe
         ped_df_prod = pd.DataFrame(index=self.ped_df.index,
                                    columns=self.ped_df.columns, dtype=object)
-        for P in self.ped_df.columns:
-            for T in self.ped_df.sort_index().index:
-                idx_new = self.ped_df[P][T].index * beta_prod
-                norm_factor = np.trapz(self.ped_df[P][T].values, x=idx_new)
-                vals = self.ped_df[P][T].values/norm_factor
-                ped_df_prod[P][T] = pd.Series(vals, index=idx_new)
+        for pressure in self.ped_df.columns:
+            for temp in self.ped_df.sort_index().index:
+                idx_new = self.ped_df[pressure][temp].index * beta_prod
+                norm_factor = np.trapz(
+                    self.ped_df[pressure][temp].values, x=idx_new)
+                vals = self.ped_df[pressure][temp].values/norm_factor
+                ped_df_prod[pressure][temp] = pd.Series(vals, index=idx_new)
 
         return ped_df_prod
 
-    def P_E1_fct(self, distr_type):
+    def prob_ene1_fct(self, distr_type):
         """ Derive the energy distribution of 1 product from one
             of the statistical models by Danilack Goldsmith PROCI 2020
             phi is the average fraction of energy transferred to the products
@@ -224,138 +251,180 @@ class ped_models:
             c. integrate over dE: int(P(E',E)*PED(E)dE) = P(E')
         """
 
-        def norm_distr(E1, E, phi, ene_bw):
-            """ P(E1; E) = exp(-(E1-phi*E)^2/(2^0.5*sigma(ene_bw)))/((2*pi)^0.5*sigma(ene_bw))
-                mi = phi*E
-                sigma = f(ene_bw, phi*E)
-                E1 is a number
-                E is a vector
+        def norm_distr(ene1, ene, phi, ene_bw):
+            """ P(ene1; ene) = exp(
+                    -(ene1-phi*ene)^2/(2^0.5*sigma(ene_bw))) /
+                    ((2*pi)^0.5*sigma(ene_bw)
+                )
+                mi = phi*ene
+                sigma = f(ene_bw, phi*ene)
+                ene1 is a number
+                ene is a vector
             """
 
-            mi = np.array(phi*E, dtype=float)
-            # correlation from Danilack Goldsmith - I add the additional fraction of energy transferred to the products
-            sigma = np.array(0.87+0.04*(ene_bw+phi*(E-ene_bw)), dtype=float)
-            num = np.exp(-((E1-mi)/(2**0.5)/sigma)**2)
+            mtermi = np.array(phi*ene, dtype=float)
+            # correlation from Danilack-Goldsmith
+            # I add additional fraction of energy transferred to the products
+            sigma = np.array(0.87+0.04*(ene_bw+phi*(ene-ene_bw)), dtype=float)
+            num = np.exp(-((ene1-mtermi)/(2**0.5)/sigma)**2)
             den = np.power(2*np.pi, 0.5)*sigma
 
-            P_E1E = num/den
+            prob_e1e = num/den
 
-            return P_E1E
+            return prob_e1e
 
-        def init_dos(P, T):
+        def init_dos(pressure, temp):
             """ initialize variables for DOS calculation
             """
-            rho_rovib_prod1 = self.f_rho_rovib_prod1(self.E1_vect)
-            E1_vect_w0 = np.concatenate((np.array([0]), self.E1_vect))
-            rho_rovib_prod2 = self.f_rho_rovib_prod2(E1_vect_w0)
-            rho_trasl = dos_trasl(self.mw_dct[self.prod1],
-                self.mw_dct[self.prod2], E1_vect_w0, P*101325, T)
+            rho_rovib_prod1 = self.f_rho_rovib_prod1(self.ene1_vect)
+            ene1_vect_w0 = np.concatenate((np.array([0]), self.ene1_vect))
+            rho_rovib_prod2 = self.f_rho_rovib_prod2(ene1_vect_w0)
+            rho_trasl = dos_trasl(
+                self.mw_dct[self.prod1],
+                self.mw_dct[self.prod2],
+                ene1_vect_w0,
+                pressure*101325,
+                temp)
 
-            # calculate rho_non1(E1_vect)
+            # calculate rho_non1(ene1_vect)
             rho_non1 = []
-            for idx in self.E1_vect:
+            for idx in self.ene1_vect:
                 # first iter should be 0
-                # the sum of the energies in rhovib_prod2 and rho_trasl is always E1
-                idx_Eint = np.arange(0, idx+1, dtype=int)
-                idx_EminusEint = idx_Eint[::-1]
-                rho_non1_integrand = rho_rovib_prod2[idx_Eint] * rho_trasl[idx_EminusEint]
-                rho_non1.append(np.trapz(rho_non1_integrand, x = self.E1_vect[idx_Eint]))
+                # the sum of the energies in rhovib_prod2 and
+                # rho_trasl is always ene1
+                idx_ene_int = np.arange(0, idx+1, dtype=int)
+                idx_ene_minus_ene_int = idx_ene_int[::-1]
+                rho_non1_integrand = (
+                    rho_rovib_prod2[idx_ene_int] *
+                    rho_trasl[idx_ene_minus_ene_int]
+                )
+                rho_non1.append(np.trapz(rho_non1_integrand,
+                                         x=self.ene1_vect[idx_ene_int]))
 
             rho_non1 = np.array(rho_non1)
 
             return rho_rovib_prod1, rho_non1
 
-        def dos(idx_E1, idx_E_new):
+        def dos(idx_ene1, idx_ene_new):
+            """ Calculate density of states """
 
-            P_E1E = []
-            # loops over total energy: loop over the indexes where you find Etot in E1vect
-            for idx_E in idx_E_new:
+            prob_ene1ene = []
+            # loops over total energy:
+            # loop over the idxs where you find enetot in ene1vect
+            for idx_ene in idx_ene_new:
 
-                if idx_E1 == idx_E:
-                    # rho1(E1)*rhonon1(E-E1) = 0
-                    P_E1E.append(0)
+                if idx_ene1 == idx_ene:
+                    # rho1(ene1)*rhonon1(ene-ene1) = 0
+                    prob_ene1ene.append(0)
                     continue
-                idx_E1_array = np.arange(0, idx_E) # index of E1<E (fixed E)
-                idx_E_minus_E1_array = idx_E1_array[::-1] # index of E-E1 (fixed E)
-                rho1_E1 = self.rho_rovib_prod1[idx_E1] # rho1(E1)
-                rho_non1 = self.rho_non1[idx_E_minus_E1_array[idx_E1]] # rhonon1(E-E1)
-                rho1_E1_array = self.rho_rovib_prod1[idx_E1_array] # rho1(E1) with E1<E (fixed E)
-                rho_non1_array = self.rho_non1[idx_E_minus_E1_array] # rhonon1(E-E1) with E1<E (fixed E)
-                num = rho1_E1 * rho_non1
-                den = np.trapz(rho1_E1_array * rho_non1_array, x = self.E1_vect[idx_E1_array])
-                P_E1E.append(num/den)
+                # index of ene1<ene (fixed ene)
+                idx_ene1_array = np.arange(0, idx_ene)
+                # index of ene-ene1 (fixed ene)
+                idx_ene_minus_ene1_array = idx_ene1_array[::-1]
+                rho1_ene1 = self.rho_rovib_prod1[idx_ene1]
+                rho_non1 = self.rho_non1[idx_ene_minus_ene1_array[idx_ene1]]
+                # rho1(ene1) with ene1<ene (fixed ene)
+                rho1_ene1_array = self.rho_rovib_prod1[idx_ene1_array]
+                # rhonon1(ene-ene1) with ene1<ene (fixed ene)
+                rho_non1_array = self.rho_non1[idx_ene_minus_ene1_array]
+                num = rho1_ene1 * rho_non1
+                den = np.trapz(rho1_ene1_array*rho_non1_array,
+                               x=self.ene1_vect[idx_ene1_array])
+                prob_ene1ene.append(num/den)
 
-            P_E1E = np.array(P_E1E)
-            # print(P_E1E)
-            return P_E1E
+            prob_ene1ene = np.array(prob_ene1ene)
+            # print(prob_ene1ene)
+            return prob_ene1ene
 
         # preallocations
         ped_df_prod = pd.DataFrame(index=self.ped_df.index,
                                    columns=self.ped_df.columns, dtype=object)
 
-        for P in self.ped_df.columns:
-            for T in self.ped_df.sort_index().index:
-                ped_series = self.ped_df[P][T].sort_index()
-                E = ped_series.index
-                ped_step = E[1]-E[0]
-                self.E1_step = ped_step/3
-                #E1_vect_low = np.arange(E[0], self.E1_step, -self.E1_step)[1:]
-                #E1_vect_high = np.arange(E[0], max(E), self.E1_step)
-                steps_to_zero = round((E[0]-0)/self.E1_step)
-                E1_vect_low = np.linspace(E[0], E[0]-steps_to_zero*self.E1_step, steps_to_zero+1)[1:-1]
-                E1_vect_high = np.linspace(E[0], E[-1], num=round((E[-1]-E[0])/self.E1_step)+1) # includes Emax
-                self.E1_vect = np.sort(np.concatenate((E1_vect_low, E1_vect_high)))
+        for pressure in self.ped_df.columns:
+            for temp in self.ped_df.sort_index().index:
+                ped_series = self.ped_df[pressure][temp].sort_index()
+                ene = ped_series.index
+                ped_step = ene[1]-ene[0]
+                self.ene1_step = ped_step/3
+                # ene1_vect_low = np.arange(
+                # ene[0], self.ene1_step, -self.ene1_step)[1:]
+                # ene1_vect_high = np.arange(
+                # ene[0], max(ene), self.ene1_step)
+                steps_to_zero = round((ene[0]-0)/self.ene1_step)
+                ene1_vect_low = np.linspace(
+                    ene[0],
+                    ene[0]-steps_to_zero*self.ene1_step,
+                    steps_to_zero+1)[1:-1]
+                ene1_vect_high = np.linspace(
+                    ene[0],
+                    ene[-1],
+                    num=round((ene[-1]-ene[0])/self.ene1_step)+1)
+                # ^ includes enemax
+                self.ene1_vect = np.sort(
+                    np.concatenate((ene1_vect_low, ene1_vect_high)))
 
-                # idx_E_vect: indices in E1_vect corresponding to values of E: E[0]=self.E1_vect[idx_E_vect[0]]
-                idx_E_vect = np.arange(len(E1_vect_low), len(self.E1_vect), 3) #
+                # idx_ene_vect: indices in ene1_vect corresponding to values
+                # of ene: ene[0]=self.ene1_vect[idx_ene_vect[0]]
+                idx_ene_vect = np.arange(
+                    len(ene1_vect_low), len(self.ene1_vect), 3)
                 if distr_type == 'dos':
-                    self.rho_rovib_prod1, self.rho_non1 = init_dos(P, T)
+                    self.rho_rovib_prod1, self.rho_non1 = init_dos(
+                        pressure, temp)
 
-                P_E1_vect = []
-                for idx_E1, E1 in enumerate(self.E1_vect):
-                    #indexes from self.E1_vect: almost identical to energies in E, but more consistent
-                    idx_E_new = idx_E_vect[idx_E_vect >= idx_E1]
-                    E_new = self.E1_vect[idx_E_new]
+                prob_ene1_vect = []
+                for idx_ene1, ene1 in enumerate(self.ene1_vect):
+                    # indexes from self.ene1_vect: almost identical
+                    # to energies in ene, but more consistent
+                    idx_ene_new = idx_ene_vect[idx_ene_vect >= idx_ene1]
+                    ene_new = self.ene1_vect[idx_ene_new]
 
                     if distr_type == 'phi':
-                        P_E1E = norm_distr(E1, E_new, self.phi, self.ene_bw)
+                        prob_ene1ene = norm_distr(
+                            ene1, ene_new, self.phi, self.ene_bw)
                     elif distr_type == 'dos':
-                        P_E1E = dos(idx_E1, idx_E_new)
-                    P_E1Etot_P_ped = P_E1E*ped_series.values[idx_E_vect >= idx_E1]
-                    P_E1 = np.trapz(P_E1Etot_P_ped, E_new)
-                    P_E1_vect.append(P_E1)
+                        prob_ene1ene = dos(idx_ene1, idx_ene_new)
+                    prob_ene1ene_tot_pressure_ped = (
+                        prob_ene1ene *
+                        ped_series.values[idx_ene_vect >= idx_ene1]
+                    )
+                    prob_ene1 = np.trapz(
+                        prob_ene1ene_tot_pressure_ped, ene_new)
+                    prob_ene1_vect.append(prob_ene1)
 
-                norm_factor_P_E1 = np.trapz(
-                    P_E1_vect, x=self.E1_vect)
-                P_E1_norm = P_E1_vect/norm_factor_P_E1
-                ped_df_prod[P][T] = pd.Series(P_E1_norm, index=self.E1_vect)
+                norm_factor_prob_ene1 = np.trapz(
+                    prob_ene1_vect, x=self.ene1_vect)
+                prob_ene1_norm = prob_ene1_vect/norm_factor_prob_ene1
+                ped_df_prod[pressure][temp] = pd.Series(
+                    prob_ene1_norm, index=self.ene1_vect)
 
                 # remove comments to print P(E1)|T,P
-                #P_E1_df = ped_df_prod[P][T].reset_index()
-                #header_label = np.array(P_E1_df.columns, dtype=str)
-                #header_label[0] = 'E [kcal/mol]'
-                #labels = '\t\t'.join(header_label)
-                #np.savetxt('PE1_{}_{}.txt'.format(P,T), P_E1_df.values,
-                #        delimiter='\t', header=labels, fmt='%1.3e')
-                #print(P, T, ped_df_prod[P][T].idxmax(), '\n')
+                # prob_ene1_df = ped_df_prod[P][T].reset_index()
+                # header_label = np.array(prob_ene1_df.columns, dtype=str)
+                # header_label[0] = 'E [kcal/mol]'
+                # labels = '\t\t'.join(header_label)
+                # np.savetxt('PE1_{}_{}.txt'.format(P,T), prob_ene1_df.values,
+                #         delimiter='\t', header=labels, fmt='%1.3e')
+                # print(P, T, ped_df_prod[P][T].idxmax(), '\n')
 
         return ped_df_prod
 
     def equip_phi(self):
-        """ Derive the energy distribution of 1 product from the energy equipartition theorem
+        """ Derive the energy distribution of 1 product from the
+            energy equipartition theorem
 
             :return ped_df_prod: energy distribution of the product prod
             :rtype: dataframe(series(float))
         """
 
-        vibdof_prod1, rotdof_prod1, vibdof_prod2, rotdof_prod2, _, _ = self.get_dofs()
+        dofs = self.get_dofs()
+        vibdof_prod1, rotdof_prod1, vibdof_prod2, rotdof_prod2, _, _ = dofs
 
         phi_prod = (vibdof_prod1+rotdof_prod1/2) / \
             (vibdof_prod1+vibdof_prod2+(3+rotdof_prod1+rotdof_prod2)/2)
-        print(
-            'fraction of energy transferred to products phi: {:.2f}'.format(phi_prod))
+        print('Fraction of energy transferred to '
+              f'products phi: {phi_prod:.2f}')
         self.phi = phi_prod
-        ped_df_prod = self.P_E1_fct('phi')
+        ped_df_prod = self.prob_ene1_fct('phi')
 
         return ped_df_prod
 
@@ -366,15 +435,17 @@ class ped_models:
             :return ped_df_prod: energy distribution of the product prod
             :rtype: dataframe(series(float))
         """
-        vibdof_prod1, _, _, _, vibdof_ts, _ = self.get_dofs()
+        dofs = self.get_dofs()
+        vibdof_prod1, _, _, _, vibdof_ts, _ = dofs
+
         # derive the energy fraction phi
         phi1a = vibdof_prod1/vibdof_ts
-        print(
-            'fraction of energy transferred to products phi1a: {:.2f}'.format(phi1a))
+        print('Fraction of energy transferred to '
+              f'products phi1a: {phi1a:.2f}')
+
         # rescale all energies with beta: allocate values in new dataframe
         self.phi = phi1a
-        ped_df_prod = self.P_E1_fct('phi')
-
+        ped_df_prod = self.prob_ene1_fct('phi')
 
         return ped_df_prod
 
@@ -385,13 +456,17 @@ class ped_models:
             :return ped_df_prod: energy distribution of the product prod
             :rtype: dataframe(series(float))
         """
-        vibdof_prod1, rotdof_prod1, _, _, vibdof_ts, rotdof_ts = self.get_dofs()
+
+        dofs = self.get_dofs()
+        vibdof_prod1, rotdof_prod1, _, _, vibdof_ts, rotdof_ts = dofs
+
         # derive the energy fraction phi
         phi2a = (vibdof_prod1+(3+rotdof_prod1)/2)/(vibdof_ts+(3+rotdof_ts)/2)
-        print(
-            'fraction of energy transferred to products phi2a: {:.2f}'.format(phi2a))
+        print('Fraction of energy transferred to '
+              f'products phi2a: {phi2a:.2f}')
+
         self.phi = phi2a
-        ped_df_prod = self.P_E1_fct('phi')
+        ped_df_prod = self.prob_ene1_fct('phi')
 
         return ped_df_prod
 
@@ -403,13 +478,17 @@ class ped_models:
             :rtype: dataframe(series(float))
         """
         # derive the energy fraction phi
-        vibdof_prod1, rotdof_prod1, vibdof_prod2, rotdof_prod2, _, _ = self.get_dofs()
+        dofs = self.get_dofs()
+        vibdof_prod1, rotdof_prod1, vibdof_prod2, rotdof_prod2, _, _ = dofs
+
+        # derive the energy fraction phi
         phi3a = (vibdof_prod1+(3+rotdof_prod1)/2) / \
             (vibdof_prod1+vibdof_prod2+(3+3+rotdof_prod1+rotdof_prod2)/2+3)
-        print(
-            'fraction of energy transferred to products phi3a: {:.2f}'.format(phi3a))
+        print('Fraction of energy transferred to '
+              f'products phi3a: {phi3a:.2f}')
+
         self.phi = phi3a
-        ped_df_prod = self.P_E1_fct('phi')
+        ped_df_prod = self.prob_ene1_fct('phi')
 
         return ped_df_prod
 
@@ -417,7 +496,7 @@ class ped_models:
         """ Derive the energy distribution of 1 product from the
             convolution of the density of states
 
-            :return ped_df_prod: probability distribution of the energy of prod1
+            :return ped_df_prod: probability distribution of energy of prod1
             :rtype: dataframe(series(float))
         """
         # checks on input
@@ -427,23 +506,30 @@ class ped_models:
             print('*Error: dos not defined, exiting now \n')
             sys.exit()
 
-        if self.prod1 not in self.dos_df.columns or self.prod2 not in self.dos_df.columns:
-            print('*Error: rovibrational density of states unavailable for prod1/prod2. add "Fragment" next to frag name')
+        if (
+            self.prod1 not in self.dos_df.columns or
+            self.prod2 not in self.dos_df.columns
+        ):
+            print('*Error: rovibrational density of states unavailable '
+                  'for prod1/prod2. add "Fragment" next to frag name')
             sys.exit()
 
         # preallocations
         ped_df_prod = pd.DataFrame(index=self.ped_df.index,
                                    columns=self.ped_df.columns, dtype=object)
 
-        E_dos0 = self.dos_df.index
-        self.E_dos0 = E_dos0
-        # dos functions for prod1, prod2: more convenient because many values are duplicate
-        self.f_rho_rovib_prod1 = interp1d(E_dos0, self.dos_df[self.prod1][E_dos0].values, kind='cubic',
-                                     fill_value='extrapolate')
-        self.f_rho_rovib_prod2 = interp1d(E_dos0, self.dos_df[self.prod2][E_dos0].values, kind='cubic',
-                                     fill_value='extrapolate')
+        ene_dos0 = self.dos_df.index
+        self.ene_dos0 = ene_dos0
 
-        ped_df_prod = self.P_E1_fct('dos')
+        # dos functions for prod1, prod2: more convenient because
+        # many values are duplicate
+        self.f_rho_rovib_prod1 = interp1d(
+            ene_dos0, self.dos_df[self.prod1][ene_dos0].values, kind='cubic',
+            fill_value='extrapolate')
+        self.f_rho_rovib_prod2 = interp1d(
+            ene_dos0, self.dos_df[self.prod2][ene_dos0].values, kind='cubic',
+            fill_value='extrapolate')
+
+        ped_df_prod = self.prob_ene1_fct('dos')
 
         return ped_df_prod
-

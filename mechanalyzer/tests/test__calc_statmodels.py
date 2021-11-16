@@ -2,25 +2,30 @@
     mess_io required for input generation - too large input strings otherwise
     statmodels.ped_models is a class, tested in test__prompt.py
 """
+
 import os
 import numpy as np
-from autofile.io_ import read_file
-import mechanalyzer
+import ioformat.pathtools
 import mess_io
+import mechanalyzer
+
 
 PATH = os.path.dirname(os.path.realpath(__file__))
-INP_PATH_SINGLE = os.path.join(PATH, 'test_nB', 'CH2O_H')
-PED_INP_SINGLE = read_file(os.path.join(INP_PATH_SINGLE, 'me_ktp_ped.inp'))
-INP_PATH_DOUBLE = os.path.join(PATH, 'test_nB', 'C3H8_OH')
-PED_INP_DOUBLE = read_file(os.path.join(INP_PATH_DOUBLE, 'me_ktp_ped.inp'))
+INP_PATH_SGL = os.path.join(PATH, 'data', 'prompt', 'CH2O_H')
+INP_PATH_DBL = os.path.join(PATH, 'data', 'prompt', 'C3H8_OH')
+PED_INP_SGL = ioformat.pathtools.read_file(INP_PATH_SGL, 'me_ktp_ped.inp')
+PED_INP_DBL = ioformat.pathtools.read_file(INP_PATH_DBL, 'me_ktp_ped.inp')
 
 
 def test_get_dof_info():
+    """ test mechanalyzer.calculator.statmodels
+    """
+
     # PES1
-    species_blocks_ped1 = mess_io.reader.get_species(PED_INP_SINGLE)
+    species_blocks_ped1 = mess_io.reader.get_species(PED_INP_SGL)
     dof1 = mechanalyzer.calculator.statmodels.get_dof_info(
         species_blocks_ped1['R'], ask_for_ts=True)
-    # check vibrational dofs, rotational dofs, mw
+
     assert all(np.isclose(list(dof1.loc['HCO'].values), [
                3., 3., 0.029], atol=1e-4))
     assert all(np.isclose(list(dof1.loc['H2'].values), [
@@ -29,7 +34,7 @@ def test_get_dof_info():
                8.0, 3.0, 0.031], atol=1e-4))
 
     # PES2
-    species_blocks_ped2 = mess_io.reader.get_species(PED_INP_DOUBLE)
+    species_blocks_ped2 = mess_io.reader.get_species(PED_INP_DBL)
     dof2 = mechanalyzer.calculator.statmodels.get_dof_info(
         species_blocks_ped2['NC3H7'])
 

@@ -11,6 +11,11 @@ ChemicalEigenvalueMax                 0.2
 ChemicalEigenvalueMin                 1.e-6          #only for direct diagonalization method
 CalculationMethod                       direct #low-eigenvalue #direct
 
+MicroRateOutput                        ke_ped.out
+MicroEnerMin[kcal/mol]                 0.0
+MicroEnerMax[kcal/mol]                 320.0
+MicroEnerStep[kcal/mol]                0.1
+
 
 !EnergyStepOverTemperature		.2
 !ExcessEnergyOverTemperature		40
@@ -119,7 +124,7 @@ Model
 !-----------------------------------------------
 
   Bimolecular		R	#ch3ch2ch2+h2o
-    Fragment    HCO
+    Fragment    HCO density
       ! Current data taken from:
       !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/coh/c1o1/hco/cc/hco_cc_tz.out
       RRHO
@@ -140,7 +145,7 @@ Model
             0	2
       End
 
-    Fragment	H2
+    Fragment	H2 density
       ! Current data taken from:
       !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/h/h2/dft/h2_b2plypd3_ccpvtz.log
       RRHO
