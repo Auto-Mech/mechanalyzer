@@ -124,3 +124,5 @@ for species in pedspecies:
     rxn_ktp_dct = mechanalyzer.builder.bf.merge_bf_ktp(bf_tp_dct, ktp_dct[label], frag_reacs, frag1, frag2, hot_frag_dct)
     rxns[label] = rxn_ktp_dct
 
+print(rxn_ktp_dct)
+
