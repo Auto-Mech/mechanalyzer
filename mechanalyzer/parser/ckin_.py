@@ -55,7 +55,7 @@ def load_rxn_param_dcts(mech_filenames, direc):
     return rxn_param_dcts
 
 
-def load_spc_therm_dcts(thermo_filenames, direc, temps_lst):
+def load_spc_therm_dcts(thermo_filenames, direc, temps):
     """ Reads Chemkin thermo files and calculates thermo at the indicated
         temperatures. Outputs a list of spc_therm_dcts.
 
@@ -63,8 +63,8 @@ def load_spc_therm_dcts(thermo_filenames, direc, temps_lst):
         :type thermo_filenames: list [filename1, filename2, ...]
         :param direc: directory with file(s) (all must be in same directory)
         :type direc: str
-        :param temps_lst: list of temperature arrays (K)
-        :type temps_lst: list [numpy.ndarray1, numpy.ndarray2, ...]
+        :param temps: temperatures at which to do calculations (K) 
+        :type temps: numpy.ndarray
         :return spc_therm_dcts: list of spc_therm_dcts
         :rtype: list of dcts [spc_therm_dct1, spc_therm_dct2, ...]
     """
@@ -72,7 +72,7 @@ def load_spc_therm_dcts(thermo_filenames, direc, temps_lst):
     spc_therm_dcts = []
     for thermo_filename in thermo_filenames:
         print(f'Loading spc_therm_dct for the file {thermo_filename}...')
-        spc_therm_dct = load_spc_therm_dct(thermo_filename, direc, temps_lst)
+        spc_therm_dct = load_spc_therm_dct(thermo_filename, direc, temps)
         spc_therm_dcts.append(spc_therm_dct)
 
     return spc_therm_dcts
@@ -118,7 +118,7 @@ def load_rxn_param_dct(mech_filename, direc):
     return rxn_param_dct
 
 
-def load_spc_therm_dct(thermo_filename, direc, temps_lst):
+def load_spc_therm_dct(thermo_filename, direc, temps):
     """ Reads a Chemkin thermo file and calculates thermo at the indicated
         temperatures. Outputs a spc_therm_dct.
 
@@ -126,14 +126,14 @@ def load_spc_therm_dct(thermo_filename, direc, temps_lst):
         :type thermo_filename: str
         :param direc: directory with file
         :type direc: str
-        :param temps_lst: list of temperature arrays (K)
-        :type temps_lst: list [numpy.ndarray1, numpy.ndarray2, ...]
+        :param temps: temperatures at which to do calculations (K) 
+        :type temps: numpy.ndarray
         :return spc_therm_dct: spc_therm_dct object
         :rtype: dct {spc1: therm_array1, spc2: ...}
     """
 
     mech_str = parser.read_file(direc, thermo_filename)
-    spc_therm_dct = parse_spc_therm_dct(mech_str, temps_lst)
+    spc_therm_dct = parse_spc_therm_dct(mech_str, temps)
 
     return spc_therm_dct
 
@@ -174,7 +174,7 @@ def parse_rxn_param_dct(mech_str):
     return rxn_param_dct
 
 
-def parse_spc_therm_dct(mech_str, temps_lst):
+def parse_spc_therm_dct(mech_str, temps):
     """ Parses a raw Chemkin mechanism string and yields a spc_therm_dct
 
         *note: the input mech_str can be from reading the entire Chemkin file,
@@ -182,15 +182,15 @@ def parse_spc_therm_dct(mech_str, temps_lst):
 
         :param mech_str: raw string from reading a Chemkin file
         :type mech_str: str
-        :param temps_lst: list of temperature arrays (K)
-        :type temps_lst: list [numpy.ndarray1, numpy.ndarray2, ...]
+        :param temps: temperatures at which to do calculations (K) 
+        :type temps: numpy.ndarray
         :return rxn_param_dct: rxn_param_dct object
         :rtype: dct {rxn1: param_tuple1, rxn2: ...}
     """
 
     thermo_block_str = parser_mech.thermo_block(mech_str)
     spc_nasa7_dct = parser_thermo.create_spc_nasa7_dct(thermo_block_str)
-    spc_therm_dct = calc_thermo.create_spc_therm_dct(spc_nasa7_dct, temps_lst)
+    spc_therm_dct = calc_thermo.create_spc_therm_dct(spc_nasa7_dct, temps)
 
     return spc_therm_dct
 

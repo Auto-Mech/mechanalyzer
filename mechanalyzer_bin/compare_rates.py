@@ -12,15 +12,30 @@ import mechanalyzer.parser.ckin_ as ckin_parser
 
 # INPUTS
 # Filenames
-mech_filenames = ['Tran_v33_short.ckin', 'Tran_v42_short.ckin']
-thermo_filenames = ['Tran_v33_short.ckin', 'Tran_v42_short.ckin']
-spc_csv_filenames = ['Tran_species_dumb.csv', 'Tran_species_dumb.csv']
-
-output_filename = '33_42_short.pdf'
-mech_nicknames = ['v33', 'v42']
+mech_filenames = [
+    'glarborg.mech', 
+    'stagni.mech',
+    'alturaifi.mech',
+]
+thermo_filenames = [
+    'glarborg.therm',
+    'stagni.therm',
+    'alturaifi.therm',
+]
+spc_csv_filenames = [
+    'nh3_species.csv',
+    'nh3_species.csv',
+    'nh3_species.csv',
+]
+output_filename = 'rates_glarborg_stagni_alturaifi.pdf'
+mech_nicknames = [
+    'Glarborg',
+    'Stagni',
+    'Alturaifi',
+]
 
 # Conditions
-TEMPS_LST = [numpy.linspace(400, 700, 31)]
+TEMPS_LST = [numpy.linspace(300, 2500, 23)]
 pressures = [1, 10]
 
 # Options
@@ -42,7 +57,7 @@ elif len(sys.argv) == 1:
 rxn_ktp_dcts = ckin_parser.load_rxn_ktp_dcts(
     mech_filenames, JOB_PATH, TEMPS_LST, pressures)
 spc_therm_dcts = ckin_parser.load_spc_therm_dcts(
-    thermo_filenames, JOB_PATH, TEMPS_LST)
+    thermo_filenames, JOB_PATH, TEMPS_LST[0])  # NOTE: taking first entry
 spc_dcts = spc_parser.load_spc_dcts(spc_csv_filenames, JOB_PATH)
 
 # Get the algn_rxn_ktp_dct

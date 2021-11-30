@@ -24,6 +24,7 @@ def run_all_checks(rxn_param_dct, rxn_ktp_dct, k_thresholds,
         :return total_str: description of all the checks performed
         :rtype: str
     """
+
     def separator():
         """ Write a line of '+' to separate sections
         """
@@ -157,6 +158,7 @@ def get_negative_kts(rxn_ktp_dct):
             one or more negative k(T)
         :rtype: dct {rxn1: ktp_dct1, rxn2: ...}
     """
+
     negative_rxn_ktp_dct = {}
     for rxn, ktp_dct in rxn_ktp_dct.items():
         negative_ktp_dct = {}
@@ -189,6 +191,7 @@ def get_lone_spcs(rxn_param_dct, threshold):
         :rtype: dct {lone_spc1: [rxn1, rxn2, ...], lone_spc2: ...}
 
     """
+
     # Get the number of reactions that each species participates in
     all_rcts, all_prds = _get_rcts_prds(rxn_param_dct)
     spc_counts = dict(counter(all_rcts + all_prds))
@@ -217,6 +220,7 @@ def get_duplicates(rxn_param_dct):
         :return duplicate_rxns: duplicate reactions and number of expressions
         :rtype: dct {rxn1: num_of_expressions1, rxn2: ...}
     """
+
     duplicate_rxns = {}
     for rxn, params in rxn_param_dct.items():
         if len(params) > 2:
@@ -241,6 +245,7 @@ def get_mismatches(rxn_param_dct):
     def classify_rate(param):
         """ Classify a rate based on the contents of the param
         """
+
         if param[3] is not None:
             rxn_type = 'Chebyshev'
         elif param[4] is not None:
@@ -282,9 +287,11 @@ def get_missing_spcs(rxn_param_dct, spc_dct):
         :return missing_from_mech: list of species missing from the mechanism
         :rtype: list [spc1, spc2, ...]
     """
+
     def strip_thrd_bod(thrd_bod, rxn):
         """ Strip the third body notation from a species name
         """
+
         if thrd_bod in ('(+M)', '+M'):
             stripped_thrd_bod = None
         elif thrd_bod[0] == '(':
@@ -554,6 +561,7 @@ def write_missing_spcs(missing_from_csv, missing_from_mech):
     """ Write a string saying what species are missing from the
         species.csv or mechanism.dat file.
     """
+
     missing_spc_str = '\nSPECIES MISSING FROM CSV OR MECHANISM\n\n'
     missing_spc_str += 'These species are missing from the spc.csv file:\n'
     for spc in missing_from_csv:
@@ -574,6 +582,7 @@ def _write_rxn_ktp_dct(rxn_ktp_dct):
     :return output_str: string describing the rxn_ktp_dct
     :rtype: str
     """
+
     output_str = ''
     for rxn, ktp_dct in rxn_ktp_dct.items():
         output_str += format_rxn_name(rxn)
@@ -600,6 +609,7 @@ def _get_rcts_prds(rxn_param_dct):
     :return all_prds: all products in the mechanism
     :rtype: list [prd1, prd2, ...]
     """
+
     all_rcts = []
     all_prds = []
     for rxn in rxn_param_dct.keys():
