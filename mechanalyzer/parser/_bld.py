@@ -27,6 +27,7 @@ def build_input_file(bld_inp_str):
             inp_block, formatvals=True)
     else:
         print('Missing inp block')
+        inp_dct = None
 
     # Set the build series
     if all(block is not None
@@ -49,5 +50,6 @@ def build_input_file(bld_inp_str):
         )
     else:
         print('Missing rct1, rct2 or rclasses block')
+        rseries = None
 
     return inp_dct, rseries

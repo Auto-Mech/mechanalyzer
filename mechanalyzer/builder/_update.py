@@ -98,7 +98,8 @@ def remove_spc_not_in_reactions(rxn_param_dct, mech_spc_dct):
     return new_mech_spc_dct
 
 
-def remove_improper_reactions(rxn_param_dct, mech_spc_dct, stereo=True):
+def remove_improper_reactions(rxn_param_dct, mech_spc_dct,
+                              stereo=True, reverse=True):
     """ Remove reactions from the mechanism that do not correspond
         to proper, physical elementary step reactions.
     """
@@ -113,7 +114,18 @@ def remove_improper_reactions(rxn_param_dct, mech_spc_dct, stereo=True):
         if rxn_obj_sets is not None:
             ste_rxn_param_dct[rxn] = params
         else:
-            print(f'Removing reaction {rcts_ich}->{prds_ich}')
+            # Check if the reverse reaction cannot be ID'd
+            if reverse:
+                rxn_obj_sets = automol.reac.rxn_objs_from_inchi(
+                    prds_ich, rcts_ich, stereo=stereo)
+                if rxn_obj_sets is not None:
+                    print('Checking if Reverse reaction can be identified...')
+                    rev_rxn = (rxn[1], rxn[0], rxn[2]) 
+                    ste_rxn_param_dct[rev_rxn] = params
+                else:
+                    print(f'Removing reaction {rcts_ich}->{prds_ich}')
+            else:
+                print(f'Removing reaction {rcts_ich}->{prds_ich}')
 
     return ste_rxn_param_dct
 
