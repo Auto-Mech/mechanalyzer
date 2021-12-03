@@ -2,6 +2,7 @@
 Functions for mechanism reading and sorting
 """
 
+import sys
 import autoparse.pattern as app
 import ioformat.ptt
 from mechanalyzer.parser import ckin_ as ckin
@@ -41,6 +42,25 @@ def mech_info(rxn_param_dct, spc_dct):
         :rtype: list
     """
 
+    def _check_names(rct_names, prd_names, all_spc_names):
+        """ Assess if the reactant and product names provided in the
+            rxn_param_dct exist in the spc_dct
+        """
+        all_mech_names = ()
+        for _rct_names, _prd_names in zip(rct_names, prd_names):
+            all_mech_names += _rct_names
+            all_mech_names += _prd_names
+        all_mech_names = set(all_mech_names)
+
+        missing_names = all_mech_names - all_spc_names
+        if missing_names:
+            print('Names in provided in mechanism, '
+                  'but not provided in species list (likely from .csv file):')
+            for name in missing_names:
+                print('  ', name)
+            print('Unable to finish parsing mechanism. Exiting...')
+            sys.exit()
+
     def _inf(rct_names, prd_names, ich_dct):
         """ Sort reactant and product name lists by formula to facilitate
             multichannel, multiwell rate evaluations
@@ -59,6 +79,9 @@ def mech_info(rxn_param_dct, spc_dct):
     # Extract info from dictionary
     rcts, prds, thrdbdy = zip(*rxn_param_dct.keys())
     rct_names, prd_names, thrdbdy_lst = list(rcts), list(prds), list(thrdbdy)
+
+    # Check if the rxn_param dct may be fully parsed
+    _check_names(rct_names, prd_names, set(spc_dct.keys()))
 
     # formulas and reaction names (repplace with the mech info from ckin
     ich_dct = name_inchi_dct(spc_dct)
