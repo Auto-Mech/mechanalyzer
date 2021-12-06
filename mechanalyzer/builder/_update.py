@@ -61,10 +61,11 @@ def update_rxn_dct(rxn_lst, rxn_dct, spc_dct):
     print('\nAdding new unique reactions to mechanism...\n')
 
     for rxn in rxn_lst:
-        if _unique_reaction(rxn, rxn_dct):
+        rxn_wname = _rxn_ich_to_name(rxn, spc_dct)
+        if _unique_reaction(rxn_wname, rxn_dct):
 
             # Convert to names and print message
-            rxn_wname = _rxn_ich_to_name(rxn, spc_dct)
+            # rxn_wname = _rxn_ich_to_name(rxn, spc_dct)
             print(f'Adding reaction {rxn_wname} to param dct')
 
             rxn_dct[rxn_wname] = RxnParams(
@@ -135,8 +136,17 @@ def _unique_reaction(rxn, rxn_dct):
 
         does not deal with the third body, so function does not work
     """
+    print('ini reactions')
+    for x in rxn_dct:
+        print(x)
+
     rxns = _make_reaction_permutations(rxn)
+    print('permutations')
+    for x in rxns:
+        print(x)
+
     unique = not any(rxn in rxn_dct for rxn in rxns)
+    print('\n\n')
     return unique
 
 
@@ -198,7 +208,7 @@ def _rxn_ich_to_name(rxn, spc_dct):
     rxn2 = (
         tuple(ich_name_dct[rgt] for rgt in rxn[0]),
         tuple(ich_name_dct[rgt] for rgt in rxn[1]),
-        (None,)
+        rxn[2]
     )
 
     return rxn2
@@ -207,10 +217,13 @@ def _rxn_ich_to_name(rxn, spc_dct):
 def rxn_name_str(rxn, newline=False):
     """ get a reaction name string
     """
+    # print('rxn', rxn)
     if newline:
         rstr = ' =\n       '.join((' + '.join(rxn[0]), ' + '.join(rxn[1])))
     else:
         rstr = ' = '.join((' + '.join(rxn[0]), ' + '.join(rxn[1])))
+    # if rxn[2] != (None,):
+    #     rstr += rxn[2][0] + 'WRONG'
 
     return rstr
 
