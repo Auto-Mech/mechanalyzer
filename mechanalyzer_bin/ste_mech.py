@@ -43,7 +43,7 @@ rxn_param_dct, _, _ = mechanalyzer.parser.mech.parse_mechanism(
 isolate_spc, sort_lst = mechanalyzer.parser.mech.parse_sort(SORT_STR)
 
 # Remove reactions that should not be there
-print('\n Removing improper reactions')
+print('\n Removing stereo improper reactions')
 rxn_param_dct = mechanalyzer.builder.remove_improper_reactions(
     rxn_param_dct, mech_spc_dct)
 
@@ -62,7 +62,10 @@ print('\n---- Expanding the list of mechanism reactions to include all'
 ste_rxn_dct, ste_mech_spc_dct = mechanalyzer.builder.expand_mech_stereo(
     rxn_param_dct, mech_spc_dct)
 
-# Remove species that should not be there
+# Remove species and reactions that should not be there
+# print('\n Removing stereo improper reactions')
+# ste_rxn_dct = mechanalyzer.builder.remove_improper_reactions(
+#     ste_rxn_dct, ste_mech_spc_dct)
 print('\n Removing species not in the reactions')
 ste_mech_spc_dct = mechanalyzer.builder.remove_spc_not_in_reactions(
     ste_rxn_dct, ste_mech_spc_dct)

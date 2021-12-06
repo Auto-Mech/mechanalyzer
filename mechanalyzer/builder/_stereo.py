@@ -11,10 +11,12 @@ import mechanalyzer.parser
 from mechanalyzer.builder._update import update_spc_dct_from_reactions
 from mechanalyzer.builder._update import update_rxn_dct
 from mechanalyzer.builder._update import rxn_name_str
+from chemkin_io.writer._util import format_rxn_name
 
 
 # MAIN CALLABLE
-def expand_mech_stereo(mech_rxn_dct, mech_spc_dct, nprocs='auto'):
+# def expand_mech_stereo(mech_rxn_dct, mech_spc_dct, nprocs='auto'):
+def expand_mech_stereo(mech_rxn_dct, mech_spc_dct, nprocs=1):
     """ Build list of stereochemistry to reactions
 
         Currently, we assume that the species in them mech_spc_dct have
@@ -27,21 +29,25 @@ def expand_mech_stereo(mech_rxn_dct, mech_spc_dct, nprocs='auto'):
         srxns = ()
         for rxn in rxns:
 
-            log1 = f'\nExpanding Stereo for Reaction: {rxn_name_str(rxn)}\n'
+            # Split thrdbdy off, not needed for stereo code, add back later
+            _rxn = (rxn[0], rxn[1])
+            thrdbdy = rxn[2]
+
+            log1 = f'\nExpanding Stereo for Reaction: {format_rxn_name(rxn)}\n'
 
             # Reformat reaction to use InChI instead of mechanism name
-            rxn_ich = _rxn_ich(rxn, name_ich_dct)
+            rxn_ich = _rxn_ich(_rxn, name_ich_dct)
 
             # Build list of all stereochemically allowed versions of reaction
             ste_rxns_lst, log2 = _ste_rxn_lsts(rxn_ich)
-
+            
             # Filter redundant reactions from each enantiomer pairs
             ste_rxns_lst, removed_rxns_lst = _remove_enantiomer_reactions(
                 ste_rxns_lst)
 
             # Appropriately format the reactions with third body
-            ste_rxns_lst = _add_third(ste_rxns_lst)
-            removed_rxns_lst = _add_third(removed_rxns_lst)
+            ste_rxns_lst = _add_third(ste_rxns_lst, thrdbdy)
+            removed_rxns_lst = _add_third(removed_rxns_lst, thrdbdy)
 
             # Print final list of stereochemical reactions to potentially add
             log3 = _stereo_results(rxn, ste_rxns_lst, removed_rxns_lst)
@@ -133,19 +139,19 @@ def _stereo_results(rxn, f_ste_rxns_lst, removed_ste_rxns_lst):
     return log
 
 
-def _add_third(rxn_lst):
+def _add_third(rxn_lst, thrdbdy):
     """ Format a rxn list to have the third-body added back
     """
-    return tuple((rxn[0], rxn[1], (None,)) for rxn in rxn_lst)
+    return tuple((rxn[0], rxn[1], thrdbdy) for rxn in rxn_lst)
 
 
 def _rxn_ich(rxn, ich_dct):
     """ Convert a reacion written with spc names to spc inchis
+        Third body list remains the same
     """
     return (
         tuple(ich_dct[rgt] for rgt in rxn[0]),
         tuple(ich_dct[rgt] for rgt in rxn[1]),
-        (None,)
     )
 
 
@@ -155,5 +161,4 @@ def _rxn_smiles(rxn):
     return (
         tuple(automol.inchi.smiles(rgt) for rgt in rxn[0]),
         tuple(automol.inchi.smiles(rgt) for rgt in rxn[1]),
-        (None,)
     )
