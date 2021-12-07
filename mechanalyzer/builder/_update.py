@@ -121,7 +121,7 @@ def remove_improper_reactions(rxn_param_dct, mech_spc_dct,
                     prds_ich, rcts_ich, stereo=stereo)
                 if rxn_obj_sets is not None:
                     print('Checking if Reverse reaction can be identified...')
-                    rev_rxn = (rxn[1], rxn[0], rxn[2]) 
+                    rev_rxn = (rxn[1], rxn[0], rxn[2])
                     ste_rxn_param_dct[rev_rxn] = params
                 else:
                     print(f'Removing reaction {rcts_ich}->{prds_ich}')
@@ -136,18 +136,8 @@ def _unique_reaction(rxn, rxn_dct):
 
         does not deal with the third body, so function does not work
     """
-    print('ini reactions')
-    for x in rxn_dct:
-        print(x)
-
     rxns = _make_reaction_permutations(rxn)
-    print('permutations')
-    for x in rxns:
-        print(x)
-
-    unique = not any(rxn in rxn_dct for rxn in rxns)
-    print('\n\n')
-    return unique
+    return not any(rxn in rxn_dct for rxn in rxns)
 
 
 # Make the bookkeeping objects
