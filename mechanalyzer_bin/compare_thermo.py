@@ -4,7 +4,7 @@
 import os
 import sys
 import numpy
-import mechanalyzer.calculator.compare as compare
+from mechanalyzer.calculator import compare
 import mechanalyzer.plotter.thermo as plot_thermo
 import mechanalyzer.plotter._util as util
 import mechanalyzer.parser.spc as spc_parser
@@ -31,6 +31,8 @@ OUTPUT_FILENAME = 'compare_thermo.pdf'
 
 # Conditions
 TEMPS = numpy.linspace(300, 2500, 23)
+# TEMPS = numpy.linspace(300, 1000, 15)
+# TEMPS = numpy.linspace(600, 700, 10)
 
 # Options
 # SORT = False
