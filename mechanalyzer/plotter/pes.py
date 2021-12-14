@@ -7,7 +7,7 @@ import matplotlib
 from matplotlib import pyplot as plt
 # from matplotlib.artist import Artist
 # from matplotlib.backends.backend_cairo import RendererCairo
-# from igraph import BoundingBox, Graph, palettes
+import igraph
 
 
 # matplotlib.use("cairo")
@@ -463,37 +463,63 @@ def resort_names(ene_dct, conn_lst):
 #                             *self.args, **self.kwds)
 #
 #
-# def make_graph(ene_dct, conn_lst):
-#     """ Make an igraph argument
-#     """
-#
-#     # Make an igraph object
-#     pes_gra = Graph()
-#
-#     # Add vertices and set the name and ene attributes
-#     pes_gra.add_vertices(len(ene_dct))
-#     pes_gra.vs["name"] = list(ene_dct.keys())
-#     pes_gra.vs["energy"] = list(ene_dct.values())
-#     pes_gra.vs["label"] = list(ene_dct.keys())
-#
-#     # Write the conn_lst in terms of indices to add the edges
-#     name_idx_dct = {name: idx for idx, name in enumerate(ene_dct)}
-#     idx_conn_lst = ()
-#     for conn in conn_lst:
-#         idx_conn_lst += (tuple(name_idx_dct[x] for x in conn),)
-#     pes_gra.add_edges(idx_conn_lst)
-#
-#     # Make a plot with some layout
-#     # layout = pes_gra.layout("kk")
-#     fig, axes = plt.subplots(
-#         nrows=1, ncols=1, figsize=(16, 9))
-#
-#     matplotlib.use("cairo")
-#     graph_artist = GraphArtist(pes_gra, (600, 450), layout="kk")
-#     axes.artists.append(graph_artist)
-#
-#     # plt.plot(pes_gra, layout=layout)
-#     # axes.plot(pes_gra, layout=layout)
-#     fig.set_size_inches(16, 9)
-#     fig.savefig('surface.pdf', dpi=200)
-#     plt.close(fig)
+def pes_graph(ene_dct, conn_lst_dct, label_dct=None):
+    """ Make an igraph argument
+    """
+
+    def _nobarrier(ene_dct, conn_lst_dct):
+        """ Remove barriers from ene_dct and make connections just
+            to the reactants+products
+        """
+        _ene_dct = {name: ene for name, ene in ene_dct.items()
+                    if 'B' not in name}
+        return _ene_dct, tuple(conn_lst_dct.values())
+
+    def _relabel(ene_dct, conn_lst, label_dct):
+        """ relabel the graph
+        """
+        _ene_dct = {label_dct[name]: ene for name, ene in ene_dct.items()}
+        _conn_lst = ()
+        for conn in conn_lst:
+            _conn_lst += ((label_dct[conn[0]], label_dct[conn[1]]),)
+
+        return _ene_dct, _conn_lst
+
+    ene_dct, conn_lst = _nobarrier(ene_dct, conn_lst_dct)
+    if label_dct is not None:
+        ene_dct, conn_lst = _relabel(ene_dct, conn_lst, label_dct)
+
+    # Make an igraph object
+    pes_gra = igraph.Graph()
+
+    # Add vertices and set the name and ene attributes
+    pes_gra.add_vertices(len(ene_dct))
+    pes_gra.vs["name"] = list(ene_dct.keys())
+    pes_gra.vs["energy"] = list(ene_dct.values())
+    pes_gra.vs["label"] = list(ene_dct.keys())
+
+    # Write the conn_lst in terms of indices to add the edges
+    name_idx_dct = {name: idx for idx, name in enumerate(ene_dct)}
+    idx_conn_lst = ()
+    for conn in conn_lst:
+        idx_conn_lst += (tuple(name_idx_dct[x] for x in conn),)
+    pes_gra.add_edges(idx_conn_lst)
+
+    # Make a plot with some layout
+    fig, axes = plt.subplots(
+        nrows=1, ncols=1, figsize=(16, 9))
+    visual_style = {
+        "vertex_size": 30,
+        "vertex_label_size": 26,
+        # "vertex_color": [color_dict[gender] for gender in g.vs["gender"]],
+        "vertex_label": pes_gra.vs["name"],
+        # "edge_width": [1+2*int(is_form) for is_form in g.es["is_form"]],
+        "layout": "kamada_kawai",
+        "bbox": (300, 300),
+        "margin": 20
+    }
+    igraph.plot(pes_gra, target=axes, **visual_style)
+
+    fig.set_size_inches(16, 9)
+    fig.savefig('surface.pdf', dpi=200)
+    plt.close(fig)
