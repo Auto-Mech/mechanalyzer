@@ -1,5 +1,8 @@
 """ Functions which handle updating the master and temporary
     objects describing the reactions and species of a mechanism
+
+    Need to add code to remove unstable species as reactants
+    (going to bimol prods?)
 """
 
 import itertools
@@ -129,6 +132,28 @@ def remove_improper_reactions(rxn_param_dct, mech_spc_dct,
                 print(f'Removing reaction {rcts_ich}->{prds_ich}')
 
     return ste_rxn_param_dct
+
+
+def remove_unstable_reactions(rxn_param_dct, mech_spc_dct):
+    """ Remove reaction A -> B + C where A is an unstable reactant.
+        This is because these reactions are readded with other codes.
+    """
+    _rxn_param_dct = {}
+    for rxn, params in rxn_param_dct.items():
+        reacs, prods, _ = rxn
+        if len(reacs) == 1 and len(prods) == 2:
+            rct_geo = automol.inchi.geometry(mech_spc_dct[reacs[0]]['inchi'])
+            rct_zma = automol.geom.zmatrix(rct_geo)
+            instab_zmas = automol.reac.instability_product_zmas(rct_zma)
+            if instab_zmas:
+                print('Removing reaction', reacs, prods)
+                _rxn_param_dct[rxn] = params
+            else:
+                _rxn_param_dct[rxn] = params
+        else:
+            _rxn_param_dct[rxn] = params
+
+    return _rxn_param_dct
 
 
 def _unique_reaction(rxn, rxn_dct):
