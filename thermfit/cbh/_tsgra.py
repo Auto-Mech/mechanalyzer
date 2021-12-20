@@ -41,84 +41,32 @@ def xor(lst1, lst2):
 
 
 def ts_graph(gra, site1, site2=None):
-    """ Get a transition state graph.
-
-        :param gra:
-        :type gra: automol
-        :param site1:
-    """
-
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
     atm_vals = automol.graph.atom_element_valences(gra)
+    rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
     atms = automol.graph.atoms(gra)
-    bnd_ords = automol.graph.one_resonance_dominant_bond_orders(gra)
+    bnds = automol.graph.bonds(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
-
     sites = [site1]
-    if site2:
+    for rad_atm in rad_atms:
+        atm_vals[rad_atm] -= 1
+    if site2 is not None:
         sites.append(site2)
+        frm_bnd = frozenset({site2[0], site2[1]})
+        bnd_ord = bnds[frm_bnd][0]
+        bnds[frm_bnd] = (bnd_ord + 0.1, None)
     for site in sites:
-        frm = [site[0], site[1]]
-        brk = [site[1], site[2]]
-        frm.sort()
-        brk.sort()
-        # update adjacent atms list to consider TS connected
-        if site[1] in adj_atms[site[0]]:
-            if site[1] in adj_atms[site[2]]:
-                if site[1] in rad_atms:
-                    new_bnd_ords = bnd_ords.copy()
-                    bnd_dic = {}
-                    for key in bnd_ords:
-                        bnd_dic[key] = (list(new_bnd_ords[key])[0], None)
-                    new_gra = (atms, bnd_dic)
-                    new_rad_atms = list(
-                        automol.graph.sing_res_dom_radical_atom_keys(new_gra))
-                    if site[1] not in new_rad_atms:
-                        rad_atms.remove(site[1])
-                bnd_ords[frozenset({*frm})] = frozenset(
-                    {list(bnd_ords[frozenset({*frm})])[0] + 0.6})
-                bnd_ords[frozenset({*brk})] = frozenset(
-                    {list(bnd_ords[frozenset({*brk})])[0] - 0.6})
-            else:
-                if site[2] in rad_atms:
-                    new_bnd_ords = bnd_ords.copy()
-                    new_bnd_ords[frozenset({*frm})] = frozenset(
-                        {list(bnd_ords[frozenset({*frm})])[0] - 1})
-                    new_bnd_ords[frozenset({*brk})] = frozenset({1})
-                    bnd_dic = {}
-                    for key in bnd_ords:
-                        bnd_dic[key] = (list(new_bnd_ords[key])[0], None)
-                    new_gra = (atms, bnd_dic)
-                    new_rad_atms = list(
-                        automol.graph.sing_res_dom_radical_atom_keys(new_gra))
-                    if site[2] not in new_rad_atms:
-                        rad_atms.remove(site[2])
-                bnd_ords[frozenset({*frm})] = frozenset(
-                    {list(bnd_ords[frozenset({*frm})])[0] - 0.4})
-                bnd_ords[frozenset({*brk})] = frozenset({0.4})
-                adj_atms[site[2]] = frozenset({site[1], *adj_atms[site[2]]})
-                adj_atms[site[1]] = frozenset({site[2], *adj_atms[site[1]]})
-        else:
-            if site[0] in rad_atms:
-                new_bnd_ords = bnd_ords.copy()
-                new_bnd_ords[frozenset({*brk})] = frozenset(
-                    {list(bnd_ords[frozenset({*brk})])[0] - 1})
-                new_bnd_ords[frozenset({*frm})] = frozenset({1})
-                bnd_dic = {}
-                for key in bnd_ords:
-                    bnd_dic[key] = (list(new_bnd_ords[key])[0], None)
-                new_gra = (atms, bnd_dic)
-                new_rad_atms = list(
-                    automol.graph.sing_res_dom_radical_atom_keys(new_gra))
-                if site[0] not in new_rad_atms:
-                    rad_atms.remove(site[0])
-            bnd_ords[frozenset({*frm})] = frozenset({0.6})
-            bnd_ords[frozenset({*brk})] = frozenset(
-                {list(bnd_ords[frozenset({*brk})])[0] - 0.6})
-            adj_atms[site[0]] = frozenset({site[1], *adj_atms[site[0]]})
-            adj_atms[site[1]] = frozenset({site[0], *adj_atms[site[1]]})
-
-    return rad_atms, atms, bnd_ords, atm_vals, adj_atms
+        abs_atm = site[0]
+        trans_atm = site[1]
+        don_atm = site[2]
+        if trans_atm not in adj_atms[abs_atm]:
+            adj_atms[abs_atm] = frozenset(
+                {*list(adj_atms[abs_atm]), trans_atm})
+        if trans_atm not in adj_atms[don_atm]:
+            adj_atms[don_atm] = frozenset(
+                {*list(adj_atms[don_atm]), trans_atm})
+    #    bnd_ords[brk_bnd] = frozenset({list(bnd_ords[frm_bnd])[0] - 0.1})
+    return rad_atms, atms, bnds, atm_vals, adj_atms
 
 
 def remove_zero_order_bnds(gra):
@@ -148,74 +96,6 @@ def remove_hyd_from_adj_atms(atms, adj_atms, othersite=(), other_adj=()):
     return new_adj_atms
 
 
-def split_beta_gras(gras):
-    """ ?
-    """
-
-    rct_ichs = ['']
-    prd_ichs = ['', '']
-    atms, bnd_ords = gras
-    atms = atms.copy()
-    bnd_ords = bnd_ords.copy()
-    # ioprinter.debug_message('rct gra at start', atms, bnd_ords)
-    for bnd_ord in bnd_ords:
-        order, tmp = bnd_ords[bnd_ord]
-        if abs(np.floor(order) - (order - 0.4)) < 0.01:
-            bnd_ords[bnd_ord] = (round(order + 0.6, 1), tmp)
-            atmai, atmbi = bnd_ord
-            if not abs(np.floor(atms[atmai][1]) - (atms[atmai][1]-0.6)) < 0.01:
-                atmbi, atmai = atmai, atmbi
-            atma = list(atms[atmai])
-            atmb = list(atms[atmbi])
-            atma[1] = round(atma[1] - 0.6, 1)
-            atms[atmai] = tuple(atma)
-            atms[atmbi] = tuple(atmb)
-            for atmi in atms:
-                if abs(np.floor(atms[atmi][1]) - (atms[atmi][1]-0.4)) < .01:
-                    atm = list(atms[atmi])
-                    atm[1] = round(atm[1] - 0.4, 1)
-                    atms[atmi] = tuple(atm)
-                    order, tmp = bnd_ords[frozenset({atmbi, atmi})]
-                    bnd_ords[frozenset({atmbi, atmi})] = (round(
-                        order - 0.6, 1), tmp)
-            rct_gra = remove_zero_order_bnds((atms, bnd_ords))
-            atms, bnd_ords = rct_gra
-    rct_gras = automol.graph.connected_components(rct_gra)
-    for idx, rgra in enumerate(rct_gras):
-        if rgra:
-            rct_ichs[idx] = automol.graph.inchi(rgra)
-    rct_ichs = automol.inchi.sorted_(rct_ichs)
-    atms, bnd_ords = gras
-    for bnd_ord in bnd_ords:
-        order, tmp = bnd_ords[bnd_ord]
-        if abs(np.floor(order) - (order - 0.4)) < 0.01:
-            bnd_ords[bnd_ord] = (round(order - 0.4, 1), tmp)
-            atmai, atmbi = bnd_ord
-            if not abs(np.floor(atms[atmai][1]) - (atms[atmai][1]-0.6)) < 0.01:
-                atmbi, atmai = atmai, atmbi
-            atma = list(atms[atmai])
-            atmb = list(atms[atmbi])
-            atma[1] = round(atma[1] - 0.6, 1)
-            atms[atmai] = tuple(atma)
-            atms[atmbi] = tuple(atmb)
-            for atmi in atms:
-                if abs(np.floor(atms[atmi][1]) - (atms[atmi][1]-0.4)) < 0.01:
-                    atm = list(atms[atmi])
-                    atm[1] = round(atm[1] - 0.4, 1)
-                    atms[atmi] = tuple(atm)
-                    order, tmp = bnd_ords[frozenset({atmbi, atmi})]
-                    bnd_ords[frozenset({atmbi, atmi})] = (round(
-                        order + 0.4, 1), tmp)
-            prd_gra = remove_zero_order_bnds((atms, bnd_ords))
-            atms, bnd_ords = prd_gra
-    prd_gras = automol.graph.connected_components(prd_gra)
-    for idx, pgra in enumerate(prd_gras):
-        prd_ichs[idx] = automol.graph.inchi(pgra)
-    prd_ichs = automol.inchi.sorted_(prd_ichs)
-
-    return (rct_ichs, prd_ichs)
-
-
 # GRAPH SPLITTING FUNCTIONS
 def split_radradabs_gras(gras):
     """ Split a graph from radical-radical abstraction TS into the constituent
@@ -229,10 +109,10 @@ def split_radradabs_gras(gras):
     bnd_ords = bnd_ords.copy()
     for bnd_ord in bnd_ords:
         order, tmp = bnd_ords[bnd_ord]
-        if abs(np.floor(order) - (order - 0.4)) < 0.01:
-            bnd_ords[bnd_ord] = (round(order + 0.6, 1), tmp)
+        if abs(np.floor(order) - (order - 0.1)) < 0.01:
+            bnd_ords[bnd_ord] = (round(order + 0.9, 1), tmp)
             atmai, atmbi = bnd_ord
-            if abs(np.floor(atms[atmbi][1]) - (atms[atmbi][1]-0.6)) < 0.01:
+            if abs(np.floor(atms[atmbi][1]) - (atms[atmbi][1]-0.9)) < 0.01:
                 atmbi, atmai = atmai, atmbi
             atma = list(atms[atmai])
             atmb = list(atms[atmbi])
@@ -243,20 +123,20 @@ def split_radradabs_gras(gras):
             for atmi in atms:
                 if frozenset({atmi, atmbi}) in bnd_ords and atmi != atmai:
                     order, tmp = bnd_ords[frozenset({atmbi, atmi})]
-                    if abs(np.floor(order) - (order - 0.6)) < 0.01:
+                    if abs(np.floor(order) - (order - 0.9)) < 0.01:
                         atm = list(atms[atmi])
                         atm[1] = np.floor(atm[1])
                         atms[atmi] = tuple(atm)
                         bnd_ords[frozenset({atmbi, atmi})] = (round(
-                            order - 0.6, 1), tmp)
+                            order - 0.9, 1), tmp)
                 if frozenset({atmi, atmai}) in bnd_ords and atmi != atmbi:
                     order, tmp = bnd_ords[frozenset({atmai, atmi})]
-                    if abs(np.floor(order) - (order - 0.6)) < 0.01:
+                    if abs(np.floor(order) - (order - 0.9)) < 0.01:
                         atm = list(atms[atmi])
                         atm[1] = np.floor(atm[1])
                         atms[atmi] = tuple(atm)
                         bnd_ords[frozenset({atmai, atmi})] = (round(
-                            order - 0.6, 1), tmp)
+                            order - 0.9, 1), tmp)
             rct_gra = remove_zero_order_bnds((atms, bnd_ords))
             atms, bnd_ords = rct_gra
     rct_gras = automol.graph.connected_components(rct_gra)
@@ -267,10 +147,10 @@ def split_radradabs_gras(gras):
     atms, bnd_ords = gras
     for bnd_ord in bnd_ords:
         order, tmp = bnd_ords[bnd_ord]
-        if abs(np.floor(order) - (order - 0.4)) < 0.01:
-            bnd_ords[bnd_ord] = (round(order - 0.4, 1), tmp)
+        if abs(np.floor(order) - (order - 0.1)) < 0.01:
+            bnd_ords[bnd_ord] = (round(order - 0.1, 1), tmp)
             atmai, atmbi = bnd_ord
-            if abs(np.floor(atms[atmbi][1]) - (atms[atmbi][1]-0.6)) < 0.01:
+            if abs(np.floor(atms[atmbi][1]) - (atms[atmbi][1]-0.9)) < 0.01:
                 atmbi, atmai = atmai, atmbi
             atma = list(atms[atmai])
             atmb = list(atms[atmbi])
@@ -281,17 +161,17 @@ def split_radradabs_gras(gras):
             for atmi in atms:
                 if frozenset({atmi, atmbi}) in bnd_ords and atmi != atmai:
                     order, tmp = bnd_ords[frozenset({atmbi, atmi})]
-                    if abs(np.floor(order) - (order - 0.6)) < 0.01:
+                    if abs(np.floor(order) - (order - 0.9)) < 0.01:
                         atm = list(atms[atmi])
                         atm[1] = np.floor(atm[1])
                         atms[atmi] = tuple(atm)
                         atms[atmi] = tuple(atm)
                         order, tmp = bnd_ords[frozenset({atmbi, atmi})]
                         bnd_ords[frozenset({atmbi, atmi})] = (round(
-                            order + 0.4, 1), tmp)
+                            order + 0.1, 1), tmp)
                 if frozenset({atmi, atmai}) in bnd_ords and atmi != atmbi:
                     order, tmp = bnd_ords[frozenset({atmai, atmi})]
-                    if abs(np.floor(order) - (order - 0.6)) < 0.01:
+                    if abs(np.floor(order) - (order - 0.9)) < 0.01:
                         atm = list(atms[atmi])
                         atm[1] = np.floor(atm[1])
                         atms[atmi] = tuple(atm)
@@ -306,148 +186,57 @@ def split_radradabs_gras(gras):
     return (rct_ichs, prd_ichs)
 
 
-def split_elim_gras(gras):
-    """ Split a graph from elimination TS into the constituent
-        reactant/products graphs.
-    """
-
-    rct_ichs = []
-    prd_ichs = []
-    atms, bnd_ords = gras
-    atms = atms.copy()
-    bnd_ords = bnd_ords.copy()
+def _fix_sig_fig_issues(bnd_ords, atms):
     for bnd_ord in bnd_ords:
         order, tmp = bnd_ords[bnd_ord]
-        if abs(np.floor(order) - (order - 0.4)) < 0.01:
-            bnd_ords[bnd_ord] = (round(order + 0.6, 1), tmp)
-            atmai, atmbi = bnd_ord
-            if abs(np.floor(atms[atmbi][1]) - (atms[atmbi][1]-0.6)) < 0.01:
-                atmbi, atmai = atmai, atmbi
-            atma = list(atms[atmai])
-            atmb = list(atms[atmbi])
-            atmb[1] = np.floor(atmb[1])
-            atma[1] = np.floor(atma[1])
-            atms[atmai] = tuple(atma)
-            atms[atmbi] = tuple(atmb)
-            for atmi in atms:
-                if frozenset({atmi, atmbi}) in bnd_ords and atmi != atmai:
-                    order, tmp = bnd_ords[frozenset({atmbi, atmi})]
-                    if abs(np.floor(order) - (order - 0.6)) < 0.01:
-                        atm = list(atms[atmi])
-                        atm[1] = np.floor(atm[1])
-                        atms[atmi] = tuple(atm)
-                        bnd_ords[frozenset({atmbi, atmi})] = (round(
-                            order - 0.6, 1), tmp)
-            rct_gra = remove_zero_order_bnds((atms, bnd_ords))
-            atms, bnd_ords = rct_gra
-    rct_gras = automol.graph.connected_components(rct_gra)
-    for rgra in rct_gras:
-        rct_ichs.append(automol.graph.inchi(rgra))
-    if len(rct_ichs) > 1:
-        rct_ichs = automol.inchi.sorted_(rct_ichs)
-    atms, bnd_ords = gras
-    for bnd_ord in bnd_ords:
-        order, tmp = bnd_ords[bnd_ord]
-        if abs(np.floor(order) - (order - 0.4)) < 0.01:
-            bnd_ords[bnd_ord] = (round(order - 0.4, 1), tmp)
-            atmai, atmbi = bnd_ord
-            if abs(np.floor(atms[atmbi][1]) - (atms[atmbi][1]-0.6)) < 0.01:
-                atmbi, atmai = atmai, atmbi
-            atma = list(atms[atmai])
-            atmb = list(atms[atmbi])
-            atmb[1] = np.floor(atmb[1])
-            atma[1] = np.floor(atma[1])
-            atms[atmai] = tuple(atma)
-            atms[atmbi] = tuple(atmb)
-            for atmi in atms:
-                if frozenset({atmi, atmbi}) in bnd_ords and atmi != atmai:
-                    order, tmp = bnd_ords[frozenset({atmbi, atmi})]
-                    if abs(np.floor(order) - (order - 0.6)) < 0.01:
-                        atm = list(atms[atmi])
-                        atm[1] = np.floor(atm[1])
-                        atms[atmi] = tuple(atm)
-                        order, tmp = bnd_ords[frozenset({atmbi, atmi})]
-                        bnd_ords[frozenset({atmbi, atmi})] = (round(
-                            order + 0.4, 1), tmp)
-            # ioprinter.info_message(atms, bnd_ords)
-            prd_gra = remove_zero_order_bnds((atms, bnd_ords))
-            atms, bnd_ords = prd_gra
-    prd_gras = automol.graph.connected_components(prd_gra)
-    for pgra in prd_gras:
-        prd_ichs.append(automol.graph.inchi(pgra))
-    if len(prd_ichs) > 1:
-        prd_ichs = automol.inchi.sorted_(prd_ichs)
-    return (rct_ichs, prd_ichs)
+        if abs(np.floor(order) - (order - 0.1)) < 0.01:
+            order = np.floor(order) + 0.1
+        elif abs(np.floor(order) - (order - 0.9)) < 0.01:
+            order = np.floor(order) + 0.9
+        bnd_ords[bnd_ord] = (order, tmp,)
+    for atm_idx in atms:
+        atm, val, tmp = atms[atm_idx]
+        if abs(np.floor(val) - (val - 0.1)) < 0.01:
+            val = np.floor(val) + 0.1
+        elif abs(np.floor(val) - (val - 0.9)) < 0.01:
+            val = np.floor(val) + 0.9
+        atms[atm_idx] = (atm, val, tmp) 
+        return bnd_ords, atms
 
 
 def split_gras(gras):
-    """ Split graphs by ???
-    """
-
+    atms = automol.graph.atoms(gras)
+    bnds = automol.graph.bonds(gras)
+    rct_gras = (atms.copy(), bnds.copy())
+    prd_gras = (atms.copy(), bnds.copy())
+    for bnd in bnds:
+        order, _ = bnds[bnd]
+        if abs(np.floor(order) - (order - 0.1)) < 0.01:
+            rct_gras = automol.graph.remove_bonds(
+                rct_gras, (bnd,))
+            new_ord = np.floor(order) + 1
+            prd_gras = automol.graph.set_bond_orders(
+                prd_gras, {bnd: new_ord})
+        elif abs(np.floor(order) - (order - 0.9)) < 0.01:
+            prd_gras = automol.graph.remove_bonds(
+                prd_gras, (bnd,))
+            new_ord = np.floor(order) + 1
+            rct_gras = automol.graph.set_bond_orders(
+                rct_gras, {bnd: new_ord})
+    prd_gras = automol.graph.connected_components(prd_gras)
+    rct_gras = automol.graph.connected_components(rct_gras)
     rct_ichs = []
     prd_ichs = []
-    atms, bnd_ords = gras
-    atms = atms.copy()
-    bnd_ords = bnd_ords.copy()
-    for bnd_ord in bnd_ords:
-        order, tmp = bnd_ords[bnd_ord]
-        if abs(np.floor(order) - (order - 0.4)) < 0.01:
-            bnd_ords[bnd_ord] = (round(order + 0.6, 1), tmp)
-            atmai, atmbi = bnd_ord
-            if not abs(np.floor(atms[atmai][1]) - (atms[atmai][1]-0.6)) < 0.01:
-                atmbi, atmai = atmai, atmbi
-            atma = list(atms[atmai])
-            atmb = list(atms[atmbi])
-            atma[1] = round(atma[1] - 0.6, 1)
-            atms[atmai] = tuple(atma)
-            atms[atmbi] = tuple(atmb)
-            for atmi in atms:
-                if abs(np.floor(atms[atmi][1]) - (atms[atmi][1]-0.4)) < 0.01:
-                    order, tmp = bnd_ords[frozenset({atmbi, atmi})]
-                    if abs(np.floor(order) - (order - 0.6)) < 0.01:
-                        atm = list(atms[atmi])
-                        atm[1] = round(atm[1] - 0.4, 1)
-                        atms[atmi] = tuple(atm)
-                        bnd_ords[frozenset({atmbi, atmi})] = (round(
-                            order - 0.6, 1), tmp)
-            rct_gra = remove_zero_order_bnds((atms, bnd_ords))
-            atms, bnd_ords = rct_gra
-    rct_gras = automol.graph.connected_components(rct_gra)
     for rgra in rct_gras:
         rct_ichs.append(automol.graph.inchi(rgra))
-    if len(rct_ichs) > 1:
-        rct_ichs = automol.inchi.sorted_(rct_ichs)
-    atms, bnd_ords = gras
-    for bnd_ord in bnd_ords:
-        order, tmp = bnd_ords[bnd_ord]
-        if abs(np.floor(order) - (order - 0.4)) < 0.01:
-            bnd_ords[bnd_ord] = (round(order - 0.4, 1), tmp)
-            atmai, atmbi = bnd_ord
-            if not abs(np.floor(atms[atmai][1]) - (atms[atmai][1]-0.6)) < 0.01:
-                atmbi, atmai = atmai, atmbi
-            atma = list(atms[atmai])
-            atmb = list(atms[atmbi])
-            atma[1] = round(atma[1] - 0.6, 1)
-            atms[atmai] = tuple(atma)
-            atms[atmbi] = tuple(atmb)
-            for atmi in atms:
-                if abs(np.floor(atms[atmi][1]) - (atms[atmi][1]-0.4)) < 0.01:
-                    atm = list(atms[atmi])
-                    atm[1] = round(atm[1] - 0.4, 1)
-                    atms[atmi] = tuple(atm)
-                    atms[atmi] = tuple(atm)
-                    order, tmp = bnd_ords[frozenset({atmbi, atmi})]
-                    bnd_ords[frozenset({atmbi, atmi})] = (round(
-                        order + 0.4, 1), tmp)
-            prd_gra = remove_zero_order_bnds((atms, bnd_ords))
-            atms, bnd_ords = rct_gra
-    prd_gras = automol.graph.connected_components(prd_gra)
     for pgra in prd_gras:
         prd_ichs.append(automol.graph.inchi(pgra))
+    if len(rct_ichs) > 1:
+        rct_ichs = automol.inchi.sorted_(rct_ichs)
     if len(prd_ichs) > 1:
         prd_ichs = automol.inchi.sorted_(prd_ichs)
+    return rct_ichs, prd_ichs
 
-    return (rct_ichs, prd_ichs)
 
 
 def simplify_gra_frags(frags):
