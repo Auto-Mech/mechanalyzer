@@ -212,19 +212,29 @@ def split_gras(gras):
     for bnd in bnds:
         order, _ = bnds[bnd]
         if abs(np.floor(order) - (order - 0.1)) < 0.01:
-            rct_gras = automol.graph.remove_bonds(
-                rct_gras, (bnd,))
+            new_ord = np.floor(order)
+            if new_ord < 1:
+                rct_gras = automol.graph.remove_bonds(
+                    rct_gras, (bnd,))
+            else:
+                rct_gras = automol.graph.set_bond_orders(
+                    rct_gras, {bnd: new_ord})
             new_ord = np.floor(order) + 1
             prd_gras = automol.graph.set_bond_orders(
                 prd_gras, {bnd: new_ord})
         elif abs(np.floor(order) - (order - 0.9)) < 0.01:
-            prd_gras = automol.graph.remove_bonds(
-                prd_gras, (bnd,))
+            new_ord = np.floor(order)
+            if new_ord < 1:
+                prd_gras = automol.graph.remove_bonds(
+                    prd_gras, (bnd,))
+            else:
+                prd_gras = automol.graph.set_bond_orders(
+                    prd_gras, {bnd: new_ord})
             new_ord = np.floor(order) + 1
             rct_gras = automol.graph.set_bond_orders(
                 rct_gras, {bnd: new_ord})
-    prd_gras = automol.graph.connected_components(prd_gras)
     rct_gras = automol.graph.connected_components(rct_gras)
+    prd_gras = automol.graph.connected_components(prd_gras)
     rct_ichs = []
     prd_ichs = []
     for rgra in rct_gras:
