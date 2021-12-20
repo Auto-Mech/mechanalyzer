@@ -490,6 +490,7 @@ CBH_SCHEMES = {
     'cbh1_0': cbhone,
     'cbh1_1': cbhone,
     'cbh2': cbhtwo,
+    'cbh2_0': cbhzed,
     'cbh2_1': cbhtwo,
     'cbh2_2': cbhtwo,
     'cbh3': cbhthree
