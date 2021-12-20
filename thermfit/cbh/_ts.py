@@ -206,7 +206,17 @@ def cbh_basis(zrxn, scheme):
             fraglist.append(
                 tsutil.split_gras(frag_gra['ts_gra']))
             clist.append(frag_gra['coeff'])
-    return fraglist, clist
+
+    final_fraglist = []
+    final_clist = []
+    for idx, frag in enumerate(fraglist):
+        if frag in final_fraglist:
+            c_idx = final_fraglist.index(frag)
+            final_clist[c_idx] += clist[idx]
+        else:
+            final_fraglist.append(frag)
+            final_clist.append(clist[idx])
+    return final_fraglist, final_clist
 
 
 # Individual CBH-n calculators
@@ -667,18 +677,20 @@ def cleave_group_and_saturate(gra, atmi, atmj):
     gra -- new graph
     """
     # Graphical info about molecule
-
     bnd_ords = automol.graph.one_resonance_dominant_bond_orders(gra)
-    order = list(bnd_ords[frozenset({atmi, atmj})])[0]
-    for _ in range(order):
-        gra = automol.graph.add_bonded_atom(gra, 'H', atmi)
-    gra = automol.graph.remove_bonds(gra, (frozenset({atmi, atmj}),))
-    gras = automol.graph.connected_components(gra)
-    new_gra = None
-    for gra_k in gras:
-        atmsk = automol.graph.atom_keys(gra_k)
-        if atmi in atmsk:
-            new_gra = gra_k
+    if frozenset({atmi, atmj}) in bnd_ords:
+        order = list(bnd_ords[frozenset({atmi, atmj})])[0]
+        for _ in range(order):
+            gra = automol.graph.add_bonded_atom(gra, 'H', atmi)
+        gra = automol.graph.remove_bonds(gra, (frozenset({atmi, atmj}),))
+        gras = automol.graph.connected_components(gra)
+        new_gra = None
+        for gra_k in gras:
+            atmsk = automol.graph.atom_keys(gra_k)
+            if atmi in atmsk:
+                new_gra = gra_k
+    else:
+        new_gra = gra
     return new_gra
 
 
