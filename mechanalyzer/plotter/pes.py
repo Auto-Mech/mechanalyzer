@@ -5,12 +5,10 @@ Calls MatPlotLib functionality to create the plot
 import numpy
 import matplotlib
 from matplotlib import pyplot as plt
-# from matplotlib.artist import Artist
-# from matplotlib.backends.backend_cairo import RendererCairo
 import igraph
-
-
-# matplotlib.use("cairo")
+import networkx
+from pyvis.network import Network
+import automol.util
 
 
 # Set plotting options
@@ -463,43 +461,23 @@ def resort_names(ene_dct, conn_lst):
 #                             *self.args, **self.kwds)
 #
 #
-def pes_graph(ene_dct, conn_lst_dct, label_dct=None):
+def pes_graph(conn_lst, ene_dct=None, label_dct=None, file_name='surface.pdf'):
     """ Make an igraph argument
     """
 
-    def _nobarrier(ene_dct, conn_lst_dct):
-        """ Remove barriers from ene_dct and make connections just
-            to the reactants+products
-        """
-        _ene_dct = {name: ene for name, ene in ene_dct.items()
-                    if 'B' not in name}
-        return _ene_dct, tuple(conn_lst_dct.values())
-
-    def _relabel(ene_dct, conn_lst, label_dct):
-        """ relabel the graph
-        """
-        _ene_dct = {label_dct[name]: ene for name, ene in ene_dct.items()}
-        _conn_lst = ()
-        for conn in conn_lst:
-            _conn_lst += ((label_dct[conn[0]], label_dct[conn[1]]),)
-
-        return _ene_dct, _conn_lst
-
-    ene_dct, conn_lst = _nobarrier(ene_dct, conn_lst_dct)
-    if label_dct is not None:
-        ene_dct, conn_lst = _relabel(ene_dct, conn_lst, label_dct)
+    ene_dct, conn_lst, rgts_lst = _format(ene_dct, conn_lst, label_dct)
 
     # Make an igraph object
     pes_gra = igraph.Graph()
 
     # Add vertices and set the name and ene attributes
-    pes_gra.add_vertices(len(ene_dct))
-    pes_gra.vs["name"] = list(ene_dct.keys())
-    pes_gra.vs["energy"] = list(ene_dct.values())
-    pes_gra.vs["label"] = list(ene_dct.keys())
+    pes_gra.add_vertices(len(rgts_lst))
+    pes_gra.vs["name"] = rgts_lst
+    pes_gra.vs["label"] = rgts_lst
+    # pes_gra.vs["energy"] = list(ene_dct.values())
 
     # Write the conn_lst in terms of indices to add the edges
-    name_idx_dct = {name: idx for idx, name in enumerate(ene_dct)}
+    name_idx_dct = {name: idx for idx, name in enumerate(rgts_lst)}
     idx_conn_lst = ()
     for conn in conn_lst:
         idx_conn_lst += (tuple(name_idx_dct[x] for x in conn),)
@@ -510,7 +488,7 @@ def pes_graph(ene_dct, conn_lst_dct, label_dct=None):
         nrows=1, ncols=1, figsize=(16, 9))
     visual_style = {
         "vertex_size": 30,
-        "vertex_label_size": 26,
+        "vertex_label_size": 22,
         # "vertex_color": [color_dict[gender] for gender in g.vs["gender"]],
         "vertex_label": pes_gra.vs["name"],
         # "edge_width": [1+2*int(is_form) for is_form in g.es["is_form"]],
@@ -520,6 +498,65 @@ def pes_graph(ene_dct, conn_lst_dct, label_dct=None):
     }
     igraph.plot(pes_gra, target=axes, **visual_style)
 
-    fig.set_size_inches(16, 9)
-    fig.savefig('surface.pdf', dpi=200)
+    fig.set_size_inches(16, 12)
+    fig.savefig(file_name, dpi=200)
     plt.close(fig)
+
+
+def pes_graph2(conn_lst, ene_dct=None, label_dct=None,
+               file_name='surface.html'):
+    """ Make a networkx graph argument
+    """
+
+    ene_dct, conn_lst, rgts_lst = _format(ene_dct, conn_lst, label_dct)
+
+    nxg = networkx.Graph()
+    nxg.add_nodes_from(rgts_lst)
+    nxg.add_edges_from(conn_lst)
+    # Need to set the y-values
+    # networkx.set_node_attributes(nxg, atom_symbols, 'symbol')
+
+    net = Network('3000px', '3000px')
+    net.from_nx(nxg)
+    # net.enable_physics(True)
+    net.set_options("""
+        "nodes": {
+            "fixed": {
+                "y": true
+    }}
+    """)
+    net.show_buttons(filter_=['nodes', 'edges', 'physics'])
+    net.save_graph(file_name)
+
+
+def _format(ene_dct, conn_lst, label_dct):
+    """ a
+    """
+
+    def _relabel(ene_dct, conn_lst, label_dct):
+        """ relabel the graph
+        """
+        if ene_dct is not None:
+            _ene_dct = {label_dct[name]: ene for name, ene in ene_dct.items()}
+        else:
+            _ene_dct = None
+
+        _conn_lst = ()
+        for conn in conn_lst:
+            _conn_lst += ((label_dct[conn[0]], label_dct[conn[1]]),)
+
+        return _ene_dct, _conn_lst
+
+    def _rgts_lst(conn_lst):
+        """ Get the full list of reagents
+        """
+        lst = ()
+        for conn in conn_lst:
+            lst += conn
+        return automol.util.remove_duplicates_with_order(lst)
+
+    if label_dct is not None:
+        ene_dct, conn_lst = _relabel(ene_dct, conn_lst, label_dct)
+    rgts_lst = _rgts_lst(conn_lst)
+
+    return ene_dct, conn_lst, rgts_lst
