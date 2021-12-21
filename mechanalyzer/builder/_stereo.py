@@ -16,7 +16,7 @@ from chemkin_io.writer._util import format_rxn_name
 
 # MAIN CALLABLE
 # def expand_mech_stereo(mech_rxn_dct, mech_spc_dct, nprocs='auto'):
-def expand_mech_stereo(mech_rxn_dct, mech_spc_dct, nprocs=1):
+def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct, nprocs=1):
     """ Build list of stereochemistry to reactions
 
         Currently, we assume that the species in them mech_spc_dct have
@@ -29,18 +29,17 @@ def expand_mech_stereo(mech_rxn_dct, mech_spc_dct, nprocs=1):
         srxns = ()
         for rxn in rxns:
 
-            # Split thrdbdy off, not needed for stereo code, add back later
-            _rxn = (rxn[0], rxn[1])
-            thrdbdy = rxn[2]
-
             log1 = f'\nExpanding Stereo for Reaction: {format_rxn_name(rxn)}\n'
 
             # Reformat reaction to use InChI instead of mechanism name
-            rxn_ich = _rxn_ich(_rxn, name_ich_dct)
+            # Split thrdbdy off, not needed for stereo code, add back later
+            rxn_ich = _rxn_name_to_ich(rxn, name_ich_dct)
+            _rxn_ich = (rxn_ich[0], rxn_ich[1])
+            thrdbdy = rxn_ich[2]
 
             # Build list of all stereochemically allowed versions of reaction
-            ste_rxns_lst, log2 = _ste_rxn_lsts(rxn_ich)
-            
+            ste_rxns_lst, log2 = _ste_rxn_lsts(_rxn_ich)
+
             # Filter redundant reactions from each enantiomer pairs
             ste_rxns_lst, removed_rxns_lst = _remove_enantiomer_reactions(
                 ste_rxns_lst)
@@ -63,18 +62,77 @@ def expand_mech_stereo(mech_rxn_dct, mech_spc_dct, nprocs=1):
         print(f'Processor {os.getpid()} finished')
 
     # Dictionaries to map name to inchi
-    name_ich_dct = mechanalyzer.parser.spc.name_inchi_dct(mech_spc_dct)
+    name_ich_dct = mechanalyzer.parser.spc.name_inchi_dct(inp_mech_spc_dct)
 
     # Generate all stereo reactons from the initial set
-    rxns = tuple(mech_rxn_dct.keys())
+    rxns = tuple(inp_mech_rxn_dct.keys())
     args = (name_ich_dct,)
     ste_rxns = execute_function_in_parallel(_expand, rxns, args, nprocs=nprocs)
 
-    # Update the mechanism objects with unique spc and rxns
-    mech_spc_dct, _ = update_spc_dct_from_reactions(ste_rxns, mech_spc_dct)
-    mech_rxn_dct = update_rxn_dct(ste_rxns, mech_rxn_dct, mech_spc_dct)
+    print('\nGenerating mech and spc from '
+          'list of final stereoexpanded reactions')
+    print('WARNING: Orig labeling of mech+spc not used')
 
-    return mech_rxn_dct, mech_spc_dct
+    # Update the mechanism objects with unique spc and rxns
+    ste_spc_dct, ste_rxn_dct = {}, {}
+    ste_spc_dct, _ = update_spc_dct_from_reactions(ste_rxns, ste_spc_dct)
+    ste_rxn_dct = update_rxn_dct(ste_rxns, ste_rxn_dct, ste_spc_dct)
+
+    return ste_rxn_dct, ste_spc_dct
+
+
+def remove_stereochemistry(inp_mech_rxn_dct, inp_mech_spc_dct):
+    """ Generate a mechanism with all stereochemistry removed
+    """
+
+    print('Removing stereochemistry from the species and reactions')
+
+    # Generate a spc_dct with no stereochemical labels
+    noste_spc_dct = {}
+    noste_ichs = ()
+    removed_spcs = ()
+    for name, dct in inp_mech_spc_dct.items():
+        noste_ich = automol.inchi.standard_form(dct['inchi'], stereo=False)
+        if noste_ich not in noste_ichs:
+            noste_spc_dct[name] = dct
+            noste_ichs += (noste_ich,)
+        else:
+            removed_spcs += (name,)
+
+    name_ich_dct = mechanalyzer.parser.spc.name_inchi_dct(noste_spc_dct)
+
+    # Now put in the reactions
+    noste_rxn_dct = {}
+    noste_rxns = ()
+    removed_rxns = ()
+    for rxn, params in inp_mech_rxn_dct.items():
+        rxn_ich = _rxn_name_to_ich(rxn, name_ich_dct)
+        if rxn_ich is not None:
+            if rxn_ich not in noste_rxns:
+                noste_rxn_dct[rxn] = params
+                noste_rxns += (rxn_ich,)
+            else:
+                removed_rxns += (rxn,)
+        else:
+            removed_rxns += (rxn,)
+
+    # Print the final
+    print('\nSpecies:')
+    for name in noste_spc_dct:
+        print(name)
+
+    print('\nReactions:')
+    for rxn in noste_rxn_dct:
+        print(rxn)
+
+    print('\nRemoved spc and reactions')
+    for name in removed_spcs:
+        print(name)
+    print()
+    for rxn in removed_rxns:
+        print(rxn)
+
+    return noste_rxn_dct, noste_spc_dct
 
 
 # Build reaction lists
@@ -145,14 +203,26 @@ def _add_third(rxn_lst, thrdbdy):
     return tuple((rxn[0], rxn[1], thrdbdy) for rxn in rxn_lst)
 
 
-def _rxn_ich(rxn, ich_dct):
+def _rxn_name_to_ich(rxn, ich_dct):
     """ Convert a reacion written with spc names to spc inchis
         Third body list remains the same
     """
-    return (
-        tuple(ich_dct[rgt] for rgt in rxn[0]),
-        tuple(ich_dct[rgt] for rgt in rxn[1]),
+
+    # Convert reactant and product names to InChIs
+    _rxn = (
+        tuple(ich_dct.get(rgt) for rgt in rxn[0]),
+        tuple(ich_dct.get(rgt) for rgt in rxn[1]),
+        rxn[2]
     )
+
+    # Set rxn_ich to None
+    if (
+        any(rgt is None for rgt in _rxn[0]) or
+        any(rgt is None for rgt in _rxn[1])
+    ):
+        _rxn = None
+
+    return _rxn
 
 
 def _rxn_smiles(rxn):
