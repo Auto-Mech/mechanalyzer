@@ -5,6 +5,7 @@
 """
 
 import os
+import copy
 import automol
 from autorun import execute_function_in_parallel
 import mechanalyzer.parser
@@ -94,7 +95,9 @@ def remove_stereochemistry(inp_mech_rxn_dct, inp_mech_spc_dct):
     for name, dct in inp_mech_spc_dct.items():
         noste_ich = automol.inchi.standard_form(dct['inchi'], stereo=False)
         if noste_ich not in noste_ichs:
-            noste_spc_dct[name] = dct
+            _dct = copy.deepcopy(dct)
+            _dct['inchi'] = noste_ich
+            noste_spc_dct[name] = _dct
             noste_ichs += (noste_ich,)
         else:
             removed_spcs += (name,)
@@ -150,10 +153,13 @@ def _ste_rxn_lsts(rxn_ich):
     for ste_rxn in automol.reac.expand_stereo(rxn_obj):
         rct_gras = automol.reac.reactant_graphs(ste_rxn)
         prd_gras = automol.reac.product_graphs(ste_rxn)
-        rct_ichs = tuple(map(automol.graph.stereo_inchi, rct_gras))
-        prd_ichs = tuple(map(automol.graph.stereo_inchi, prd_gras))
+        try:
+            rct_ichs = tuple(map(automol.graph.stereo_inchi, rct_gras))
+            prd_ichs = tuple(map(automol.graph.stereo_inchi, prd_gras))
 
-        ste_rxn_ichs += ((rct_ichs, prd_ichs),)
+            ste_rxn_ichs += ((rct_ichs, prd_ichs),)
+        except:
+            print('Fail to get stereo', rxn_ich)
 
     # Set log message
     log = f' - Reaction identified as {rxn_obj.class_}.\n'
