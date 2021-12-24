@@ -99,7 +99,6 @@ def cbh_basis(zrxn, scheme):
     # Set up graph and reaction site information
     site = None
     site2 = None
-
     #  Elimination missing the forming double bond
     if rxnclass == ReactionClass.Typ.ELIMINATION:
         # brk_key, brk_key2 = _elimination_find_brk_bnds(gra, frm_key1)
@@ -108,10 +107,10 @@ def cbh_basis(zrxn, scheme):
 
     #  Addition is missing the 2nd order bond in the graph
     elif rxnclass == ReactionClass.Typ.ADDITION:
-        gra, brk_key1 = tsutil.add_appropriate_pi_bonds(gra)
+        gra, brk_key1 = tsutil.add_appropriate_pi_bonds(gra, frm_key1)
         if not brk_key1:
             gra = tsutil.remove_frm_bnd(gra, brk_key1, frm_key1)
-            gra, brk_key1 = tsutil.add_appropriate_pi_bonds(gra)
+            gra, brk_key1 = tsutil.add_appropriate_pi_bonds(gra, frm_key1)
 
     # The first set of forming and breaking bonds makes the first reaction site
     if frm_key1 and brk_key1 and rxnclass != ReactionClass.Typ.ELIMINATION:
