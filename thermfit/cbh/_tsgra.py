@@ -274,7 +274,7 @@ def remove_frm_bnd(gra, brk_key, frm_key):
     return gra
 
 
-def add_appropriate_pi_bonds(gra):
+def add_appropriate_pi_bonds(gra, frm_key):
     """ Add pi bonds to graphs
     """
 
@@ -290,12 +290,11 @@ def add_appropriate_pi_bonds(gra):
         for atmj in unsat_atms:
             if atmi > atmj:
                 if atmi in adj_atms[atmj]:
-                    key = [atmi, atmj]
-                    key.sort()
-                    key = frozenset(key)
-                    brk_key = key
-                    bnd, tmp = bnd_ords[key]
-                    bnd_ords[key] = (bnd + 1, tmp)
+                    key = frozenset({atmi, atmj})
+                    if not key == frm_key:
+                        brk_key = key
+                        bnd, tmp = bnd_ords[key]
+                        bnd_ords[key] = (bnd + .9, tmp)
 
     return (atms, bnd_ords), brk_key
 
