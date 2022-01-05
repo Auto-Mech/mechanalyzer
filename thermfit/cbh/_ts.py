@@ -171,21 +171,31 @@ def cbh_basis(zrxn, scheme):
         (ReactionClass.Typ.BETA_SCISSION, False),
         (ReactionClass.Typ.ADDITION, False)
     )
+    
+    # Graphical info about molecule
+    _, atms, bnd_ords, atm_vals, adj_atms = tsutil.ts_graph(gra, site, site2)
+
     if rxnclass == ReactionClass.Typ.HYDROGEN_ABSTRACTION and radrad:
         if scheme == 'cbh0':
-            frags = cbhzed_radradabs(gra, site, site2)
+            frags = cbhzed_radradabs(
+                gra, site, site2, atms, bnd_ords, atm_vals, adj_atms)
         elif scheme == 'cbh1':
-            frags = cbhone_radradabs(gra, site, site2)
+            frags = cbhone_radradabs(
+                gra, site, site2, atms, bnd_ords, atm_vals, adj_atms)
     elif any(cls[0] == rxnclass for cls in fclasses):
         if scheme == 'cbh0':
-            frags = cbhzed_habs(gra, site)
+            frags = cbhzed_habs(
+                gra, site, atms, bnd_ords, atm_vals, adj_atms)
         elif scheme == 'cbh1':
-            frags = cbhone_habs(gra, site)
+            frags = cbhone_habs(
+                gra, site, atms, bnd_ords, atm_vals, adj_atms)
     elif rxnclass == ReactionClass.Typ.ELIMINATION:
         if scheme == 'cbh0':
-            frags = cbhzed_elim(gra, site, site2)
+            frags = cbhzed_elim(
+                gra, site, site2, atms, bnd_ords, atm_vals, adj_atms)
         elif scheme == 'cbh1':
-            frags = cbhone_elim(gra, site, site2)
+            frags = cbhone_elim(
+                gra, site, site2, atms, bnd_ords, atm_vals, adj_atms)
     else:
         raise NotImplementedError
     # Split the transformed graphs into a list of inchis
@@ -219,7 +229,8 @@ def cbh_basis(zrxn, scheme):
 
 
 # Individual CBH-n calculators
-def cbhzed_radradabs(gra, site1, site2, bal=True):
+def cbhzed_radradabs(
+        gra, site1, site2, atms, bnd_ords, atm_vals, adj_atms, bal=True):
     """
     Fragments molecule so that each heavy-atom is a seperate fragment
     INPUT:
@@ -229,9 +240,6 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
     and value as INT their coefficient
     """
 
-    # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, adj_atms = tsutil.ts_graph(gra, site1, site2)
-    # Determine CBHzed fragments
     frags = {}
     for atm in atm_vals:
         grai = (atms.copy(), bnd_ords.copy())
@@ -274,7 +282,7 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
                 for atm_x in adj_atms[site_atm]:
                     if atm_x not in extended_site and atms[atm_x][0] != 'H':
                         grai = cleave_group_and_saturate(
-                            grai, site_atm, atm_x)
+                            grai, bnd_ords, site_atm, atm_x)
             grai = automol.graph.explicit(grai)
             frags = _add_frag_to_frags(key, coeff, grai, frags)
     frags = tsutil.simplify_gra_frags(frags)
@@ -288,7 +296,8 @@ def cbhzed_radradabs(gra, site1, site2, bal=True):
     return frags
 
 
-def cbhone_radradabs(gra, site1, site2, bal=True):
+def cbhone_radradabs(
+        gra, site1, site2, atms, bnd_ords, atm_vals, adj_atms, bal=True):
     """
     Fragments molecule so that each heavy-atom is a seperate fragment
     INPUT:
@@ -298,10 +307,6 @@ def cbhone_radradabs(gra, site1, site2, bal=True):
     and value as INT their coefficient
     """
 
-    # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, adj_atms = tsutil.ts_graph(gra, site1, site2)
-
-    # Determine CBHzed fragments
     frags = {}
     for bnd in bnd_ords:
         atma, atmb = bnd
@@ -322,7 +327,7 @@ def cbhone_radradabs(gra, site1, site2, bal=True):
                     for atm_x in adj_atms[site_atm]:
                         if atm_x not in extended_site and atms[atm_x][0] != 'H':
                             grai = cleave_group_and_saturate(
-                                grai, site_atm, atm_x)
+                                grai, bnd_ords, site_atm, atm_x)
                 grai = automol.graph.explicit(grai)
                 frags = _add_frag_to_frags(key, coeff, grai, frags)
     frags = tsutil.simplify_gra_frags(frags)
@@ -331,9 +336,13 @@ def cbhone_radradabs(gra, site1, site2, bal=True):
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
             if not frags:
-                zedfrags = cbhzed_radradabs(gra, site1, site2, bal=True)
+                zedfrags = cbhzed_radradabs(
+                    gra, site1, site2, atms, bnd_ords,
+                    atm_vals, adj_atms, bal=True)
             else:
-                zedfrags = cbhzed_radradabs(gra, site1, site2, bal=False)
+                zedfrags = cbhzed_radradabs(
+                    gra, site1, site2, atms, bnd_ords,
+                    atm_vals, adj_atms, bal=False)
             newfrags = frags.copy()
             for zedfrags_dct in zedfrags.values():
                 newname = None
@@ -369,7 +378,8 @@ def cbhone_radradabs(gra, site1, site2, bal=True):
     return frags
 
 
-def cbhzed_elim(gra, site1, site2, bal=True):
+def cbhzed_elim(
+        gra, site1, site2, atms, bnd_ords, atm_vals, adj_atms, bal=True):
     """
     Fragments molecule so that each heavy-atom is a seperate fragment
     INPUT:
@@ -378,11 +388,7 @@ def cbhzed_elim(gra, site1, site2, bal=True):
     frags -- DIC dictionary with keys as STR inchi name for fragments
     and value as INT their coefficient
     """
-
-    # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, adj_atms = tsutil.ts_graph(gra, site1, site2)
-
-    # Determine CBHzed fragments
+    
     frags = {}
     if not site1[0] == site2[2]:
         site2, site1 = site1, site2
@@ -410,8 +416,7 @@ def cbhzed_elim(gra, site1, site2, bal=True):
                 for atm_x in adj_atms[site_atm]:
                     if atm_x not in extended_site and atms[atm_x][0] != 'H':
                         grai = cleave_group_and_saturate(
-                            grai, site_atm, atm_x)
-
+                            grai, bnd_ords, site_atm, atm_x)
             grai = automol.graph.explicit(grai)
             frags = _add_frag_to_frags(key, coeff, grai, frags)
     frags = tsutil.simplify_gra_frags(frags)
@@ -425,7 +430,8 @@ def cbhzed_elim(gra, site1, site2, bal=True):
     return frags
 
 
-def cbhzed_habs(gra, site, bal=True):
+def cbhzed_habs(
+        gra, site, atms, bnd_ords, atm_vals, adj_atms, bal=True):
     """
     Fragments molecule so that each heavy-atom is a seperate fragment
     INPUT:
@@ -435,9 +441,6 @@ def cbhzed_habs(gra, site, bal=True):
     and value as INT their coefficient
     """
 
-    # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, adj_atms = tsutil.ts_graph(gra, site)
-    # Determine CBHzed fragments
     frags = {}
     for atm in atm_vals:
         grai = (atms.copy(), bnd_ords.copy())
@@ -458,7 +461,7 @@ def cbhzed_habs(gra, site, bal=True):
                 for atm_x in adj_atms[site_atm]:
                     if atm_x not in extended_site and atms[atm_x][0] != 'H':
                         grai = cleave_group_and_saturate(
-                            grai, site_atm, atm_x)
+                            grai, bnd_ords, site_atm, atm_x)
             grai = automol.graph.explicit(grai)
             frags = _add_frag_to_frags(key, coeff, grai, frags)
     frags = tsutil.simplify_gra_frags(frags)
@@ -472,7 +475,8 @@ def cbhzed_habs(gra, site, bal=True):
     return frags
 
 
-def cbhone_elim(gra, site1, site2, bal=True):
+def cbhone_elim(
+        gra, site1, site2, atms, bnd_ords, atm_vals, adj_atms, bal=True):
     """
     Fragments molecule so that each heavy-atom is a seperate fragment
     INPUT:
@@ -508,7 +512,7 @@ def cbhone_elim(gra, site1, site2, bal=True):
                     for atm_x in adj_atms[site_atm]:
                         if atm_x not in extended_site and atms[atm_x][0] != 'H':
                             grai = cleave_group_and_saturate(
-                                grai, site_atm, atm_x)
+                                grai, bnd_ords, site_atm, atm_x)
                 grai = automol.graph.explicit(grai)
                 frags = _add_frag_to_frags(key, coeff, grai, frags)
     frags = tsutil.simplify_gra_frags(frags)
@@ -517,9 +521,13 @@ def cbhone_elim(gra, site1, site2, bal=True):
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
             if not frags:
-                zedfrags = cbhzed_elim(gra, site1, site2, bal=True)
+                zedfrags = cbhzed_elim(
+                    gra, site1, site2, atms, bnd_ords,
+                    atm_vals, adj_atms, bal=True)
             else:
-                zedfrags = cbhzed_elim(gra, site1, site2, bal=False)
+                zedfrags = cbhzed_elim(
+                    gra, site1, site2, atms, bnd_ords,
+                    atm_vals, adj_atms, bal=False)
             newfrags = frags.copy()
             for zedfrags_dct in zedfrags.values():
                 newname = None
@@ -554,7 +562,8 @@ def cbhone_elim(gra, site1, site2, bal=True):
     return frags
 
 
-def cbhone_habs(gra, site, bal=True):
+def cbhone_habs(
+        gra, site, atms, bnd_ords, atm_vals, adj_atms, bal=True):
     """
     Fragments molecule so that each heavy-atom is a seperate fragment
     INPUT:
@@ -564,12 +573,7 @@ def cbhone_habs(gra, site, bal=True):
     and value as INT their coefficient
     """
 
-    # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, adj_atms = tsutil.ts_graph(gra, site)
-
-    # Determine CBHone fragments
     frags = {}
-
     for bnd in bnd_ords:
         atma, atmb = bnd
         grai = (atms.copy(), bnd_ords.copy())
@@ -593,7 +597,7 @@ def cbhone_habs(gra, site, bal=True):
                     for atm_x in adj_atms[site_atm]:
                         if atm_x not in extended_site and atms[atm_x][0] != 'H':
                             grai = cleave_group_and_saturate(
-                                grai, site_atm, atm_x)
+                                grai, bnd_ords, site_atm, atm_x)
 
                 grai = automol.graph.explicit(grai)
                 frags = _add_frag_to_frags(key, coeff, grai, frags)
@@ -603,9 +607,13 @@ def cbhone_habs(gra, site, bal=True):
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
             if not frags:
-                zedfrags = cbhzed_habs(gra, site, bal=True)
+                zedfrags = cbhzed_habs(
+                    gra, site, atms, bnd_ords,
+                    atm_vals, adj_atms, bal=True)
             else:
-                zedfrags = cbhzed_habs(gra, site, bal=False)
+                zedfrags = cbhzed_habs(
+                    gra, site, atms, bnd_ords,
+                    atm_vals, adj_atms, bal=False)
             newfrags = frags.copy()
             for zedfrags_dct in zedfrags.values():
                 newname = None
@@ -663,7 +671,7 @@ def _add_frag_to_frags(key, coeff, grai, frags):
     return frags
 
 
-def cleave_group_and_saturate(gra, atmi, atmj):
+def cleave_group_and_saturate(gra, bnd_ords, atmi, atmj):
     """
     Fragments the bnd between atmi-atmj and adds hydrogens
     to atmi for each bond order that was removed. Returns
@@ -676,7 +684,6 @@ def cleave_group_and_saturate(gra, atmi, atmj):
     gra -- new graph
     """
     # Graphical info about molecule
-    bnd_ords = automol.graph.one_resonance_dominant_bond_orders(gra)
     if frozenset({atmi, atmj}) in bnd_ords:
         order = list(bnd_ords[frozenset({atmi, atmj})])[0]
         for _ in range(order):
