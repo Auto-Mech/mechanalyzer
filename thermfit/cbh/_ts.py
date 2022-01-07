@@ -685,7 +685,7 @@ def cleave_group_and_saturate(gra, bnd_ords, atmi, atmj):
     gra -- new graph
     """
     # Graphical info about molecule
-    if frozenset({atmi, atmj}) in bnd_ords:
+    if frozenset({atmi, atmj}) in automol.graph.bonds(gra):
         order = list(bnd_ords[frozenset({atmi, atmj})])[0]
         for _ in range(order):
             gra = automol.graph.add_bonded_atom(gra, 'H', atmi)
