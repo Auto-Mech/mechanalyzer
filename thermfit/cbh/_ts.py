@@ -243,8 +243,8 @@ def cbhzed_radradabs(
     frags = {}
     for atm in atm_vals:
         grai = (atms.copy(), bnd_ords.copy())
-        if (atms[atm][0] != 'H' or atm in site1 or atm in site2):
-            if atm in [site1[1], site1[2], site2[0], site2[2]]:
+        if (atms[atm][0] != 'H' or atm in site1 + site2):
+            if atm in site1 + site2 and atm != site1[0]:
                 continue
             coeff = 1.0
             if not bal:
@@ -257,13 +257,14 @@ def cbhzed_radradabs(
                         other_adj=adj_atms[site1[0]])
                     nonhyd_adj_atms1 = tuple(adj for adj in nonhyd_adj_atms1
                                              if adj not in site1)
-                    nonhyd_adj_atms1 = tuple(adj for adj in nonhyd_adj_atms2
+                    nonhyd_adj_atms2 = tuple(adj for adj in nonhyd_adj_atms2
                                              if adj not in site2)
                     coeff = (
                         util.branch_point(
                             nonhyd_adj_atms1, nonhyd_adj_atms2) *
                         util.terminal_moiety(
-                            nonhyd_adj_atms1, nonhyd_adj_atms2)
+                            nonhyd_adj_atms1, nonhyd_adj_atms2,
+                            endisterm=False)
                     )
                 else:
                     nonhyd_adj_atms = tsutil.remove_hyd_from_adj_atms(
@@ -318,7 +319,7 @@ def cbhone_radradabs(
                 atma, atmb = atmb, atma
             if (atma in site1 or atma in site2) and (atms[atmb][0] != 'H'):
                 key = 'ts_gra'
-                extended_site = [*site1, *site2]
+                extended_site = [*site1, *site2, atmb]
             elif atms[atma][0] != 'H' and atms[atmb][0] != 'H':
                 key = 'exp_gra'
                 extended_site = [atma, atmb]
