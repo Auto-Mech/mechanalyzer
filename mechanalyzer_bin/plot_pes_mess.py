@@ -16,41 +16,40 @@ import mechanalyzer.plotter
 CWD = os.getcwd()
 
 # Parse the command line
-PAR = argparse.ArgumentParser()
+DSTR = 'Generates a graph plot of a PES from MESS input'
+PAR = argparse.ArgumentParser(description=DSTR)
 PAR.add_argument('-i', '--input', default='mess.inp',
-                 help='name of input species rate file (mess.inp)')
-# PAR.add_argument('-o', '--output', default='surface.pdf',
-#                  help='name of outpt plot file (surface.pdf)')
+                 help='input file type (mess.inp')
+PAR.add_argument('-o', '--output', default='surface.pdf',
+                 help='name of output plot file (surface.pdf)')
 OPTS = vars(PAR.parse_args())
 
-# Read the MEsS file
+# Parse the input based on the initial type
 INP_PES_STR = ioformat.pathtools.read_file(CWD, OPTS['input'])
-
 if INP_PES_STR is None:
     print(f'ERROR: Input PES file {OPTS["input"]} not found')
     sys.exit()
 
-# Parse the MESS for information required to plot the PES
 ene_dct, _, conn_lst_dct, pes_lab_dct = mess_io.reader.pes(
     INP_PES_STR, read_fake=False)
+ene_dct = {name: ene for name, ene in ene_dct.items()
+           if 'B' not in name}
+conn_lst = tuple(conn[1] for conn in conn_lst_dct.items())
 pes_lab_dct = automol.util.dict_.invert(pes_lab_dct)
 
+# Call the plotter function
 print('Information parsed from MESS input file')
 print('Energies of species:')
 for name, ene in ene_dct.items():
     print(f'{name}: {ene} kcal/mol')
 
 print('Connections:')
-for conn in conn_lst_dct.items():
-    print(f'{conn[0]} - {conn[1]}')
-
-# Try and resort to make plot nice
-# ord_ene_dct = mechanalyzer.plotter.pes.resort_names(ene_dct, conn_lst)
-# print('fin', list(ord_ene_dct.keys()))
+for conn in conn_lst:
+    print(f'{conn}')
 
 # Produce the PES plot
 mechanalyzer.plotter.pes.pes_graph(
-    ene_dct, conn_lst_dct, label_dct=pes_lab_dct)
+    conn_lst, ene_dct=ene_dct, label_dct=pes_lab_dct)
 
 # Exit
-print('Plot surface created. Script Execution complete.')
+print('\nPlot surface created. Script Execution complete.')
