@@ -17,7 +17,8 @@ from chemkin_io.writer._util import format_rxn_name
 
 # MAIN CALLABLE
 # def expand_mech_stereo(mech_rxn_dct, mech_spc_dct, nprocs='auto'):
-def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct, nprocs=1):
+def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct,
+                       remove_enantiomer_rxns=True, nprocs=1):
     """ Build list of stereochemistry to reactions
 
         Currently, we assume that the species in them mech_spc_dct have
@@ -42,8 +43,10 @@ def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct, nprocs=1):
             ste_rxns_lst, log2 = _ste_rxn_lsts(_rxn_ich)
 
             # Filter redundant reactions from each enantiomer pairs
-            ste_rxns_lst, removed_rxns_lst = _remove_enantiomer_reactions(
-                ste_rxns_lst)
+            removed_rxns_lst = ()
+            if remove_enantiomer_rxns:
+                ste_rxns_lst, removed_rxns_lst = _remove_enantiomer_reactions(
+                    ste_rxns_lst)
 
             # Appropriately format the reactions with third body
             ste_rxns_lst = _add_third(ste_rxns_lst, thrdbdy)
