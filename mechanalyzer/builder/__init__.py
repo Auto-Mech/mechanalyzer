@@ -9,6 +9,7 @@ from mechanalyzer.builder._update import remove_improper_reactions
 from mechanalyzer.builder._update import remove_unstable_reactions
 from mechanalyzer.builder._update import rxn_name_str
 from mechanalyzer.builder._conn import connected_surfaces
+from mechanalyzer.builder._graph import pes_graphs_dct
 from mechanalyzer.builder import rxn
 from mechanalyzer.builder import checker
 from mechanalyzer.builder import sorter
@@ -26,6 +27,7 @@ __all__ = [
     'remove_unstable_reactions',
     'rxn_name_str',
     'connected_surfaces',
+    'pes_graphs_dct',
     'rxn',
     'checker',
     'sorter',
