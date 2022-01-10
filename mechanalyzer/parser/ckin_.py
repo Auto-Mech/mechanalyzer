@@ -63,7 +63,7 @@ def load_spc_therm_dcts(thermo_filenames, direc, temps):
         :type thermo_filenames: list [filename1, filename2, ...]
         :param direc: directory with file(s) (all must be in same directory)
         :type direc: str
-        :param temps: temperatures at which to do calculations (K) 
+        :param temps: temperatures at which to do calculations (K)
         :type temps: numpy.ndarray
         :return spc_therm_dcts: list of spc_therm_dcts
         :rtype: list of dcts [spc_therm_dct1, spc_therm_dct2, ...]
@@ -126,7 +126,7 @@ def load_spc_therm_dct(thermo_filename, direc, temps):
         :type thermo_filename: str
         :param direc: directory with file
         :type direc: str
-        :param temps: temperatures at which to do calculations (K) 
+        :param temps: temperatures at which to do calculations (K)
         :type temps: numpy.ndarray
         :return spc_therm_dct: spc_therm_dct object
         :rtype: dct {spc1: therm_array1, spc2: ...}
@@ -174,6 +174,21 @@ def parse_rxn_param_dct(mech_str):
     return rxn_param_dct
 
 
+def parse_pes_dct(mech_str):
+    """ Parses a PES dct
+
+        :param mech_str: raw string from reading a Chemkin file
+        :type mech_str: str
+        :return rxn_param_dct: rxn_param_dct object
+        :rtype: dct {rxn1: param_tuple1, rxn2: ...}
+    """
+
+    rxn_block_str = parser_mech.reaction_block(mech_str)
+    pes_dct = parser_rxn.get_pes_dct(rxn_block_str)
+
+    return pes_dct
+
+
 def parse_spc_therm_dct(mech_str, temps):
     """ Parses a raw Chemkin mechanism string and yields a spc_therm_dct
 
@@ -182,7 +197,7 @@ def parse_spc_therm_dct(mech_str, temps):
 
         :param mech_str: raw string from reading a Chemkin file
         :type mech_str: str
-        :param temps: temperatures at which to do calculations (K) 
+        :param temps: temperatures at which to do calculations (K)
         :type temps: numpy.ndarray
         :return rxn_param_dct: rxn_param_dct object
         :rtype: dct {rxn1: param_tuple1, rxn2: ...}
