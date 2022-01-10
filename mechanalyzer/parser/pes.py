@@ -118,12 +118,10 @@ def print_pes_channels(pes_dct):
     """ Print the PES
     """
 
-    for (form, pidx, sidx), chnls in pes_dct.items():
-        pes_str = f'PES: {pidx+1},'
-        sub_pes_str = f'SUB-PES: {sidx+1},'
-        chnl_str = 'Channels: ' + ','.join(str(chnl[0]+1) for chnl in chnls)
-        print('!', form, pes_str, sub_pes_str, chnl_str)
+    for (fml, pidx, sidx), chnls in pes_dct.items():
         for chnl in chnls:
-            _, rxn = chnl
-            rct_str, prd_str = ' + '.join(rxn[0]), ' + '.join(rxn[1])
-            print(f'  {rct_str} = {prd_str}')
+            cidx, rxn = chnl
+            rxn_str = ' + '.join(rxn[0]) + ' = ' + ' + '.join(rxn[1])
+            idx_str = ('# fml.pes.subpes.channel '
+                       f'{fml}.{pidx+1}.{sidx+1}.{cidx+1}')
+            print(f'   {rxn_str:<40s}{idx_str}')
