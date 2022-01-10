@@ -42,20 +42,53 @@ def xor(lst1, lst2):
 
 def ts_graph(gra, site1, site2=None):
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
+    unsat_atms_dct = automol.graph.atom_unsaturated_valences(gra)
+    unsat_atms = []
+    for atm in unsat_atms_dct:
+        if unsat_atms_dct[atm] > 0:
+            unsat_atms.append(atm)
     atm_vals = automol.graph.atom_element_valences(gra)
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
     atms = automol.graph.atoms(gra)
     bnds = automol.graph.bonds(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
-    sites = [site1]
-    for rad_atm in rad_atms:
-        atm_vals[rad_atm] -= 1
+    sites_lst = [site1]
+    sites = site1
+
+    # add forming key to reaction bonds that are forming double bonds
     if site2 is not None:
-        sites.append(site2)
+        sites.extend(site2)
+        sites_lst.append(site2)
         frm_bnd = frozenset({site2[0], site2[1]})
         bnd_ord = bnds[frm_bnd][0]
         bnds[frm_bnd] = (bnd_ord + 0.1, None)
-    for site in sites:
+
+    # switch resonances so dbl bnd isn't in rction site
+    if len(unsat_atms) > 2:
+        for unsat_a in unsat_atms:
+            if unsat_a in sites:
+                for unsat_b in adj_atms[unsat_a]:
+                    if unsat_b in unsat_atms and unsat_b not in sites:
+                        for unsat_c in adj_atms[unsat_b]:
+                            if (unsat_c in unsat_atms and unsat_c != unsat_a
+                                    and unsat_c not in sites):
+                                unsat_ab = frozenset({unsat_a, unsat_b})
+                                order_ab, tmp_ab = bnds[unsat_ab]
+                                if order_ab == 2:
+                                    unsat_bc = frozenset({unsat_b, unsat_c})
+                                    order_bc, tmp_bc = bnds[unsat_bc]
+                                    bnds[unsat_ab] = (order_ab - 1, tmp_ab)
+                                    bnds[unsat_bc] = (order_bc + 1, tmp_bc)
+                                else:
+                                    unsat_bc = frozenset({unsat_b, unsat_c})
+                                    order_bc, tmp_bc = bnds[unsat_bc]
+                                    bnds[unsat_ab] = (order_ab, tmp_ab)
+                                    bnds[unsat_bc] = (order_bc + 1, tmp_bc)
+    # fix the hydrogen valence of radical atms
+    for rad_atm in rad_atms:
+        atm_vals[rad_atm] -= 1
+
+    for site in sites_lst:
         abs_atm = site[0]
         trans_atm = site[1]
         don_atm = site[2]
