@@ -7,7 +7,7 @@ import matplotlib
 from matplotlib import pyplot as plt
 import igraph
 import networkx
-from pyvis.network import Network
+# from pyvis.network import Network
 import automol.util
 
 
