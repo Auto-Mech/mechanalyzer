@@ -13,30 +13,48 @@ import mechanalyzer.parser.ckin_ as ckin_parser
 # INPUTS
 # Filenames
 THERMO_FILENAMES = [
-    'glarborg.therm',
-    'stagni.therm',
-    'alturaifi.therm',
+    # 'NUIGMech1.2.Therm.DAT',
+    # 'b2t_hr_nohb_1-19.ckin',
+    # 'RO4_tzf.ckin',
+    'C3H8QM1.DAT',
+    'C3H8QM2.DAT',
+    'C3H8QM3.DAT',
+    # 'C3H8NGA.DAT',
+    # 'glarborg.therm',
+    # 'stagni.therm',
+    # 'alturaifi.therm',
 ]
 SPC_CSV_FILENAMES = [
-    'nh3_species.csv',
-    'nh3_species.csv',
-    'nh3_species.csv',
+    'NUIG_species.csv',
+    'NUIG_species.csv',
+    'NUIG_species.csv',
+    # 'NUIG_species.csv',
+    # 'NUIG_species.csv',
+    # 'nh3_species.csv',
+    # 'nh3_species.csv',
+    # 'nh3_species.csv',
 ]
 MECH_NAMES = [
-    'Glarborg',
-    'Stagni',
-    'Alturaifi',
+    # 'NUIG',
+    'QM1',
+    'QM2',
+    'QM3',
+    # 'NGA',
+    # 'Glarborg',
+    # 'Stagni',
+    # 'Alturaifi',
 ]
-OUTPUT_FILENAME = 'compare_thermo.pdf'
+OUTPUT_FILENAME = 'C3-C5_compare.pdf'
+# OUTPUT_FILENAME = 'compare_thermo.pdf'
 
 # Conditions
-TEMPS = numpy.linspace(300, 2500, 23)
+TEMPS = numpy.linspace(300, 1500, 13)
 # TEMPS = numpy.linspace(300, 1000, 15)
 # TEMPS = numpy.linspace(600, 700, 10)
 
 # Options
-# SORT = False
-SORT = True
+SORT = False
+# SORT = True
 SORT_INSTR = 'g'  # either 'h', 'cp', 's', 'g', or None
 SORT_TEMP = None  # can be (1) None to sort by max difference or (2) a number
 REMOVE_LONERS = True
