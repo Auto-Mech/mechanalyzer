@@ -173,9 +173,28 @@ def cbh_basis(zrxn, scheme):
     )
     
     # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, adj_atms = tsutil.ts_graph(gra, site, site2)
+    atms, bnd_ords, atm_vals, adj_atms, unsat_atms = tsutil.ts_graph(gra, site, site2)
 
-    if rxnclass == ReactionClass.Typ.HYDROGEN_ABSTRACTION and radrad:
+    # consider all reactions on the triplet surface as radrad
+    if not radrad:
+        rcts_gra = automol.reac.reactants_graph(zrxn)
+        for rgra in automol.graph.connected_components(rcts_gra):
+            if automol.graph.inchi(rgra) == 'InChI=1S/O2/c1-2':
+                radrad = True
+                # rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
+                adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
+                atmc, atmd = frm_key1
+                if atmc not in unsat_atms:
+                    atmd, atmc = atmc, atmd
+                for atmb in adj_atms[atmc]:
+                    if atmb in unsat_atms and atmb != atmd:
+                        brk_key2 = frozenset({atmc, atmb})
+                        site2 = [atmd, atmc, atmb]
+                        print('sites', site, site2)
+                        atms, bnd_ords, atm_vals, adj_atms, unsat_atms = tsutil.ts_graph(gra, site, site2)
+
+    # if rxnclass == ReactionClass.Typ.HYDROGEN_ABSTRACTION and radrad:
+    if radrad:
         if scheme == 'cbh0':
             frags = cbhzed_radradabs(
                 gra, site, site2, atms, bnd_ords, atm_vals, adj_atms)
@@ -192,10 +211,10 @@ def cbh_basis(zrxn, scheme):
     elif rxnclass == ReactionClass.Typ.ELIMINATION:
         if scheme == 'cbh0':
             frags = cbhzed_elim(
-                gra, site, site2, atms, bnd_ords, atm_vals, adj_atms)
+                gra, site, atms, bnd_ords, atm_vals, adj_atms)
         elif scheme == 'cbh1':
             frags = cbhone_elim(
-                gra, site, site2, atms, bnd_ords, atm_vals, adj_atms)
+                gra, site, atms, bnd_ords, atm_vals, adj_atms)
     else:
         raise NotImplementedError
     # Split the transformed graphs into a list of inchis
@@ -225,6 +244,7 @@ def cbh_basis(zrxn, scheme):
         else:
             final_fraglist.append(frag)
             final_clist.append(clist[idx])
+    print('frags from cbh', final_fraglist, final_clist)
     return final_fraglist, final_clist
 
 
@@ -249,23 +269,9 @@ def cbhzed_radradabs(
             coeff = 1.0
             if not bal:
                 if atm in site1 + site2:
-                    nonhyd_adj_atms1 = tsutil.remove_hyd_from_adj_atms(
-                        atms, adj_atms[site1[0]], site2,
-                        other_adj=adj_atms[site2[0]])
-                    nonhyd_adj_atms2 = tsutil.remove_hyd_from_adj_atms(
-                        atms, adj_atms[site2[0]], site1,
-                        other_adj=adj_atms[site1[0]])
-                    nonhyd_adj_atms1 = tuple(adj for adj in nonhyd_adj_atms1
-                                             if adj not in site1)
-                    nonhyd_adj_atms2 = tuple(adj for adj in nonhyd_adj_atms2
-                                             if adj not in site2)
-                    coeff = (
-                        util.branch_point(
-                            nonhyd_adj_atms1, nonhyd_adj_atms2) *
-                        util.terminal_moiety(
-                            nonhyd_adj_atms1, nonhyd_adj_atms2,
-                            endisterm=False)
-                    )
+                    coeff = _coeff_for_extended_site(
+                        atms, adj_atms, site1 + site2)
+
                 else:
                     nonhyd_adj_atms = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[atm])
@@ -332,6 +338,7 @@ def cbhone_radradabs(
                 grai = automol.graph.explicit(grai)
                 frags = _add_frag_to_frags(key, coeff, grai, frags)
     frags = tsutil.simplify_gra_frags(frags)
+    print('frags prebal', frags)
     if bal:
         balance_ = util.balance_ts(gra, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
@@ -344,6 +351,7 @@ def cbhone_radradabs(
                 zedfrags = cbhzed_radradabs(
                     gra, site1, site2, atms, bnd_ords,
                     atm_vals, adj_atms, bal=False)
+            print('cbhzed frags', zedfrags)
             newfrags = frags.copy()
             for zedfrags_dct in zedfrags.values():
                 newname = None
@@ -755,4 +763,35 @@ def _coeff_for_ts_sites(atm, atms, adj_atms, site):
             util.branch_point(nonhyd_adj_atms) *
             util.terminal_moiety(nonhyd_adj_atms)
         )
+    return coeff
+
+
+def _coeff_for_rad_rad(atms, adj_atms, site1, site2):
+    nonhyd_adj_atms1 = tsutil.remove_hyd_from_adj_atms(
+        atms, adj_atms[site1[0]], site2,
+        other_adj=adj_atms[site2[0]])
+    nonhyd_adj_atms2 = tsutil.remove_hyd_from_adj_atms(
+        atms, adj_atms[site2[0]], site1,
+        other_adj=adj_atms[site1[0]])
+    nonhyd_adj_atms1 = tuple(adj for adj in nonhyd_adj_atms1
+                             if adj not in site1)
+    nonhyd_adj_atms2 = tuple(adj for adj in nonhyd_adj_atms2
+                             if adj not in site2)
+    coeff = (
+        util.branch_point(
+            nonhyd_adj_atms1, nonhyd_adj_atms2) *
+        util.terminal_moiety(
+            nonhyd_adj_atms1, nonhyd_adj_atms2)
+    )
+    return coeff
+
+
+def _coeff_for_extended_site(atms, adj_atms_dct, extended_site):
+    nonhyd_adj_atms_dct = tsutil.remove_hyd_from_adj_atms2(
+        atms, adj_atms_dct, extended_site)
+    branch_coeff = util.branch_point2(
+            nonhyd_adj_atms_dct, extended_site)
+    terminal_coeff = util.terminal_moiety2(
+            nonhyd_adj_atms_dct, extended_site)
+    coeff = branch_coeff * terminal_coeff
     return coeff

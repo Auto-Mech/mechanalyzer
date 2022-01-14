@@ -57,11 +57,20 @@ def ts_graph(gra, site1, site2=None):
 
     # add forming key to reaction bonds that are forming double bonds
     if site2 is not None:
-        sites.extend(site2)
-        sites_lst.append(site2)
-        frm_bnd = frozenset({site2[0], site2[1]})
-        bnd_ord = bnds[frm_bnd][0]
-        bnds[frm_bnd] = (bnd_ord + 0.1, None)
+        if site1[1] == site2[0]:
+            # second site is the breaking O=O bond
+            sites.extend(site2)
+            sites_lst.append(site2)
+            brk_bnd = frozenset({site2[1], site2[2]})
+            bnd_ord = bnds[brk_bnd][0]
+            bnds[brk_bnd] = (bnd_ord + 0.9, None)
+        else:
+            # second site is a forming pi bond
+            sites.extend(site2)
+            sites_lst.append(site2)
+            frm_bnd = frozenset({site2[0], site2[1]})
+            bnd_ord = bnds[frm_bnd][0]
+            bnds[frm_bnd] = (bnd_ord + 0.1, None)
 
     # switch resonances so dbl bnd isn't in rction site
     if len(unsat_atms) > 2:
@@ -99,7 +108,8 @@ def ts_graph(gra, site1, site2=None):
             adj_atms[don_atm] = frozenset(
                 {*list(adj_atms[don_atm]), trans_atm})
     #    bnd_ords[brk_bnd] = frozenset({list(bnd_ords[frm_bnd])[0] - 0.1})
-    return rad_atms, atms, bnds, atm_vals, adj_atms
+    print('rad atms unsat atms', rad_atms, unsat_atms)
+    return atms, bnds, atm_vals, adj_atms, unsat_atms
 
 
 def remove_zero_order_bnds(gra):
@@ -128,6 +138,23 @@ def remove_hyd_from_adj_atms(atms, adj_atms, othersite=(), other_adj=()):
 
     return new_adj_atms
 
+
+def remove_hyd_from_adj_atms2(atms, adj_atms_dct, extended_site):
+    """ Removes H atoms from all atms adjacent to a set of atoms requested
+        by the user
+    """
+
+    new_adj_atms_dct = {}
+    for atm in adj_atms_dct:
+        new_adj_atms = ()
+        for adj_atm in adj_atms_dct[atm]:
+            if atms[adj_atm][0] != 'H' and adj_atm not in extended_site:
+                print(adj_atm, atms[adj_atm][0], extended_site)
+                new_adj_atms += (adj_atm,)
+
+        new_adj_atms_dct[atm] = new_adj_atms
+    print('new ad atms', new_adj_atms_dct)
+    return new_adj_atms_dct
 
 # GRAPH SPLITTING FUNCTIONS
 def split_radradabs_gras(gras):
@@ -233,7 +260,7 @@ def _fix_sig_fig_issues(bnd_ords, atms):
             val = np.floor(val) + 0.1
         elif abs(np.floor(val) - (val - 0.9)) < 0.01:
             val = np.floor(val) + 0.9
-        atms[atm_idx] = (atm, val, tmp) 
+        atms[atm_idx] = (atm, val, tmp)
         return bnd_ords, atms
 
 

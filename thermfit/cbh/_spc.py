@@ -487,10 +487,11 @@ def cbhthree(ich, balance=True):
 CBH_SCHEMES = {
     'cbh0': cbhzed,
     'cbh1': cbhone,
+    'cbh0_0': cbhzed,
     'cbh1_0': cbhone,
     'cbh1_1': cbhone,
     'cbh2': cbhtwo,
-    'cbh2_0': cbhzed,
+    'cbh2_0': cbhtwo,
     'cbh2_1': cbhtwo,
     'cbh2_2': cbhtwo,
     'cbh3': cbhthree
