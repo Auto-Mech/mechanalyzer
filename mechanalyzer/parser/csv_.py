@@ -3,12 +3,14 @@ Read the csv file
 """
 
 
+import sys
 from io import StringIO
 import pandas
 from automol.smiles import inchi as _inchi
 from automol.inchi import smiles as _smiles
 from automol.inchi import formula as _fml_inchi
 from automol.inchi import low_spin_multiplicity as _low_spin_mult
+from automol.inchi import recalculate
 
 
 # What columns are allowed in the CSV file
@@ -104,7 +106,18 @@ def _read_csv_inchi(data, idxs):
         spc_dct = dict(zip(idxs, data.inchi))
     elif hasattr(data, 'smiles'):
         print('No inchi column in csv file, getting inchi from SMILES')
-        ichs = [_inchi(smiles) for smiles in data.smiles]
+        ichs = []
+        for idx, smiles in enumerate(data.smiles):
+            ich = _inchi(smiles)
+            # print('smiles to ich test:', data.name[idx], smiles, ich, data.mult[idx])
+            try:
+                recalculate(ich)
+            except TypeError:
+                print('smiles to ich test:', data.name[idx], smiles, ich, data.mult[idx])
+                print('exiting code due to bad species')
+                sys.exit()
+            ichs.append(ich)
+        # ichs = [_inchi(smiles) for smiles in data.smiles]
         spc_dct = dict(zip(idxs, ichs))
     else:
         spc_dct = {}
@@ -282,6 +295,7 @@ def _check_csv(data):
     """
 
     headers = set(list(data.head()))
+    num_headers = len(headers)
 
     req1 = {'name', 'smiles'}
     req2 = {'name', 'inchi'}
@@ -304,6 +318,15 @@ def _check_csv(data):
     if len(list(data.name)) > len(set(list(data.name))):
         proper = False
         print('Repeat names found')
+
+    for idx, row in data.iterrows():
+        # Have to add number of non-NaNs and NaN values
+        if (row.count() + row.isna().sum()) != num_headers:
+            name = row['name']
+            print(
+                'Error: The number of items for species', idx, name,
+                'does not match the number of headers')
+            proper = False
 
     # Check validity of inchi and multiplicity combinations (and chg?)
     # assert _is_valid_inchi_multiplicity(ich, mul)
@@ -342,6 +365,8 @@ def _read_csv(csv_str):
     # Read in csv file while removing whitespace and make all chars lowercase
     csv_file = StringIO(csv_str)
     data = pandas.read_csv(csv_file, comment='!', quotechar="'")
+
+    # Want way to fill empty fields with None
 
     # Parse CSV string into data columns
     data.columns = data.columns.str.strip()

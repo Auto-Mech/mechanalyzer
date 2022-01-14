@@ -26,7 +26,7 @@ FORMULA = 'CH2O'
 def test__plot_pes():
     """ test mechanalyzer.plotter.pes.build
     """
-    mechanalyzer.plotter.pes.build(ENE_DCT, CONN_LST, FORMULA)
+    mechanalyzer.plotter.pes.build(ENE_DCT, CONN_LST)  # , FORMULA)
 
 
 if __name__ == '__main__':

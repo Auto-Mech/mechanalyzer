@@ -48,11 +48,11 @@ END
 
 
 REACTIONS     CAL/MOLE     MOLES
-
-C2H4(+M)=H2+H2CC(+M)     8.000E+12     0.440    88770
-    LOW  /               7.000E+50    -9.310    99860  /
-    TROE /   7.345E-01   1.800E+02   1.035E+03   5.417E+03 /
-    H2/2.000/   H2O/6.000/   CH4/2.000/   CO/1.500/   CO2/2.000/   C2H6/3.000/   AR/0.700/   
+! Commenting out since reaction classifier isn't working well for this
+!C2H4(+M)=H2+H2CC(+M)     8.000E+12     0.440    88770
+!    LOW  /               7.000E+50    -9.310    99860  /
+!    TROE /   7.345E-01   1.800E+02   1.035E+03   5.417E+03 /
+!    H2/2.000/   H2O/6.000/   CH4/2.000/   CO/1.500/   CO2/2.000/   C2H6/3.000/   AR/0.700/   
 C2H3+H(+M)=C2H4(+M)      6.080E+12     0.270      280
     LOW  /               1.400E+30    -3.860     3320  /
     TROE /   7.820E-01   2.075E+02   2.663E+03   6.095E+03 /
@@ -70,7 +70,8 @@ C2H5O2=C2H4+HO2          2.700E+37    -8.470    35840   ! Arrhenius parameters a
     PLOG /   4.000E-02   1.780E+32    -7.100    32840 /
     PLOG /   1.000E+00   2.700E+37    -8.470    35840 /
     PLOG /   1.000E+01   1.980E+38    -8.460    37900 /
-C3H4-A+O=C2H4+CO         6.240E+06     2.050      180
+! Commenting out since reaction classifier isn't working well for this
+!C3H4-A+O=C2H4+CO         6.240E+06     2.050      180
 C2H5+H(+M)=C2H6(+M)      5.210E+17    -0.990     1580
     LOW  /               1.990E+41    -7.080     6685  /
     TROE /   8.420E-01   1.250E+02   2.219E+03   6.882E+03 /

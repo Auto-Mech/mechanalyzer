@@ -5,6 +5,10 @@ Calls MatPlotLib functionality to create the plot
 import numpy
 import matplotlib
 from matplotlib import pyplot as plt
+import igraph
+import networkx
+# from pyvis.network import Network
+import automol.util
 
 
 # Set plotting options
@@ -227,7 +231,7 @@ def _create_img(fig,
         :type dpi: float
     """
 
-    fig_name = '{0}.{1}'.format(name, ext)
+    fig_name = f'{name}.{ext}'.format(name, ext)
     fig.set_size_inches(width, height)
     fig.savefig(fig_name, dpi=dpi)
     plt.close(fig)
@@ -284,3 +288,275 @@ def _position_text(xp2, xp1, ene, name_vshift):
 #     for k in range(0, Molecule.species_count):
 #         tmp = '$' + name[k] + '$'
 #         name[k] = tmp
+
+
+# Sorting functions
+def resort_names(ene_dct, conn_lst):
+    """ Discern a new sorting for the names of the ene dct
+        so that the plotter can make a plot that is readable
+    """
+
+    def _connected_partners(spc, conn_lst):
+        """ Get names of all PES parts that spc is connected to. """
+        conns = []
+        for conn in conn_lst:
+            if spc in conn:
+                lconn, rconn = conn
+                partner = lconn if spc != lconn else rconn
+                conns.append(partner)
+        return conns
+
+    def _remove_listed(name_lst, plot_lst):
+        """ Return name_lst entries not already accounted for in plot_lst """
+        return [name for name in name_lst if name not in plot_lst]
+
+    def _unchecked_wells(plot_lst, conn_lst, min_well, side):
+        """ Find any leftward wells in plot list whose connections have not
+            been checked.
+        """
+
+        chk_lst = plot_lst if side == 'left' else reversed(plot_lst)
+
+        _wells = []
+        for name in chk_lst:
+            # Stop at the minimum-well to avoid going to opposite side
+            if name == min_well:
+                break
+            if 'W' in name:
+                _wells.append(name)  # wrong need check
+
+        _unchked_wells = []
+        for _well in _wells:
+            conn_spc = _connected_partners(_well, conn_lst)
+            conn_spc = _remove_listed(conn_spc, plot_lst)
+            if conn_spc:
+                _unchked_wells.append(_well)
+
+        return _unchked_wells
+
+    def _add_spc(well, plot_lst, side):
+        """ Add barriers and then products to side
+        """
+        print(side)
+        conn_spc = _connected_partners(well, conn_lst)
+        conn_spc = _remove_listed(conn_spc, plot_lst)
+        if conn_spc:
+            for spc in conn_spc:
+                # Add barrier to list
+                if side == 'left':
+                    plot_lst.insert(0, spc)
+                else:
+                    plot_lst.append(spc)
+                # Add products (wells or products)
+                conn_spc2 = _connected_partners(spc, conn_lst)
+                conn_spc2 = _remove_listed(conn_spc2, plot_lst)
+                for spc2 in conn_spc2:
+                    if side == 'left':
+                        plot_lst.insert(0, spc2)
+                    else:
+                        plot_lst.append(spc2)
+
+        return plot_lst
+
+    # Initialize list that will have the PES components in plot order
+    plot_names = []
+
+    # Find the deepest well
+    min_ene, min_well = 10000.0, None
+    for name, ene in ene_dct.items():
+        if 'W' in name and ene < min_ene:
+            min_ene = ene
+            min_well = name
+    plot_names.append(min_well)
+
+    # Find the barriers the min-well is connected, add to list
+    # conn_spc = _connected_partners(min_well, conn_lst)
+    # for i, spc in enumerate(conn_spc):
+    #     if (i+1) % 2 == 1:
+    #         plot_names.insert(0, spc)
+    #     else:
+    #         plot_names.append(spc)
+    # print('plot names 1', plot_names)
+
+    # Now build out the left and right
+    # left_well = None
+    # for name in plot_names:
+    #     if 'W' in name:
+    #         left_well = name
+    # right_well = None
+    # for name in reversed(plot_names):
+    #     if 'W' in name:
+    #         right_well = name
+
+    # Build out left side of list
+    left_well = min_well
+    left_finished = False
+    while not left_finished:
+        plot_names = _add_spc(left_well, plot_names, 'left')
+        unchecked_names = _unchecked_wells(
+            plot_names, conn_lst, min_well, 'left')
+        if unchecked_names:
+            left_well = unchecked_names[0]
+        else:
+            left_finished = True
+
+    # Build out right side of list
+    right_well = min_well
+    right_finished = False
+    while not right_finished:
+        plot_names = _add_spc(right_well, plot_names, 'right')
+        unchecked_names = _unchecked_wells(
+            plot_names, conn_lst, min_well, 'right')
+        if unchecked_names:
+            right_well = unchecked_names[0]
+        else:
+            right_finished = True
+
+    # Build a new ene_dct with the ordered plot names
+    ord_ene_dct = {name: ene_dct[name] for name in plot_names}
+
+    print(plot_names)
+    print(ord_ene_dct)
+    return ord_ene_dct
+
+
+# Attempt 2 using graphs #
+# HAS PYLINT ISSUES WITH THE DRAW FUNCTION
+# class GraphArtist(Artist):
+#     """Matplotlib artist class that draws igraph graphs.
+#
+#     Only Cairo-based backends are supported.
+#     """
+#
+#     def __init__(self, graph, bbox, palette=None, *args, **kwds):
+#         """Constructs a graph artist that draws the given graph within
+#         the given bounding box.
+#
+#         `graph` must be an instance of `igraph.Graph`.
+#         `bbox` must either be an instance of `igraph.drawing.BoundingBox`
+#         or a 4-tuple (`left`, `top`, `width`, `height`). The tuple
+#         will be passed on to the constructor of `BoundingBox`.
+#         `palette` is an igraph palette that is used to transform
+#         numeric color IDs to RGB values. If `None`, a default grayscale
+#         palette is used from igraph.
+#
+#         All the remaining positional and keyword arguments are passed
+#         on intact to `igraph.Graph.__plot__`.
+#         """
+#         Artist.__init__(self)
+#
+#         if not isinstance(graph, Graph):
+#             raise TypeError(f'expected igraph.Graph, got {type(graph)}')
+#
+#         self.graph = graph
+#         self.palette = palette or palettes["gray"]
+#         self.bbox = BoundingBox(bbox)
+#         self.args = args
+#         self.kwds = kwds
+#
+#     def draw(self, renderer):
+#         if not isinstance(renderer, RendererCairo):
+#             raise TypeError('plotting is supported only on Cairo backends')
+#         self.graph.__plot__(renderer.gc.ctx, self.bbox, self.palette,
+#                             *self.args, **self.kwds)
+#
+#
+def pes_graph(conn_lst, ene_dct=None, label_dct=None, file_name='surface.pdf'):
+    """ Make an igraph argument
+    """
+
+    ene_dct, conn_lst, rgts_lst = _format(ene_dct, conn_lst, label_dct)
+
+    # Make an igraph object
+    pes_gra = igraph.Graph()
+
+    # Add vertices and set the name and ene attributes
+    pes_gra.add_vertices(len(rgts_lst))
+    pes_gra.vs["name"] = rgts_lst
+    pes_gra.vs["label"] = rgts_lst
+    # pes_gra.vs["energy"] = list(ene_dct.values())
+
+    # Write the conn_lst in terms of indices to add the edges
+    name_idx_dct = {name: idx for idx, name in enumerate(rgts_lst)}
+    idx_conn_lst = ()
+    for conn in conn_lst:
+        idx_conn_lst += (tuple(name_idx_dct[x] for x in conn),)
+    pes_gra.add_edges(idx_conn_lst)
+
+    # Make a plot with some layout
+    fig, axes = plt.subplots(
+        nrows=1, ncols=1, figsize=(16, 9))
+    visual_style = {
+        "vertex_size": 30,
+        "vertex_label_size": 22,
+        # "vertex_color": [color_dict[gender] for gender in g.vs["gender"]],
+        "vertex_label": pes_gra.vs["name"],
+        # "edge_width": [1+2*int(is_form) for is_form in g.es["is_form"]],
+        "layout": "kamada_kawai",
+        "bbox": (300, 300),
+        "margin": 20
+    }
+    igraph.plot(pes_gra, target=axes, **visual_style)
+
+    fig.set_size_inches(16, 12)
+    fig.savefig(file_name, dpi=200)
+    plt.close(fig)
+
+
+def pes_graph2(conn_lst, ene_dct=None, label_dct=None,
+               file_name='surface.html'):
+    """ Make a networkx graph argument
+    """
+
+    ene_dct, conn_lst, rgts_lst = _format(ene_dct, conn_lst, label_dct)
+
+    nxg = networkx.Graph()
+    nxg.add_nodes_from(rgts_lst)
+    nxg.add_edges_from(conn_lst)
+    # Need to set the y-values
+    # networkx.set_node_attributes(nxg, atom_symbols, 'symbol')
+
+    net = Network('3000px', '3000px')
+    net.from_nx(nxg)
+    # net.enable_physics(True)
+    net.set_options("""
+        "nodes": {
+            "fixed": {
+                "y": true
+    }}
+    """)
+    net.show_buttons(filter_=['nodes', 'edges', 'physics'])
+    net.save_graph(file_name)
+
+
+def _format(ene_dct, conn_lst, label_dct):
+    """ a
+    """
+
+    def _relabel(ene_dct, conn_lst, label_dct):
+        """ relabel the graph
+        """
+        if ene_dct is not None:
+            _ene_dct = {label_dct[name]: ene for name, ene in ene_dct.items()}
+        else:
+            _ene_dct = None
+
+        _conn_lst = ()
+        for conn in conn_lst:
+            _conn_lst += ((label_dct[conn[0]], label_dct[conn[1]]),)
+
+        return _ene_dct, _conn_lst
+
+    def _rgts_lst(conn_lst):
+        """ Get the full list of reagents
+        """
+        lst = ()
+        for conn in conn_lst:
+            lst += conn
+        return automol.util.remove_duplicates_with_order(lst)
+
+    if label_dct is not None:
+        ene_dct, conn_lst = _relabel(ene_dct, conn_lst, label_dct)
+    rgts_lst = _rgts_lst(conn_lst)
+
+    return ene_dct, conn_lst, rgts_lst

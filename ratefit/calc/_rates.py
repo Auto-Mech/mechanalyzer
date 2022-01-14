@@ -16,11 +16,11 @@ def single_arrhenius(a_par, n_par, ea_par,
     """ Calculates T-dependent rate constants [k(T)]s using
         a single Arrhenius functional expression.
 
-        :param a_par: pre-exponential A parmater
+        :param a_par: pre-exponential A parameter
         :type a_par: float
-        :param n_par: temperature exponent n parmater
+        :param n_par: temperature exponent n parameter
         :type n_par: float
-        :param ea_par: activation energy Ea parmater (kcal.mol-1)
+        :param ea_par: activation energy Ea parameter (kcal.mol-1)
         :type ea_par: float
         :param t_ref: Reference temperature (K)
          :type t_ref: float
@@ -39,17 +39,17 @@ def double_arrhenius(a_par1, n_par1, ea_par1,
     """ Calculates T-dependent rate constants [k(T)]s using
         a double Arrhenius functional expression.
 
-        :param a_par1: 1st pre-exponential A parmater
+        :param a_par1: 1st pre-exponential A parameter
         :type a_par1: float
-        :param n_par1: 1st temperature exponent n parmater
+        :param n_par1: 1st temperature exponent n parameter
         :type n_par1: float
-        :param ea_par1: 1st activation energy Ea parmater (kcal.mol-1)
+        :param ea_par1: 1st activation energy Ea parameter (kcal.mol-1)
         :type ea_par1: float
-        :param a_par2: 2nd pre-exponential A parmater
+        :param a_par2: 2nd pre-exponential A parameter
         :type a_par2: float
-        :param n_par2: 2nd temperature exponent n parmater
+        :param n_par2: 2nd temperature exponent n parameter
         :type n_par2: float
-        :param ea_par2: 2nd activation energy Ea parmater (kcal.mol-1)
+        :param ea_par2: 2nd activation energy Ea parameter (kcal.mol-1)
         :type ea_par2: float
         :param t_ref: Reference temperature (K)
         :type t_ref: float
@@ -65,32 +65,27 @@ def double_arrhenius(a_par1, n_par1, ea_par1,
     return kts
 
 
-def arrhenius(params, t_ref, temps):
-    """ Calculates T-dependent rate constants [k(T)]s using
-         a either a single or double Arrhenius functional expression,
-         depending on the number of input fitting parameters.
+def arrhenius(arr_tuples, temps, t_ref, rval=RC):
+    """ Calculates T-dependent rate constants [k(T)]s using a list of any number
+            of Arrhenius parameters
 
-         :param params: fitting parameters
-         :type params: list(float)
-         :param t_ref: Reference tempserature (K)
-         :type t_ref: float
-         :param temps: List of Temperatures (K)
-         :type temps: numpy.ndarray
-         :return kts: T-dependent rate constants
-         :rtype: numpy.ndarray
+        :param arr_tuples: Arrhenius fit parameters
+        :type arr_tuples: tuple ((A1, n1, Ea1), (A2, n2, Ea2), ...)
+        :param temps: temperatures at which to do calculations (K)
+        :type temps: numpy.ndarray
+        :param t_ref: reference temperature (K)
+        :type t_ref: float
+        :return kts: T-dependent rate constants
+        :rtype: numpy.ndarray
     """
 
-    assert len(params) in (3, 6)
-
-    if len(params) == 3:
-        kts = single_arrhenius(
-            params[0], params[1], params[2],
-            t_ref, temps)
-    else:
-        kts = double_arrhenius(
-            params[0], params[1], params[2],
-            params[3], params[4], params[5],
-            t_ref, temps)
+    kts = np.zeros_like(temps)
+    for arr_tuple in arr_tuples:
+        assert len(arr_tuple) == 3, (
+            f'Length of Arrhenius tuples should be 3, not {len(arr_tuple)}')
+        a_par, n_par, ea_par = arr_tuple
+        new_kts = a_par * ((temps/t_ref)**n_par) * np.exp(-ea_par/(rval*temps))
+        kts = np.add(kts, new_kts, out=kts, casting='unsafe')  # stops Np errs
 
     return kts
 
@@ -369,7 +364,7 @@ def plog_one_pressure(plog_dct, t_ref, temps, pressure):
     return ktps
 
 
-def chebyshev(alpha, tmin, tmax, pmin, pmax, temps, pressures):
+def cheb(alpha, tlim, plim, temps, pressures):
     """ Calculates T,P-dependent rate constants [k(T,P)]s using
         a Chebyshev functional expression.
 
@@ -377,8 +372,6 @@ def chebyshev(alpha, tmin, tmax, pmin, pmax, temps, pressures):
         :type alpha: numpy.ndarray
         :param tmin: minimum temperature Chebyshev model is defined
         :type tmin: float
-        :param tmax: maximum temperature Chebyshev model is defined
-        :type tmax: float
         :param pmin: minimum pressure Chebyshev model is defined
         :type pmin: float
         :param temps: Temps used to calculate high- and low-k(T)s
@@ -388,64 +381,44 @@ def chebyshev(alpha, tmin, tmax, pmin, pmax, temps, pressures):
         :return ktp_dct: k(T,Ps) at all temps and pressures
         :rtype: dict[pressure: temps]
     """
+
+    def cheb_one_pressure(alpha, tlim, plim, temps, pressure):
+        """ Calculates T,P-dependent rate constants [k(T,P)]s using
+            a Chebyshev functional expression, at a given pressure,
+            across several temperatures.
+        """
+
+        tmin, tmax = tlim
+        pmin, pmax = plim
+        alpha_nrows, alpha_ncols = alpha.shape
+
+        ktps = np.zeros(len(temps))
+        for i, temp in enumerate(temps):
+            ctemp = (
+                (2.0 * temp**(-1) - tmin**(-1) - tmax**(-1)) /
+                (tmax**(-1) - tmin**(-1)))
+            cpress = (
+                (2.0 * np.log10(pressure) - np.log10(pmin) - np.log10(pmax)) /
+                (np.log10(pmax) - np.log10(pmin)))
+
+            logktp = 0.0
+            for j in range(alpha_nrows):
+                for k in range(alpha_ncols):
+                    logktp += (alpha[j][k] * eval_chebyt(j, ctemp) *
+                               eval_chebyt(k, cpress))
+
+            ktps[i] = 10**(logktp)
+
+        return ktps
+
     kp_dct = {}
     for pressure in pressures:
-        kp_dct[pressure] = chebyshev_one_pressure(
-            alpha, tmin, tmax, pmin, pmax, temps, pressure)
+        kp_dct[pressure] = cheb_one_pressure(
+            alpha, tlim, plim, temps, pressure)
 
     ktp_dct = _ktp_dct(kp_dct, temps)
 
     return ktp_dct
-
-
-def chebyshev_one_pressure(alpha, tmin, tmax, pmin, pmax, temps, pressure):
-    """ Calculates T,P-dependent rate constants [k(T,P)]s using
-        a Chebyshev functional expression, at a given pressure,
-        across several temperatures.
-
-        :param alpha: Chebyshev coefficient matrix
-        :type alpha: numpy.ndarray
-        :param tmin: minimum temperature Chebyshev model is defined
-        :type tmin: float
-        :param tmax: maximum temperature Chebyshev model is defined
-        :type tmax: float
-        :param pmin: minimum pressure Chebyshev model is defined
-        :type pmin: float
-        :param pmax: maximum pressure Chebyshev model is defined
-        :type pmax: float
-        :param temps: Temps used to calculate high- and low-k(T)s
-        :type temps: numpy.ndarray
-        :param pressure: Pressure used to calculate k(T,P)s
-        :type pressure: float
-        :return ktps: Set of k(T,P)s at given pressure
-        :rtype numpy.ndarray
-    """
-
-    alpha_nrows, alpha_ncols = alpha.shape
-
-    ktps = np.zeros(len(temps))
-    for i, temp in enumerate(temps):
-        ctemp = (
-            (2.0 * temp**(-1) - tmin**(-1) - tmax**(-1)) /
-            (tmax**(-1) - tmin**(-1))
-        )
-        cpress = (
-            (2.0 * np.log10(pressure) - np.log10(pmin) - np.log10(pmax)) /
-            (np.log10(pmax) - np.log10(pmin))
-        )
-
-        logktp = 0.0
-        for j in range(alpha_nrows):
-            for k in range(alpha_ncols):
-                logktp += (
-                    alpha[j][k] *
-                    eval_chebyt(j, ctemp) *
-                    eval_chebyt(k, cpress)
-                )
-
-        ktps[i] = 10**(logktp)
-
-    return ktps
 
 
 # Functions for calculating terms in certain P-dependent expressions

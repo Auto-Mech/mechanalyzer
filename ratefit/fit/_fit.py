@@ -1,220 +1,312 @@
-"""
-  Fit the rate constants read from the MESS output to
-  Arrhenius, Plog, Troe, and Chebyshev expressions
+""" This is Clayton's new version
 """
 
 import copy
-import mess_io
-import ioformat
-from ratefit.fit import arrhenius as arrfit
-from ratefit.fit import chebyshev as chebfit
-from ratefit.fit import troe as troefit
-from ratefit.fit._util import filter_ktp_dct
-from ratefit.fit._pdep import pressure_dependent_ktp_dct
+import numpy
+from ratefit.fit import arr
+from ratefit.fit import plog
+from ratefit.fit import cheb
 
-
-DEFAULT_PDEP_DCT = {
+DEFAULT_PDEP = {
     'temps': (500.0, 1000.0),
     'tol': 20.0,
-    'pval': 1.0,
     'plow': None,
-    'phigh': None
-}
-DEFAULT_ARRFIT_DCT = {
+    'phigh': None,
+    'pval': 1.0}
+DEFAULT_ARR = {  # also used for PLOG fitting
     'dbltol': 15.0,
-    'dblcheck': 'max'
-}
-DEFAULT_TROE_DCT = {
+    'dbl_iter': 30}
+DEFAULT_TROE = {
     'params': ('ts1', 'ts2', 'ts3', 'alpha'),
-    'tol': 20.0
-}
-DEFAULT_CHEB_DCT = {
+    'tol': 20.0}
+DEFAULT_CHEB = {
     'tdeg': 6,
     'pdeg': 4,
-    'tol': 20.0
-}
+    'tol': 20.0}
+NICKNAMES = {  # used for printing messages
+    'arr': 'Arrhenius',
+    'plog': 'PLOG',
+    'cheb': 'Chebyshev',
+    'troe': 'Troe'}
+ALLOWED_FIT_METHODS = (
+    'arr',
+    'plog',
+    'cheb',
+    'troe')
 
 
-def fit_ktp_dct(mess_path, inp_fit_method,
-                pdep_dct=None,
-                arrfit_dct=None,
-                chebfit_dct=None,
-                troefit_dct=None,
-                label_dct=None,
-                fit_temps=None, fit_pressures=None,
-                fit_tunit='K', fit_punit='atm'):
-    """ Parse the MESS output and fit the rates to
-        Arrhenius expressions written as CHEMKIN strings
+def fit_rxn_ktp_dct(rxn_ktp_dct, fit_method, pdep_dct=None, arrfit_dct=None,
+                    chebfit_dct=None, troefit_dct=None):
+    """ Fits all reactions in a rxn_ktp_dct to some desired form
+
+        :param rxn_ktp_dct: rate constants to be fitted, for multiple reactions
+        :type rxn_ktp_dct: dict {rxn: ktp_dct}
+        :param fit_method: desired fit form; 'arr', 'plog', 'cheb', or 'troe'
+        :type fit_method: str
+        :param pdep_dct: instructions for checking P dependence
+        :type pdep_dct: dict
+        :param arrfit_dct: instructions for Arrhenius fitting (also for PLOG)
+        :type arrfit_dct: dict
+        :param chebfit_dct: instructions for Chebyshev fitting
+        :type chebfit_dct: dict
+        :param troefit_dct: instructions for Troe fitting
+        :type troefit_dct: dict
+        :return rxn_param_dct: fitted parameters for each reaction
+        :rtype: dict {rxn: params}
+        :return rxn_err_dct: fitting errors for each reaction
+        :rtype: dict {rxn: err_dct}
+    """
+    def rxn_name_str(rxn, newline=False):
+        """ get a reaction name string
+        """
+        return ' = '.join((' + '.join(rxn[0]), ' + '.join(rxn[1])))
+
+    rxn_param_dct = {}
+    rxn_err_dct = {}
+    for rxn, ktp_dct in rxn_ktp_dct.items():
+        print(f'\nFitting Reaction: {rxn_name_str(rxn)}')
+        params, err_dct = fit_ktp_dct(ktp_dct, fit_method, pdep_dct=pdep_dct,
+                                      arrfit_dct=arrfit_dct,
+                                      chebfit_dct=chebfit_dct,
+                                      troefit_dct=troefit_dct)
+        if all(x is not None for x in (params, err_dct)):
+            rxn_param_dct[rxn] = params
+            rxn_err_dct[rxn] = err_dct
+        print('--------------------------------\n')
+
+    return rxn_param_dct, rxn_err_dct
+
+
+def fit_ktp_dct(ktp_dct, fit_method, pdep_dct=None, arrfit_dct=None,
+                chebfit_dct=None, troefit_dct=None):
+    """ Fits a single ktp_dct to some desired form
+
+        :param ktp_dct: rate constants to be fitted
+        :type ktp_dct: dict {pressure: (temps, kts)}
+        :param fit_method: desired fit form; 'arr', 'plog', 'cheb', or 'troe'
+        :type fit_method: str
+        :param pdep_dct: instructions for checking P dependence
+        :type pdep_dct: dict
+        :param arrfit_dct: instructions for Arrhenius fitting (also for PLOG)
+        :type arrfit_dct: dict
+        :param chebfit_dct: instructions for Chebyshev fitting
+        :type chebfit_dct: dict
+        :param troefit_dct: instructions for Troe fitting
+        :type troefit_dct: dict
+        :return params: fitted parameters
+        :rtype: autoreact.RxnParams object
+        :return err_dct: fitting errors
+        :rtype: dict {pressure: (temps, errs)}
     """
 
-    # Read the mess input and output strings using the path
-    mess_out_str = ioformat.pathtools.read_file(mess_path, 'rate.out')
+    # Load instructions, etc.
+    assert fit_method in ALLOWED_FIT_METHODS, (
+        f"Fit method should be in {ALLOWED_FIT_METHODS}, not '{fit_method}'")
+    pdep_dct = pdep_dct or DEFAULT_PDEP
+    arrfit_dct = arrfit_dct or DEFAULT_ARR
+    chebfit_dct = chebfit_dct or DEFAULT_CHEB
+    troefit_dct = troefit_dct or DEFAULT_TROE
 
-    # Set dictionaries if they are unprovided
-    pdep_dct = pdep_dct or DEFAULT_PDEP_DCT
-    arrfit_dct = arrfit_dct or DEFAULT_ARRFIT_DCT
-    chebfit_dct = chebfit_dct or DEFAULT_CHEB_DCT
-    troefit_dct = troefit_dct or DEFAULT_TROE_DCT
-
-    if label_dct is None:
-        labels = mess_io.reader.rates.labels(mess_out_str, read_fake=False)
-        label_dct = dict(zip(labels, labels))
-
-    # Loop through reactions, fit rates, and write ckin strings
-    chemkin_str_dct = {}
-    rxn_pairs = gen_reaction_pairs(label_dct)
-    for (name_i, lab_i), (name_j, lab_j) in rxn_pairs:
-
-        # Set the name and A conversion factor
-        reaction = name_i + '=' + name_j
-        print('------------------------------------------------\n')
-        print('Reading and Fitting Rates for {}'.format(reaction))
-
-        # Read the rate constants out of the mess outputs
-        print('\nReading k(T,P)s from MESS output...')
-        ktp_dct, cheb_fit_temps = read_rates(
-            mess_out_str, pdep_dct, lab_i, lab_j,
-            fit_temps=fit_temps, fit_pressures=fit_pressures,
-            fit_tunit=fit_tunit, fit_punit=fit_punit)
-
-        # Check the ktp dct and fit_method to see how to fit rates
-        fit_method = _assess_fit_method(ktp_dct, inp_fit_method)
-
-        # Get the desired fits in the form of CHEMKIN strs
-        if fit_method is None:
-            continue
-        if fit_method == 'arrhenius':
-            chemkin_str = arrfit.pes(
-                ktp_dct, reaction, mess_path, **arrfit_dct)
-        elif fit_method == 'chebyshev':
-            chemkin_str = chebfit.pes(
-                ktp_dct, reaction, mess_path,
-                fit_temps=cheb_fit_temps, **chebfit_dct)
-            if not chemkin_str:
-                chemkin_str = arrfit.pes(
-                    ktp_dct, reaction, mess_path, **arrfit_dct)
-        elif fit_method == 'troe':
-            chemkin_str += troefit.pes(
-                ktp_dct, reaction, mess_path, **troefit_dct)
-
-        # Update the chemkin string dct {PES FORMULA: [PES CKIN STRS]}
-        print('\nFinal Fitting Parameters in CHEMKIN Format:', chemkin_str)
-        ridx = reaction.replace('=', '_')
-        chemkin_str_dct.update({ridx: chemkin_str})
-
-    return chemkin_str_dct
-
-
-def gen_reaction_pairs(label_dct):
-    """ Generate pairs of reactions
-    """
-
-    rxn_pairs = ()
-    for name_i, lab_i in label_dct.items():
-        if 'F' not in lab_i and 'B' not in lab_i:
-            for name_j, lab_j in label_dct.items():
-                if 'F' not in lab_j and 'B' not in lab_j and lab_i != lab_j:
-                    rxn_pairs += (((name_i, lab_i), (name_j, lab_j)),)
-
-    # Only grab the forward reactions, remove the reverse reactions
-    sorted_rxn_pairs = ()
-    for pair in rxn_pairs:
-        rct, prd = pair
-        if (rct, prd) in sorted_rxn_pairs or (prd, rct) in sorted_rxn_pairs:
-            continue
-        sorted_rxn_pairs += ((rct, prd),)
-
-    return sorted_rxn_pairs
-
-
-# Readers
-def read_rates(mess_out_str, pdep_dct, rct_lab, prd_lab,
-               fit_temps=None, fit_pressures=None,
-               fit_tunit=None, fit_punit=None):
-    """ Read the rate constants from the MESS output and
-        (1) filter out the invalid rates that are negative or undefined
-        and obtain the pressure dependent values
-    """
-
-    # Initialize vars
-    ktp_dct = {}
-    bimol = bool('W' not in rct_lab)
-
-    # Read temperatures, pressures and rateks from MESS output
-    mess_temps, tunit = mess_io.reader.rates.temperatures(mess_out_str)
-    mess_press, punit = mess_io.reader.rates.pressures(mess_out_str)
-
-    fit_temps = fit_temps if fit_temps is not None else mess_temps
-    fit_pressures = fit_pressures if fit_pressures is not None else mess_press
-    fit_tunit = fit_tunit if fit_tunit is not None else tunit
-    fit_punit = fit_punit if fit_punit is not None else punit
-
-    fit_temps = list(set(list(fit_temps)))
-    fit_temps.sort()
-    assert set(fit_temps) <= set(mess_temps)
-    assert set(fit_pressures) <= set(mess_press)
-
-    # Read all k(T,P) values from MESS output; filter negative/undefined values
-    calc_ktp_dct = mess_io.reader.rates.ktp_dct(
-        mess_out_str, rct_lab, prd_lab)
-    print(
-        '\nRemoving invalid k(T,P)s from MESS output that are either:\n',
-        '  (1) negative, (2) undefined [***], or (3) below 10**(-21) if',
-        'reaction is bimolecular')
-    filt_ktp_dct = filter_ktp_dct(calc_ktp_dct, bimol)
-
-    # Filter the ktp dictionary by assessing the presure dependence
-    if filt_ktp_dct:
-        if list(filt_ktp_dct.keys()) == ['high']:
-            print('\nValid k(T)s only found at High Pressure...')
-            ktp_dct['high'] = filt_ktp_dct['high']
-        else:
-            if pdep_dct:
-                print(
-                    '\nUser requested to assess pressure dependence',
-                    'of reaction.')
-                ktp_dct = pressure_dependent_ktp_dct(filt_ktp_dct, **pdep_dct)
-            else:
-                ktp_dct = copy.deepcopy(filt_ktp_dct)
-
-    return ktp_dct, fit_temps
-
-
-def _assess_fit_method(ktp_dct, inp_fit_method):
-    """ Assess if there are any rates to fit and if so, check if
-        the input fit method should be used, or just simple Arrhenius
-        fits will suffice because there is only one pressure for which
-        rates exist to be fit.
-
-        # If only one pressure (outside HighP limit), just run Arrhenius
-    """
-
+    # If rates exist, fit them to desired functional form
+    params, err_dct = None, None
     if ktp_dct:
-        pressures = list(ktp_dct.keys())
-        npressures = len(pressures)
-        if npressures == 1 or (npressures == 2 and 'high' in pressures):
-            fit_method = 'arrhenius'
-        else:
-            fit_method = inp_fit_method
+        # Get the pdep_version of the ktp_dct
+        pdep_ktp_dct = get_pdep_ktp_dct(
+            ktp_dct, assess_temps=pdep_dct['temps'],
+            tol=pdep_dct['tol'],
+            plow=pdep_dct['plow'], phigh=pdep_dct['phigh'],
+            pval=pdep_dct['pval'])
+
+        # Check the ktp_dct and the fit_method to see how to fit rates
+        actual_fit_method = assess_fit_method(pdep_ktp_dct, fit_method)
+
+        # Get desired fit as instance of the RxnParams class, and the err_dct
+        if actual_fit_method == 'troe':
+            print('Troe not implemented. Not doing a fit')
+        elif actual_fit_method == 'arr':
+            # dbl_iter = arrfit_dct.get('dbl_iter')  # unused for now
+            params, err_dct = arr.get_params(
+                pdep_ktp_dct, dbltol=arrfit_dct['dbltol'])
+        elif actual_fit_method == 'plog':
+            # dbl_iter = arrfit_dct.get('dbl_iter')  # unused for now
+            params, err_dct = plog.get_params(
+                pdep_ktp_dct, dbltol=arrfit_dct['dbltol'])
+        elif actual_fit_method == 'cheb':
+            params, err_dct = cheb.get_params(
+                pdep_ktp_dct,
+                tdeg=chebfit_dct['tdeg'], pdeg=chebfit_dct['pdeg'],
+                tol=chebfit_dct['tol'])
     else:
-        fit_method = None
+        print('No rate constants to fit.')
+
+    return params, err_dct
+
+
+def assess_fit_method(pdep_ktp_dct, fit_method):
+    """ Checks a pdep_ktp_dct (i.e., already filtered for pressure dependence)
+        to see if the selected fit method is acceptable. If something is amiss,
+        corrects the fit method to the proper form.
+
+        :param pdep_ktp_dct: pressure-dependent rate constants; either 'high'
+            only (if P-independent) or with all pressures (if P-dependent)
+        :type pdep_ktp_dct: dict {pressure: (temps, kts)}
+        :param fit_method: desired fit form; 'arr', 'plog', 'cheb', or 'troe'
+        :type fit_method: str
+        :return actual_fit_method: fit method after checking P dependence; may
+            be unchanged from original selection
+        :rtype: str
+    """
+
+    pressures = list(pdep_ktp_dct.keys())
+    npressures = len(pressures)
+    if npressures == 1 or (npressures == 2 and 'high' in pressures):
+        actual_fit_method = 'arr'
+    else:
+        # If the fit_method is Arrhenius but there are multiple pressures
+        if fit_method == 'arr':
+            actual_fit_method = 'plog'
+        else:
+            actual_fit_method = fit_method
+
+    # If Chebyshev was requested and granted, check that it is viable to do
+    # Chebyshev based on the number of k(T) values at each pressure
+    if actual_fit_method == 'cheb':
+        # Note: this check ignores the 'high' entry
+        cheb_viable = cheb.check_viability(pdep_ktp_dct)
+        if not cheb_viable:
+            actual_fit_method = 'plog'
 
     # Print message to say what fitting will be done
-    if fit_method == 'arrhenius':
-        if inp_fit_method != 'arrhenius':
-            print(
-                '\nRates at not enough pressures for Troe/Chebyshev.')
-        print(
-            '\nFitting k(T,P)s to PLOG/Arrhenius Form....')
-    elif fit_method == 'chebyshev':
-        print(
-            '\nFitting k(T,P)s to Chebyshev Form...')
-    elif fit_method == 'troe':
-        print(
-            '\nFitting k(T,P)s to Tree Form...')
-    elif fit_method is None:
-        print(
-            '\nNo valid k(T,Ps)s from MESS output to fit.',
-            'Skipping to next reaction...')
+    if actual_fit_method != fit_method:  # if the fit method was changed
+        if actual_fit_method == 'plog':
+            # If changed to PLOG from Arrhenius
+            if fit_method == 'arr':
+                print('\nPressure dependence found. Fitting to PLOG form...')
+            elif fit_method == 'cheb':
+                print('\nRates invalid for Chebyshev. Fitting to PLOG form...')
+        else:  # if changed to Arrhenius from anything else
+            print(f'\nNot enough pressures for {NICKNAMES[fit_method]} form.')
+            print('\nFitting k(T,P)s to Arrhenius form...')
+    elif fit_method is None:  # if the ktp_dct was empty
+        print('\nNo valid k(T,Ps)s to fit. Skipping to next reaction...')
+    else:  # if the fit method was unchanged
+        print(f'\nFitting k(T,P)s to {NICKNAMES[fit_method]} form...')
 
-    return fit_method
+    return actual_fit_method
+
+
+def get_pdep_ktp_dct(ktp_dct, assess_temps=DEFAULT_PDEP['temps'],
+                     tol=DEFAULT_PDEP['tol'], plow=DEFAULT_PDEP['plow'],
+                     phigh=DEFAULT_PDEP['phigh'], pval=DEFAULT_PDEP['pval']):
+    """ Returns a ktp_dct with either (i) P-dependent or (ii) P-independent
+        rate constants, depending on the P dependence of the rate constants
+
+        :param ktp_dct: rate constants to be fitted
+        :type ktp_dct: dict {pressure: (temps, kts)}
+        :param assess_temps: temperature(s) at which to assess P dependence
+        :type assess_temps: tuple
+        :param tol: percent difference threshold for determining P dependence
+        :type tol: float
+        :param plow: low pressure for assessing P dependence; if None, the
+            lowest pressure will be used
+        :type plow: float
+        :param phigh: high pressure for assessing P dependence; if None, the
+            highest pressure will be used
+        :type phigh: float
+        :param pval: pressure at which to get kts if ktp_dct is P-independent;
+            if pval isn't in the ktp_dct, gets kts at the highest pressure
+        :return pdep_ktp_dct: pressure-dependent rate constants; either 'high'
+            only (if P-independent) or with all pressures (if P-dependent)
+        :rtype: dict {pressure: (temps, kts)}
+    """
+
+    # Assess the pressure dependence of the rate constants
+    rxn_is_pdependent = assess_pdep(ktp_dct, assess_temps, tol=tol, plow=plow,
+                                    phigh=phigh)
+
+    if rxn_is_pdependent:
+        print('Reaction found to be pressure dependent.',
+              'Fitting all k(T)s from all pressures.')
+        pdep_ktp_dct = copy.deepcopy(ktp_dct)
+    else:
+        # If pval is in the dct, return kts at that pressure
+        if pval in ktp_dct:
+            pdep_ktp_dct = {pval: ktp_dct[pval]}
+            print(f'No pressure dependence. Grabbing k(T)s at {pval} atm.')
+        # Otherwise, get kts at some other pressure
+        else:
+            print(f'No pressure dependence, but no k(T)s at {pval} atm.')
+            pressures = [pressure for pressure in ktp_dct
+                         if pressure != 'high']
+            if pressures:
+                pressure = pressures[-1]
+                pdep_ktp_dct = {pressure: ktp_dct[pressure]}
+                print(f'Grabbing kts at {pressure} atm.')
+            else:
+                pdep_ktp_dct = {'high': ktp_dct['high']}
+                print('No numerical pressures. Grabbing "high" kts.')
+
+    return pdep_ktp_dct
+
+
+def assess_pdep(ktp_dct, assess_temps=DEFAULT_PDEP['temps'],
+                tol=DEFAULT_PDEP['tol'], plow=DEFAULT_PDEP['plow'],
+                phigh=DEFAULT_PDEP['phigh']):
+    """ Assesses if there are significant differences between k(T,P) values
+        at low and high pressure, signaling pressure dependence
+
+        :param ktp_dct: rate constants to be fitted
+        :type ktp_dct: dict {pressure: (temps, kts)}
+        :param assess_temps: temperature(s) at which to assess P dependence
+        :type assess_temps: tuple
+        :param tol: percent difference threshold for determining P dependence
+        :type tol: float
+        :param plow: low pressure for assessing P dependence; if None, the
+            lowest pressure will be used
+        :type plow: float
+        :param phigh: high pressure for assessing P dependence; if None, the
+            highest pressure will be used
+        :type phigh: float
+        :param pval: pressure at which to get kts if ktp_dct is P-independent;
+            if pval isn't in the ktp_dct, gets kts at the highest pressure
+        :return pdep_ktp_dct: pressure-dependent rate constants; either 'high'
+            only (if P-independent) or with all pressures (if P-dependent)
+        :rtype: dict {pressure: (temps, kts)}
+    """
+
+    # Get list of pressures, ignoring the high-pressure limit rates
+    pressures = [pressure for pressure in ktp_dct
+                 if pressure != 'high']
+
+    # Set the low- and high-pressure if not specified by user
+    if plow is None and pressures != []:
+        plow = min(pressures)
+    if phigh is None and pressures != []:
+        phigh = max(pressures)
+
+    # Check % difference for k(T, P) vals
+    is_pdep = False
+    if plow in ktp_dct and phigh in ktp_dct:  # won't get run if only 'high'
+
+        # Loop over temps to examine for large % dif in k(T) at low- and high-P
+        for assess_temp in assess_temps:
+            # For low and high P, find the idx for assess_temp
+            temps_low = ktp_dct[plow][0]
+            temps_high = ktp_dct[phigh][0]
+            temp_low_match = numpy.where(
+                numpy.isclose(temps_low, assess_temp))[0]
+            temp_high_match = numpy.where(
+                numpy.isclose(temps_high, assess_temp))[0]
+            if temp_low_match.size > 0 and temp_high_match.size > 0:
+                temp_low_idx = temp_low_match[0]
+                temp_high_idx = temp_high_match[0]
+                # Grab k value for the appropriate temp and pressure
+                kt_low = ktp_dct[plow][1][temp_low_idx]
+                kt_high = ktp_dct[phigh][1][temp_high_idx]
+                # Calculate the % difference and see if above threshold
+                kt_dif = (abs(kt_low - kt_high) / kt_low) * 100.0
+                if kt_dif > tol:
+                    is_pdep = True
+                    break
+
+    return is_pdep

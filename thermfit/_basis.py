@@ -1,172 +1,167 @@
-"""
-  Therm Calculations
+""" ThermFit Interface to CBH code used to generate and update
+    the mechanism oriented objects with species required to
+    form the complete basis of heats-of-formation for species
+    currently comprising some mechanism and stored in the
+    the species dictionary.
 """
 
 import os
-import math
-import multiprocessing
-import random
 import automol.inchi
 import automol.geom
 from phydat import phycon
+import autorun
 from mechanalyzer.inf import rxn as rinfo
 import thermfit.cbh
 
 
 # Set up the references for building
-def prepare_refs(ref_scheme, spc_dct, spc_names,
-                 repeats=False, parallel=False, zrxn=None):
-    """ Generate all of the reference (basis) species for
-        a list of species. Will also generate needed info
-        if it does not exist.
+def prepare_basis(ref_scheme, spc_dct, spc_names,
+                  zrxn=None, print_log=True, nprocs=1):
+    """ Main callable function to generate the reference
+        basis molecules used in heat-of-formation calculations
 
-    add refs to species list as necessary
+        Executed in parallel using Python MultiProcessing
+        module if nprocs set above 1. Parallelization occurs
+        over the species list.
+
+        species basis_dct[name] = ()
+        ts basis_dct[name] = ()
     """
 
-    if parallel:
-        nproc_avail = len(os.sched_getaffinity(0)) - 1
+    args = (ref_scheme, spc_dct, zrxn, print_log)
+    basis_dcts = autorun.execute_function_in_parallel(
+        _prepare_basis, spc_names, args, nprocs=nprocs)
 
-        num_spc = len(spc_names)
-        spc_per_proc = math.floor(num_spc / nproc_avail)
+    basis_dct = {}
+    for dct in basis_dcts:
+        basis_dct.update(dct)
 
-        queue = multiprocessing.Queue()
-        procs = []
-        random.shuffle(spc_names)
-        for proc_n in range(nproc_avail):
-            spc_start = proc_n*spc_per_proc
-            if proc_n == nproc_avail - 1:
-                spc_end = num_spc
-            else:
-                spc_end = (proc_n+1)*spc_per_proc
-
-            spc_lst = spc_names[spc_start:spc_end]
-
-            proc = multiprocessing.Process(
-                target=_prepare_refs,
-                args=(queue, ref_scheme, spc_dct, spc_lst,
-                      repeats, parallel, zrxn))
-            procs.append(proc)
-            proc.start()
-
-        basis_dct = {}
-        unique_refs_dct = {}
-        for _ in procs:
-            bas_dct, unq_dct = queue.get()
-            basis_dct.update(bas_dct)
-            bas_ichs = [
-                unique_refs_dct[spc]['inchi']
-                if 'inchi' in unique_refs_dct[spc]
-                else unique_refs_dct['reacs']
-                for spc in unique_refs_dct]
-            for spc in unq_dct:
-                new_ich = (
-                    unq_dct[spc]['inchi']
-                    if 'inchi' in unq_dct[spc] else unq_dct[spc]['reacs'])
-                if new_ich not in bas_ichs:
-                    cnt = len(list(unique_refs_dct.keys())) + 1
-                    if isinstance(new_ich, str):
-                        ref_name = 'REF_{}'.format(cnt)
-                        unique_refs_dct[ref_name] = unq_dct[spc]
-                    else:
-                        ref_name = 'TS_REF_{}'.format(cnt)
-                        unique_refs_dct[ref_name] = unq_dct[spc]
-        for proc in procs:
-            proc.join()
-    else:
-        basis_dct, unique_refs_dct = _prepare_refs(
-            None, ref_scheme, spc_dct, spc_names,
-            repeats=repeats, parallel=parallel,
-            zrxn=zrxn)
-
-    return basis_dct, unique_refs_dct
+    return basis_dct
 
 
-def _prepare_refs(queue, ref_scheme, spc_dct, spc_names,
-                  repeats=False, parallel=False, zrxn=None):
+def _prepare_basis(ref_scheme, spc_dct, zrxn, print_log,
+                   spc_names, output_queue=None):
     """ Prepare references
     """
 
-    print(
-        'Processor {} will prepare species: {}'.format(
-            os.getpid(), ', '.join(spc_names)))
+    # Get objects from spc_names
+    spc_str = ', '.join(spc_names)
     spc_ichs = [spc_dct[spc]['inchi'] for spc in spc_names]
-    dct_ichs = [spc_dct[spc]['inchi'] for spc in spc_dct.keys()
-                if spc != 'global' and 'ts' not in spc]
+
+    # Begin prints
+    if print_log:
+        print(f'Process {os.getpid()} prepping species: {spc_str}')
 
     # Print the message
-    msg = '\nDetermining reference molecules for scheme: {}'.format(ref_scheme)
+    msg = f'\nDetermining reference molecules for scheme: {ref_scheme}'
     msg += '\n'
 
     basis_dct = {}
-    unique_refs_dct = {}
     for spc_name, spc_ich in zip(spc_names, spc_ichs):
 
+        msg += f'\nDetermining basis for species: {spc_name}'
+
         # Build the basis set and coefficients for spc/TS
-        msg += '\nDetermining basis for species: {}'.format(spc_name)
         if zrxn is not None:
             rcls = automol.reac.reaction_class(zrxn)
-            if rcls in thermfit.cbh.CBH_TS_CLASSES:
+            radrad = automol.reac.is_radical_radical(zrxn)
+            if (rcls, radrad) in thermfit.cbh.CBH_TS_CLASSES:
                 scheme = ref_scheme
+                if '_' in scheme:
+                    scheme = 'cbh' + scheme.split('_')[1]
             else:
                 scheme = 'basic'
-            if '_' in scheme:
-                scheme = 'cbh' + scheme.split('_')[1]
             spc_basis, coeff_basis = thermfit.cbh.ts_basis(
                 zrxn, scheme)
         else:
             spc_basis, coeff_basis = thermfit.cbh.species_basis(
                 spc_ich, ref_scheme)
-        spc_basis = tuple(automol.inchi.add_stereo(bas) for bas in spc_basis
-                          if isinstance(bas, str))
 
-        msg += '\nInCHIs for basis set:'
-        for base in spc_basis:
-            msg += '\n  {}'.format(base)
+        # Add stereochemistry to the basis
+        # basis either single InChI, or ((InChI,), (InChI,))
+        ste_basis = ()
+        for bas in spc_basis:
+            if isinstance(bas, str):
+                ste_basis += (automol.inchi.add_stereo(bas),)
+            else:
+                ste_basis += (
+                    (tuple(automol.inchi.add_stereo(b) for b in bas[0]),
+                     tuple(automol.inchi.add_stereo(b) for b in bas[1])),
+                )
+
+        # need to figure out print for TS basis
+        # msg += '\nInChIs for basis set: {}'.format('\n  '.join(ste_basis))
 
         # Add to the dct containing info on the species basis
-        basis_dct[spc_name] = (spc_basis, coeff_basis)
+        basis_dct[spc_name] = (ste_basis, coeff_basis)
 
-        # Add to the dct with reference dct if it is not in the spc dct
-        for ref in spc_basis:
-            bas_ichs = [
-                unique_refs_dct[spc]['inchi']
-                if 'inchi' in unique_refs_dct[spc] else
-                unique_refs_dct[spc]['reacs']
-                for spc in unique_refs_dct]
-            cnt = len(list(unique_refs_dct.keys())) + 1
-            if isinstance(ref, str):
-                if ((ref not in spc_ichs and ref not in dct_ichs)
-                        or repeats) and ref not in bas_ichs:
-                    ref_name = 'REF_{}'.format(cnt)
-                    msg += (
-                        '\nAdding reference species {}, InChI string:{}'
-                    ).format(ref, ref_name)
-                    unique_refs_dct[ref_name] = create_spec(ref)
+    # Print log message if it is desired
+    if print_log:
+        print(msg)
+
+    # Add results to multiprocessing.Queue obj passed in
+    output_queue.put((basis_dct,))
+
+
+# Build a dictionary of unique basis references that need to be added
+def unique_basis_species(basis_dct, spc_dct):
+    """ Checks to see which species comprising the lists of
+        heat-of-formation basis species (provided in the basis dct)
+        currently exist in the mechanism species dictionary.
+
+        If a basis molecule is found to be absent a sub-species
+        dictionary is created and added to the spc dictionary.
+
+        :param basis_dct: basis molecules for a set of species
+        :type basis dct: dict[str: tuple(str)]
+    """
+
+    def _spc_ref_unique(ref, mech_ichs):
+        """ Determine if InChI is unique
+        """
+        return ref not in mech_ichs
+
+    def _ts_ref_unique(ref, mech_ichs):
+        """ Determine if lst of inchis for ts is unique """
+        return (
+            _spc_ref_unique(ref, mech_ichs) or
+            _spc_ref_unique(ref[::-1], mech_ichs)
+        )
+
+    # Generate list of all species currently in the spc dct
+    mech_ichs = tuple(spc_dct[spc]['inchi'] for spc in spc_dct.keys()
+                      if 'ts' not in spc)
+
+    # Generate list of all prospective basis species
+    unique_refs_dct = {}
+    cnt = 1
+    for name, (basis, _) in basis_dct.items():
+        for bas in basis:
+            # bas spc is (1) string = species, (2) ((str,), (str,))
+            if isinstance(bas, str):
+                if _spc_ref_unique(bas, mech_ichs):
+                    ref_name = f'REF_{cnt}'
+                    unique_refs_dct[ref_name] = create_spec(bas)
+                    mech_ichs += (bas,)
+                    cnt += 1
             else:
-                if _chk(ref, spc_ichs, dct_ichs, bas_ichs, repeats):
-                    ref_name = 'TS_REF_{}'.format(cnt)
-                    msg += (
-                        '\nAdding reference species {}, InChI string:{}'
-                    ).format(ref, ref_name)
+                if _ts_ref_unique(bas, mech_ichs):
+                    ref_name = f'TS_REF_{cnt}_0'
                     unique_refs_dct[ref_name] = create_ts_spc(
-                        ref, spc_dct, spc_dct[spc_name]['mult'],
-                        rcls)
-    print(msg)
+                        bas, spc_dct, spc_dct[name]['mult'])
+                    mech_ichs += (bas,)
+                    cnt += 1
 
-    ret = None
-    if parallel:
-        queue.put((basis_dct, unique_refs_dct))
-    else:
-        ret = (basis_dct, unique_refs_dct)
-
-    return ret
+    return unique_refs_dct
 
 
-def create_ts_spc(ref, spc_dct, mult, rxnclass):
+# Create dictionries of information for species/TS
+def create_ts_spc(ref, spc_dct, mult):
     """ add a ts species to the species dictionary
     """
 
     # Obtain the Reaction InChIs, Charges, Mults
+    print('ref test', ref)
     reacs, prods = ref[0], ref[1]
     rxn_ichs = (
         tuple(automol.inchi.add_stereo(ich) for ich in reacs if ich),
@@ -178,11 +173,11 @@ def create_ts_spc(ref, spc_dct, mult, rxnclass):
         rgt_muls, rgt_chgs = (), ()
         for rgt in rgts:
             found = False
-            for name in spc_dct:
-                if 'inchi' in spc_dct[name]:
-                    if spc_dct[name]['inchi'] == rgt:
-                        rgt_muls += (spc_dct[name]['mult'],)
-                        rgt_chgs += (spc_dct[name]['charge'],)
+            for dct in spc_dct.values():
+                if 'inchi' in dct:
+                    if dct['inchi'] == rgt:
+                        rgt_muls += (dct['mult'],)
+                        rgt_chgs += (dct['charge'],)
                         found = True
                         break
             if not found:
@@ -197,10 +192,10 @@ def create_ts_spc(ref, spc_dct, mult, rxnclass):
         'prods': list(prods),
         'charge': 0,
         'inchi': '',
-        'class': rxnclass,
         'mult': mult,
         'ts_locs': (0,),
-        'rxn_info': rinfo.from_data(rxn_ichs, rxn_chgs, rxn_muls, mult)
+        'rxn_info': rinfo.from_data(rxn_ichs, rxn_chgs, rxn_muls, mult),
+        'hbond_cutoffs': (4.55, 1.92)
     }
 
 
@@ -213,28 +208,12 @@ def create_spec(ich, charge=0,
     mult = 1 if not rad else 2
 
     return {
+        'smiles': automol.inchi.smiles(ich),
         'inchi': ich,
         'inchikey': automol.inchi.inchi_key(ich),
-        'sens': 0.0,
         'charge': charge,
         'mult': mult,
         'mc_nsamp': mc_nsamp,
-        'hind_inc': hind_inc * phycon.DEG2RAD
+        'hind_inc': hind_inc * phycon.DEG2RAD,
+        'hbond_cutoffs': (4.55, 1.92)
     }
-
-
-# Helpers
-def _chk(ref, spc_ichs, dct_ichs, bas_ichs, repeats):
-    """ a """
-
-    ini = (
-        ((ref not in spc_ichs and ref not in dct_ichs) or repeats) and
-        (ref not in bas_ichs)
-    )
-    rref = ref[::-1]
-    sec = (
-        ((rref not in spc_ichs and rref not in dct_ichs) or repeats) and
-        (ref not in bas_ichs[::-1])
-    )
-
-    return ini or sec

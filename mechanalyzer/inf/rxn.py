@@ -77,7 +77,7 @@ def value(inf_obj, val):
     """
 
     assert val in RXN_PROPS, (
-        'Desired value {} not in rxn info object'.format(val)
+        f'Desired value {val} not in rxn info object'
     )
 
     return inf_obj[RXN_PROPS.index(val)]

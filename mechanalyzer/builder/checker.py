@@ -6,7 +6,7 @@ from chemkin_io.writer._util import format_rxn_name
 
 
 def run_all_checks(rxn_param_dct, rxn_ktp_dct, k_thresholds,
-                   rxn_num_threshold, filename=None):
+                   rxn_num_threshold):
     """ Run all mechanism checks and output a string describing the results.
         Optionally write a text file with the string.
 
@@ -21,11 +21,10 @@ def run_all_checks(rxn_param_dct, rxn_ktp_dct, k_thresholds,
         :param rxn_num_threshold: # of reactions at and below
             which a species is considered "lone"
         :type rxn_num_threshold: int
-        :param filename: filename for output file; if None, no file written
-        :type filename: str
         :return total_str: description of all the checks performed
         :rtype: str
     """
+
     def separator():
         """ Write a line of '+' to separate sections
         """
@@ -62,11 +61,6 @@ def run_all_checks(rxn_param_dct, rxn_ktp_dct, k_thresholds,
     source_spcs, sink_spcs = get_sources_and_sinks(rxn_param_dct)
     total_str += write_sources_and_sinks(source_spcs, sink_spcs)
     total_str += separator()
-
-    if filename is not None:
-        with open(filename, 'w') as fid:
-            fid.write(total_str)
-        fid.close()
 
     return total_str
 
@@ -164,6 +158,7 @@ def get_negative_kts(rxn_ktp_dct):
             one or more negative k(T)
         :rtype: dct {rxn1: ktp_dct1, rxn2: ...}
     """
+
     negative_rxn_ktp_dct = {}
     for rxn, ktp_dct in rxn_ktp_dct.items():
         negative_ktp_dct = {}
@@ -196,6 +191,7 @@ def get_lone_spcs(rxn_param_dct, threshold):
         :rtype: dct {lone_spc1: [rxn1, rxn2, ...], lone_spc2: ...}
 
     """
+
     # Get the number of reactions that each species participates in
     all_rcts, all_prds = _get_rcts_prds(rxn_param_dct)
     spc_counts = dict(counter(all_rcts + all_prds))
@@ -207,10 +203,10 @@ def get_lone_spcs(rxn_param_dct, threshold):
             lone_spcs[spc] = []
 
     # Store the reaction name(s) for each lone species
-    for spc in lone_spcs:
+    for spc, dct in lone_spcs.items():
         for rxn in rxn_param_dct.keys():
             if spc in rxn[0] or spc in rxn[1]:  # whether spc in prds or rcts
-                lone_spcs[spc].append(rxn)
+                dct.append(rxn)
 
     return lone_spcs
 
@@ -224,6 +220,7 @@ def get_duplicates(rxn_param_dct):
         :return duplicate_rxns: duplicate reactions and number of expressions
         :rtype: dct {rxn1: num_of_expressions1, rxn2: ...}
     """
+
     duplicate_rxns = {}
     for rxn, params in rxn_param_dct.items():
         if len(params) > 2:
@@ -248,6 +245,7 @@ def get_mismatches(rxn_param_dct):
     def classify_rate(param):
         """ Classify a rate based on the contents of the param
         """
+
         if param[3] is not None:
             rxn_type = 'Chebyshev'
         elif param[4] is not None:
@@ -274,6 +272,62 @@ def get_mismatches(rxn_param_dct):
             mismatched_rxns[rxn] = (params, rxn_types)
 
     return mismatched_rxns
+
+
+def get_missing_spcs(rxn_param_dct, spc_dct):
+    """ Compares a rxn_param_dct and a spc_dct to find missing species
+
+        :param rxn_param_dct: rate constant parameters for a mechanism
+        :type rxn_param_dct: dct
+            {rxn1: (param_tuple1, param_tuple2, ...), rxn2: ...}
+        :param spc_dct: info on species
+        :type spc_dct: dct {spc1: info_dct1, spc2: ...}
+        :return missing_from_csv: list of species missing from the spc_csv
+        :rtype: list [spc1, spc2, ...]
+        :return missing_from_mech: list of species missing from the mechanism
+        :rtype: list [spc1, spc2, ...]
+    """
+
+    def strip_thrd_bod(thrd_bod, rxn):
+        """ Strip the third body notation from a species name
+        """
+
+        if thrd_bod in ('(+M)', '+M'):
+            stripped_thrd_bod = None
+        elif thrd_bod[0] == '(':
+            stripped_thrd_bod = thrd_bod[2:-1]
+        elif thrd_bod[0] == '+':
+            stripped_thrd_bod = thrd_bod[1:]
+        else:
+            stripped_thrd_bod = None
+            print(f'The third body could not be read for the reaction {rxn}')
+
+        return stripped_thrd_bod
+
+    # Get the mechanism species
+    mech_spcs = []
+    for rxn in rxn_param_dct.keys():
+        rcts, prds, thrd_bods = rxn
+        for spc in rcts:
+            mech_spcs.append(spc)
+        for spc in prds:
+            mech_spcs.append(spc)
+        for thrd_bod in thrd_bods:
+            if thrd_bod:  # if it's not None, try to read it
+                stripped_thrd_bod = strip_thrd_bod(thrd_bod, rxn)
+                if stripped_thrd_bod:  # will be None for '+M' or '(+M)'
+                    mech_spcs.append(stripped_thrd_bod)
+
+    mech_spcs = set(mech_spcs)
+
+    # Get the spc_dct spcs
+    csv_spcs = set(spc_dct.keys())
+
+    # Get the differences between the two sets
+    missing_from_csv = list(mech_spcs - csv_spcs)
+    missing_from_mech = list(csv_spcs - mech_spcs)
+
+    return missing_from_csv, missing_from_mech
 
 
 def write_sources_and_sinks(source_spcs, sink_spcs):
@@ -503,6 +557,23 @@ def write_mismatches(mismatched_rxns):
     return mismatch_str
 
 
+def write_missing_spcs(missing_from_csv, missing_from_mech):
+    """ Write a string saying what species are missing from the
+        species.csv or mechanism.dat file.
+    """
+
+    missing_spc_str = '\nSPECIES MISSING FROM CSV OR MECHANISM\n\n'
+    missing_spc_str += 'These species are missing from the spc.csv file:\n'
+    for spc in missing_from_csv:
+        missing_spc_str += spc + '\n'
+    missing_spc_str += '\nThese species are missing from the mechanism file:\n'
+    for spc in missing_from_mech:
+        missing_spc_str += spc + '\n'
+    missing_spc_str += '\n\n'
+
+    return missing_spc_str
+
+
 def _write_rxn_ktp_dct(rxn_ktp_dct):
     """ Write a rxn_ktp_dct in an easily readable string
 
@@ -511,6 +582,7 @@ def _write_rxn_ktp_dct(rxn_ktp_dct):
     :return output_str: string describing the rxn_ktp_dct
     :rtype: str
     """
+
     output_str = ''
     for rxn, ktp_dct in rxn_ktp_dct.items():
         output_str += format_rxn_name(rxn)
@@ -518,10 +590,10 @@ def _write_rxn_ktp_dct(rxn_ktp_dct):
             output_str += f'\nPressure: {pressure} atm\n'
             output_str += '    Temperature (K)\n    '
             for temp in temps:
-                output_str += ('{0:<12.1f}'.format(temp))
+                output_str += (f'{temp:<12.1f}')
             output_str += '\n    Rate constant\n    '
             for rate in kts:
-                output_str += ('{0:<12.3E}'.format(rate))
+                output_str += (f'{rate:<12.3E}')
         output_str += '\n\n\n'
 
     return output_str
@@ -537,6 +609,7 @@ def _get_rcts_prds(rxn_param_dct):
     :return all_prds: all products in the mechanism
     :rtype: list [prd1, prd2, ...]
     """
+
     all_rcts = []
     all_prds = []
     for rxn in rxn_param_dct.keys():
@@ -552,10 +625,10 @@ def _get_rcts_prds(rxn_param_dct):
 def get_molecularity(rxn):
     """ Get the molecularity of a reaction
 
-    :param rxn:
-    :type rxn:
-    :return molecularity: molecularity of reaction; 1=unimol, 2=bimol, etc.
-    :rtype: int
+        :param rxn: tuple describing reactants, products, and third body
+        :type rxn: tuple ((rct1, rct2, ...), (prd1, prd2, ...), (thirdbod,))
+        :return molecularity: molecularity of reaction; 1=unimol, 2=bimol, etc.
+        :rtype: int
     """
 
     rcts, _, third_bods = rxn

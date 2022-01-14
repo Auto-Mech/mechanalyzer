@@ -8,6 +8,7 @@ import argparse
 from ioformat import pathtools
 import chemkin_io.writer
 from mechanalyzer.builder import sorter
+from mechanalyzer.parser import spc as sparser
 from mechanalyzer.parser import mech as mparser
 
 
@@ -22,10 +23,10 @@ PAR.add_argument('-s', '--spc', default='species.csv',
                  help='species file name (species.csv)')
 PAR.add_argument('-i', '--sort', default='sort.dat',
                  help='input file name (sort.dat)')
-PAR.add_argument('-o', '--out', default='outmech.dat',
+PAR.add_argument('-o', '--outmech', default='outmech.dat',
                  help='output file name (outmech.dat)')
-# PAR.add_argument('-o2', '--out2', default='outmech2.dat',
-#                  help='output file name (outmech2.dat)')
+PAR.add_argument('-c', '--outspc', default='outspc.csv',
+                 help='output file name (outspc.csv)')
 OPTS = vars(PAR.parse_args())
 
 # Read the input files
@@ -35,21 +36,24 @@ sort_str = pathtools.read_file(CWD, OPTS['sort'], remove_comments='#')
 
 # Check if the input strings exist
 if any(string is None for string in (spc_str, mech_str, sort_str)):
-    print('ERROR: Input file missing')
+    print('ERROR: Input file(s) species.csv, mechanism.dat, sort.dat missing')
     sys.exit()
 
 # Build sorted mechanism files
-isolate_spc, sort_list = mparser.parse_sort(sort_str)
-param_dct_sort, _, spc_dct, cmts_dct, elems = sorter.sorted_mech(
-    spc_str, mech_str, isolate_spc, sort_str)
+isolate_spc, sort_lst = mparser.parse_sort(sort_str)
+param_dct_sort, _, mech_spc_dct, cmts_dct, elems = sorter.sorted_mech(
+    spc_str, mech_str, isolate_spc, sort_lst)
+rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(
+    rxn_sort_dct=cmts_dct)
 
 # Write the output files (need to make general at some point)
+headers = sparser.csv_headers(mech_spc_dct)
+sortd_csv_str = sparser.csv_string(mech_spc_dct, headers)
 sortd_mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
-    elem_tuple=elems, spc_dct=spc_dct,
+    elem_tuple=elems,
+    mech_spc_dct=mech_spc_dct,
     rxn_param_dct=param_dct_sort,
-    comments=cmts_dct)
+    rxn_cmts_dct=rxn_cmts_dct)
 
-sortmech_out_path = os.path.join(CWD, OPTS['out'])
-# restmech_out_path = os.path.join(CWD, OPTS['out2'])
-with open(sortmech_out_path, 'w') as mech_obj:
-    mech_obj.write(sortd_mech_str)
+pathtools.write_file(sortd_csv_str, CWD, OPTS['outspc'])
+pathtools.write_file(sortd_mech_str, CWD, OPTS['outmech'])

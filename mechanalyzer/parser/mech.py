@@ -2,10 +2,12 @@
 Functions for mechanism reading and sorting
 """
 
+import sys
 import autoparse.pattern as app
 import ioformat.ptt
 from mechanalyzer.parser import ckin_ as ckin
-from mechanalyzer.parser._util import get_ich_dct, get_fml
+from mechanalyzer.parser.spc import name_inchi_dct
+from mechanalyzer.parser._util import get_fml
 
 
 # Parse mechanism files
@@ -15,12 +17,16 @@ def parse_mechanism(mech_str, mech_type, spc_dct):
 
     # Parse the info from the chemkin file
     if mech_type == 'chemkin':
-        rxn_param_dct, elem_tuple = ckin.parse(mech_str)
+        rxn_param_dct = ckin.parse_rxn_param_dct(mech_str)
+        elem_tuple = ckin.parse_elem_tuple(mech_str)
     else:
         raise NotImplementedError
 
     # Build mech_info object to pass along to various functions
-    _mech_info = mech_info(rxn_param_dct, spc_dct)
+    if rxn_param_dct is not None:
+        _mech_info = mech_info(rxn_param_dct, spc_dct)
+    else:
+        _mech_info = None
 
     return rxn_param_dct, _mech_info, elem_tuple
 
@@ -35,6 +41,25 @@ def mech_info(rxn_param_dct, spc_dct):
         :return mech_info: objects with mech info
         :rtype: list
     """
+
+    def _check_names(rct_names, prd_names, all_spc_names):
+        """ Assess if the reactant and product names provided in the
+            rxn_param_dct exist in the spc_dct
+        """
+        all_mech_names = ()
+        for _rct_names, _prd_names in zip(rct_names, prd_names):
+            all_mech_names += _rct_names
+            all_mech_names += _prd_names
+        all_mech_names = set(all_mech_names)
+
+        missing_names = all_mech_names - all_spc_names
+        if missing_names:
+            print('Names in provided in mechanism, '
+                  'but not provided in species list (likely from .csv file):')
+            for name in missing_names:
+                print('  ', name)
+            print('Unable to finish parsing mechanism. Exiting...')
+            sys.exit()
 
     def _inf(rct_names, prd_names, ich_dct):
         """ Sort reactant and product name lists by formula to facilitate
@@ -55,8 +80,11 @@ def mech_info(rxn_param_dct, spc_dct):
     rcts, prds, thrdbdy = zip(*rxn_param_dct.keys())
     rct_names, prd_names, thrdbdy_lst = list(rcts), list(prds), list(thrdbdy)
 
+    # Check if the rxn_param dct may be fully parsed
+    _check_names(rct_names, prd_names, set(spc_dct.keys()))
+
     # formulas and reaction names (repplace with the mech info from ckin
-    ich_dct = get_ich_dct(spc_dct)
+    ich_dct = name_inchi_dct(spc_dct)
     formula_dct, formula_str, rxn_name = _inf(rct_names, prd_names, ich_dct)
 
     return [formula_dct, formula_str,

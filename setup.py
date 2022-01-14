@@ -6,7 +6,7 @@ from distutils.core import setup
 
 setup(
     name="mechanalyzer",
-    version="0.2.2",
+    version="0.6.0",
     packages=[
         'mechanalyzer',
         'mechanalyzer.builder',
@@ -17,8 +17,6 @@ setup(
         'ratefit',
         'ratefit.calc',
         'ratefit.fit',
-        'ratefit.fit.arrhenius',
-        'ratefit.fit.chebyshev',
         'ratefit.fit.troe',
         'thermfit',
         'thermfit.cbh'

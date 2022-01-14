@@ -1,14 +1,8 @@
 """ test mechanalyzer.builder.checker
 """
 
-import os
-import tempfile
 import numpy as np
 from mechanalyzer.builder import checker
-
-TMP_DIR = tempfile.mkdtemp()
-CHECK_OUTFILE = os.path.join(TMP_DIR, 'mech_check.txt')
-print('Temp Run Dir:', TMP_DIR)
 
 
 TEMPS = np.array([500, 1000, 1500])
@@ -71,6 +65,21 @@ RXN_KTP_DCT3 = {
         1: (TEMPS, GOOD_KTS), 10: (TEMPS, LARGE_UNIMOLEC_KTS)},
     (('HO2',), ('HO', 'O'), (None,)): {
         1: (TEMPS, GOOD_KTS), 10: (TEMPS, GOOD_KTS)},
+}
+
+SPC_IDENT_DCT1 = {
+    'H': {'smiles': '', 'inchi': 'InChI=1S/H', 'inchikey': '', 'mult': 2, 'charge': 0, 'sens': 0,
+          'fml': {'H': 1}},
+    'OH': {'smiles': '', 'inchi': 'InChI=1S/HO/h1H', 'inchikey': '', 'mult': 2, 'charge': 0,
+           'sens': 0, 'fml': {'H': 1, 'O': 1}},
+    'O': {'smiles': '', 'inchi': 'InChI=1S/O', 'inchikey': '', 'mult': 3, 'charge': 0, 'sens': 0,
+          'fml': {'O': 1}},
+    'H2': {'smiles': '', 'inchi': 'InChI=1S/H2/h1H', 'inchikey': '', 'mult': 1, 'charge': 0,
+           'sens': 0, 'fml': {'H': 2}},
+    'O2': {'smiles': '', 'inchi': 'InChI=1S/O2/c1-2', 'inchikey': '', 'mult': 1, 'charge': 0,
+           'sens': 0, 'fml': {'O': 2}},
+    'OHV': {'smiles': '', 'inchi': 'InChI=1S/O', 'inchikey': '', 'mult': 1, 'charge': 0,
+            'sens': 0, 'fml': {'O': 1}},
 }
 
 CORRECT_NEGATIVE_KTS_STR = (
@@ -137,6 +146,11 @@ CORRECT_MISMATCHES_STR2 = (
     'rate expressions found\n\n\n'
 )
 
+CORRECT_MISSING_SPC_STR = '\nSPECIES MISSING FROM CSV OR MECHANISM\n\n' \
+    'These species are missing from the spc.csv file:\n' \
+    'HO2\nO(S)\n\n' \
+    'These species are missing from the mechanism file:\nOHV\n\n\n'
+
 
 def test__all_checks():
     """ Test the run_all_checks function
@@ -144,8 +158,7 @@ def test__all_checks():
     k_thresholds = [1e11, 1e15, 1e22]
     rxn_num_threshold = 2
     _ = checker.run_all_checks(RXN_PARAM_DCT1, RXN_KTP_DCT1, k_thresholds,
-                               rxn_num_threshold,
-                               filename=CHECK_OUTFILE)
+                               rxn_num_threshold)
 
 
 def test__sources_and_sinks():
@@ -249,6 +262,22 @@ def test__mismatches():
     assert mismatch_str2 == CORRECT_MISMATCHES_STR2
 
 
+def test__missing_spcs():
+    """ Test the get_mismatches and write_mismatches functions
+    """
+
+    missing_from_csv, missing_from_mech = checker.get_missing_spcs(
+        RXN_PARAM_DCT1, SPC_IDENT_DCT1)
+    # Sort so the test always passes
+    missing_from_csv = sorted(missing_from_csv)
+    assert set(missing_from_csv) == set(['HO2', 'O(S)'])
+    assert set(missing_from_mech) == set(['OHV'])
+
+    missing_spcs_str = checker.write_missing_spcs(missing_from_csv,
+                                                  missing_from_mech)
+    assert missing_spcs_str == CORRECT_MISSING_SPC_STR
+
+
 if __name__ == '__main__':
     test__all_checks()
     test__sources_and_sinks()
@@ -257,3 +286,4 @@ if __name__ == '__main__':
     test__lone_species()
     test__duplicates()
     test__mismatches()
+    test__missing_spcs()

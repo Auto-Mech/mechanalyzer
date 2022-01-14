@@ -3,7 +3,6 @@ jobs:
     test-mechanalyzer:
         docker:
             - image: continuumio/miniconda3
-        working_directory: ~/ratefit
         steps:
             - checkout  # checkout the code
             - run:
@@ -34,44 +33,50 @@ jobs:
                 command: |
                     source activate mechanalyzer-env
                     cd ratefit
-                    pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs ratefit
+                    pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs ratefit --cov-report=html
+                    coverage report
             - run:
                 name: Test thermfit
                 command: |
                     source activate mechanalyzer-env
                     cd thermfit
-                    pytest . -v --disable-pytest-warnings --cov=ratefit --pyargs thermfit
+                    pytest . -v --disable-pytest-warnings --cov=thermfit --pyargs thermfit --cov-report=html
+                    coverage report
             - run:
                 name: Test mechanalyzer
                 no_output_timeout: 60m
                 command: |
                     source activate mechanalyzer-env
                     cd mechanalyzer
-                    pytest . -v --disable-pytest-warnings --cov=mechanalyzer --pyargs mechanalyzer
+                    pytest . -v --disable-pytest-warnings --cov=mechanalyzer --pyargs mechanalyzer --cov-report=html
+                    coverage report
             - run:
                 name: Assess ratefit PEP8
                 no_output_timeout: 60m
                 command: |
                     source activate mechanalyzer-env
-                    cd ratefit
-                    flake8 --exit-zero ratefit
-                    pylint --rcfile=../.pylintrc ratefit
+                    flake8 --max-line-length=100 --exit-zero ratefit
+                    pylint --rcfile=.pylintrc ratefit
             - run:
                 name: Assess thermfit PEP8
                 no_output_timeout: 60m
                 command: |
                     source activate mechanalyzer-env
-                    cd thermfit
-                    flake8 --exit-zero ratefit
-                    pylint --rcfile=../.pylintrc thermfit
+                    flake8 --max-line-length=100 --exit-zero thermfit
+                    pylint --rcfile=.pylintrc thermfit
             - run:
                 name: Assess mechanalyzer PEP8
                 no_output_timeout: 60m
                 command: |
                     source activate mechanalyzer-env
-                    cd mechanalyzer
-                    flake8 --exit-zero mechanalyzer
-                    pylint --rcfile=../.pylintrc mechanalyzer
+                    flake8 --max-line-length=100 --exit-zero mechanalyzer
+                    pylint --rcfile=.pylintrc mechanalyzer
+            - store_artifacts:
+                    path: ratefit/htmlcov
+            - store_artifacts:
+                    path: thermfit/htmlcov
+            - store_artifacts:
+                    path: mechanalyzer/htmlcov
 workflows:
     version: 2
     build-all:

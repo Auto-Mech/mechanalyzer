@@ -3,7 +3,6 @@
 
 import os
 import csv
-import automol
 from phydat import phycon
 
 
@@ -35,18 +34,19 @@ def calc_hform_0k(spc_h0, basis_h0,
     for i, ich in enumerate(basis_ichs):
 
         # Read reference enthalpies for basis molecule
-        ref_h0 = reference_enthalpy(ich, ref_set, 0, rxn=rxn)
+        ref_h0 = reference_enthalpy(ich, ref_set, 0)
         ref_h0 = ref_h0 if ref_h0 is not None else 0.0  # break loop?
 
         # Add basis and reference energies to overall va
         dhzero += basis_coeffs[i] * (ref_h0 - basis_h0[i])
 
-        print('Contribution from:', automol.inchi.smiles(ich))
-        print(
-            'HF0K in kcal: {:g} * {:.5f}'.format(basis_coeffs[i], ref_h0 *phycon.EH2KCAL))
-        print(
-            'ABS in hartree: {:g} * {:.5f}'.format(
-                basis_coeffs[i], basis_h0[i] * phycon.EH2KCAL))
+        # print('Contribution from:', automol.inchi.smiles(ich))
+        # print(
+        #     'HF0K in kcal: {:g} * {:.5f}'.format(
+        #     basis_coeffs[i], ref_h0 *phycon.EH2KCAL))
+        # print(
+        #     'ABS in hartree: {:g} * {:.5f}'.format(
+        #         basis_coeffs[i], basis_h0[i] * phycon.EH2KCAL))
 
     return dhzero
 
@@ -68,21 +68,24 @@ def reference_enthalpy(ich_lookup, ref_set, temp, rxn=False):
     """
 
     # Set path and name to thermo database file
+    rxn = True
+    if isinstance(ich_lookup, str):
+        rxn = False
     thermodb_file = _thermo_database(temp, rxn=rxn)
-
+    if rxn:
+        ich_lookup = '+'.join(ich_lookup[0]) + '=' + '+'.join(ich_lookup[1])
+        ref_set = 'ANL0'
+    print('its looking for ', ich_lookup, rxn)
     # Find the energy value for the given species and enery type
-    print('ich lookup', ich_lookup)
-    print('thermfile', thermodb_file)
     hf_val = None
-    with open(thermodb_file, 'r') as db_file:
+    with open(thermodb_file, mode='r', encoding='utf-8') as db_file:
         reader = csv.DictReader(db_file)
         for row in reader:
             if row['inchi'] == ich_lookup:
                 val = row[ref_set]
-                if val == '':
-                    val = None
-                hf_val = float(val)
-    print('hf_val', hf_val)
+                hf_val = float(val) if val != '' else None
+                break
+
     # Convert units if val found, else print error message
     if hf_val is not None:
         if not rxn:
@@ -91,7 +94,7 @@ def reference_enthalpy(ich_lookup, ref_set, temp, rxn=False):
             hf_val *= phycon.KJ2EH
     else:
         print('No Heat for Formation exists:')
-        print('SPC:{} Set:{} Temp:{}K'.format(ich_lookup, ref_set, temp))
+        print(f'SPC:{ich_lookup} Set:{ref_set} Temp:{temp}K')
 
     return hf_val
 
@@ -125,8 +128,8 @@ def _thermo_database(temp, rxn=False):
     """
 
     if rxn:
-        thermodb_name = 'tsthermodb_{}K.csv'.format(str(int(temp)))
+        thermodb_name = f'tsthermodb_{str(int(temp))}K.csv'
     else:
-        thermodb_name = 'Hfdb_{}K.csv'.format(str(int(temp)))
+        thermodb_name = f'Hfdb_{str(int(temp))}K.csv'
 
     return os.path.join(SRC_PATH, 'thermdb', thermodb_name)
