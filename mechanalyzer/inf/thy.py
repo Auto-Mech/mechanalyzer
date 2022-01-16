@@ -88,3 +88,18 @@ def combine(mod_inf_obj1, mod_inf_obj2):
         comb_orb_lbl = 'U'
 
     return (prog1, method1, basis1, comb_orb_lbl)
+
+
+# I/O
+def string(geo_obj, sp_obj=None):
+    """ Convert objects to a string representative common thy representation
+        in literature:
+
+        sp_method/sp_basis//geo_method/geo_basis
+    """
+    
+    thy_str = f'{geo_obj[3]}{geo_obj[1]}/{geo_obj[2]}'
+    if sp_obj is not None:
+        thy_str = f'{sp_obj[3]}{sp_obj[1]}/{sp_obj[2]}//' + thy_str
+
+    return thy_str
