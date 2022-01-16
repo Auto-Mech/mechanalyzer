@@ -91,52 +91,23 @@ def remove_stereochemistry(inp_mech_rxn_dct, inp_mech_spc_dct):
 
     print('Removing stereochemistry from the species and reactions')
 
-    # Generate a spc_dct with no stereochemical labels
-    noste_spc_dct = {}
-    noste_ichs = ()
-    removed_spcs = ()
-    for name, dct in inp_mech_spc_dct.items():
-        noste_ich = automol.inchi.standard_form(dct['inchi'], stereo=False)
-        if noste_ich not in noste_ichs:
-            _dct = copy.deepcopy(dct)
-            _dct['inchi'] = noste_ich
-            noste_spc_dct[name] = _dct
-            noste_ichs += (noste_ich,)
-        else:
-            removed_spcs += (name,)
+    # Loop over the reactions and generate the variants without stereo
+    name_ich_dct = mechanalyzer.parser.spc.name_inchi_dct(inp_mech_spc_dct)
 
-    name_ich_dct = mechanalyzer.parser.spc.name_inchi_dct(noste_spc_dct)
-
-    # Now put in the reactions
-    noste_rxn_dct = {}
     noste_rxns = ()
-    removed_rxns = ()
-    for rxn, params in inp_mech_rxn_dct.items():
+    for rxn in inp_mech_rxn_dct:
+
+        # Write rxn in terms of inchi, then remove the inchi strings
         rxn_ich = _rxn_name_to_ich(rxn, name_ich_dct)
-        if rxn_ich is not None:
-            if rxn_ich not in noste_rxns:
-                noste_rxn_dct[rxn] = params
-                noste_rxns += (rxn_ich,)
-            else:
-                removed_rxns += (rxn,)
-        else:
-            removed_rxns += (rxn,)
+        rxn_ich_noste = _remove_rxn_stereo(rxn_ich)
 
-    # Print the final
-    print('\nSpecies:')
-    for name in noste_spc_dct:
-        print(name)
+        if rxn_ich_noste not in noste_rxns:
+            noste_rxns += (rxn_ich_noste,)
 
-    print('\nReactions:')
-    for rxn in noste_rxn_dct:
-        print(rxn)
-
-    print('\nRemoved spc and reactions')
-    for name in removed_spcs:
-        print(name)
-    print()
-    for rxn in removed_rxns:
-        print(rxn)
+    # Update the mechanism objects with unique spc and rxns
+    noste_spc_dct, noste_rxn_dct = {}, {}
+    noste_spc_dct, _ = update_spc_dct_from_reactions(noste_rxns, noste_spc_dct)
+    noste_rxn_dct = update_rxn_dct(noste_rxns, noste_rxn_dct, noste_spc_dct)
 
     return noste_rxn_dct, noste_spc_dct
 
@@ -232,6 +203,17 @@ def _rxn_name_to_ich(rxn, ich_dct):
         _rxn = None
 
     return _rxn
+
+
+def _remove_rxn_stereo(rxn):
+    """ Generate rxn in inchi representation with no stereo
+    """
+
+    return (
+        tuple(automol.inchi.standard_form(ich, stereo=False) for ich in rxn[0]),
+        tuple(automol.inchi.standard_form(ich, stereo=False) for ich in rxn[1]),
+        rxn[2]
+    )
 
 
 def _rxn_smiles(rxn):
