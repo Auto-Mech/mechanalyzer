@@ -87,14 +87,14 @@ def reference_enthalpy(ich_lookup, ref_set, temp, rxn=False):
                 break
 
     # Convert units if val found, else print error message
-    if hf_val is not None:
-        if not rxn:
-            hf_val *= phycon.KCAL2EH
-        else:
-            hf_val *= phycon.KJ2EH
+    assert hf_val is not None,(
+        'No Heat of Formation exists:',
+        f'SPC:{ich_lookup} Set:{ref_set} Temp:{temp}K')
+
+    if not rxn:
+        hf_val *= phycon.KCAL2EH
     else:
-        print('No Heat for Formation exists:')
-        print(f'SPC:{ich_lookup} Set:{ref_set} Temp:{temp}K')
+        hf_val *= phycon.KJ2EH
 
     return hf_val
 

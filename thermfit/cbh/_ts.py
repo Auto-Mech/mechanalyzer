@@ -55,6 +55,7 @@ def basic_ts_basis(zrxn, spc_scheme):
     """
 
     # Just use reactants
+    # rxn_ichs = automol.reac.reaction_inchis(zrxn)
     rxn_ichs = automol.reac.reaction_inchis(zrxn, stereo=False)
     rct_ichs, _ = rxn_ichs
 
@@ -243,7 +244,6 @@ def cbh_basis(zrxn, scheme):
         else:
             final_fraglist.append(frag)
             final_clist.append(clist[idx])
-    print('frags from cbh', final_fraglist, final_clist)
     return final_fraglist, final_clist
 
 
@@ -337,7 +337,6 @@ def cbhone_radradabs(
                 grai = automol.graph.explicit(grai)
                 frags = _add_frag_to_frags(key, coeff, grai, frags)
     frags = tsutil.simplify_gra_frags(frags)
-    print('frags prebal', frags)
     if bal:
         balance_ = util.balance_ts(gra, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
@@ -350,7 +349,6 @@ def cbhone_radradabs(
                 zedfrags = cbhzed_radradabs(
                     gra, site1, site2, atms, bnd_ords,
                     atm_vals, adj_atms, bal=False)
-            print('cbhzed frags', zedfrags)
             newfrags = frags.copy()
             for zedfrags_dct in zedfrags.values():
                 newname = None

@@ -38,9 +38,7 @@ def branch_point2(nonhyd_adj_atms_dct, extended_site):
     """ Branch point?
     """
     branches = -1
-    print('branching checker')
     for atm in list(set(extended_site)):
-        print('atm in branch check', atm, nonhyd_adj_atms_dct[atm])
         branches += len(nonhyd_adj_atms_dct[atm])
     return max(1, branches)
 

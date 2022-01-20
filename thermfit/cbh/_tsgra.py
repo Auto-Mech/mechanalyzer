@@ -108,7 +108,6 @@ def ts_graph(gra, site1, site2=None):
             adj_atms[don_atm] = frozenset(
                 {*list(adj_atms[don_atm]), trans_atm})
     #    bnd_ords[brk_bnd] = frozenset({list(bnd_ords[frm_bnd])[0] - 0.1})
-    print('rad atms unsat atms', rad_atms, unsat_atms)
     return atms, bnds, atm_vals, adj_atms, unsat_atms
 
 
@@ -153,7 +152,6 @@ def remove_hyd_from_adj_atms2(atms, adj_atms_dct, extended_site):
                 new_adj_atms += (adj_atm,)
 
         new_adj_atms_dct[atm] = new_adj_atms
-    print('new ad atms', new_adj_atms_dct)
     return new_adj_atms_dct
 
 # GRAPH SPLITTING FUNCTIONS
