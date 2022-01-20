@@ -55,7 +55,7 @@ def basic_ts_basis(zrxn, spc_scheme):
     """
 
     # Just use reactants
-    rxn_ichs = automol.reac.reaction_inchis(zrxn)
+    rxn_ichs = automol.reac.reaction_inchis(zrxn, stereo=False)
     rct_ichs, _ = rxn_ichs
 
     basis, coeff_lst = [], []
@@ -190,7 +190,6 @@ def cbh_basis(zrxn, scheme):
                     if atmb in unsat_atms and atmb != atmd:
                         brk_key2 = frozenset({atmc, atmb})
                         site2 = [atmd, atmc, atmb]
-                        print('sites', site, site2)
                         atms, bnd_ords, atm_vals, adj_atms, unsat_atms = tsutil.ts_graph(gra, site, site2)
 
     # if rxnclass == ReactionClass.Typ.HYDROGEN_ABSTRACTION and radrad:
@@ -211,10 +210,10 @@ def cbh_basis(zrxn, scheme):
     elif rxnclass == ReactionClass.Typ.ELIMINATION:
         if scheme == 'cbh0':
             frags = cbhzed_elim(
-                gra, site, atms, bnd_ords, atm_vals, adj_atms)
+                gra, site, site2, atms, bnd_ords, atm_vals, adj_atms)
         elif scheme == 'cbh1':
             frags = cbhone_elim(
-                gra, site, atms, bnd_ords, atm_vals, adj_atms)
+                gra, site, site2, atms, bnd_ords, atm_vals, adj_atms)
     else:
         raise NotImplementedError
     # Split the transformed graphs into a list of inchis
@@ -496,7 +495,6 @@ def cbhone_elim(
     """
 
     # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, adj_atms = tsutil.ts_graph(gra, site1, site2)
     if not site1[0] == site2[2]:
         site2, site1 = site1, site2
     # Determine CBHone fragments
