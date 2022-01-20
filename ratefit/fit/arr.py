@@ -35,23 +35,29 @@ def get_params(ktp_dct, dbltol=15, dbl_iter=1, tref=1.0):
     pressure = list(ktp_dct.keys())[0]  # get first (and only) pressure
 
     # Perform single fit and assess its errors
-    #
     (temps, kts) = ktp_dct[pressure]  # read data
     sing_params = single_arr(temps, kts)
     sing_err_dct = err.get_err_dct(ktp_dct, sing_params)
     sing_max_err = err.get_max_err(sing_err_dct)
 
-    # If single fit has acceptable errors, use the single fit
-    if sing_max_err < dbltol:
-        print(f'Single fit error is {sing_max_err:.1f}%, which is less than'
-              f' the input limit of {dbltol}%. Using single fit.')
+    # Put in checks to see if a single fit should be used
+    # Sees if enough rate constants to do double fit, and error necessitates it
+    use_single_fit = False
+    if len(kts) < 6:
+        print('There are less than six rate constants to fit. Using single fit.')
+        use_single_fit = True
+    else:
+        if sing_max_err < dbltol:
+            print(f'Single fit error is {sing_max_err:.1f}%, which is less than'
+                  f' the input limit of {dbltol}%. Using single fit.')
+            use_single_fit = True
+            
+    # Perform double fit if needed or just take single fit params
+    if use_single_fit:
         params = sing_params
         err_dct = sing_err_dct
-
-    # Otherwise, perform a double fit
     else:
-        print(f'Single fit error is {sing_max_err:.1f}%, which is more than'
-              f' the input limit of {dbltol}%. Attempting double fit...')
+        print('Attempting double fit...')
 
         # Perfom a double fit
         doub_params, guess_idx = double_arr(temps, kts, sing_params, tref=tref,
