@@ -219,8 +219,7 @@ def rename_dcts(target_dcts, spc_dcts, target_type):
     renamed_spc_dcts = copy.deepcopy(spc_dcts)
     num_mechs = len(target_dcts)
     assert num_mechs == len(spc_dcts), (
-        f'Length of dct_list is {num_mechs} while length of spc_dct_lst is {len(spc_dcts)}.'
-        )
+        f'Length of dct_list is {num_mechs} while length of spc_dct_lst is {len(spc_dcts)}.')
 
     # Loop through each item in the list of dictionaries
     rename_instr_lst = []
@@ -558,6 +557,23 @@ def assess_rxn_match(rxn1, rxn_ktp_dct2):
         :return rev_rate: whether or not the rate should be reversed
         :rtype: Bool
     """
+
+    def check_third_bod(third_bod1, third_bod2):
+        """ Checks if two third bodies are the same. Accounts for the case 
+            where one is None and the other is '(+M)'
+        """
+        
+        if third_bod1 == third_bod2:
+            are_same = True
+        elif third_bod1 is None and third_bod2 == '(+M)':
+            are_same = True
+        elif third_bod1 == '(+M)' and third_bod2 is None:
+            are_same = True
+        else:
+            are_same = False
+    
+        return are_same
+
     # Get all possible orderings of the reactants and products for mech1
     [rcts1, prds1, third_bods1] = rxn1
     third_bod1 = third_bods1[0]
@@ -570,7 +586,8 @@ def assess_rxn_match(rxn1, rxn_ktp_dct2):
     for rxn2 in rxn_ktp_dct2.keys():
         [rcts2, prds2, third_bods2] = rxn2
         third_bod2 = third_bods2[0]
-        if rcts2 in rcts1_perm and prds2 in prds1_perm and third_bod1 == third_bod2:
+        same_third_bod = check_third_bod(third_bod1, third_bod2)
+        if rcts2 in rcts1_perm and prds2 in prds1_perm and same_third_bod:
             matching_rxn_name = rxn2
             rev_rate = False
             if already_found:
@@ -581,7 +598,7 @@ def assess_rxn_match(rxn1, rxn_ktp_dct2):
             else:
                 already_found = True
 
-        if rcts2 in prds1_perm and prds2 in rcts1_perm and third_bod1 == third_bod2:
+        if rcts2 in prds1_perm and prds2 in rcts1_perm and same_third_bod:
             matching_rxn_name = rxn2
             rev_rate = True
             if already_found:
