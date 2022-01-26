@@ -10,7 +10,6 @@ from mechanalyzer.parser.spc import name_inchi_dct
 from mechanalyzer.parser._util import get_fml
 
 
-# Parse mechanism files
 def parse_mechanism(mech_str, mech_type, spc_dct):
     """ Get the reactions and species from the mechanism input
     """

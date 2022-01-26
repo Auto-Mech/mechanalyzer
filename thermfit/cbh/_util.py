@@ -34,6 +34,25 @@ def branch_point(adj_atms_i, adj_atms_j=(), adj_atms_k=()):
     return max(1, len(adj_atms_i) + len(adj_atms_j) + len(adj_atms_k) - 1)
 
 
+def branch_point2(nonhyd_adj_atms_dct, extended_site):
+    """ Branch point?
+    """
+    branches = -1
+    for atm in list(set(extended_site)):
+        branches += len(nonhyd_adj_atms_dct[atm])
+    return max(1, branches)
+
+
+def terminal_moiety2(nonhyd_adj_atms_dct, extended_site):
+    branches = 0
+    terminal = 1
+    for atm in list(set(extended_site)):
+        branches += len(nonhyd_adj_atms_dct[atm])
+    if branches < 2:
+        terminal = 0
+    return terminal
+
+
 def terminal_moiety(adj_atms_i, adj_atms_j=(), adj_atms_k=(), endisterm=True):
     """ Get moiety of termial groups?
     """

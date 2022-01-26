@@ -136,16 +136,20 @@ def unique_basis_species(basis_dct, spc_dct):
     unique_refs_dct = {}
     cnt = 1
     for name, (basis, _) in basis_dct.items():
+        current_uni_ichs = tuple(
+            unique_refs_dct[spc]['inchi'] for spc in unique_refs_dct.keys()
+            if 'ts' not in spc)
+        all_ichs = current_uni_ichs + mech_ichs
         for bas in basis:
             # bas spc is (1) string = species, (2) ((str,), (str,))
             if isinstance(bas, str):
-                if _spc_ref_unique(bas, mech_ichs):
+                if _spc_ref_unique(bas, all_ichs):
                     ref_name = f'REF_{cnt}'
                     unique_refs_dct[ref_name] = create_spec(bas)
                     mech_ichs += (bas,)
                     cnt += 1
             else:
-                if _ts_ref_unique(bas, mech_ichs):
+                if _ts_ref_unique(bas, all_ichs):
                     ref_name = f'TS_REF_{cnt}_0'
                     unique_refs_dct[ref_name] = create_ts_spc(
                         bas, spc_dct, spc_dct[name]['mult'])

@@ -95,8 +95,10 @@ rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(
 # WRITE OUTPUT AND EXIT
 
 # Write the dictionaries to ordered strings
+header_lst = list(FILE_DCT['headers'])
+header_lst.remove('name')  # remove redundant 'name' entry
 csv_str = mechanalyzer.parser.spc.csv_string(
-    ste_mech_spc_dct_sort, FILE_DCT['headers'])
+    ste_mech_spc_dct_sort, header_lst)
 mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
     elem_tuple=elems,
     mech_spc_dct=ste_mech_spc_dct_sort,

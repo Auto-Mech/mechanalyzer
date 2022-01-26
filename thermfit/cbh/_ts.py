@@ -55,7 +55,8 @@ def basic_ts_basis(zrxn, spc_scheme):
     """
 
     # Just use reactants
-    rxn_ichs = automol.reac.reaction_inchis(zrxn)
+    # rxn_ichs = automol.reac.reaction_inchis(zrxn)
+    rxn_ichs = automol.reac.reaction_inchis(zrxn, stereo=False)
     rct_ichs, _ = rxn_ichs
 
     basis, coeff_lst = [], []
@@ -173,9 +174,27 @@ def cbh_basis(zrxn, scheme):
     )
     
     # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, adj_atms = tsutil.ts_graph(gra, site, site2)
+    atms, bnd_ords, atm_vals, adj_atms, unsat_atms = tsutil.ts_graph(gra, site, site2)
 
-    if rxnclass == ReactionClass.Typ.HYDROGEN_ABSTRACTION and radrad:
+    # consider all reactions on the triplet surface as radrad
+    if not radrad:
+        rcts_gra = automol.reac.reactants_graph(zrxn)
+        for rgra in automol.graph.connected_components(rcts_gra):
+            if automol.graph.inchi(rgra) == 'InChI=1S/O2/c1-2':
+                radrad = True
+                # rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
+                adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
+                atmc, atmd = frm_key1
+                if atmc not in unsat_atms:
+                    atmd, atmc = atmc, atmd
+                for atmb in adj_atms[atmc]:
+                    if atmb in unsat_atms and atmb != atmd:
+                        brk_key2 = frozenset({atmc, atmb})
+                        site2 = [atmd, atmc, atmb]
+                        atms, bnd_ords, atm_vals, adj_atms, unsat_atms = tsutil.ts_graph(gra, site, site2)
+
+    # if rxnclass == ReactionClass.Typ.HYDROGEN_ABSTRACTION and radrad:
+    if radrad:
         if scheme == 'cbh0':
             frags = cbhzed_radradabs(
                 gra, site, site2, atms, bnd_ords, atm_vals, adj_atms)
@@ -249,23 +268,9 @@ def cbhzed_radradabs(
             coeff = 1.0
             if not bal:
                 if atm in site1 + site2:
-                    nonhyd_adj_atms1 = tsutil.remove_hyd_from_adj_atms(
-                        atms, adj_atms[site1[0]], site2,
-                        other_adj=adj_atms[site2[0]])
-                    nonhyd_adj_atms2 = tsutil.remove_hyd_from_adj_atms(
-                        atms, adj_atms[site2[0]], site1,
-                        other_adj=adj_atms[site1[0]])
-                    nonhyd_adj_atms1 = tuple(adj for adj in nonhyd_adj_atms1
-                                             if adj not in site1)
-                    nonhyd_adj_atms2 = tuple(adj for adj in nonhyd_adj_atms2
-                                             if adj not in site2)
-                    coeff = (
-                        util.branch_point(
-                            nonhyd_adj_atms1, nonhyd_adj_atms2) *
-                        util.terminal_moiety(
-                            nonhyd_adj_atms1, nonhyd_adj_atms2,
-                            endisterm=False)
-                    )
+                    coeff = _coeff_for_extended_site(
+                        atms, adj_atms, site1 + site2)
+
                 else:
                     nonhyd_adj_atms = tsutil.remove_hyd_from_adj_atms(
                         atms, adj_atms[atm])
@@ -488,7 +493,6 @@ def cbhone_elim(
     """
 
     # Graphical info about molecule
-    _, atms, bnd_ords, atm_vals, adj_atms = tsutil.ts_graph(gra, site1, site2)
     if not site1[0] == site2[2]:
         site2, site1 = site1, site2
     # Determine CBHone fragments
@@ -755,4 +759,35 @@ def _coeff_for_ts_sites(atm, atms, adj_atms, site):
             util.branch_point(nonhyd_adj_atms) *
             util.terminal_moiety(nonhyd_adj_atms)
         )
+    return coeff
+
+
+def _coeff_for_rad_rad(atms, adj_atms, site1, site2):
+    nonhyd_adj_atms1 = tsutil.remove_hyd_from_adj_atms(
+        atms, adj_atms[site1[0]], site2,
+        other_adj=adj_atms[site2[0]])
+    nonhyd_adj_atms2 = tsutil.remove_hyd_from_adj_atms(
+        atms, adj_atms[site2[0]], site1,
+        other_adj=adj_atms[site1[0]])
+    nonhyd_adj_atms1 = tuple(adj for adj in nonhyd_adj_atms1
+                             if adj not in site1)
+    nonhyd_adj_atms2 = tuple(adj for adj in nonhyd_adj_atms2
+                             if adj not in site2)
+    coeff = (
+        util.branch_point(
+            nonhyd_adj_atms1, nonhyd_adj_atms2) *
+        util.terminal_moiety(
+            nonhyd_adj_atms1, nonhyd_adj_atms2)
+    )
+    return coeff
+
+
+def _coeff_for_extended_site(atms, adj_atms_dct, extended_site):
+    nonhyd_adj_atms_dct = tsutil.remove_hyd_from_adj_atms2(
+        atms, adj_atms_dct, extended_site)
+    branch_coeff = util.branch_point2(
+            nonhyd_adj_atms_dct, extended_site)
+    terminal_coeff = util.terminal_moiety2(
+            nonhyd_adj_atms_dct, extended_site)
+    coeff = branch_coeff * terminal_coeff
     return coeff

@@ -106,7 +106,7 @@ def fit_ktp_dct(ktp_dct, fit_method, pdep_dct=None, arrfit_dct=None,
     arrfit_dct = arrfit_dct or DEFAULT_ARR
     chebfit_dct = chebfit_dct or DEFAULT_CHEB
     troefit_dct = troefit_dct or DEFAULT_TROE
-
+            
     # If rates exist, fit them to desired functional form
     params, err_dct = None, None
     if ktp_dct:
