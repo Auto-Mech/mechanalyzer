@@ -441,12 +441,12 @@ def test__beta_scission():
 
     ref_cbh0 = (
         ['InChI=1S/CH4/h1H4',
-         (('InChI=1S/C2H5O/c1-2-3/h3H,1-2H2',),
+         (['InChI=1S/C2H5O/c1-2-3/h3H,1-2H2'],
           ('InChI=1S/C2H4/c1-2/h1-2H2', 'InChI=1S/HO/h1H')),
          'InChI=1S/H2/h1H'], [2.0, 1.0, -2.0])
     ref_cbh1 = (
         ['InChI=1S/C2H6/c1-2/h1-2H3',
-         (('InChI=1S/C3H7O/c1-2-3-4/h2,4H,3H2,1H3',),
+         (['InChI=1S/C3H7O/c1-2-3-4/h2,4H,3H2,1H3'],
           ('InChI=1S/C3H6/c1-3-2/h3H,1H2,2H3', 'InChI=1S/HO/h1H')),
          'InChI=1S/CH4/h1H4'], [1.0, 1.0, -1])
 
@@ -454,10 +454,3 @@ def test__beta_scission():
     assert numpy.allclose(cbh0[1], ref_cbh0[1])
     assert cbh1[0] == ref_cbh1[0]
     assert numpy.allclose(cbh1[1], ref_cbh1[1])
-
-
-if __name__ == '__main__':
-    test__closed_shell_species()
-    test__open_shell_species()
-    test__hydrogen_abstraction()
-    test__beta_scission()

@@ -1,8 +1,10 @@
 """ test thermfit.heatform
 """
 
+import pytest
 import numpy
 import thermfit.heatform
+
 
 # Energies (ene+zpve [Hartrees])
 DCT_H0 = {
@@ -54,17 +56,14 @@ def test__ref_enthalpy():
 
     # Species
     ref_hf0k_1 = -0.08780432505395637
-    ref_hf0k_3 = -0.08785677661265853
+    ref_hf0k_2 = -0.08785677661265853
 
     hf0k_1 = thermfit.heatform.reference_enthalpy(
         C3H7OH_ICH, REF_SET1, TEMP1, rxn=False)
     hf0k_2 = thermfit.heatform.reference_enthalpy(
-        C3H7OH_ICH, REF_SET2, TEMP1, rxn=False)
-    hf0k_3 = thermfit.heatform.reference_enthalpy(
         C3H7OH_ICH, REF_SET3, TEMP1, rxn=False)
     assert numpy.isclose(ref_hf0k_1, hf0k_1)
-    assert hf0k_2 is None
-    assert numpy.isclose(ref_hf0k_3, hf0k_3)
+    assert numpy.isclose(ref_hf0k_2, hf0k_2)
 
     # Transition State
     ref_hf0k = -0.0033071800404707342
@@ -74,7 +73,7 @@ def test__ref_enthalpy():
         db_rxn_ich, REF_SET1, TEMP1, rxn=True)
     assert numpy.isclose(ref_hf0k, hf0k)
 
-    # Missing InChI (just species should be fine)
-    miss_hf0k = thermfit.heatform.reference_enthalpy(
-        NON_DB_ICH, REF_SET1, TEMP1, rxn=False)
-    assert miss_hf0k is None
+    # Missing Species
+    with pytest.raises(AssertionError):
+        _ = thermfit.heatform.reference_enthalpy(
+            NON_DB_ICH, REF_SET1, TEMP1, rxn=False)

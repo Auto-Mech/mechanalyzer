@@ -88,7 +88,7 @@ def reference_enthalpy(ich_lookup, ref_set, temp, rxn=False):
                 break
 
     # Convert units if val found, else print error message
-    assert hf_val is not None,(
+    assert hf_val is not None, (
         'No Heat of Formation exists:',
         f'SPC:{ich_lookup} Set:{ref_set} Temp:{temp}K')
 
