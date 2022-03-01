@@ -5,10 +5,15 @@ import itertools
 import automol
 from mechanalyzer.builder._update import update_spc_dct_from_reactions
 from mechanalyzer.builder._update import update_rxn_dct
+from mechanalyzer.builder._stereo import _add_third
+from mechanalyzer.builder._stereo import _ste_rxn_lsts
+from mechanalyzer.builder._stereo import _remove_enantiomer_reactions
+from mechanalyzer.builder._stereo import _stereo_results
+from chemkin_io.writer._util import format_rxn_name
 
 
 # MAIN CALLABLE FUNCTIONS FOR GENERATING REACTION LISTS
-def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series):
+def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series, stereo=False):
     """ Use the lst of reactions to build objects to describe mechanism
     """
 
@@ -25,7 +30,7 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series):
         print(f'Generating Reactions for Series {sidx+1}')
 
         # Generate the reactions from the reactants
-        rxns = ()
+        ini_rxns = ()
         for rtyp in rxn_typs:
 
             # Determine reactants to generate reactions for
@@ -47,7 +52,24 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series):
 
             # Generate Reactions
             for ichs in rct_ichs:
-                rxns += generate_reactions(ichs, allowed_prd_ichs, rtyp)
+                ini_rxns += generate_reactions(ichs, allowed_prd_ichs, rtyp)
+
+        # Add stereo
+        if stereo:
+            rxns = ()
+            for _rxn in ini_rxns:
+                log1 = ('\nExpanding Stereo for Reaction: '
+                        f'{format_rxn_name(_rxn)}\n')
+                _tmp_rxn = (_rxn[0], _rxn[1])
+                thrdbdy = _rxn[2]
+                ste_rxns_lst, log2 = _ste_rxn_lsts(_tmp_rxn)
+                ste_rxns_lst, rem_rxns, log3 = _remove_enantiomer_reactions(
+                    ste_rxns_lst, reacs_stereo_inchi=_rxn[0])
+                rxns += _add_third(ste_rxns_lst, thrdbdy)
+                log4 = _stereo_results(_rxn, ste_rxns_lst, rem_rxns)
+                print(log1 + log2 + log3 + log4)
+        else:
+            rxns = ini_rxns
 
         # Update the mechanism objects with unique spc and rxns
         mech_spc_dct, _ = update_spc_dct_from_reactions(
