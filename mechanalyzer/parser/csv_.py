@@ -318,6 +318,10 @@ def _check_csv(data):
     if len(list(data.name)) > len(set(list(data.name))):
         proper = False
         print('Repeat names found')
+        names = list(data.name)
+        for name in names:
+            if names.count(name) > 1:
+                print(name)
 
     for idx, row in data.iterrows():
         # Have to add number of non-NaNs and NaN values

@@ -38,6 +38,7 @@ def calc_hform_0k(spc_h0, basis_h0,
         ref_h0 = ref_h0 if ref_h0 is not None else 0.0  # break loop?
 
         # Add basis and reference energies to overall va
+        print('dHzero test', dhzero, ich, basis_coeffs[i], ref_h0, basis_h0[i])
         dhzero += basis_coeffs[i] * (ref_h0 - basis_h0[i])
 
         # print('Contribution from:', automol.inchi.smiles(ich))
@@ -75,7 +76,7 @@ def reference_enthalpy(ich_lookup, ref_set, temp, rxn=False):
     if rxn:
         ich_lookup = '+'.join(ich_lookup[0]) + '=' + '+'.join(ich_lookup[1])
         ref_set = 'ANL0'
-    print('its looking for ', ich_lookup, rxn)
+
     # Find the energy value for the given species and enery type
     hf_val = None
     with open(thermodb_file, mode='r', encoding='utf-8') as db_file:
@@ -87,7 +88,7 @@ def reference_enthalpy(ich_lookup, ref_set, temp, rxn=False):
                 break
 
     # Convert units if val found, else print error message
-    assert hf_val is not None,(
+    assert hf_val is not None, (
         'No Heat of Formation exists:',
         f'SPC:{ich_lookup} Set:{ref_set} Temp:{temp}K')
 
