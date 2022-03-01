@@ -45,22 +45,21 @@ def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct,
             # Filter redundant reactions from each enantiomer pairs
             removed_rxns_lst = ()
             if remove_enantiomer_rxns:
-                ste_rxns_lst, removed_rxns_lst = _remove_enantiomer_reactions(
+                ste_rxns_lst, rem_rxns, log3 = _remove_enantiomer_reactions(
                     ste_rxns_lst)
 
             # Appropriately format the reactions with third body
             ste_rxns_lst = _add_third(ste_rxns_lst, thrdbdy)
-            removed_rxns_lst = _add_third(removed_rxns_lst, thrdbdy)
+            rem_rxns = _add_third(rem_rxns, thrdbdy)
 
             # Print final list of stereochemical reactions to potentially add
-            log3 = _stereo_results(rxn, ste_rxns_lst, removed_rxns_lst)
+            log4 = _stereo_results(rxn, ste_rxns, removed_rxns_lst)
 
             # Add to overall stereo reactions list
             srxns += ste_rxns_lst
 
             # Print log message for reaction
-            log = log1 + log2 + log3
-            print(log)
+            print(log1 + log2 + log3 + log4)
 
         output_queue.put(srxns)
         print(f'Processor {os.getpid()} finished')
@@ -142,19 +141,35 @@ def _ste_rxn_lsts(rxn_ich):
 
 
 # Functions to check and sort the reactions by stereochemistry
-def _remove_enantiomer_reactions(ste_rxn_lst):
+def _remove_enantiomer_reactions(ste_rxn_lst, reacs_stereo_inchi=None):
     """ Take all reactions that occur from stereochemically
         and determine which reactions should be kept and
         whihc are unneccessary
+
+        There are two reduction methods to reduce the set.
+        If the reactant inchi is given, we grab reactions that use that
+        stereo. Otherwise, we use internal logic in autochem to enfore
+        m0 stereochemistry in the InChI strings.
     """
 
+    # Convert reactants stero inchi to set for comparisons
+    reacs_stereo_inchi = set(reacs_stereo_inchi)
+
     # Remove redundant sets and rebuild proper list
-    f_ste_rxn_lst = automol.inchi.filter_enantiomer_reactions(ste_rxn_lst)
+    if reacs_stereo_inchi is not None:
+        log = ' - Reducing reactions to those with reactant stereochemistry\n'
+        # Checks the InChI of the reactants in each reaction to see if they
+        # match the input stereo inchi
+        f_ste_rxn_lst = tuple(rxn for rxn in ste_rxn_lst
+                              if set(rxn[0]) == reacs_stereo_inchi)
+    else:
+        log = ' - Reducing reactions to enforce InChI/m0 stereo throughout\n'
+        f_ste_rxn_lst = automol.inchi.filter_enantiomer_reactions(ste_rxn_lst)
 
     # Print the removed reactions
     removed_ste_rxn_lst = set(ste_rxn_lst) - set(f_ste_rxn_lst)
 
-    return f_ste_rxn_lst, removed_ste_rxn_lst
+    return f_ste_rxn_lst, removed_ste_rxn_lst, log
 
 
 # Formatters and printers
