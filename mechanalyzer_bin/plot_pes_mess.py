@@ -36,6 +36,7 @@ ene_dct = {name: ene for name, ene in ene_dct.items()
            if 'B' not in name}
 conn_lst = tuple(conn[1] for conn in conn_lst_dct.items())
 pes_lab_dct = automol.util.dict_.invert(pes_lab_dct)
+print(pes_lab_dct)
 
 # Call the plotter function
 print('Information parsed from MESS input file')
