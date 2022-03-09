@@ -421,6 +421,8 @@ class PEDModels:
 
         phi_prod = (vibdof_prod1+rotdof_prod1/2) / \
             (vibdof_prod1+vibdof_prod2+(3+rotdof_prod1+rotdof_prod2)/2)
+        # kbT for vib, 1/2kbT for rot, no trasl (ts trasl energy preserved)
+        # denominator: +3/2kbT for relative trasl
         print('Fraction of energy transferred to '
               f'products phi: {phi_prod:.2f}')
         self.phi = phi_prod

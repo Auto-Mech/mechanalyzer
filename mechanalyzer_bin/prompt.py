@@ -40,7 +40,6 @@ PAR.add_argument('-ohot', '--hotoutput', default='me_ktp_hoten.log',
 OPTS = vars(PAR.parse_args())  # it's a dictionary
 
 ############ DO NOT MODIFY ##################
-# SECONDO ME CONVIENE ALLA FINE METTERE TUTTO IN UNA CLASSE
 # OPERATIONS
 # 0. EXTRACT INPUT INFORMATION from me_ped.inp
 me_ped_inp = read_file(os.path.join(CWD, OPTS['pedinput']))
@@ -107,8 +106,9 @@ for species in pedspecies:
     fragments = fragments_dct[label]
     try:
         frag1 = list(set(hotspecies).intersection(fragments))[0]
-        fragments.remove(frag1)
-        frag2 = fragments[0]
+        fragments_list = list(fragments)
+        fragments_list.remove(frag1)
+        frag2 = fragments_list[0]
     except IndexError:
         print('no superposition between PED fragments and hot fragments - exiting now \n')
         sys.exit()
