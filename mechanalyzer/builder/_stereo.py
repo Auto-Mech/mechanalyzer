@@ -126,13 +126,18 @@ def _ste_rxn_lsts(rxn_ich):
     for ste_rxn in automol.reac.expand_stereo(rxn_obj):
         rct_gras = automol.reac.reactant_graphs(ste_rxn)
         prd_gras = automol.reac.product_graphs(ste_rxn)
-        try:
-            rct_ichs = tuple(map(automol.graph.stereo_inchi, rct_gras))
-            prd_ichs = tuple(map(automol.graph.stereo_inchi, prd_gras))
+        attempt = 1
+        while attempt < 4:
+            try:
+                rct_ichs = tuple(map(automol.graph.stereo_inchi, rct_gras))
+                prd_ichs = tuple(map(automol.graph.stereo_inchi, prd_gras))
+                ste_rxn_ichs += ((rct_ichs, prd_ichs),)
+                break
+            except:
+                attempt += 1
 
-            ste_rxn_ichs += ((rct_ichs, prd_ichs),)
-        except:
-            print('Fail to get stereo', rxn_ich)
+            if attempt == 3:
+                print('Fail to get stereo in 3 attempts', rxn_ich)
 
     # Set log message
     log = f' - Reaction identified as {rxn_obj.class_}.\n'
@@ -238,3 +243,5 @@ def _rxn_smiles(rxn):
         tuple(automol.inchi.smiles(rgt) for rgt in rxn[0]),
         tuple(automol.inchi.smiles(rgt) for rgt in rxn[1]),
     )
+
+
