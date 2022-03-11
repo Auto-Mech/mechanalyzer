@@ -370,11 +370,21 @@ def assign_unique_name(fml_str, fml_count_dct, spc_dct):
     """
 
     if fml_str in fml_count_dct:
+
         fml_count_dct[fml_str] += 1
-        # If the number is in the dictionary, increase by one
-        # happen when you have A(5), A(6), A(9)...A(7) miss throws off count
+
         fml_count = fml_count_dct[fml_str]
         name = fml_str + f'({fml_count})'
+
+        # if stereo:
+        #     ste_str = stereo_name_suffix(ich)
+        # else:
+        #     ste_str = ''
+
+        name += f'({fml_count})'
+
+        # If the number is in the dictionary, increase by one
+        # happen when you have A(5), A(6), A(9)...A(7) miss throws off count
         while name in spc_dct:
             fml_count += 1
             name = fml_str + f'({fml_count})'
@@ -383,6 +393,50 @@ def assign_unique_name(fml_str, fml_count_dct, spc_dct):
         name = fml_str
 
     return name, fml_count_dct
+
+
+def stereo_name_suffix(ich):
+    """ Parse the stereo from the InChI and write a string describing the
+        stereo that is present.
+    """
+
+    ste_str = ''
+
+    # Read the stereo chemistry from the InChI string
+    ste_slyrs = automol.inchi.stereo_sublayers(ich)
+
+    tlyr = ste_slyrs.get('t')
+    blyr = ste_slyrs.get('b')
+    mlyr = ste_slyrs.get('m')
+
+    # Write name strings that describe the E/Z stereochemistry
+    if blyr is not None:
+        # Determine if it is E or Z
+        if '+' in blyr and '-' in blyr:
+            _blyr = 'E'
+        else:
+            _blyr = 'Z'
+        ste_str += _blyr
+
+    # Write name strings that describe the R/S stereochemistry
+    if tlyr is not None:
+        # (1) Replace: +=A -=B
+        # _tlyr = tlyr.replace('+', 'A').replace('-', 'B')
+        # _tlyr = _tlyr.replace(',', '')
+        # ste_str += _tlyr
+        # (2) Replace +=A -=B, remove the numbers
+        plus_cnt, minus_cnt = tlyr.count('+'), tlyr.count('-')
+        for _ in range(plus_cnt):
+            ste_str += 'A'
+        for _ in range(minus_cnt):
+            ste_str += 'B'
+
+        # Write additional label to describe enantiomer if needed
+        if 'm' in ste_slyrs:
+            # ste_str += '_' + mlyr
+            ste_str += mlyr
+
+    return ste_str
 
 
 # add functions like adding the hashkey
@@ -399,23 +453,11 @@ def add_hashkey(spc_dct):
 
 
 if __name__ == '__main__':
-    test_spc_dct = {
-        'A(1)': {},
-        'A(2)': {},
-        'A(3)': {},
-        'A(7)': {},
-        'A(8)': {},
-    }
-    _fml_count_dct = {'A': 5}
-    print('init')
-    print(test_spc_dct)
-    print(_fml_count_dct)
-    for i in range(3):
-        print('---')
-        print(i)
-        _name, _fml_count_dct = assign_unique_name(
-            'A', _fml_count_dct, test_spc_dct)
-        print(_name)
-        test_spc_dct.update({_name: {}})
-        print(_fml_count_dct)
-        print(test_spc_dct)
+    print('ich1')
+    ICH = 'InChI=1S/C4H8O/c1-3-4(2)5-3/h3-4H,1-2H3/t3-,4-/m0/s1'
+    NAME = stereo_name_suffix(ICH)
+    print(NAME)
+    print('\nich2')
+    ICH = 'InChI=1S/C4H7O2/c1-3(5)4(2)6/h5H,1-2H3/b4-3+'
+    NAME = stereo_name_suffix(ICH)
+    print(NAME)
