@@ -8,6 +8,8 @@ from mechanalyzer.calculator import combine
 from mechanalyzer.calculator import compare
 from mechanalyzer.calculator import statmodels
 from mechanalyzer.calculator import bf
+from mechanalyzer.calculator._prompt import prompt_dissociation_ktp_dct
+
 
 __all__ = [
     'rates',
@@ -15,5 +17,6 @@ __all__ = [
     'combine',
     'compare',
     'statmodels',
-    'bf'
+    'bf',
+    'prompt_dissociation_ktp_dct'
 ]
