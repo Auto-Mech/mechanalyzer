@@ -3,11 +3,14 @@
 
 import sys
 import os
+import time
 import ioformat
 import chemkin_io
 import mechanalyzer
 from mechanalyzer.builder import sorter
 
+# Initialize the start time for script execution
+t0 = time.time()
 
 # Set up the paths
 CWD = os.getcwd()
@@ -29,6 +32,7 @@ INP_MECH_STR = ioformat.pathtools.read_file(
 SORT_STR = ioformat.pathtools.read_file(
     CWD, FILE_DCT['sort'],
     remove_comments='#', remove_whitespace=True)
+STEREO = FILE_DCT.get('stereo', False)
 
 # Check if the input strings exist
 if any(string is None for string in (INP_SPC_STR, INP_MECH_STR, SORT_STR)):
@@ -37,13 +41,18 @@ if any(string is None for string in (INP_SPC_STR, INP_MECH_STR, SORT_STR)):
 
 mech_spc_dct = mechanalyzer.parser.spc.build_spc_dct(
     INP_SPC_STR, 'csv')
+
 rxn_param_dct, _, _ = mechanalyzer.parser.mech.parse_mechanism(
     INP_MECH_STR, 'chemkin', mech_spc_dct)
+rxn_param_dct = rxn_param_dct if rxn_param_dct is not None else {}
+
 isolate_spc, sort_lst = mechanalyzer.parser.mech.parse_sort(SORT_STR)
 
 # Generate the requested reactions
 mech_spc_dct, rxn_param_dct = mechanalyzer.builder.rxn.build_mechanism(
-    mech_spc_dct, rxn_param_dct, rxn_series=RSERIES)
+    mech_spc_dct, rxn_param_dct,
+    rxn_series=RSERIES,
+    stereo=STEREO)
 
 # Write the dictionaries to original strings
 csv_str = mechanalyzer.parser.spc.csv_string(
@@ -74,3 +83,9 @@ mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
 # Write the species and mechanism files
 ioformat.pathtools.write_file(csv_str, CWD, FILE_DCT['out_spc'])
 ioformat.pathtools.write_file(mech_str, CWD, FILE_DCT['out_mech'])
+
+# Compute script run time and print to screen
+tf = time.time()
+print('\n\nScript executed successfully.')
+print(f'Time to complete: {tf-t0:.2f}')
+print('Exiting...')

@@ -503,6 +503,30 @@ def lind(highp_arr, lowp_arr, temps_lst, pressures, collid_factor=1.0,
     return ktp_dct
 
 
+def merge_rxn_ktp_dcts(full_rxn_ktp_dct, rxn_ktp_dct):
+    """ Merge a reaction ktp dictionary into an existing one.
+        If a reaction currently exists in both. Then we add the kts
+        together for the reactions.
+
+    """
+    # Add the prompt dictionary to the full one
+    # We will add the rates together if rxn is prev. found
+    for rxn, _ktp1 in rxn_ktp_dct.items():
+        if rxn not in full_rxn_ktp_dct:
+            # Simply place rates into the full dct
+            full_rxn_ktp_dct[rxn] = _ktp1
+        else:
+            # Add the existing rates from the full and small dct together
+            _ktp2 = full_rxn_ktp_dct[rxn]
+            print('add rxn test')
+            print(rxn)
+            print(_ktp2)
+            print(_ktp1)
+            full_rxn_ktp_dct[rxn] = add_ktp_dcts(_ktp1, _ktp2)
+
+    return full_rxn_ktp_dct
+
+
 def add_ktp_dcts(ktp_dct1, ktp_dct2):
     """ Add the rates in two ktp_dcts.
 
@@ -512,34 +536,66 @@ def add_ktp_dcts(ktp_dct1, ktp_dct2):
     """
 
     # If either starting dct is empty, simply copy the other
-    if ktp_dct1 == {}:
+    if not ktp_dct1:
         added_dct = copy.deepcopy(ktp_dct2)
-    elif ktp_dct2 == {}:
+    elif not ktp_dct2:
         added_dct = copy.deepcopy(ktp_dct1)
     # Otherwise, add the dcts
     else:
         added_dct = {}
-        # Loop over the pressures in the first dct
-        for pressure, (temps, kts1) in ktp_dct1.items():
-            if pressure in ktp_dct2.keys():
-                (_, kts2) = ktp_dct2[pressure]  # unpack ktp_dct2 values
-            else:  # if the pressure is not in ktp_dct2
-                kts2 = numpy.zeros(numpy.shape(kts1))
-            added_kts = kts1 + kts2
-            added_dct[pressure] = (temps, added_kts)  # store added values
-        # Loop over the pressures in the second dct and see if any are new
-        for pressure, (temps, kts2) in ktp_dct2.items():
-            # If the pressure is not in added_dct, it is unique to ktp_dct
-            if pressure not in added_dct.keys():
-                (_, kts2) = ktp_dct2[pressure]  # unpack ktp_dct2 values
-                added_dct[pressure] = (temps, kts2)  # store new values
+
+        # Determine pressures common to both dcts and only in p1/p2
+        pr1 = set(ktp_dct1.keys())
+        pr2 = set(ktp_dct2.keys())
+
+        pr_common = sorted(list(pr1 & pr2))
+        pr1_only = sorted(list(pr1 - pr2))
+        pr2_only = sorted(list(pr2 - pr1))
+
+        # Loop over common pressures and add the rate constants togther
+        for pressure in pr_common:
+            temps1, kts1 = ktp_dct1[pressure]
+            temps2, kts2 = ktp_dct2[pressure]
+
+            # Check if two arrays are the same
+            if numpy.array_equal(temps1, temps2):
+                added_kts = kts1 + kts2
+                added_dct[pressure] = (temps1, added_kts)  # store added values
+            else:
+                added_temps = sorted(
+                    list(set(temps1.tolist() + temps2.tolist())))
+                added_kts = []
+                for temp in added_temps:
+                    if temp in temps1:
+                        _kt1_idx = next(i for i, t in enumerate(temps1)
+                                        if numpy.isclose(temp, t))
+                        _kt1 = kts1[_kt1_idx]
+                    else:
+                        _kt1 = 0
+                    if temp in temps2:
+                        _kt2_idx = next(i for i, t in enumerate(temps2)
+                                        if numpy.isclose(temp, t))
+                        _kt2 = kts2[_kt2_idx]
+                    else:
+                        _kt2 = 0
+                    added_kts.append(_kt1+_kt2)
+                added_dct[pressure] = (numpy.array(added_temps),
+                                       numpy.array(added_kts))
+
+        # Add rate constants for pressures only in ktp_dct1
+        for pressure in pr1_only:
+            added_dct[pressure] = ktp_dct1[pressure]
+
+        # Add rate constants for pressures only in ktp_dct2
+        for pressure in pr2_only:
+            added_dct[pressure] = ktp_dct2[pressure]
 
     return added_dct
 
 
 def check_p_t(temps_lst, pressures):
     """ Enforces rules on the temps_lst and pressures. In the case where the
-        user has only provided one temp array in temps_lst, duplicates that temp
+        user has only provided one temp array in temps_lst, duplicates temp
         to occur the same number of times as the number of pressures
 
         :param temps_lst: list of temperature arrays used to get k(T,P)s (K)

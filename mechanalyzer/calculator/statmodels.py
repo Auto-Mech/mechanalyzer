@@ -40,14 +40,14 @@ def get_dof_info(block, ask_for_ts=False):
         info = block_i.splitlines()
         where_name = find.where_in('Species', info)[0]
         where_hind = find.where_in('Hindered', info)
-        where_geom = find.where_in('Geometry', info)[0]
-        num_atoms = int(info[where_geom].strip().split()[1])
-        atoms_ts += num_atoms
 
         key = info[where_name].strip().split()[1]
         keys.append(key)
+
         try:
+            where_geom = find.where_in('Geometry', info)[0]
             where_freq = find.where_in('Frequencies', info)[0]
+            num_atoms = int(info[where_geom].strip().split()[1])
             num_dof = (
                 int(info[where_freq].strip().split()[1]) + len(where_hind)
             )
@@ -59,18 +59,24 @@ def get_dof_info(block, ask_for_ts=False):
             # if 1 atom only: no 'Frequencies', set to 0
             num_dof = 0
             rot_dof = 0
+            num_atoms = 1
+            where_geom = find.where_in('Name', info)[0]
+            atoms_array = np.array([info[where_geom].strip().split()[1]])
+
+        atoms_ts += num_atoms
         # this allows to get 3N-5 or 3N-6 without analyzing the geometry
         info_array[i, 0] = num_dof
         info_array[i, 1] = rot_dof
 
         # MW from type of atoms:
-        geom_in = where_geom+1
-        geom_fin = geom_in+num_atoms
-        atoms_array = np.array([geomline.strip().split()[0]
-                                for geomline in info[geom_in:geom_fin]])
+        if num_atoms > 1:
+            geom_in = where_geom+1
+            geom_fin = geom_in+num_atoms
+            atoms_array = np.array([geomline.strip().split()[0]
+                                    for geomline in info[geom_in:geom_fin]])
 
         info_array[i, 2] = np.sum(np.array([MW_dct_elements[at]
-                                  for at in atoms_array], dtype=float))
+                                for at in atoms_array], dtype=float))
 
     # if ask for ts: assume first 2 blocks are 2 reactants of bimol reaction
     # and derive the DOFs of the TS
@@ -421,6 +427,8 @@ class PEDModels:
 
         phi_prod = (vibdof_prod1+rotdof_prod1/2) / \
             (vibdof_prod1+vibdof_prod2+(3+rotdof_prod1+rotdof_prod2)/2)
+        # kbT for vib, 1/2kbT for rot, no trasl (ts trasl energy preserved)
+        # denominator: +3/2kbT for relative trasl
         print('Fraction of energy transferred to '
               f'products phi: {phi_prod:.2f}')
         self.phi = phi_prod
