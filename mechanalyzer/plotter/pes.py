@@ -6,8 +6,8 @@ import numpy
 import matplotlib
 from matplotlib import pyplot as plt
 import igraph
-import networkx
-from pyvis.network import Network
+import networkx as nx
+# from pyvis.network import Network
 import automol.util
 
 
@@ -501,6 +501,244 @@ def pes_graph(conn_lst, ene_dct=None, label_dct=None, file_name='surface.pdf'):
     fig.set_size_inches(16, 12)
     fig.savefig(file_name, dpi=200)
     plt.close(fig)
+
+
+def _node_lst(conn, sccs_label=''):
+    """ nx formatted nodes from a single conn
+    """
+    return [(sccs_label + node, {'color': 'green'}) for node in conn]
+
+
+def _edge_lst(conn, sccs_label=''):
+    """ nx formatted edge from a single conn
+    """
+    return [(
+       *[sccs_label + node for node in conn], {'color': 'green'})]
+
+
+def _well_nodes(nodes):
+    """ list of nodes that are wells
+    """
+    return [node for node in nodes if '+' not in node]
+
+
+def _prod_nodes(nodes):
+    """ list of nodes that are bimol
+    """
+    return [node for node in nodes if '+' in node]
+
+
+def _prod_edges(edges):
+    """ list of edges that are to bimols
+    """
+    prod_edges = []
+    for edge in edges:
+        if '+' in edge[0] or '+' in edge[1]:
+            prod_edges.append(edge)
+    return prod_edges
+
+
+def _well_edges(edges):
+    """ list of edges that are between wells
+    """
+    well_edges = []
+    for edge in edges:
+        if '+' not in edge[0] and '+' not in edge[1]:
+            well_edges.append(edge)
+    return well_edges
+
+
+def sccs_graph(conn_lst, sccs_idx=None):
+    """ Make a networkx graph argument
+    """
+    G = nx.Graph()
+    sccs_label = ''
+    if sccs_idx is not None:
+        sccs_label = '{:g}_{:g}!'.format(*sccs_idx)
+    for conn in conn_lst:
+        G.add_nodes_from(_node_lst(conn, sccs_label))
+        G.add_edges_from(_edge_lst(conn, sccs_label))
+    # Need to set the y-values
+    # networkx.set_node_attributes(nxg, atom_symbols, 'symbol')
+    return G
+
+
+def _label_dct(nodes):
+    """ simplify the label for the plot
+    """
+    label_dct = {}
+    n = 8
+    for node in nodes:
+        label = node.split('!')
+        if len(label) == 1:
+            label = label[0]
+        else:
+            label = label[1]
+        label_lst = label.split('+')
+        split_label_lst = []
+        for lab in label_lst:
+            lab = '\n'.join([lab[i:i+n] for i in range(0, len(lab), n)])
+            split_label_lst.append(lab)
+        label_dct[node] = '\n+\n'.join(split_label_lst)
+
+    return label_dct
+
+
+def show_sccs(G, plt_title=None, save=False):
+    """ show/save sccs graph
+    """
+    plt.figure(figsize=(10, 10), dpi=80)
+    pos = nx.spring_layout(G, seed=3113794652)
+
+    options = {"edgecolors": "tab:gray", "node_size": 3000, "alpha": 0.9}
+    nx.draw_networkx_nodes(
+        G, pos,
+        nodelist=_well_nodes(G.nodes), node_color="tab:cyan", **options)
+
+    options = {"edgecolors": "tab:gray", "node_size": 3000, "alpha": 0.9}
+    nx.draw_networkx_nodes(
+        G, pos,
+        nodelist=_prod_nodes(G.nodes), node_color="tab:orange", **options)
+
+    nx.draw_networkx_edges(
+        G, pos, edgelist=_well_edges(G.edges), width=4.0,
+        alpha=0.4, edge_color='tab:cyan')
+    nx.draw_networkx_edges(
+        G, pos, edgelist=_prod_edges(G.edges), width=2.0,
+        alpha=0.6, edge_color='tab:orange')
+    nx.draw_networkx_labels(
+        G, pos, font_size=8, labels=_label_dct(G.nodes), font_color="black")
+
+    if plt_title:
+        plt.title(plt_title)
+    if save:
+        pass
+    else:
+        plt.show()
+
+
+def _cross_conn(conns_a, conns_b, a_idx, b_idx):
+    """ find the connections between bimol products and wells
+        of two PESes
+    """
+    conn_lst = ()
+    a_nodes = []
+    b_nodes = []
+    lab_a_nodes = []
+    lab_b_nodes = []
+    sccs_label_a = '{:g}_{:g}!'.format(*a_idx)
+    sccs_label_b = '{:g}_{:g}!'.format(*b_idx)
+    for conn in conns_a:
+        a_nodes.extend(_node_lst(conn))
+        lab_a_nodes.extend(_node_lst(conn, sccs_label_a))
+    for conn in conns_b:
+        b_nodes.extend(_node_lst(conn))
+        lab_b_nodes.extend(_node_lst(conn, sccs_label_b))
+    for i, a_node in enumerate(a_nodes):
+        a_node = a_node[0].split('+')
+        for j, b_node in enumerate(b_nodes):
+            b_node = b_node[0].split('+')
+            if len(a_node) > len(b_node):
+                if b_node[0] in a_node:
+                    conn_lst += (
+                        (lab_a_nodes[i][0], lab_b_nodes[j][0]),)
+            elif len(b_node) > len(a_node):
+                if a_node[0] in b_node:
+                    conn_lst += (
+                        (lab_a_nodes[i][0], lab_b_nodes[j][0]),)
+    return conn_lst
+
+
+def show_pes(G_lst, g_conn_lst, idx_lst, save=False):
+    """ show/save graph of mechanism
+    """
+    cross_ccs_conns = ()
+    chosen = ((0, 0), (1, 1), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0))
+    for idx_a, (ia, ja) in enumerate(idx_lst):
+        for idx_b, (ib, jb) in enumerate(idx_lst):
+            if ia > ib:
+                conns_a = g_conn_lst[idx_a]
+                conns_b = g_conn_lst[idx_b]
+                cross_conns = _cross_conn(
+                    conns_a, conns_b, (ia, ja), (ib, jb))
+                cross_ccs_conns += cross_conns
+    full_G = nx.Graph()
+    for G in G_lst:
+        full_G.update(G)
+
+    for conn in cross_ccs_conns:
+        full_G.add_edges_from(_edge_lst(conn))
+        print('added cross connection', conn)
+    colors = [
+        'tab:red', 'tab:blue', 'tab:orange', 'tab:pink',
+        'tab:green', 'tab:purple', 'tab:cyan', 'tab:olive',
+        'black', 'black', 'black', 'black', 'black', 'black'
+        'black', 'black', 'black', 'black', 'black', 'black'
+        'black', 'black', 'black', 'black', 'black', 'black'
+        'black', 'black', 'black', 'black', 'black', 'black'
+        'black', 'black', 'black', 'black', 'black', 'black'
+        'black', 'black', 'black', 'black', 'black', 'black'
+        ]
+    edge_colors = [
+        'tab:red', 'tab:blue', 'tab:orange', 'tab:pink',
+        'tab:green', 'tab:purple', 'tab:cyan', 'tab:olive',
+        'black', 'black', 'black', 'black', 'black', 'black'
+        'black', 'black', 'black', 'black', 'black', 'black'
+        'black', 'black', 'black', 'black', 'black', 'black'
+        'black', 'black', 'black', 'black', 'black', 'black'
+        'black', 'black', 'black', 'black', 'black', 'black'
+        'black', 'black', 'black', 'black', 'black', 'black'
+        ]
+    plt.figure(figsize=(14, 14), dpi=80)
+    pos = nx.spring_layout(full_G, seed=3113794652)
+    for idx, G in enumerate(G_lst):
+        i, j = idx_lst[idx]
+        if (i, j) in chosen:
+            alpha = 0.9
+        else:
+            alpha = 0.2
+        options = {
+            "edgecolors": edge_colors[j], "node_size": 600, "alpha": alpha}
+        nx.draw_networkx_nodes(
+            full_G, pos,
+            nodelist=_well_nodes(G.nodes), node_color=colors[i], **options)
+
+        options = {
+            "edgecolors": edge_colors[j], "node_size": 200, "alpha": alpha}
+        nx.draw_networkx_nodes(
+            full_G, pos,
+            nodelist=_prod_nodes(G.nodes), node_color=colors[i], **options)
+
+        nx.draw_networkx_edges(
+            full_G, pos, edgelist=_well_edges(G.edges), width=2.0, alpha=alpha,
+            edge_color=colors[i])
+        nx.draw_networkx_edges(
+            full_G, pos, edgelist=_prod_edges(G.edges), width=1.0, alpha=alpha,
+            edge_color=colors[i])
+
+    chosen_edges = ()
+    other_edges = ()
+    for cross_conn in cross_ccs_conns:
+        ia, ja = cross_conn[0].split('!')[0].split('_')
+        ib, jb = cross_conn[1].split('!')[0].split('_')
+        if (int(ia), int(ja),) in chosen and (int(ib), int(jb),) in chosen:
+            chosen_edges += (cross_conn,)
+        else:
+            other_edges += (cross_conn,)
+    nx.draw_networkx_edges(
+        full_G, pos, edgelist=chosen_edges,
+        width=2.0, alpha=.95, edge_color='black')
+    nx.draw_networkx_edges(
+        full_G, pos, edgelist=other_edges,
+        width=1.0, alpha=.2, edge_color='black')
+    # nx.draw_networkx_labels(full_G, pos, font_size=8, font_color="black")
+    # nx.draw_networkx_labels(
+    #     full_G, pos, font_size=8,
+    #     labels=_label_dct(full_G.nodes), font_color="black")
+    if save:
+        pass
+    else:
+        plt.show()
 
 
 def pes_graph2(conn_lst, ene_dct=None, label_dct=None,
