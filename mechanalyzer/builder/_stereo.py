@@ -5,13 +5,12 @@
 """
 
 import os
-import copy
 import automol
 from autorun import execute_function_in_parallel
 import mechanalyzer.parser
 from mechanalyzer.builder._update import update_spc_dct_from_reactions
 from mechanalyzer.builder._update import update_rxn_dct
-from mechanalyzer.builder._update import rxn_name_str
+from mechanalyzer.builder._names import rxn_name_str
 from chemkin_io.writer._util import format_rxn_name
 
 
