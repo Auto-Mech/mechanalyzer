@@ -71,18 +71,18 @@ rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(
     rxn_sort_dct=cmts_dct)
 
 # Write the dictionaries to ordered strings
-csv_str = mechanalyzer.parser.spc.csv_string(
+sortd_csv_str = mechanalyzer.parser.spc.csv_string(
     mech_spc_dct, FILE_DCT['headers'])
-mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
+sortd_mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
     elem_tuple=elems,
     mech_spc_dct=mech_spc_dct,
     spc_nasa7_dct=None,
-    rxn_param_dct=rxn_param_dct,
+    rxn_param_dct=param_dct_sort,
     rxn_cmts_dct=rxn_cmts_dct)
 
 # Write the species and mechanism files
-ioformat.pathtools.write_file(csv_str, CWD, FILE_DCT['out_spc'])
-ioformat.pathtools.write_file(mech_str, CWD, FILE_DCT['out_mech'])
+ioformat.pathtools.write_file(sortd_csv_str, CWD, FILE_DCT['out_spc'])
+ioformat.pathtools.write_file(sortd_mech_str, CWD, FILE_DCT['out_mech'])
 
 # Compute script run time and print to screen
 tf = time.time()

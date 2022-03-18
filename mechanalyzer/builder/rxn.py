@@ -72,7 +72,7 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series, stereo=False):
             rxns = ini_rxns
 
         # Update the mechanism objects with unique spc and rxns
-        mech_spc_dct, _ = update_spc_dct_from_reactions(
+        mech_spc_dct = update_spc_dct_from_reactions(
             rxns, mech_spc_dct)
         mech_rxn_dct = update_rxn_dct(
             rxns, mech_rxn_dct, mech_spc_dct)
@@ -108,6 +108,9 @@ def generate_reactions(rct_ichs, allowed_prd_ichs, rtyp):
         print(f'Found Product(s) {pidx+1}: {_prd_smis}')
 
         rxn_ichs += ((rct_ichs, prds, (None,)),)
+
+    if not prd_ichs:
+        print('NO Product(s) Found')
 
     return rxn_ichs
 
