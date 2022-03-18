@@ -1,6 +1,6 @@
 """ Return the rates from a prompt dissociation process
 """
-
+import sys
 import mess_io
 import mechanalyzer
 
@@ -8,8 +8,7 @@ import mechanalyzer
 def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
                                 ped_ped_str, ped_ke_out_str,
                                 hot_inp_str, hot_out_str, hot_log_str,
-                                modeltype, bf_thresh,
-                                temps, pressures):
+                                modeltype, bf_thresh):
     """ Parses the MESS files and generates the rate constants
         from a prompt dissociation process
     """
@@ -47,19 +46,18 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
             spc_blocks_ped)[prods]
 
     # Read ped.out file for product energy distributions
-    ped_dct = mess_io.reader.ped.get_ped(ped_ped_str, ped_spc, energy_dct)
+    ped_dct = mess_io.reader.ped.get_ped(ped_ped_str, ped_spc, energy_dct, sp_labels='inp')
 
     # Read ke_ped.out file for energy density of each fragment
-    dos_df = mess_io.reader.rates.dos_rovib(ped_ke_out_str)
+    dos_df = mess_io.reader.rates.dos_rovib(ped_ke_out_str, sp_labels='inp')
 
-    # Read the hotenergies output
     spc_blocks_hoten = mess_io.reader.get_species(hot_inp_str)
     hot_frag_dct = mess_io.reader.dct_species_fragments(spc_blocks_hoten)
-    hot_spc = mess_io.reader.hoten.get_hot_species(hot_inp_str)  # can supply
+    hot_spc_en = mess_io.reader.hoten.get_hot_species(hot_inp_str) 
 
     hoten_dct = mess_io.reader.hoten.extract_hot_branching(
-        hot_log_str, hot_spc, list(spc_blocks_hoten.keys()),
-        list(temps), list(pressures))
+        hot_log_str, hot_spc_en, list(spc_blocks_hoten.keys()), sp_labels='inp')
+    print(hoten_dct)
 
     # OBTAIN ALL OF THE RATE CONSTANTS FROM THE OUTPUT FILES
     # Read the thermal rates from both files
@@ -71,16 +69,12 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
                 filter_kts=True,
                 filter_reaction_types=('fake', 'self',
                                        'loss', 'capture', 'reverse'),
-                relabel_reactions=True,
-                tmin=min(temps),
-                tmax=max(temps),
-                pmin=min(pressures),
-                pmax=max(pressures)
+                relabel_reactions=True
             )
         )
 
     # Derive Branching Fractions, Calculate Prompt Rates
-    # Merge Prompt Rates with Thermaal Rates
+    # Merge Prompt Rates with Thermal Rates
     prompt_rxns = ()
     full_prompt_rxn_ktp_dct = {}
     for spc in ped_spc:
@@ -90,20 +84,20 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
 
         label = ((reacs,), (prods,), (None,))
         relabel = (_reacs, _prods, (None,))
-        _ped_label = '+'.join(label[0]) + '->' + '+'.join(label[1])
 
-        ped_df = ped_dct[_ped_label]
+        ped_df = ped_dct[label]
         ene_bw = ene_bw_dct[label]
         # select the fragment of which you want the PED:
         # it is the one in common with hotspecies
         fragments = fragments_dct[label]
         try:
-            frag1 = list(set(hot_spc).intersection(fragments))[0]
+            frag1 = list(set(hot_spc_en).intersection(fragments))[0]
             frag2 = list(set(fragments).difference((frag1,)))[0]
         except IndexError:
             print('no superposition between PED fragments and hot fragments '
                   '- exiting now \n')
-        
+            sys.exit()
+
         # DERIVE PED OF THE HOT FRAGMENT
         ped_df_frag1_dct = mechanalyzer.builder.ped.ped_frag1(
             ped_df, frag1, frag2, (modeltype,),
@@ -132,7 +126,6 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
         prompt_rxns += (relabel,)
 
     # Remove the original reaction
-    # Point of this function
     for rxn in prompt_rxns:
         print('pop reaction?', rxn)
         rxn_ktp_dct.pop(rxn)
