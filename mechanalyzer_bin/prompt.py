@@ -60,20 +60,21 @@ hot_log = pathtools.read_file(CWD, OPTS['hotlog'])
 
 # Get a list of all the statistical energy distribution models
 MODELS = OPTS['model'].split(',')
-
+#MODELS = ['equip_simple','beta_phi1a']
 
 # Generate CKIN files
 # This includes both the thermal and non-thermal reactions
-for model in MODELS:
-    # Read and calculate the rate constants into a rxn ktp dictionary
-    rxn_ktp_dct = mechanalyzer.calculator.prompt_dissociation_ktp_dct(
-        me_ped_inp, me_ped_out,
-        pedoutput_str, ke_ped_out,
-        hot_inp, hot_out, hot_log,
-        model, OPTS['bf_threshold'])
 
+# Read and calculate the rate constants into a rxn ktp dictionary
+rxn_ktp_dct_models = mechanalyzer.calculator.prompt_dissociation_ktp_dct(
+    me_ped_inp, me_ped_out,
+    pedoutput_str, ke_ped_out,
+    hot_inp, hot_out, hot_log,
+    MODELS, OPTS['bf_threshold'])
+
+for modeltype in MODELS:
     rxn_param_dct, rxn_err_dct = ratefit.fit.fit_rxn_ktp_dct(
-        rxn_ktp_dct,
+        rxn_ktp_dct_models[modeltype],
         OPTS['fit_method'],
         arrfit_dct={'dbltol': 300}
     )
@@ -85,4 +86,4 @@ for model in MODELS:
         rxn_param_dct=rxn_param_dct, rxn_cmts_dct=rxn_cmts_dct)
 
     # Write the fitted rate parameter file
-    pathtools.write_file(ckin_str, CWD, f'rates_LABEL_{model}.txt')
+    pathtools.write_file(ckin_str, CWD, f'rates_{modeltype}.txt')
