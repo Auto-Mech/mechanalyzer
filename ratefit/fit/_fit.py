@@ -8,13 +8,13 @@ from ratefit.fit import plog
 from ratefit.fit import cheb
 
 DEFAULT_PDEP = {
-    'temps': (500.0, 1000.0),
+    'temps': (500.0, 1000, 2000.0),
     'tol': 20.0,
     'plow': None,
     'phigh': None,
     'pval': 1.0}
 DEFAULT_ARR = {  # also used for PLOG fitting
-    'dbltol': 15.0,
+    'dbltol': 50.0,
     'dbl_iter': 30}
 DEFAULT_TROE = {
     'params': ('ts1', 'ts2', 'ts3', 'alpha'),

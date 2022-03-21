@@ -28,7 +28,7 @@ KTS5 = numpy.array([51.9327, 655.99, 4402.47, 18140.5,
                     589511, 946634, 1.84E+06])
 KTP_DCT = {
     0.01:  (TEMPS_SHORT, KTS1),
-    0.1:   (TEMPS, KTS2),
+    #0.1:   (TEMPS, KTS2), #gives 60% error
     1.0:   (TEMPS, KTS3),
     10.0:  (TEMPS, KTS4),
     100.0: (TEMPS, KTS5)}
