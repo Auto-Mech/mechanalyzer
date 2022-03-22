@@ -38,7 +38,7 @@ class SortMech:
 
         # Extract data from mech info
         [formula_dct_lst, formulas, rct_names_lst,
-            prd_names_lst, thrdbdy_lst, rxn_name_lst, param_vals] = mech_info(rxn_param_dct)
+            prd_names_lst, thrdbdy_lst, rxn_name_lst, param_vals] = mech_info(rxn_param_dct, spc_dct)
 
         rxn_index = list(zip(rxn_name_lst, thrdbdy_lst))
 
