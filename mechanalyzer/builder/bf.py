@@ -66,7 +66,7 @@ def merge_bf_ktp(bf_ktp_dct, ktp_dct, frag_reacs, frag1, frag2, hotsp_dct):
         ktp_dct_model_i_new = rename_ktp_dct(
             ktp_dct_model_i, frag_reacs, frag1, frag2, hotsp_dct)
         rxn_ktp_dct[modeltype] = ktp_dct_model_i_new
-
+        # print(ktp_dct_model_i_new)
     return rxn_ktp_dct
 
 
@@ -95,14 +95,5 @@ def rename_ktp_dct(ktp_dct, frag_reacs, hotprod, otherprod, hotsp_dct):
         prods = hotsp_dct[spc] + (otherprod,)
         newkey = (frag_reacs, prods, (None,))
         renamed_ktp_dct[newkey] = ktp_dct[spc]
-        # linker = (spc == hotprod)*'=' + (spc != hotprod)*'=>'
-        # if len(hotsp_dct[spc]) > 1:
-        #     hotprod = '+'.join(hotsp_dct[spc])
-        # elif len(hotsp_dct[spc]) == 1:
-        #     hotprod = hotsp_dct[spc][0]
-        # print('hot test', hotprod)
-        # prods = '+'.join([hotprod, otherprod])
-        # newkey = linker.join([reacs, prods])
-        # renamed_ktp_dct[newkey] = ktp_dct[spc]
 
     return renamed_ktp_dct
