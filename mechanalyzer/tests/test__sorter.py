@@ -550,14 +550,13 @@ def test_sort_ktp():
 
     # Build spc and mech information
     spc_dct_full = sparser.build_spc_dct(spc_str, SPC_TYPE)
-    mech_info = mparser.mech_info(AL_KTP_DCT, spc_dct_full)
 
     # Sort the mechanism
     isolate_spc = []
     sort_lst = ['rxn_max_vals', 'rxn_max_ratio', 0]
 
     srt_mch = sorter.sorting(
-        mech_info, spc_dct_full, sort_lst, isolate_spc)
+        AL_KTP_DCT, spc_dct_full, sort_lst, isolate_spc)
     sorted_idx, cmts_dct, _ = srt_mch.return_mech_df()
     al_ktp_dct_sorted = sorter.reordered_mech(AL_KTP_DCT, sorted_idx)
     print('ktp dct sorted by max val and ratios test:')

@@ -18,17 +18,17 @@ from mechanalyzer.parser._util import count_atoms
 from mechanalyzer.parser._util import order_rct_bystoich
 from mechanalyzer.parser._util import extract_spc
 from mechanalyzer.parser._util import get_mult
-
+from mechanalyzer.parser.spc import name_inchi_dct
+from mechanalyzer.parser._util import get_fml
 
 class SortMech:
     """ class of methods to organize the mechanism according to given criteria
     """
 
-    def __init__(self, mech_info, spc_dct):
+    def __init__(self, rxn_param_dct, spc_dct):
         """ Initializes the mechanism dataframe and the species dictionary
 
-        :param mech_info: list of mechanism info [formula dct, formulas,
-                            rct_names, prd_names, rxn_names]
+        :param rxn_param_dct: rxn param dct for info extraction
         :param spc_dct: species dictionary
 
         :returns: None, updates self.
@@ -38,7 +38,7 @@ class SortMech:
 
         # Extract data from mech info
         [formula_dct_lst, formulas, rct_names_lst,
-            prd_names_lst, thrdbdy_lst, rxn_name_lst, param_vals] = mech_info
+            prd_names_lst, thrdbdy_lst, rxn_name_lst, param_vals] = mech_info(rxn_param_dct)
 
         rxn_index = list(zip(rxn_name_lst, thrdbdy_lst))
 
@@ -841,3 +841,67 @@ def get_max_aligned_values(aligned_rxn_dct_entry):
                     max_val = max(values)
 
     return max_val
+
+
+# EXTRACT MECH INFO - PREVIOUSLY IN MECHANALYZER PARSER
+
+def mech_info(rxn_param_dct, spc_dct):
+    """ Build mech_info object for mech sorting
+
+        :param spc_dct: species dictionary
+        :type spc_dct: dict[?:?]
+        :param rxn_dct: parameter dictionary
+        :type rxn_dct: dict[?:?]
+        :return mech_info: objects with mech info
+        :rtype: list
+    """
+
+    def _check_names(rct_names, prd_names, all_spc_names):
+        """ Assess if the reactant and product names provided in the
+            rxn_param_dct exist in the spc_dct
+        """
+        all_mech_names = ()
+        for _rct_names, _prd_names in zip(rct_names, prd_names):
+            all_mech_names += _rct_names
+            all_mech_names += _prd_names
+        all_mech_names = set(all_mech_names)
+
+        missing_names = all_mech_names - all_spc_names
+        if missing_names:
+            print('Names in provided in mechanism, '
+                  'but not provided in species list (likely from .csv file):')
+            for name in missing_names:
+                print('  ', name)
+            print('Unable to finish parsing mechanism. Exiting...')
+            sys.exit()
+
+    def _inf(rct_names, prd_names, ich_dct):
+        """ Sort reactant and product name lists by formula to facilitate
+            multichannel, multiwell rate evaluations
+        """
+        rxn_name_lst, formula_str_lst, formula_dct_lst = [], [], []
+        for _rct_names, _prd_names in zip(rct_names, prd_names):
+            rxn_name = '='.join(['+'.join(_rct_names), '+'.join(_prd_names)])
+            rxn_name_lst.append(rxn_name)
+            rct_ichs = list(map(ich_dct.__getitem__, _rct_names))
+            formula_dct, formula_str = get_fml(rct_ichs)
+            formula_dct_lst.append(formula_dct)
+            formula_str_lst.append(formula_str)
+
+        return formula_dct_lst, formula_str_lst, rxn_name_lst
+
+    # Extract info from dictionary
+    rcts, prds, thrdbdy = zip(*rxn_param_dct.keys())
+    rct_names, prd_names, thrdbdy_lst = list(rcts), list(prds), list(thrdbdy)
+
+    # Check if the rxn_param dct may be fully parsed
+    _check_names(rct_names, prd_names, set(spc_dct.keys()))
+
+    # formulas and reaction names (repplace with the mech info from ckin
+    ich_dct = name_inchi_dct(spc_dct)
+    formula_dct, formula_str, rxn_name = _inf(rct_names, prd_names, ich_dct)
+
+    return [formula_dct, formula_str,
+            rct_names, prd_names, thrdbdy_lst,
+            rxn_name, list(rxn_param_dct.values())]
+
