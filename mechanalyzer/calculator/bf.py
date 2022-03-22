@@ -78,8 +78,11 @@ def bf_tp_df_full(ped_df, hoten_df):
             # extract ped and hoten by increasing index
             ped = ped_df[pressure][temp].sort_index()
             hoten = hoten_df[pressure][temp].sort_index().index
-            # reduce the energy range of hoten
-            hoten = hoten[hoten <= ped.index[-1]]
+            # reduce the energy range of hoten and ped
+            min_en = max([ped.index[0], hoten[0]])
+            max_en = min([ped.index[-1], hoten[-1]])
+            hoten = hoten[(min_en <= hoten)*(hoten <= max_en)]
+            ped = ped[(min_en <= ped.index)*(ped.index <= max_en)]
             if len(hoten) >= 4:
                 ene_vect = ped.index
                 ped_vect = ped.values
@@ -93,7 +96,6 @@ def bf_tp_df_full(ped_df, hoten_df):
                     hoten_vect = f_hoten(ene_vect)
                     # recompute in an appropriate range
                     bf_series[spc] = np.trapz(ped_vect*hoten_vect, x=ene_vect)
-
                 # renormalize for all species and put in dataframe
                 bf_tp_df[pressure][temp] = bf_series/np.sum(bf_series.values)
 
@@ -124,7 +126,6 @@ def bf_tp_df_todct(bf_tp_df, bf_threshold, savefile=False, reac='', model=''):
         :rtype: dct{species: {pressure: (array(T), array(BF))}} -
             same type as ktp dct
     """
-
     # get species
     temps, pressures = bf_tp_df.index, bf_tp_df.columns
     allspecies = bf_tp_df.iloc[0, 0].index
