@@ -8,11 +8,12 @@ import numpy
 from phydat import phycon
 from chemkin_io.writer import _util as writer_util
 import ratefit
+from automol.inchi import without_stereo
 
 RC_CAL = phycon.RC_CAL  # universal gas constant in cal/mol-K
 
 
-def get_algn_rxn_ktp_dct(rxn_ktp_dcts, spc_therm_dcts, spc_dcts, temps,
+def get_algn_rxn_ktp_dct(rxn_ktp_dcts, spc_therm_dcts, mech_spc_dcts, temps,
                          rev_rates=True, remove_loners=True, write_file=False):
     """ Create an algn_rxn_ktp_dct, which contains a single set of rxn keys, where each reaction
         has a ktp_dct for each mechanism. Options exist for reversing rates or not, removing rates
@@ -22,8 +23,8 @@ def get_algn_rxn_ktp_dct(rxn_ktp_dcts, spc_therm_dcts, spc_dcts, temps,
         :type: list of dcts [rxn_ktp_dct1, rxn_ktp_dct2, ...]
         :param spc_therm_dcts: list of spc_therm_dcts
         :type: list of dcts [spc_therm_dct1, spc_therm_dct2, ...]
-        :param spc_dcts: list of spc_dcts
-        :type: list of dcts [spc_dct1, spc_dct2, ...]
+        :param mech_spc_dcts: list of mech_spc_dcts
+        :type: list of dcts [mech_spc_dct1, mech_spc_dct2, ...]
         :param temps: temperatures at which to do calculations (Kelvin)
         :type temps: list [float]
         :param rev_rates: whether or not rates should be reversed
@@ -35,17 +36,17 @@ def get_algn_rxn_ktp_dct(rxn_ktp_dcts, spc_therm_dcts, spc_dcts, temps,
         :return algn_rxn_ktp_dct: single dct with a list of ktp_dcts for each rxn
         :rtype: dct {rxn1: [ktp_dct1, ktp_dct2, ...], rxn2: ...}
     """
-    assert len(rxn_ktp_dcts) == len(spc_therm_dcts) == len(spc_dcts), (
+    assert len(rxn_ktp_dcts) == len(spc_therm_dcts) == len(mech_spc_dcts), (
         f'Lengths of rxn_ktp_dcts ({len(rxn_ktp_dcts)}), spc_therm_dcts ({len(spc_therm_dcts)})' +
-        f', and spc_dcts ({len(spc_dcts)}) should all be the same.'
+        f', and mech_spc_dcts ({len(mech_spc_dcts)}) should all be the same.'
     )
 
     # Get the renamed dictionaries
     renamed_rxn_ktp_dcts, rename_instr_lst = rename_dcts(
-        rxn_ktp_dcts, spc_dcts, target_type='rxn')
+        rxn_ktp_dcts, mech_spc_dcts, target_type='rxn')
     if rev_rates:
         renamed_spc_therm_dcts, _ = rename_dcts(
-            spc_therm_dcts, spc_dcts, target_type='spc')
+            spc_therm_dcts, mech_spc_dcts, target_type='spc')
     else:
         renamed_spc_therm_dcts = []
 
@@ -68,7 +69,7 @@ def get_algn_rxn_ktp_dct(rxn_ktp_dcts, spc_therm_dcts, spc_dcts, temps,
     return algn_rxn_ktp_dct
 
 
-def get_algn_spc_therm_dct(spc_therm_dcts, spc_dcts, remove_loners=True,
+def get_algn_spc_therm_dct(spc_therm_dcts, mech_spc_dcts, remove_loners=True,
                            write_file=False):
     """ Create an algn_spc_therm_dct, which contains a single set of spc keys, where each
         species has a thermo_array for each mechanism. Options exist for removing species
@@ -76,8 +77,8 @@ def get_algn_spc_therm_dct(spc_therm_dcts, spc_dcts, remove_loners=True,
 
         :param spc_therm_dcts: list of spc_therm_dcts
         :type: list of dcts [spc_therm_dct1, spc_therm_dct2, ...]
-        :param spc_dcts: list of spc_dcts
-        :type: list of dcts [spc_dct1, spc_dct2, ...]
+        :param mech_spc_dcts: list of mech_spc_dcts
+        :type: list of dcts [mech_spc_dct1, mech_spc_dct2, ...]
         :param remove_loners: whether or not species with any None entries should be removed
         :type remove_loners: Bool
         :param write_file: whether or not to write output to a text file
@@ -85,14 +86,14 @@ def get_algn_spc_therm_dct(spc_therm_dcts, spc_dcts, remove_loners=True,
         :return algn_spc_therm_dct: single dct with a list of thermo_arrays for each spc
         :rtype: dct {spc1: [thermo_array1, thermo_array2, ...], spc2: ...}
     """
-    assert len(spc_therm_dcts) == len(spc_dcts), (
+    assert len(spc_therm_dcts) == len(mech_spc_dcts), (
         f'Lengths of spc_therm_dcts ({len(spc_therm_dcts)}) ' +
-        f'and spc_dcts ({len(spc_dcts)}) should be the same.'
+        f'and mech_spc_dcts ({len(mech_spc_dcts)}) should be the same.'
         )
 
     # Get the renamed spc_therm_dct
     renamed_spc_therm_dcts, rename_instr_lst = rename_dcts(
-        spc_therm_dcts, spc_dcts, target_type='spc'
+        spc_therm_dcts, mech_spc_dcts, target_type='spc'
     )
 
     # Get the algn_rxn_ktp_dct
@@ -199,7 +200,7 @@ def remove_incomplete_items(algn_dct):
     return filtered_algn_dct
 
 
-def rename_dcts(target_dcts, spc_dcts, target_type):
+def rename_dcts(target_dcts, mech_spc_dcts, target_type):
     """ Takes a list of dictionaries and renames all the species. The species are renamed in order
         of the preference specified by the order of the list (first dct is unchanged, second is
         only changed by first, third is changed by first and then second, etc.).
@@ -208,36 +209,36 @@ def rename_dcts(target_dcts, spc_dcts, target_type):
 
         :param target_dcts: list of dictionaries to be renamed
         :type target_dcts: list of dcts; [{dct1}, {dct2}, ...]
-        :param spc_dcts: list of species dictionaries corresponding to dcts
-        :type spc_dcts: list of dcts; [{dct1}, {dct2}, ...]
+        :param mech_spc_dcts: list of species dictionaries corresponding to dcts
+        :type mech_spc_dcts: list of dcts; [{dct1}, {dct2}, ...]
         :param target_type: either 'rxn' or 'spc'; refers to what the key of the dct is
         :type target_type: str
         :return renamed_dcts: dcts with species renamed
         :rtype: list of dcts [dct1, dct2, ...]
     """
     renamed_target_dcts = copy.deepcopy(target_dcts)  # deepcopy to prevent external changes
-    renamed_spc_dcts = copy.deepcopy(spc_dcts)
+    renamed_mech_spc_dcts = copy.deepcopy(mech_spc_dcts)
     num_mechs = len(target_dcts)
-    assert num_mechs == len(spc_dcts), (
-        f'Length of dct_list is {num_mechs} while length of spc_dct_lst is {len(spc_dcts)}.')
+    assert num_mechs == len(mech_spc_dcts), (
+        f'Length of dct_list is {num_mechs} while length of mech_spc_dct_lst is {len(mech_spc_dcts)}.')
 
     # Loop through each item in the list of dictionaries
     rename_instr_lst = []
     for mech_idx in range(num_mechs-1):
-        spc_dct1 = renamed_spc_dcts[mech_idx]
+        mech_spc_dct1 = renamed_mech_spc_dcts[mech_idx]
         for idx2 in range(mech_idx+1, num_mechs):
-            spc_dct2 = renamed_spc_dcts[idx2]
+            mech_spc_dct2 = renamed_mech_spc_dcts[idx2]
 
             # Get the rename instructions from the species dcts
-            rename_instr = get_rename_instr(spc_dct1, spc_dct2)
+            rename_instr = get_rename_instr(mech_spc_dct1, mech_spc_dct2)
 
-            # Rename and store the current spc_dct
-            renamed_spc_dct2 = rename_species(
-                spc_dct2, rename_instr, target_type='spc')
-            renamed_spc_dcts[idx2] = renamed_spc_dct2
+            # Rename and store the current mech_spc_dct
+            renamed_mech_spc_dct2, _ = rename_species(
+                mech_spc_dct2, rename_instr, target_type='spc')
+            renamed_mech_spc_dcts[idx2] = renamed_mech_spc_dct2
 
             # Rename and store the current dct
-            renamed_dct = rename_species(
+            renamed_dct, _ = rename_species(
                 renamed_target_dcts[idx2], rename_instr, target_type)
             renamed_target_dcts[idx2] = renamed_dct
             rename_instr_lst.append(rename_instr)
@@ -245,14 +246,14 @@ def rename_dcts(target_dcts, spc_dcts, target_type):
     return renamed_target_dcts, rename_instr_lst
 
 
-def get_rename_instr(spc_dct1, spc_dct2):
-    """ Get instructions for renaming spc_dct2 to be consistent with spc_dct1
+def get_rename_instr(mech_spc_dct1, mech_spc_dct2, strip_ste=False):
+    """ Get instructions for renaming mech_spc_dct2 to be consistent with mech_spc_dct1
 
-        :param spc_dct1: the reference spc_dct
-        :type spc_dct1: dct {spc1: ident_array1, spc2: ...}
-        :param spc_dct2: the spc_dct to be renamed
-        :type spc_dct2: dct {spc1: ident_array1, spc2: ...}
-        :return rename_instr: instructions for renaming the species in spc_dct2
+        :param mech_spc_dct1: the reference mech_spc_dct
+        :type mech_spc_dct1: dct {spc1: ident_array1, spc2: ...}
+        :param mech_spc_dct2: the mech_spc_dct to be renamed
+        :type mech_spc_dct2: dct {spc1: ident_array1, spc2: ...}
+        :return rename_instr: instructions for renaming the species in mech_spc_dct2
         :rtype: dct {spc_to_be_renamed1: new_spc_name1, spc_to_be_renamed2: ...}
     """
 
@@ -260,15 +261,21 @@ def get_rename_instr(spc_dct1, spc_dct2):
     rename_str = '-zz'
 
     # Loop through each species in mech1
-    for spc_name1, spc_vals1 in spc_dct1.items():
+    for spc_name1, spc_vals1 in mech_spc_dct1.items():
         ich1 = spc_vals1['inchi']
         mlt1 = spc_vals1['mult']
         chg1 = spc_vals1['charge']
+        # Look for some stereo things
+        if strip_ste:  # strip stereo layer(s) if indicated
+            ich1 = without_stereo(ich1)
 
-        for spc_name2, spc_vals2 in spc_dct2.items():
+        for spc_name2, spc_vals2 in mech_spc_dct2.items():
             ich2 = spc_vals2['inchi']
             mlt2 = spc_vals2['mult']
             chg2 = spc_vals2['charge']
+
+            if strip_ste:  # strip stereo layer(s) if indicated
+                ich2 = without_stereo(ich2)
 
             # If species are identical
             if ich1 == ich2 and mlt1 == mlt2 and chg1 == chg2:
@@ -282,59 +289,142 @@ def get_rename_instr(spc_dct1, spc_dct2):
     return rename_instr
 
 
-def get_comb_spc_dct(spc_dct1, spc_dct2):
-    """ Combine two spc_dcts by adding to spc_dct1 any spcs unique to spc_dct2
+def get_rename_instr_v2(mech_spc_dct1, mech_spc_dct2, strip_ste=False):
+    """ Get instructions for renaming mech_spc_dct2 to be consistent with mech_spc_dct1
 
-        :param spc_dct1: the reference spc_dct
-        :type spc_dct1: dct {spc1: ident_array1, spc2: ...}
-        :param spc_dct2: the spc_dct to be added
-        :type spc_dct2: dct {spc1: ident_array1, spc2: ...}
-        :return comb_spc_dct: spc_dct1 plus any species unique to spc_dct2
+        :param mech_spc_dct1: the reference mech_spc_dct
+        :type mech_spc_dct1: dct {spc1: ident_array1, spc2: ...}
+        :param mech_spc_dct2: the mech_spc_dct to be renamed
+        :type mech_spc_dct2: dct {spc1: ident_array1, spc2: ...}
+        :return rename_instr: instructions for renaming the species in mech_spc_dct2
+        :rtype: dct {spc_to_be_renamed1: new_spc_name1, spc_to_be_renamed2: ...}
+    """
+
+    rename_instr = {}
+    rename_str = '-zz'
+
+    # Loop through each species in mech1
+    for spc1, spc_dct1 in mech_spc_dct1.items():
+        ich1 = spc_dct1['inchi']
+        mlt1 = spc_dct1['mult']
+        chg1 = spc_dct1['charge']
+        exc1 = spc_dct1['exc_flag']
+        fml1 = spc_dct1['fml']
+
+        # Strip stereo layer(s) if indicated
+        if strip_ste:
+            ich1 = without_stereo(ich1)
+
+        for spc2, spc_dct2 in mech_spc_dct2.items():
+            # If species are identical
+            spc_same = are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2, 
+                                    strip_ste=strip_ste)
+            if spc_same:
+                if spc1 != spc2:  # if spc names different, add to rename_instr
+                    rename_instr[spc2] = spc1
+
+            # If species are different but have same name
+            elif spc1 == spc2:
+                rename_instr[spc2] = spc2 + rename_str
+
+    return rename_instr
+
+
+def are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2, strip_ste=False):
+    """ Compares two species to see if they are the same
+
+        Note: inputting spc1 in pieces for faster implementation in loop
+    """
+    
+    def are_fml_same(fml1, fml2):
+        """ Compares two formula dictionaries to see if they are the same
+        """
+        for elem, count in fml1.items():
+            if elem not in fml2:  # if element is not in fml2
+                return False
+            elif fml2[elem] != count:  # if element is in fml2 but has dif. #
+                return False
+        # If the for loop is completed without returning False, return True
+        return True
+    
+    # Load spc2 information
+    ich2 = spc_dct2['inchi']
+    mlt2 = spc_dct2['mult']
+    chg2 = spc_dct2['charge']
+    exc2 = spc_dct2['exc_flag']
+    fml2 = spc_dct2['fml']
+
+    # Check a few easy things
+    if mlt1 != mlt2:
+        return False
+    if chg1 != chg2:
+        return False
+    if exc1 != exc2:
+        return False
+    if not are_fml_same(fml1, fml2):
+        return False
+
+    # Finally, (maybe) remove the stereo part of the inchi and compare inchis
+    if strip_ste:
+        ich2 = without_stereo(ich2)  # this is expensive, so saving for last
+    if ich1 != ich2:
+        return False
+    return True
+        
+
+def get_comb_mech_spc_dct(mech_spc_dct1, mech_spc_dct2):
+    """ Combine two mech_spc_dcts by adding to mech_spc_dct1 any spcs unique to mech_spc_dct2
+
+        :param mech_spc_dct1: the reference mech_spc_dct
+        :type mech_spc_dct1: dct {spc1: ident_array1, spc2: ...}
+        :param mech_spc_dct2: the mech_spc_dct to be added
+        :type mech_spc_dct2: dct {spc1: ident_array1, spc2: ...}
+        :return comb_mech_spc_dct: mech_spc_dct1 plus any species unique to mech_spc_dct2
         :rtype: dct {spc1: ident_array1, spc2: ...}
     """
 
-    rename_instr = get_rename_instr(spc_dct1, spc_dct2)
+    rename_instr = get_rename_instr(mech_spc_dct1, mech_spc_dct2)
     rename_str = '-zz'
-    comb_spc_dct = copy.deepcopy(spc_dct1)  # deepcopy = no external changes
-    for spc_name2, spc_vals2 in spc_dct2.items():
+    comb_mech_spc_dct = copy.deepcopy(mech_spc_dct1)  # deepcopy = no external changes
+    for spc2, spc_dct2 in mech_spc_dct2.items():
         unique = True
-        ich2 = spc_vals2['inchi']
-        mlt2 = spc_vals2['mult']
-        chg2 = spc_vals2['charge']
+        ich2 = spc_dct2['inchi']
+        mlt2 = spc_dct2['mult']
+        chg2 = spc_dct2['charge']
 
-        for spc_vals1 in spc_dct1.values():
-            ich1 = spc_vals1['inchi']
-            mlt1 = spc_vals1['mult']
-            chg1 = spc_vals1['charge']
+        for spc_dct1 in mech_spc_dct1.values():
+            ich1 = spc_dct1['inchi']
+            mlt1 = spc_dct1['mult']
+            chg1 = spc_dct1['charge']
 
             if ich1 == ich2 and mlt1 == mlt2 and chg1 == chg2:
-                if spc_name2 in rename_instr:
+                if spc2 in rename_instr:
                     unique = False
                 break
 
         if unique:
-            if spc_name2 in rename_instr:
-                comb_spc_dct[spc_name2 + rename_str] = spc_vals2
+            if spc2 in rename_instr:
+                comb_mech_spc_dct[spc2 + rename_str] = spc_dct2
             else:
-                comb_spc_dct[spc_name2] = spc_vals2
+                comb_mech_spc_dct[spc2] = spc_dct2
 
-    return comb_spc_dct
+    return comb_mech_spc_dct
 
 
-def get_mult_comb_spc_dct(spc_dcts):
-    """ Combine a list of spc_dcts into a single comb_spc_dct
+def get_mult_comb_mech_spc_dct(mech_spc_dcts):
+    """ Combine a list of mech_spc_dcts into a single comb_mech_spc_dct
 
-        :param spc_dcts: list of spc_dcts
-        :type spc_dcts: list [spc_dct1, spc_dct2, ...]
-        :return comb_spc_dct: spc_dct with all unique species
+        :param mech_spc_dcts: list of mech_spc_dcts
+        :type mech_spc_dcts: list [mech_spc_dct1, mech_spc_dct2, ...]
+        :return comb_mech_spc_dct: mech_spc_dct with all unique species
         :rtype: dct {spc1: ident_array1, spc2: ...}
     """
-    num_combs = len(spc_dcts) - 1  # n-1 combinations to do
-    comb_spc_dct = copy.deepcopy(spc_dcts[0])
+    num_combs = len(mech_spc_dcts) - 1  # n-1 combinations to do
+    comb_mech_spc_dct = copy.deepcopy(mech_spc_dcts[0])
     for idx in range(num_combs):
-        comb_spc_dct = get_comb_spc_dct(comb_spc_dct, spc_dcts[idx + 1])
+        comb_mech_spc_dct = get_comb_mech_spc_dct(comb_mech_spc_dct, mech_spc_dcts[idx + 1])
 
-    return comb_spc_dct
+    return comb_mech_spc_dct
 
 
 def rename_species(target_dct, rename_instr, target_type='rxn'):
@@ -369,6 +459,7 @@ def rename_species(target_dct, rename_instr, target_type='rxn'):
         f'The target_type is {target_type}, but should be either "rxn", "thermo", or "spc"'
         )
     renamed_dct = {}
+    ste_dct = {}
 
     # If a rxn_ktp_dct
     if target_type == 'rxn':
@@ -403,9 +494,22 @@ def rename_species(target_dct, rename_instr, target_type='rxn'):
             new_rcts = tuple(new_rcts)
             new_prds = tuple(new_prds)
             new_third_bods = tuple(new_third_bods)
-            renamed_dct[new_rcts, new_prds, new_third_bods] = target_dct[rcts, prds, third_bods]
+            # See if new reaction is already in the renamed dct
+            match, _ = assess_rxn_match((new_rcts, new_prds, new_third_bods), renamed_dct)
+            if match:
+                ste_dct[match].append((rcts, prds, third_bods))
+            else:
+                renamed_dct[new_rcts, new_prds, new_third_bods] = target_dct[rcts, prds, third_bods]
+                ste_dct[new_rcts, new_prds, new_third_bods] = [(rcts, prds, third_bods),]
 
-    # If a spc_therm_dct or spc_dct
+        # Remove any rxns in ste_dct that only have one item in the list;
+        # these are reactions without any stereo reactions
+        old_ste_dct = copy.deepcopy(ste_dct)  # this prevents runtime errors
+        for rxn, ste_list in old_ste_dct.items():
+            if len(ste_list) == 1:
+                ste_dct.pop(rxn)
+
+    # If a spc_therm_dct or mech_spc_dct
     else:
         for spc, data in target_dct.items():
             if spc in rename_instr.keys():
@@ -414,7 +518,7 @@ def rename_species(target_dct, rename_instr, target_type='rxn'):
             else:
                 renamed_dct[spc] = data
 
-    return renamed_dct
+    return renamed_dct, ste_dct
 
 
 def reverse_rxn_ktp_dcts(renamed_rxn_ktp_dcts, renamed_spc_therm_dcts, temps, rev_rates=True):
@@ -552,17 +656,17 @@ def assess_rxn_match(rxn1, rxn_ktp_dct2):
         :type rxn1: tuple (rcts, prds, third_bods)
         :param rxn_ktp_dct2: rxn_ktp_dct for mech2
         :type rxn_ktp_dct2: dict {rxn1: ktp_dct1, rxn2: ...}
-        :return matching_rxn: rxn key for the matching reaction
+        :return matching_rxn: rxn key of matching reaction; None if no match
         :rtype: tuple (rcts, prds, third_bods)
         :return rev_rate: whether or not the rate should be reversed
         :rtype: Bool
     """
 
     def check_third_bod(third_bod1, third_bod2):
-        """ Checks if two third bodies are the same. Accounts for the case 
+        """ Checks if two third bodies are the same. Accounts for the case
             where one is None and the other is '(+M)'
         """
-        
+
         if third_bod1 == third_bod2:
             are_same = True
         elif third_bod1 is None and third_bod2 == '(+M)':
@@ -571,7 +675,7 @@ def assess_rxn_match(rxn1, rxn_ktp_dct2):
             are_same = True
         else:
             are_same = False
-    
+
         return are_same
 
     # Get all possible orderings of the reactants and products for mech1
@@ -580,6 +684,8 @@ def assess_rxn_match(rxn1, rxn_ktp_dct2):
     rcts1_perm = list(itertools.permutations(rcts1, len(rcts1)))
     prds1_perm = list(itertools.permutations(prds1, len(prds1)))
 
+    if isinstance(rxn_ktp_dct2, tuple):
+        print('rxn_ktp_dct2:\n', rxn_ktp_dct2)
     matching_rxn_name = None
     rev_rate = None
     already_found = False

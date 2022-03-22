@@ -54,10 +54,10 @@ def pes_dictionary(mech_str, mech_type, spc_dct, printlog=True):
 
         # If that fails then try and read a file normally and sort it
         if pes_dct is None:
-            _, mech_info, _ = parse_mechanism(mech_str, mech_type, spc_dct)
-            if mech_info is not None:
+            rxn_param_dct = parse_mechanism(mech_str, mech_type)
+            if rxn_param_dct is not None:
                 srt_mch = sorter.sorting(
-                    mech_info, spc_dct, sort_str, isolate_species)
+                    rxn_param_dct, spc_dct, sort_str, isolate_species)
                 pes_dct = srt_mch.return_pes_dct()
         else:
             pes_dct = _fix_formula(pes_dct, spc_dct)

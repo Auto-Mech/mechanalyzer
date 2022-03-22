@@ -63,6 +63,15 @@ def test_load_spc_therm_dcts():
         assert numpy.allclose(spc_therm_dct['O'][1], CORRECT_THERM, rtol=1e-2)
 
 
+def test_load_spc_nasa7_dcts():
+    """ Tests the load_spc_nasa7_dcts function
+    """
+    spc_nasa7_dcts = ckin.load_spc_nasa7_dcts(THERMO_FILENAMES, DAT_PATH)
+    assert len(spc_nasa7_dcts) == 2
+    for spc_nasa7_dct in spc_nasa7_dcts:
+        assert tuple(spc_nasa7_dct.keys()) == CORRECT_SPCS
+
+
 def test_parse_rxn_ktp_dct():
     """ Tests the parse_rxn_ktp_dct function
     """
@@ -77,4 +86,5 @@ if __name__ == '__main__':
     test_load_rxn_ktp_dcts()
     test_load_rxn_param_dcts()
     test_load_spc_therm_dcts()
+    test_load_spc_nasa7_dcts()
     test_parse_rxn_ktp_dct()
