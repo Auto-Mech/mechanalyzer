@@ -15,7 +15,7 @@ def sorted_pes_dct(spc_str, mech_str, isolate_spc, sort_lst):
     """ Function that extracts sorted subpes for a mech
     """
 
-    srt_mch, _, _, _ = _sort_objs(spc_str, mech_str, sort_lst, isolate_spc)
+    srt_mch, _, _ = _sort_objs(spc_str, mech_str, sort_lst, isolate_spc)
 
     return srt_mch.return_pes_dct()
 
@@ -42,7 +42,7 @@ def _sort_objs(spc_str, mech_str, sort_lst, isolate_spc):
     # Build mech information
     spc_dct = sparser.build_spc_dct(spc_str, SPC_TYPE)
     rxn_param_dct = mparser.parse_mechanism(
-        mech_str, MECH_TYPE, spc_dct)
+        mech_str, MECH_TYPE)
 
     # Build the sorted mechanism and species objects
     srt_mch = sorting(rxn_param_dct, spc_dct, sort_lst, isolate_spc)
