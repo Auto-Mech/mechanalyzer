@@ -28,7 +28,7 @@ def plot_single_sccs(
         inp_spc_str, 'csv')
     pes_dct = mechanalyzer.parser.pes.pes_dictionary(
         inp_mech_str, 'chemkin', mech_spc_dct)
-    print(pes_dct)
+
     # Grab the channels of the PES dct that was requested
     print(f'Plotting PES-CCS: {pes_idx}-{ccs_idx}')
     chnls = ()
