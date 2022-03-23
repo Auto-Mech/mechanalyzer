@@ -112,6 +112,14 @@ def functional_group_name(ich, name='', rename_rule_dct=None):
         conn_string = automol.inchi.connectivity(
             ich, parse_connection_layer=True, parse_h_layer=True)
         return ioformat.hash_string(conn_string, 3, remove_char_lst=('-', '_'))
+        # c_conn_str = automol.inchi.connectivity(
+        #     ich, parse_connection_layer=True, parse_h_layer=False)
+        # h_conn_str = automol.inchi.connectivity(
+        #     ich, parse_connection_layer=False, parse_h_layer=True)
+        # chash = ioformat.hash_string(c_conn_str, 3, remove_char_lst=('-', '_'))
+        # hhash = ioformat.hash_string(h_conn_str, 3, remove_char_lst=('-', '_'))
+        # lbl = chash + hhash
+        # return lbl
 
     def _fgrp_name_string(fgrp_cnt_dct, rule_dct):
         """ Determines what the new name for a species should
@@ -174,8 +182,18 @@ def functional_group_name(ich, name='', rename_rule_dct=None):
         re_name += f'-{conn_lbl}'
         if ste_lbl:
             re_name += f'{ste_lbl}'
-        if fgrp_lbl:
-            re_name += f'-{fgrp_lbl}'
+        re_name += f'-{fgrp_lbl}'
+        
+        # conn_lbl = _conn_string(ich)
+        # ste_lbl = stereo_name_suffix(ich)
+        # fgrp_lbl = _fgrp_name_string(fgrp_cnt_dct, rename_rule_dct)
+        # # Build the names string
+        # re_name = f'C{c_cnt}'
+        # re_name += f'{fgrp_lbl}'
+        # re_name += '-'
+        # re_name += f'{conn_lbl}'
+        # if ste_lbl:
+        #     re_name += f'{ste_lbl}'
     else:
         # Use input name or use formula
         if name:

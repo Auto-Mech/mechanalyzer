@@ -567,7 +567,7 @@ def _label_dct(nodes):
     """ simplify the label for the plot
     """
     label_dct = {}
-    n = 8
+    n = 14
     for node in nodes:
         label = node.split('!')
         if len(label) == 1:
