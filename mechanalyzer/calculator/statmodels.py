@@ -9,7 +9,6 @@ from scipy.interpolate import interp1d
 from phydat import phycon
 from autoparse import find
 
-
 MW_dct_elements = {
     'C': 12e-3,
     'N': 14e-3,
@@ -336,7 +335,11 @@ class PEDModels:
                 num = rho1_ene1 * rho_non1
                 den = np.trapz(rho1_ene1_array*rho_non1_array,
                                x=self.ene1_vect[idx_ene1_array])
-                prob_ene1ene.append(num/den)
+                # if for some reason you get den=0: append 0 as value
+                if den == 0:
+                    prob_ene1ene.append(0)
+                else:
+                    prob_ene1ene.append(num/den)
 
             prob_ene1ene = np.array(prob_ene1ene)
             # print(prob_ene1ene)
@@ -376,6 +379,9 @@ class PEDModels:
                 if distr_type == 'dos':
                     self.rho_rovib_prod1, self.rho_non1 = init_dos(
                         pressure, temp)
+                # if idx_en and ped not the same length: drop 1 ped val
+                if len(idx_ene_vect) == len(ped_series.values)-1:
+                    ped_series = ped_series.iloc[:-1]
 
                 prob_ene1_vect = []
                 for idx_ene1, ene1 in enumerate(self.ene1_vect):
@@ -383,16 +389,17 @@ class PEDModels:
                     # to energies in ene, but more consistent
                     idx_ene_new = idx_ene_vect[idx_ene_vect >= idx_ene1]
                     ene_new = self.ene1_vect[idx_ene_new]
-
                     if distr_type == 'phi':
                         prob_ene1ene = norm_distr(
                             ene1, ene_new, self.phi, self.ene_bw)
                     elif distr_type == 'dos':
                         prob_ene1ene = dos(idx_ene1, idx_ene_new)
+
                     prob_ene1ene_tot_pressure_ped = (
                         prob_ene1ene *
                         ped_series.values[idx_ene_vect >= idx_ene1]
                     )
+                    
                     prob_ene1 = np.trapz(
                         prob_ene1ene_tot_pressure_ped, ene_new)
                     prob_ene1_vect.append(prob_ene1)
@@ -404,13 +411,13 @@ class PEDModels:
                     prob_ene1_norm, index=self.ene1_vect)
 
                 # remove comments to print P(E1)|T,P
-                # prob_ene1_df = ped_df_prod[P][T].reset_index()
+                # prob_ene1_df = ped_df_prod[pressure][temp].reset_index()
                 # header_label = np.array(prob_ene1_df.columns, dtype=str)
                 # header_label[0] = 'E [kcal/mol]'
                 # labels = '\t\t'.join(header_label)
-                # np.savetxt('PE1_{}_{}.txt'.format(P,T), prob_ene1_df.values,
+                # np.savetxt('PE1_{}_{}.txt'.format(pressure,temp), prob_ene1_df.values,
                 #         delimiter='\t', header=labels, fmt='%1.3e')
-                # print(P, T, ped_df_prod[P][T].idxmax(), '\n')
+                # print(pressure, temp, ped_df_prod[pressure][temp].idxmax(), '\n')
 
         return ped_df_prod
 
