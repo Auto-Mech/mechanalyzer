@@ -518,10 +518,10 @@ def merge_rxn_ktp_dcts(full_rxn_ktp_dct, rxn_ktp_dct):
         else:
             # Add the existing rates from the full and small dct together
             _ktp2 = full_rxn_ktp_dct[rxn]
-            print('add rxn test')
-            print(rxn)
-            print(_ktp2)
-            print(_ktp1)
+            # print('add rxn test')
+            # print(rxn)
+            # print(_ktp2)
+            # print(_ktp1)
             full_rxn_ktp_dct[rxn] = add_ktp_dcts(_ktp1, _ktp2)
 
     return full_rxn_ktp_dct

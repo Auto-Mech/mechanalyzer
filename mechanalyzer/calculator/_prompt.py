@@ -53,8 +53,8 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
             frag2 = list(set(fragments).difference((frag1,)))[0]
         except IndexError:
             print('no superposition between PED fragments and hot fragments '
-                  '- exiting now \n')
-            sys.exit()
+                  '- skipping \n')
+            continue
 
 
         # DERIVE PED OF THE HOT FRAGMENT
