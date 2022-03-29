@@ -23,7 +23,8 @@ ALLOWED_COLUMN_NAMES = (
     'charge',
     'exc_flag',
     'fml',
-    'sens'
+    'sens',
+    'hof',
 )
 
 TRIP_DCT = {
@@ -170,6 +171,13 @@ def read_spc_dct(cols, col_headers):
             spc_dct[col_header] = str_to_fml(col)
         else:
             spc_dct[col_header] = col
+
+    # If inchi or smiles not in headers, fill in blank value to avoid KeyError
+    # (can't both be missing; see parse_first_line)
+    if 'inchi' not in col_headers:
+        spc_dct['inchi'] = ''
+    elif 'smiles' not in col_headers:
+        spc_dct['smiles'] = ''
 
     return spc, spc_dct
 
