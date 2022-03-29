@@ -134,7 +134,7 @@ def load_rxn_param_dct(mech_filename, path):
         :rtype: dct {rxn1: param_tuple1, rxn2: ...}
     """
 
-    mech_str = parser.read_file(path, mech_filename)
+    mech_str = parser.read_file(path, mech_filename, print_debug=True)
     rxn_param_dct = parse_rxn_param_dct(mech_str)
 
     return rxn_param_dct
@@ -154,7 +154,7 @@ def load_spc_therm_dct(thermo_filename, path, temps):
         :rtype: dct {spc1: therm_array1, spc2: ...}
     """
 
-    mech_str = parser.read_file(path, thermo_filename)
+    mech_str = parser.read_file(path, thermo_filename, print_debug=True)
     spc_therm_dct = parse_spc_therm_dct(mech_str, temps)
 
     return spc_therm_dct
@@ -172,7 +172,7 @@ def load_spc_nasa7_dct(thermo_filename, path):
         :rtype: dct {spc1: nasa7_dct1, spc2: ...}
     """
 
-    mech_str = parser.read_file(path, thermo_filename)
+    mech_str = parser.read_file(path, thermo_filename, print_debug=True)
     spc_nasa7_dct = parse_spc_nasa7_dct(mech_str)
 
     return spc_nasa7_dct
