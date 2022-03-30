@@ -3,6 +3,7 @@
 
 from mechanalyzer.parser import mech as mparser
 from mechanalyzer.parser import spc as sparser
+from mechanalyzer.parser import new_spc as new_sparser
 from mechanalyzer.builder import sort_fct
 
 
@@ -40,7 +41,8 @@ def _sort_objs(spc_str, mech_str, sort_lst, isolate_spc):
     """
 
     # Build mech information
-    spc_dct = sparser.build_spc_dct(spc_str, SPC_TYPE)
+    # spc_dct = sparser.build_spc_dct(spc_str, SPC_TYPE)
+    spc_dct = new_sparser.parse_mech_spc_dct(spc_str, chk_ste=False, chk_match=False)
     rxn_param_dct = mparser.parse_mechanism(
         mech_str, MECH_TYPE)
 

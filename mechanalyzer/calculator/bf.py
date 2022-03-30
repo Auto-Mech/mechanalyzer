@@ -201,6 +201,14 @@ def merge_bf_rates(bf_tp_dct, ktp_dct):
             print(' Values at other pressures approximated from available \n')
             ktp_dct = extend_dct_with_pressure(
                 pressure_all, pressure_ktp, ktp_dct)
+            
+        if not all(pressure in pressure_all for pressure in pressure_ktp):
+            print('Warning: P range of BF dictionary extended to match ktp:\n')
+            print(' Values at other pressures approximated from available \n')
+            bf_tp_dct_sp = extend_dct_with_pressure(
+                pressure_ktp, pressure_all, bf_tp_dct_sp)   
+                
+        pressure_all = list(set(pressure_all + pressure_ktp))
         bf_ktp_dct = dict.fromkeys(pressure_all)
 
         for pressure in pressure_all:

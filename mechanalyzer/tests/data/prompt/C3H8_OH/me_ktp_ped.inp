@@ -2,8 +2,7 @@ TemperatureList[K]       400.  600. 800.  1200. 1800. 2000.
 PressureList[atm]                       1.0
 
 EnergyStepOverTemperature             0.1          #Ratio of discretization energy step to T
-ExcessEnergyOverTemperature           40
-ModelEnergyLimit[kcal/mol]            400
+ModelEnergyLimit[kcal/mol]            600
 WellCutoff                            10
 ChemicalEigenvalueMax                 0.2
 ChemicalEigenvalueMin                 1.e-6          #only for direct diagonalization method
@@ -20,12 +19,12 @@ CalculationMethod                       direct #low-eigenvalue #direct
 
 
 PEDOutput       ped.out
-PEDSpecies      RH_NC3H7 RH_IC3H7
+PEDSpecies      C3H8+OH_CH3CH2CH2+H2O  C3H8+OH_CH3CHCH3+H2O
 
 
 MicroRateOutput                         ke_ped.out
 MicroEnerMin[kcal/mol]                  0.
-MicroEnerMax[kcal/mol]                  280.
+MicroEnerMax[kcal/mol]                  380.
 MicroEnerStep[kcal/mol]                 0.2
 
 
@@ -51,8 +50,6 @@ Model
 !-----------------------------------------------
   Well     W0	# CH3CH2CH3--OH
     Species
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/coh/c3o1/c3h9o/transition_states/ch3ch2ch3+oh/ts_ch3ch2ch3_oh_to_ch3ch2ch2_h2o/dft/ts_ch3ch2ch3_oh_to_ch3ch2ch2_h2o_b2plypd3_augccpvtz.log
       RRHO
         Geometry[angstrom]	13
 	C	  0.000000	  0.000000	  0.000000
@@ -120,10 +117,8 @@ Model
 !Bimolecular R:  Reactants C3H8 + OH
 !-----------------------------------------------
 
-  Bimolecular		RH	# ch3ch2ch3+oh
+  Bimolecular		C3H8+OH
     Fragment	C3H8
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/ch/c3/c3h8/ch3ch2ch3/dft/c3h8_b2plypd3_augccpvtz.log
       RRHO
         Geometry[angstrom]	11
 	C	  0.000000	  0.000000	  0.000000
@@ -175,8 +170,6 @@ Model
       End
           
     Fragment	OH
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/oh/o1/oh/dft/oh_b2plypd3_augccpvtz.log
       RRHO
         Geometry[angstrom]	2
 	O	  0.000000	  0.000000	  0.000000
@@ -203,10 +196,8 @@ Model
 !Bimolecular Products C3H7 + H2O
 !-----------------------------------------------
 
-  Bimolecular		NC3H7	#ch3ch2ch2+h2o
+  Bimolecular		CH3CH2CH2+H2O
     Fragment    CH3CH2CH2 density
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/ch/c3/c3h7/ch3ch2ch2/dft/ch3ch2ch2_b2plypd3_augccpvtz.log
       RRHO
         Geometry[angstrom]	10
 	C	  0.000000	  0.000000	  0.000000
@@ -281,10 +272,8 @@ Model
 !Bimolecular Products C3H7 + H2O
 !-----------------------------------------------
 
-  Bimolecular		IC3H7	#ch3ch2ch2+h2o
+  Bimolecular		CH3CHCH3+H2O
     Fragment    CH3CHCH3 density
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/ch/c3/c3h7/ch3chch3/dft/ch3chch3_b2plypd3_augccpvtz.log
       RRHO
         Geometry[angstrom]	10
 	C	  0.000000	  0.000000	  0.000000
@@ -333,8 +322,6 @@ Model
             0	2
       End       
     Fragment	H2O density
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/oh/o1/h2o/dft/h2o_b2plypd3_augccpvtz.log
       RRHO
         Geometry[angstrom]	3
 	O	  0.000000	  0.000000	  0.000000
@@ -362,7 +349,7 @@ Model
 !TS addition: c3h8+oh --> ch3ch2ch3--oh
 !-----------------------------------------------
 
-   Barrier      B0   W0   RH    # C3H8 + OH = reactant complex
+   Barrier      B0   W0   C3H8+OH
      RRHO
 	Stoichiometry  C3O1H9
         Core     PhaseSpaceTheory
@@ -406,9 +393,7 @@ Model
 !TS abstraction: ch4+no2 <--> ch3+cis-hono
 !-----------------------------------------------
 
-  Barrier	B1	W0 NC3H7
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/coh/c3o1/c3h9o/transition_states/ch3ch2ch3+oh/ts_ch3ch2ch3_oh_to_ch3ch2ch2_h2o/dft/ts_ch3ch2ch3_oh_to_ch3ch2ch2_h2o_b2plypd3_augccpvtz.log
+  Barrier	B1	W0 CH3CH2CH2+H2O
       RRHO
         Geometry[angstrom]	13
 	C	  0.000000	  0.000000	  0.000000
@@ -476,9 +461,7 @@ Model
         End
       End
       
-  Barrier	B2	W0 IC3H7
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/coh/c3o1/c3h9o/transition_states/ch3ch2ch3+oh/ts_ch3ch2ch3_oh_to_ch3chch3_h2o/dft/ts_ch3ch2ch3_oh_to_ch3chch3_h2o_b2plypd3_augccpvtz.log
+  Barrier	B2	W0 CH3CHCH3+H2O
       RRHO
         Geometry[angstrom]	13
 	O	  0.000000	  0.000000	  0.000000

@@ -19,7 +19,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
             ped_inp_str, ped_out_str, ped_ped_str, ped_ke_out_str)
 
     # HOTEN INFO
-    hot_frag_dct, hot_spc_en, hoten_dct, rxn_ktp_dct_hot = \
+    hot_frag_dct, hot_spc_en, hoten_dct, rxn_ktp_dct_hot, fne_bf = \
         prompt_hot_info(hot_inp_str, hot_out_str, hot_log_str)
 
 
@@ -56,7 +56,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
                   '- skipping \n')
             continue
 
-
+        
         # DERIVE PED OF THE HOT FRAGMENT
         ped_df_frag1_dct = mechanalyzer.builder.ped.ped_frag1(
             ped_df, frag1, frag2, models,
@@ -65,7 +65,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
         # JOIN PED AND HOTEN -> DERIVE PRODUCTS BF
         bf_tp_dct = mechanalyzer.builder.bf.bf_tp_dct(
             models, ped_df_frag1_dct, hoten_dct[frag1], bf_thresh,
-            savefile=True, reac=reacs)
+            savefile=True, reac=reacs, fne=fne_bf[frag1])
 
         # Calculate Prompt Dissociation Rates
         frag_reacs_dct = mess_io.reader.dct_species_fragments(
@@ -166,4 +166,6 @@ def prompt_hot_info(hot_inp_str, hot_out_str, hot_log_str):
                 relabel_reactions=True
             )
 
-    return hot_frag_dct, hot_spc_en, hoten_dct, rxn_ktp_dct_hot
+    fne_bf = mess_io.reader.hoten.extract_fne(hot_log_str)
+
+    return hot_frag_dct, hot_spc_en, hoten_dct, rxn_ktp_dct_hot, fne_bf
