@@ -38,6 +38,9 @@ def ped_frag1(ped_df, hotfrg, otherfrg, modeltype_list,
     ped_df_frag1_dct = dict.fromkeys(modeltype_list)
 
     for modeltype in modeltype_list:
+        if modeltype == 'fne':
+            print('*Model fne independent of generating rxn; PED not calculated \n')
+            continue
         ped_df_frag1_dct[modeltype] = ped_prod1_fct.compute_ped(modeltype)
 
     return ped_df_frag1_dct

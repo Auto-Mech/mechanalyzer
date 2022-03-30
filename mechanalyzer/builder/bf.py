@@ -5,7 +5,7 @@ from mechanalyzer.calculator import bf
 # probably more useful to turn this into a class
 
 
-def bf_tp_dct(modeltype_list, ped_dct, hoten_df, bf_threshold, reac='', savefile=False):
+def bf_tp_dct(modeltype_list, ped_dct, hoten_df, bf_threshold, reac='', savefile=False, fne=None):
     """ Build a branching fractions dictionary as a
         function of temeprature and pressure
         containing the BFs of each product of the PES
@@ -19,6 +19,10 @@ def bf_tp_dct(modeltype_list, ped_dct, hoten_df, bf_threshold, reac='', savefile
         :type hoten_df: df[P][T]:df[allspecies][energies]}
         :param reac: label of original reactants producing hot species - only for file save
         :type hotreac: str
+        :param fne: branching fractions at T,P for each product
+            for the selected hotspecies
+        :type fne: dataframe of series df[P][T]:series[species],
+            dataframe(series(float)) (same as bf_tp_df)
         :return bf_tp_dct: branching fractions at T,P for each product
             for the selected hotspecies
         :rtype: dct{model: dct{species: {pressure: (array(T), array(BF))}}}
@@ -26,11 +30,14 @@ def bf_tp_dct(modeltype_list, ped_dct, hoten_df, bf_threshold, reac='', savefile
 
     _bf_tp_dct = dict.fromkeys(modeltype_list)
     for modeltype in modeltype_list:
-        ped_df = ped_dct[modeltype]
-        bf_tp_df = bf.bf_tp_df_full(ped_df, hoten_df)
+        if modeltype == 'fne':
+            bf_tp_df = fne
+        else:
+            ped_df = ped_dct[modeltype]
+            bf_tp_df = bf.bf_tp_df_full(ped_df, hoten_df)
+
         bf_tp_dct_species = bf.bf_tp_df_todct(
             bf_tp_df, bf_threshold, model=modeltype, reac=reac, savefile=savefile)
-
         _bf_tp_dct[modeltype] = bf_tp_dct_species
 
     return _bf_tp_dct

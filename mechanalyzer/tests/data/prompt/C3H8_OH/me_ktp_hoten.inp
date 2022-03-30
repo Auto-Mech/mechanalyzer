@@ -2,8 +2,7 @@ TemperatureList[K]       400.  600. 800.  1200. 1800. 2000.
 PressureList[atm]                      0.1 1.0  100.
 
 EnergyStepOverTemperature		.2
-ExcessEnergyOverTemperature		30
-ModelEnergyLimit[kcal/mol]		400
+ModelEnergyLimit[kcal/mol]		800
 CalculationMethod			direct #low-eigenvalue #direct
 !  WellCutoff				10
 !  ChemicalEigenvalueMax			0.2 
@@ -32,8 +31,6 @@ Model
 
   Well     CH3CH2CH2
     Species
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/ch/c3/c3h7/ch3ch2ch2/cc/ch3ch2ch2_cc_tz.out
       RRHO
         Geometry[angstrom]	10
 	 C          0.2919588137        0.0208982138        1.2779641817
@@ -86,8 +83,6 @@ Model
 
   Well     CH3CHCH3
     Species
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/ch/c3/c3h7/ch3chch3/cc/ch3chch3_cc_tz.out
       RRHO
         Geometry[angstrom]	10
 	 C          0.0054615712        0.2206360202       -1.2935687103
@@ -151,10 +146,8 @@ Model
 !-----------------------------------------------
 !Bimolecular:  C2H4 + CH3
 !-----------------------------------------------
-  Bimolecular		P1	# C2H4+CH3
+  Bimolecular		C2H4+CH3	# C2H4+CH3
     Fragment	C2H4
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/ch/c2/c2h4/ch2ch2/cc/ch2ch2_cc_tz.out
       RRHO
         Geometry[angstrom]	6
 	 C          0.0000000000        0.0000000000       -0.6685794983
@@ -179,8 +172,6 @@ Model
             0	1
       End             
     Fragment	CH3
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/ch/c1/ch3/cc/ch3_cc_tz.out
       RRHO
         Geometry[angstrom]	4
 	 C         -0.0000000000        0.0000000000        0.0000000000
@@ -207,10 +198,8 @@ Model
 !Bimolecular:  CH3CHCH2 + H
 !-----------------------------------------------
 
-  Bimolecular		P2	# C3H6 + H
+  Bimolecular		CH3CHCH2+H	# C3H6 + H
     Fragment	CH3CHCH2
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/ch/c3/c3h6/ch3chch2/cc/ch3chch2_tz_v2.out
       RRHO
         Geometry[angstrom]	9
 	 C          0.0000000000        0.1790471038       -1.2578513934
@@ -275,9 +264,7 @@ Model
 !TS 1: ch3ch2ch2 --> ch2ch2+ch3
 !-----------------------------------------------
 
-  Barrier     B1   CH3CH2CH2   P1    # CH3CH2CH2 --> C2H4+CH3
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/ch/c3/c3h7/transition_states/ch3ch2ch2_to_ch2ch2_+_ch3/cc/ch3ch2ch2_to_ch2ch2_ch3_cc_tz.out
+  Barrier     B1   CH3CH2CH2   C2H4+CH3    # CH3CH2CH2 --> C2H4+CH3
       RRHO
         Geometry[angstrom]	10
 	 C          0.0000000659       -0.3968794069        1.3474721049
@@ -329,9 +316,7 @@ Model
 !TS 2: ch3ch2ch2 --> ch3chch2 + h
 !-----------------------------------------------
 
-  Barrier     B2   CH3CH2CH2   P2    # CH3CH2CH2 --> CH3CHCH2+H
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/ch/c3/c3h7/transition_states/ch3ch2ch2_to_ch3chch2_+_h/cc/ch3ch2ch2_to_ch3chch2_h_cc_tz.out
+  Barrier     B2   CH3CH2CH2   CH3CHCH2+H    # CH3CH2CH2 --> CH3CHCH2+H
       RRHO
         Geometry[angstrom]	10
 	 C         -0.0177730257        0.2635181475       -1.2586534009
@@ -384,8 +369,6 @@ Model
 !TS 3: ch3ch2ch2 --> ch3chch3
 !-----------------------------------------------
   Barrier     B3   CH3CH2CH2   CH3CHCH3   # CH3CH2CH2 --> CH3CHCH3
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/ch/c3/c3h7/transition_states/ch3ch2ch2_to_ch3chch3/cc/ch3ch2ch2_to_ch3chch3_cc_tz.out
       RRHO
         Geometry[angstrom]	10
 	 C          0.2575600450        0.0257656946        1.3018005968
@@ -437,9 +420,7 @@ Model
 !-----------------------------------------------
 !TS 4: ch3chch3 --> ch3chch2+h
 !-----------------------------------------------
-  Barrier     B4   CH3CHCH3   P2    # CH3CHCH3 --> CH3CHCH2+H
-      ! Current data taken from:
-      !/gpfs/data/cfgoldsm/cfgoldsm/qchem/gas_phase/ch/c3/c3h7/transition_states/ch3chch3_to_ch3chch2_+_h/cc/ch3chch3_to_ch3chch2_h_cc_tz.out
+  Barrier     B4   CH3CHCH3   CH3CHCH2+H    # CH3CHCH3 --> CH3CHCH2+H
       RRHO
         Geometry[angstrom]	10
 	 C         -0.1448296919        0.1675561819       -1.2219981718
