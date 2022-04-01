@@ -5,6 +5,7 @@ Functions for
 """
 
 import sys
+import copy
 import numpy
 import pandas as pd
 import automol
@@ -12,7 +13,45 @@ from mechanalyzer.parser._util import get_mult
 
 # list of formulas for products/reactants identified for the sublcasses
 FMLS_SET = numpy.array(['H1', 'O1', 'H1O1', 'O2', 'H1O2', 'C1H3'])
+# atoms order: C, H, O, N, S, CL
+STOICH_DEFAULT = [0, 2, 2, 0, 0, 0]
+STOICH_DCT_ADD = {
+    'FUEL': [0, 0, 0, 0, 0, 0],
+    'FUEL_RAD': [0, -1, 0, 0, 0, 0],
+    'FUEL_ADD_H': [0, 1, 0, 0, 0, 0],
+    'FUEL_ADD_CH3': [1, 3, 0, 0, 0, 0],
+    'FUEL_ADD_O': [0, 0, 1, 0, 0, 0],
+    'FUEL_ADD_OH': [0, 1, 1, 0, 0, 0],
+    'FUEL_ADD_O2': [0, 0, 2, 0, 0, 0],
+    'R_CH3': [1, 2, 0, 0, 0, 0],
+    'R_O': [0, -1, 1, 0, 0, 0],
+    'R_O2': [0, -1, 2, 0, 0, 0],
+    'R_O4': [0, -1, 4, 0, 0, 0],
+    'R_O3-H': [0, -2, 3, 0, 0, 0]}
 
+def species_subset_ext(fuel, spc_dct, stoich_limit=STOICH_DEFAULT):
+    """ call species_subset but and also extract all species
+        below stoich: stoich_fuel+stoich_limit
+    """
+    # extract species subset
+    species_list, species_subset_df = species_subset(fuel, spc_dct)
+    # add all stoichiometries below that of interest
+    # filter extracted species from spc_dct first
+    spc_dct_reduced = copy.deepcopy(spc_dct)
+    [spc_dct_reduced.pop(sp) for sp in species_list]
+    fml_df_reduced = extract_fml_df(spc_dct_reduced)
+
+    fml_df = extract_fml_df(spc_dct)
+    stoich_fuel = fml_df.loc[fuel][['nC', 'nH', 'nO', 'nN', 'nS', 'nCl']].values
+    stoich = stoich_fuel + stoich_limit
+
+    # extract desired species and assign labels
+    species = extract_species_sub(stoich, fml_df_reduced)
+    series = pd.Series('SUBFUEL', index=species)
+    species_subset_df = species_subset_df.append(series)
+    species_list += species
+
+    return species_list, species_subset_df
 
 def species_subset(fuel, spc_dct):
     """ Given the name of a fuel in a spc_dct, it finds all species
@@ -20,7 +59,7 @@ def species_subset(fuel, spc_dct):
 
         - fuel isomers
         - fuel radicals
-        - main radical additions to fuel: fuel+H/OH/O2/O/HO2, R+O
+        - main radical additions to fuel: fuel+H/CH3/OH/O2/O/HO2, R+O
         - low T mech: RO2, RO4, RO3-H
 
         Returns all species with corresponding stoichiometries with
@@ -40,27 +79,15 @@ def species_subset(fuel, spc_dct):
     fml_df = extract_fml_df(spc_dct)
 
     # Generate list of stoichiometries to extract and the corresponding labels
-    stoich_fuel = fml_df.loc[fuel][['nC', 'nH', 'nO']].values
-
-    stoich_dct = {
-        'FUEL': stoich_fuel,
-        'FUEL_RAD': stoich_fuel+[0, -1, 0],
-        'FUEL_ADD_H': stoich_fuel+[0, 1, 0],
-        'FUEL_ADD_O': stoich_fuel+[0, 0, 1],
-        'FUEL_ADD_OH': stoich_fuel+[0, 1, 1],
-        'FUEL_ADD_O2': stoich_fuel+[0, 0, 2],
-        'R_O': stoich_fuel+[0, -1, 1],
-        'R_O2': stoich_fuel+[0, -1, 2],
-        'R_O4': stoich_fuel+[0, -1, 4],
-        'R_O3-H': stoich_fuel+[0, -2, 3]}
+    stoich_fuel = fml_df.loc[fuel][['nC', 'nH', 'nO', 'nN', 'nS', 'nCl']].values
 
     # extract desired species and assign labels
 
-    for stoich_type, stoich in stoich_dct.items():
-        species = extract_species(stoich, fml_df)
+    for stoich_type, stoich in STOICH_DCT_ADD.items():
+        species = extract_species(stoich+stoich_fuel, fml_df)
         series = pd.Series(stoich_type, index=species)
         species_subset_df = species_subset_df.append(series)
-        species_list = species_list + species
+        species_list += species
 
     return species_list, species_subset_df
 
@@ -75,7 +102,7 @@ def extract_fml_df(spc_dct):
     """
 
     fml_df = pd.DataFrame(index=list(spc_dct.keys()),
-                          columns=['fml', 'nC', 'nH', 'nO'])
+                          columns=['fml', 'nC', 'nH', 'nO', 'nN', 'nS', 'nCl'])
     for key in spc_dct.keys():
         if 'ts' not in key and 'global' not in key:
             ich = spc_dct[key]['inchi']
@@ -84,31 +111,43 @@ def extract_fml_df(spc_dct):
             fml_df['nC'][key] = automol.formula.element_count(fml_dct, 'C')
             fml_df['nH'][key] = automol.formula.element_count(fml_dct, 'H')
             fml_df['nO'][key] = automol.formula.element_count(fml_dct, 'O')
+            fml_df['nN'][key] = automol.formula.element_count(fml_dct, 'N')
+            fml_df['nS'][key] = automol.formula.element_count(fml_dct, 'S')
+            fml_df['nCl'][key] = automol.formula.element_count(fml_dct, 'Cl')
 
     return fml_df
 
 
-def extract_species(n_cho, fml_df):
-    """ Extracts species corresponding to a given stoichiometry n_CHO
+def extract_species(n_at, fml_df):
+    """ Extracts species corresponding to a given stoichiometry n_CHONSCl
         from the formulas dataframe.
 
-        :param n_cho: numpy array [x,y,z] where
-            x = n of C atoms, y = n of H atoms, z = number of O atoms
+        :param n_cho: numpy array [x,y,z,...] where
+            x = n of C atoms, y = n of H atoms, ...
         :type: n_cho: numpy.ndarray
         :param fml_df: dataframe with
             index = species names; columns 'fml' (stoichiometry),
             'nC','nH','nO' (number of C/H/O atmoms in the formula)
-        :returns: list of species with the corresponding n_CHO
+        :returns: list of species with the corresponding n_CHONSCl
     """
 
-    n_carbons = n_cho[0]
-    n_hydrogens = n_cho[1]
-    n_oxygens = n_cho[2]
-    species_set = list(fml_df[(fml_df['nC'] == n_carbons) & (
-        fml_df['nH'] == n_hydrogens) & (fml_df['nO'] == n_oxygens)].index)
+    species_set = list(fml_df[(fml_df['nC'] == n_at[0]) & (
+        fml_df['nH'] == n_at[1]) & (fml_df['nO'] == n_at[2]) & (
+        fml_df['nN'] == n_at[3]) & (fml_df['nS'] == n_at[4]) & (
+        fml_df['nCl'] == n_at[5])].index)
 
     return species_set
 
+def extract_species_sub(n_at, fml_df):
+    """ as above but leq
+    """
+
+    species_set = list(fml_df[(fml_df['nC'] <= n_at[0]) & (
+        fml_df['nH'] <= n_at[1]) & (fml_df['nO'] <= n_at[2]) & (
+        fml_df['nN'] <= n_at[3]) & (fml_df['nS'] <= n_at[4]) & (
+        fml_df['nCl'] <= n_at[5])].index)
+
+    return species_set
 
 def classify_unimol(rcts, prds, spc_dct):
     """ Classifies unimolecular reaction from reactants and products names:
