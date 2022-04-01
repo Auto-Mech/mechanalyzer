@@ -9,7 +9,6 @@ from automol.smiles import inchi as smi_to_ich
 from automol.inchi import smiles as ich_to_smi
 from automol.inchi import formula as ich_to_fml
 from automol.inchi import low_spin_multiplicity as _low_spin_mult
-from automol.inchi import recalculate  # don't think I need this
 from automol.inchi import is_complete
 from automol.formula import from_string as str_to_fml
 import rdkit.Chem as _rd_chem
@@ -46,6 +45,10 @@ def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=True,
         :type filename: list
         :param quotechar: character used to optionally ignore commas; " or '
         :type quotechar: str
+        :param chk_ste: whether or not to check inchis for stereo completeness
+        :type chk_ste: Bool
+        :param chk_match: whether or not to check that inchis and smiles match
+        :type chk_match: Bool
         :return mech_spc_dcts: list of mech_spc_dcts
         :rtype: list
     """
@@ -70,6 +73,10 @@ def load_mech_spc_dct(filename, path, quotechar="'", chk_ste=True,
         :type filename: str
         :param quotechar: character used to optionally ignore commas; " or '
         :type quotechar: str
+        :param chk_ste: whether or not to check inchis for stereo completeness
+        :type chk_ste: Bool
+        :param chk_match: whether or not to check that inchis and smiles match
+        :type chk_match: Bool
         :return mech_spc_dct: identifying information on species in a mech
         :rtype: dct {spc1: spc_dct1, spc2: ...}
     """
@@ -88,6 +95,10 @@ def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=True, chk_match=True):
         :type file_str: str
         :param quotechar: the quotechar used to optionally ignore commas
         :type quotechar: str
+        :param chk_ste: whether or not to check inchis for stereo completeness
+        :type chk_ste: Bool
+        :param chk_match: whether or not to check that inchis and smiles match
+        :type chk_match: Bool
         :return mech_spc_dct: identifying information on species in a mech
         :rtype: dct {spc1: spc_dct1, spc2: ...}
     """
@@ -95,14 +106,14 @@ def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=True, chk_match=True):
     # Check for incorrect quotechar usage
     if quotechar == '"':
         assert "'" not in file_str, (
-            f'A quotechar input of double quotation marks was selected, but at '
-            f'least one instance of a single quotation mark exists in the '
-            f'csv file. Use only double quotation marks.')
+            'A quotechar input of double quotation marks was selected, but at '
+            'least one instance of a single quotation mark exists in the '
+            'csv file. Use only double quotation marks.')
     elif quotechar == "'":
         assert '"' not in file_str, (
-            f'A quotechar input of single quotation marks was selected, but at '
-            f'least one instance of a double quotation mark exists in the '
-            f'csv file. Use only single quotation marks.')
+            'A quotechar input of single quotation marks was selected, but at '
+            'least one instance of a double quotation mark exists in the '
+            'csv file. Use only single quotation marks.')
     else:
         raise NotImplementedError(
             f'The quotechar {quotechar} is not allowed. Options are either '
@@ -139,7 +150,7 @@ def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=True, chk_match=True):
     # Find species with the same chemical identifiers but different names
     check_for_dups(mech_spc_dct)  # prints warnings
 
-    assert not errors, (f'Errors while parsing the .csv file! See printouts')
+    assert not errors, ('Errors while parsing the .csv file! See printouts')
 
     return mech_spc_dct
 
@@ -187,6 +198,12 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True):
 
         :param spc_dct: identifying information for a single species
         :type: dct
+        :param spc: species name
+        :type spc: str
+        :param chk_ste: whether or not to check inchis for stereo completeness
+        :type chk_ste: Bool
+        :param chk_match: whether or not to check that inchis and smiles match
+        :type chk_match: Bool
         :return full_spc_dct: beefed-up spc_dct
         :rtype: dct
     """
@@ -307,6 +324,17 @@ def parse_line(line, idx, num_cols, quotechar="'"):
 
 
 def check_ich(ich, spc, chk_ste=True):
+    """ Checks an inchi for various problems
+
+        :param ich: inchi string
+        :type ich: str
+        :param spc: species name
+        :type spc: str
+        :param chk_ste: whether or not to check inchi for stereo completeness
+        :type chk_ste: Bool
+        :return error: whether or not an error was found with the inchi
+        :rtype: Bool
+    """
 
     error = False
     mol = _rd_chem.MolFromInchi(ich)
@@ -325,6 +353,15 @@ def check_ich(ich, spc, chk_ste=True):
 
 
 def check_smi(smi, spc):
+    """ Checks a smiles for various problems
+
+        :param smi: smiles string
+        :type smi: str
+        :param spc: species name
+        :type spc: str
+        :return error: whether or not an error was found with the smiles
+        :rtype: Bool
+    """
 
     error = False
     mol = _rd_chem.MolFromSmiles(smi)
@@ -336,6 +373,19 @@ def check_smi(smi, spc):
 
 
 def check_smi_and_ich(smi, ich, spc, chk_ste=True):
+    """ Checks a smiles and inchi for various problems
+
+        :param smi: smiles string
+        :type smi: str
+        :param ich: inchi string
+        :type ich: str
+        :param spc: species name
+        :type spc: str
+        :param chk_ste: whether or not to check inchi for stereo completeness
+        :type chk_ste: Bool
+        :return error: whether or not an error was found with inchi or smiles
+        :rtype: Bool
+    """
 
     # Check the smiles and inchi for correctness
     error1 = check_smi(smi, spc)
@@ -376,12 +426,9 @@ def check_for_dups(mech_spc_dct):
         chg2 = spc_dct2['charge']
         exc2 = spc_dct2['exc_flag']
 
-        if ich1 == ich2 and mlt1 == mlt2 and chg1 == chg2 and exc1 == exc2:
-            are_same = True
-        else:
-            are_same = False
+        same = all([ich1 == ich2, mlt1 == mlt2, chg1 == chg2, exc1 == exc2])
 
-        return are_same
+        return same
 
     spcs = tuple(mech_spc_dct.keys())  # convert to tuple for indexing
     spc_dcts = tuple(mech_spc_dct.values())
@@ -392,4 +439,3 @@ def check_for_dups(mech_spc_dct):
             inner_dct = spc_dcts[inner_idx]
             if are_spcs_same(outer_dct, inner_dct):
                 print(f'{outer_spc} and {inner_spc} are chemical twins!')
-
