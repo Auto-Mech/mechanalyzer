@@ -283,9 +283,9 @@ def parse_first_line(first_line, quotechar="'"):
     headers = next(csv.reader([first_line], quotechar=quotechar))
     num_cols = len(headers)
 
-    # Check for appropriateness of column headers
+    # Check for appropriateness of column headers (case insensitive)
     for col_header in headers:
-        assert col_header in ALLOWED_COLUMN_NAMES, (
+        assert col_header.lower() in ALLOWED_COLUMN_NAMES, (
             f'The column header {col_header} is not allowed. Options are'
             f' {ALLOWED_COLUMN_NAMES}.')
     assert 'name' in headers, (
