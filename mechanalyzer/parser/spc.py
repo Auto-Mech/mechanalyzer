@@ -79,7 +79,6 @@ def csv_headers(spc_dct):
     headers = tuple(set(headers))
 
     # Sort the headers by the standard list
-    print('headers', headers)
     headers = automol.util.sort_by_list(
         headers, STD_HEADERS, include_missing=False)
 

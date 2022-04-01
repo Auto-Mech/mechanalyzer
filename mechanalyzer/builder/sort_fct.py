@@ -21,6 +21,7 @@ from mechanalyzer.parser._util import get_mult
 from mechanalyzer.parser.spc import name_inchi_dct
 from mechanalyzer.parser._util import get_fml
 
+
 class SortMech:
     """ class of methods to organize the mechanism according to given criteria
     """
@@ -99,15 +100,21 @@ class SortMech:
         :returns: None. updates self
         """
         # set labels for all the possible criteria
+        # maybe turn into dataframe with criteria, labels, fct names, and ascending opts
         criteria_all = ['molecularity', 'N_of_prods', 'species',
-                        'pes', 'subpes', 'chnl', 'submech',
+                        'pes', 'subpes', 'chnl', 
                         'r1', 'mult',
                         'rxn_class_broad', 'rxn_class_graph',
-                        'rxn_max_vals', 'rxn_max_ratio']
+                        'submech', 'submech_ext',
+                        'rxn_max_vals', 'rxn_max_ratio', 
+                        ]
         labels_all = ['NR', 'N_of_prods', 'SPECIES',
-                      'pes', 'subpes', 'channel', 'SUBMECH',
+                      'pes', 'subpes', 'channel',
                       'Heavier_rct', 'Totalmultiplicity',
-                      'rxntype', 'rxnclass', 'maxval', 'maxratio']
+                      'rxntype', 'rxnclass',
+                      'SUBMECH','submech_ext',
+                      'maxval', 'maxratio',
+                      ]
 
         # check on pes/subpes criteria:
         # if subpes alone, also add pes
@@ -130,12 +137,21 @@ class SortMech:
                 species_list, species_subset_df = submech.species_subset(
                     species_list[0], self.spc_dct)
                 self.species_subset_df = species_subset_df
+                filtertype = 'submech'
+
+            elif len(species_list) == 1 and 'submech_ext' in hierarchy:
+                species_list, species_subset_df = submech.species_subset_ext(
+                    species_list[0], self.spc_dct)
+                self.species_subset_df = species_subset_df
+                filtertype = 'submech_ext'
+
             elif len(species_list) > 1 and 'submech' in hierarchy:
                 print('Error: pyr/ox submech extraction available ',
                       'for only 1 species')
                 sys.exit()
 
-            self.mech_df, self.spc_dct = self.filter_byspecies(species_list)
+            self.mech_df, self.spc_dct = self.filter_byspecies(
+                species_list, filtertype)
             self.species_list = species_list
 
         # 0. Look for keywords and sort accordingly
@@ -148,6 +164,7 @@ class SortMech:
             'rxn_class_broad': self.rxnclass_broad,
             'rxn_class_graph': self.rxnclass_graph,
             'submech': self.group_submech,
+            'submech_ext': self.group_submech,
             'rxn_max_vals': self.rxn_max_vals,
             'rxn_max_ratio': self.rxn_max_ratio
         }
@@ -185,7 +202,7 @@ class SortMech:
         labels = pd.Series(labels_all, index=criteria_all)
         self.class_headers(hierarchy, labels)
 
-    def filter_byspecies(self, species_list):
+    def filter_byspecies(self, species_list, filtertype):
         """ Find all reactions involving species of the species_list given as input
             Provides a new mechanism of the reactions of the selected subset
             and a reduced list of species
@@ -193,6 +210,8 @@ class SortMech:
         :param self.mech_df: dataframe with mech info (contains all reactions)
         :param self.spc_dct: species dictionary
         :param species_list: list of species subsets
+        :param filtertype: can be 'submech' or 'submech_ext'
+            the latter removes reactions not containing only the considered species
 
         :returns: mech_df, spc_dct
         :rtype: dataframe, dict
@@ -213,14 +232,28 @@ class SortMech:
             prds = list(mech_df['prd_names_lst'][rxn])
             # Check if one species in the list is among reactants or products
             # of the reaction considered
-            _rchk = any(rct == _spc for _spc in species_list for rct in rcts)
-            _pchk = any(prd == _spc for _spc in species_list for prd in prds)
-            if not _rchk and not _pchk:
-                mech_df = mech_df.drop(index=[rxn])
-            else:
-                # append all species to the list
+            if filtertype == 'submech':
+                _rchk = any(
+                    rct == _spc for _spc in species_list for rct in rcts)
+                _pchk = any(
+                    prd == _spc for _spc in species_list for prd in prds)
+                chk = int(_rchk or _pchk)
+
+            elif filtertype == 'submech_ext':
+                # filter out bimol/bimol reactions if it some bimol rcts/prds are not in the species list
+                # equivalent to saying: at least all reactants (also single react works) or all products
+                # must be in the species list
+                chk = 0
+                chk += int(all(any(rct == _spc for _spc in species_list)
+                               for rct in rcts))
+                chk += int(all(any(prd == _spc for _spc in species_list)
+                               for prd in prds))*int(len(prds) <= 2)
+
+            if chk >= 1:  # keep reaction and add to species list
                 spc_list.extend(rcts)
                 spc_list.extend(prds)
+            elif chk == 0:  # reaction filtered out
+                mech_df = mech_df.drop(index=[rxn])
 
         # filter spc_list: unique elements
         spc_list = list(set(spc_list))
@@ -332,11 +365,13 @@ class SortMech:
         :param self.species_subset_df: dataframe with species assigned to a
                                         certain type (fuel, fuel radical..)
         :param submech_df: empty dataframe index=rxns, column: 'submech'
-
+                                                        or 'submech_ext
         :returns: submech_df dataframe with reactants
             mult dataframe[submech][rxn]
         :rtype: dataframe[str][tuple]
         """
+        # lbl as submech_df columns -> so it works with both submech and submech_ext
+        lbl_col = submech_df.columns[0]
 
         for rxn in submech_df.index:
             rcts = list(self.mech_df['rct_names_lst'][rxn])
@@ -345,9 +380,10 @@ class SortMech:
             for sp_i in self.species_list:
                 _rchk = any(sp_i == rct for rct in rcts)
                 _pchk = any(sp_i == prd for prd in prds)
-                _isfloat = isinstance(submech_df['submech'][rxn], float)
+                _isfloat = isinstance(submech_df[lbl_col][rxn], float)
                 if (_rchk or _pchk) and _isfloat:
-                    submech_df['submech'][rxn] = self.species_subset_df[sp_i]
+                    submech_df[lbl_col][rxn] = self.species_subset_df[sp_i]
+
         return submech_df
 
     def reac_mult(self, reac_mult_df):
@@ -904,4 +940,3 @@ def mech_info(rxn_param_dct, spc_dct):
     return [formula_dct, formula_str,
             rct_names, prd_names, thrdbdy_lst,
             rxn_name, list(rxn_param_dct.values())]
-
