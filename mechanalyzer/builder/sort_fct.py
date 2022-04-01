@@ -6,7 +6,7 @@ Sorter module - sorting of the mechanism according to various options
 - species subsets
 - submechanism
 """
-
+import time
 import sys
 import copy
 import pandas as pd
@@ -149,6 +149,9 @@ class SortMech:
                 print('Error: pyr/ox submech extraction available ',
                       'for only 1 species')
                 sys.exit()
+                
+            else:
+                filtertype = 'submech'
 
             self.mech_df, self.spc_dct = self.filter_byspecies(
                 species_list, filtertype)

@@ -1,4 +1,4 @@
-name,SMILES,mult
+name,smiles,mult
 AR,[Ar],1
 N2,N#N,1
 HE,[He],1
@@ -8,6 +8,7 @@ O2,[O][O],3
 O,[O],3
 H2O,O,1
 OH,[OH],2
+OHV,[OH],2
 H2O2,OO,1
 HO2,O[O],2
 CO,[C]=O,1
@@ -19,6 +20,7 @@ CH2,[CH2],3
 CH2(S),[CH2],1
 C,[C],3
 CH,[CH],2
+CHV,[CH],2
 CH3O2H,COO,1
 CH3O2,CO[O],2
 CH2O2H,[CH2]OO,2
