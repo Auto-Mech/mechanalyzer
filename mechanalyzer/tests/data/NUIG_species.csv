@@ -1,4 +1,4 @@
-'name','smiles','inchi'
+'name','SMILES','inchi'
 'O','[O]','InChI=1S/O'
 'O2','[O][O]','InChI=1S/O2/c1-2'
 'AR','[Ar]','InChI=1S/Ar'
