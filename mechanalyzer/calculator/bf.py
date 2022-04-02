@@ -76,11 +76,17 @@ def bf_tp_df_full(ped_df, hoten_df):
     for temp in temps:
         for pressure in pressures:
             # extract ped and hoten by increasing index
+
             ped = ped_df[pressure][temp].sort_index()
             hoten = hoten_df[pressure][temp].sort_index().index
+                
+            try:
+                min_en = max([ped.index[0], hoten[0]])
+                max_en = min([ped.index[-1], hoten[-1]])
+            except IndexError: # in case some errors in reading
+                continue
+
             # reduce the energy range of hoten and ped
-            min_en = max([ped.index[0], hoten[0]])
-            max_en = min([ped.index[-1], hoten[-1]])
             hoten = hoten[(min_en <= hoten)*(hoten <= max_en)]
             ped = ped[(min_en <= ped.index)*(ped.index <= max_en)]
             if len(hoten) >= 4:
