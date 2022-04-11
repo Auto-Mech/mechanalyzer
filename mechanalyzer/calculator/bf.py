@@ -80,15 +80,15 @@ def bf_tp_df_full(ped_df, hoten_df):
             ped = ped_df[pressure][temp].sort_index()
             hoten = hoten_df[pressure][temp].sort_index().index
                 
-            try:
-                min_en = max([ped.index[0], hoten[0]])
-                max_en = min([ped.index[-1], hoten[-1]])
-            except IndexError: # in case some errors in reading
-                continue
+            #try:
+            #    min_en = max([ped.index[0], hoten[0]])
+            #    max_en = min([ped.index[-1], hoten[-1]])
+            #except IndexError: # in case some errors in reading
+            #    continue
 
             # reduce the energy range of hoten and ped
-            hoten = hoten[(min_en <= hoten)*(hoten <= max_en)]
-            ped = ped[(min_en <= ped.index)*(ped.index <= max_en)]
+            hoten = hoten[(ped.index[0] <= hoten)*(hoten <= ped.index[-1])]
+            # ped = ped[(min_en <= ped.index)*(ped.index <= max_en)]
             if len(hoten) >= 4:
                 ene_vect = ped.index
                 ped_vect = ped.values
@@ -97,8 +97,8 @@ def bf_tp_df_full(ped_df, hoten_df):
                 for spc in allspecies:
                     hoten_spc = hoten_df[pressure][temp][spc][hoten]
                     f_hoten = interp1d(
-                        hoten_spc.index, hoten_spc.values,
-                        kind='cubic', fill_value='extrapolate')
+                        hoten_spc.index, hoten_spc.values, bounds_error=False, 
+                        kind='cubic', fill_value=(hoten_spc.values[0], hoten_spc.values[-1]))
                     hoten_vect = f_hoten(ene_vect)
                     # recompute in an appropriate range
                     bf_series[spc] = np.trapz(ped_vect*hoten_vect, x=ene_vect)
