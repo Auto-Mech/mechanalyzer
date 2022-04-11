@@ -21,7 +21,7 @@ MW_dct_elements = {
 }  # kg/mol
 
 
-def get_dof_info(block, ask_for_ts=False):
+def get_dof_info(block):
     """ Gets the N of degrees of freedom and MW of each species
         :param block: bimol species of which you want the dofs
         :type block: list(str1, str2)
@@ -29,9 +29,9 @@ def get_dof_info(block, ask_for_ts=False):
         :type ask_for_ts: bool
         :return dof_info: dataframe with vibrat/rot degrees of freedom
             and molecular weight
-        :rtype: dataframe(index=species, columns=['vib dof', 'rot dof', 'mw'])
+        :rtype: dataframe(index=species, columns=['n_atoms', 'vib dof', 'rot dof', 'mw'])
     """
-    info_array = np.zeros((2+int(ask_for_ts), 3))
+    info_array = np.zeros((3, 4))
     keys = []
     atoms_ts = 0
     # extract N of dofs and MW
@@ -64,8 +64,9 @@ def get_dof_info(block, ask_for_ts=False):
 
         atoms_ts += num_atoms
         # this allows to get 3N-5 or 3N-6 without analyzing the geometry
-        info_array[i, 0] = num_dof
-        info_array[i, 1] = rot_dof
+        info_array[i, 0] = num_atoms
+        info_array[i, 1] = num_dof
+        info_array[i, 2] = rot_dof
 
         # MW from type of atoms:
         if num_atoms > 1:
@@ -74,25 +75,52 @@ def get_dof_info(block, ask_for_ts=False):
             atoms_array = np.array([geomline.strip().split()[0]
                                     for geomline in info[geom_in:geom_fin]])
 
-        info_array[i, 2] = np.sum(np.array([MW_dct_elements[at]
-                                for at in atoms_array], dtype=float))
+        info_array[i, 3] = np.sum(np.array([MW_dct_elements[at]
+                                            for at in atoms_array], dtype=float))
 
-    # if ask for ts: assume first 2 blocks are 2 reactants of bimol reaction
+    # ts info: assume first 2 blocks are 2 reactants of bimol reaction
     # and derive the DOFs of the TS
-    if ask_for_ts:
-        keys.append('TS')
+    keys.append('TS')
 
-        # assume there are no linear TSs
-        info_array[2, :] = [3*atoms_ts - 7, 3,
-                            info_array[0, 2]+info_array[1, 2]]
+    # assume there are no linear TSs
+    info_array[2, :] = [atoms_ts, 3*atoms_ts - 7, 3,
+                        info_array[0, 3]+info_array[1, 3]]
 
     dof_info = pd.DataFrame(info_array, index=keys, columns=[
-                            'vib dof', 'rot dof', 'mw'])
+                            'n_atoms', 'vib dof', 'rot dof', 'mw'])
 
     return dof_info
 
 
-def dos_trasl(mass1, mass2, ene_grid, pressure, temp):
+def max_en_auto(n_atoms, ene_bw, ref_ene=0, T=2000):
+    """ Determines automatically the max energy of microcanonical output and max
+        energy stored in products for appropriate ped and hoten output writing
+        :param n_atoms: number of atoms involved in the bimol reaction
+        :type n_atoms: int
+        :param ene_bw: backward energy barrier of the reaction
+                       > 0 for exothermic reactions
+                       < 0 for enothermic reactions
+        :type ene_bw: float
+        :param ref_ene: reference energy (bimol prods energy in ped)
+        :type ref_ene: float
+        :param T: reference temperature
+        :type T: float
+        :return max_ene: maximum energy written in mess ped/hoten output
+
+    """
+    # determine average boltzmann energy for the TS at 2000 K
+    # NB equipartition theorem - no trasl bc preserved in rxn
+    # assume non-linear
+    boltz_ene_T = phycon.RC_KCAL*T*(3*n_atoms-7+3/2)
+    sigma = 0.87+0.04*(boltz_ene_T + ene_bw)  # from Danilack 2020
+    print('test statmodels line 115 energies: ref {}, boltz {}, barrier {}, sigma {} \n'.format(
+        ref_ene, boltz_ene_T, ene_bw, sigma))
+    max_ene = ref_ene + boltz_ene_T + ene_bw + 4*sigma
+
+    return max_ene
+
+
+def dos_trasl(mass1, ene_grid, pressure, temp, mass2=0):
     """ Compute the translational density of states per unit volume
         mass1, mass2: MW in kg/mol
         ene_grid: energy grid in kcal/mol (array)
@@ -104,8 +132,11 @@ def dos_trasl(mass1, mass2, ene_grid, pressure, temp):
     # conversions
     ene_grid_j = ene_grid*4184/phycon.NAVO  # kcal/mol*J/kcal/NAVO=J
     mass1 /= phycon.NAVO  # kg/mol/(molecule/mol)
-    mass2 /= phycon.NAVO
-    red_mass = (mass1 * mass2) / (mass1 + mass2)    # kg
+    if mass2 != 0:
+        mass2 /= phycon.NAVO
+        red_mass = (mass1 * mass2) / (mass1 + mass2)    # kg
+    else:
+        red_mass = mass1  # only 1 molecule
 
     # 1 molecule
     # rhotr/V = pi/4*(8m/h2)^3/2*e^1/2
@@ -150,7 +181,6 @@ class PEDModels:
         self.dof_info = dof_info
 
         self.phi = None
-        self.ene1_step = None
         self.ene1_vect = None
         self.rho_rovib_prod1 = None
         self.rho_non1 = None
@@ -171,13 +201,15 @@ class PEDModels:
             'rovib_dos': self.rovib_dos,
             'beta_phi1a': self.beta_phi1a,
             'beta_phi2a': self.beta_phi2a,
-            'beta_phi3a': self.beta_phi3a
+            'beta_phi3a': self.beta_phi3a,
+            'thermal': self.rovib_dos
         }
 
     def compute_ped(self, modeltype):
         """ compute ped according to the desired model
         """
-
+        self.mdl = modeltype
+        
         try:
             ped_df_prod = self.models_dct[modeltype]()
         except KeyError:
@@ -286,10 +318,9 @@ class PEDModels:
             rho_rovib_prod2 = self.f_rho_rovib_prod2(ene1_vect_w0)
             rho_trasl = dos_trasl(
                 self.mw_dct[self.prod1],
-                self.mw_dct[self.prod2],
                 ene1_vect_w0,
                 pressure*101325,
-                temp)
+                temp, mass2=self.mw_dct[self.prod2])
 
             # calculate rho_non1(ene1_vect)
             rho_non1 = []
@@ -345,6 +376,44 @@ class PEDModels:
             # print(prob_ene1ene)
             return prob_ene1ene
 
+        def dostherm_rhovibtrasl(idx_ene_vect, temp):
+            """ Calculate density of states
+                include also translational density of states
+                not used but keep it
+            """
+            f_Etot_num = []
+            for idx_ene1 in idx_ene_vect:
+                if idx_ene1 == 0:
+                    f_Etot_num.append(0)
+                    continue
+                # index of ene1<ene (fixed ene)
+                idx_ene1_array = np.arange(0, idx_ene1)
+                # index of ene-ene1 (fixed ene)
+                idx_ene_minus_ene1_array = idx_ene1_array[::-1]
+
+                rho1_ene1_array = self.rho_rovib_prod1[idx_ene1_array]
+                rho_non1_array = self.rho_non1[idx_ene_minus_ene1_array]
+                
+                rhotot_E1 = np.trapz(rho1_ene1_array*rho_non1_array,
+                                x=self.ene1_vect[idx_ene1_array])
+                
+                ene = self.ene1_vect[idx_ene1]
+                f_Etot_num.append(rhotot_E1*np.exp(-ene/phycon.RC_KCAL/temp))
+
+            den = np.trapz(f_Etot_num, x=self.ene1_vect[idx_ene_vect])
+            f_Etot = pd.Series(f_Etot_num/den, index = self.ene1_vect[idx_ene_vect])
+            
+            return f_Etot
+
+        def dostherm_rhovib(temp):
+            """ Calculate density of states """
+            # rovib only
+            rho1_ene1_array = self.rho_rovib_prod1 * np.exp(-self.ene1_vect/phycon.RC_KCAL/temp)
+            den = np.trapz(rho1_ene1_array, x=self.ene1_vect)
+            f_Etot = pd.Series(rho1_ene1_array/den, index = self.ene1_vect)
+            
+            return f_Etot
+                
         # preallocations
         ped_df_prod = pd.DataFrame(index=self.ped_df.index,
                                    columns=self.ped_df.columns, dtype=object)
@@ -352,73 +421,83 @@ class PEDModels:
         for pressure in self.ped_df.columns:
             for temp in self.ped_df.sort_index().index:
                 ped_series = self.ped_df[pressure][temp].sort_index()
-                ene = ped_series.index
-                ped_step = ene[1]-ene[0]
-                self.ene1_step = ped_step/3
-                # ene1_vect_low = np.arange(
-                # ene[0], self.ene1_step, -self.ene1_step)[1:]
-                # ene1_vect_high = np.arange(
-                # ene[0], max(ene), self.ene1_step)
-                steps_to_zero = round((ene[0]-0)/self.ene1_step)
-                ene1_vect_low = np.linspace(
-                    ene[0],
-                    ene[0]-steps_to_zero*self.ene1_step,
-                    steps_to_zero+1)[1:-1]
-                ene1_vect_high = np.linspace(
-                    ene[0],
-                    ene[-1],
-                    num=round((ene[-1]-ene[0])/self.ene1_step)+1)
-                # ^ includes enemax
-                self.ene1_vect = np.sort(
-                    np.concatenate((ene1_vect_low, ene1_vect_high)))
-
-                # idx_ene_vect: indices in ene1_vect corresponding to values
-                # of ene: ene[0]=self.ene1_vect[idx_ene_vect[0]]
-                idx_ene_vect = np.arange(
-                    len(ene1_vect_low), len(self.ene1_vect), 3)
-                if distr_type == 'dos':
-                    self.rho_rovib_prod1, self.rho_non1 = init_dos(
-                        pressure, temp)
-                # if idx_en and ped not the same length: drop 1 ped val
-                if len(idx_ene_vect) == len(ped_series.values)-1:
-                    ped_series = ped_series.iloc[:-1]
-
-                prob_ene1_vect = []
-                for idx_ene1, ene1 in enumerate(self.ene1_vect):
-                    # indexes from self.ene1_vect: almost identical
-                    # to energies in ene, but more consistent
-                    idx_ene_new = idx_ene_vect[idx_ene_vect >= idx_ene1]
-                    ene_new = self.ene1_vect[idx_ene_new]
-                    if distr_type == 'phi':
-                        prob_ene1ene = norm_distr(
-                            ene1, ene_new, self.phi, self.ene_bw)
-                    elif distr_type == 'dos':
-                        prob_ene1ene = dos(idx_ene1, idx_ene_new)
-
-                    prob_ene1ene_tot_pressure_ped = (
-                        prob_ene1ene *
-                        ped_series.values[idx_ene_vect >= idx_ene1]
-                    )
+                if distr_type != 'therm':
+                    ene = ped_series.index
+                    if ene[0] > 0:
+                        ped_step = ene[1]-ene[0]
+                        steps_to_zero = round((ene[0]-0)/ped_step)
+                        ene1_vect_low = np.linspace(
+                            ene[0],
+                            ene[0]-steps_to_zero*ped_step,
+                            steps_to_zero+1)[1:-1]
+                        # ^ includes enemax
+                        self.ene1_vect = np.sort(
+                            np.concatenate((ene1_vect_low, ene)))
+                    else:
+                        self.ene1_vect = ene
+                    # idx_ene_vect: indices in ene1_vect corresponding to values
+                    # of ene: ene[0]=self.ene1_vect[idx_ene_vect[0]]
+                    idx_ene_vect = np.arange(
+                        len(ene1_vect_low), len(self.ene1_vect))
+                    # if idx_en and ped not the same length: drop 1 ped val
+                    if len(idx_ene_vect) == len(ped_series.values)-1:
+                        ped_series = ped_series.iloc[:-1]
+                        
+                    if distr_type == 'dos':
+                        self.rho_rovib_prod1, self.rho_non1 = init_dos(
+                            pressure, temp)
                     
-                    prob_ene1 = np.trapz(
-                        prob_ene1ene_tot_pressure_ped, ene_new)
-                    prob_ene1_vect.append(prob_ene1)
+                    prob_ene1_vect = []
 
-                norm_factor_prob_ene1 = np.trapz(
-                    prob_ene1_vect, x=self.ene1_vect)
-                prob_ene1_norm = prob_ene1_vect/norm_factor_prob_ene1
+                    for idx_ene1, ene1 in enumerate(self.ene1_vect):
+                        # indexes from self.ene1_vect: almost identical
+                        # to energies in ene, but more consistent
+                        idx_ene_new = idx_ene_vect[idx_ene_vect >= idx_ene1]
+                        ene_new = self.ene1_vect[idx_ene_new]
+                        if distr_type == 'phi':
+                            prob_ene1ene = norm_distr(
+                                ene1, ene_new, self.phi, self.ene_bw)
+                        elif distr_type == 'dos':
+                        #elif distr_type == 'dos' or distr_type == 'therm':
+                            prob_ene1ene = dos(idx_ene1, idx_ene_new)
+
+                        #if distr_type != 'therm':
+                        prob_ene1ene_tot_pressure_ped = (
+                            prob_ene1ene *
+                            ped_series.values[idx_ene_vect >= idx_ene1]
+                        )
+                        
+                        prob_ene1 = np.trapz(
+                            prob_ene1ene_tot_pressure_ped, ene_new)
+                        prob_ene1_vect.append(prob_ene1)
+                   
+                    norm_factor_prob_ene1 = np.trapz(
+                        prob_ene1_vect, x=self.ene1_vect)
+                    prob_ene1_norm = prob_ene1_vect/norm_factor_prob_ene1
+
+                #optn 2
+                elif distr_type == 'therm':
+                    self.ene1_vect = self.ene_dos0
+                    self.rho_rovib_prod1 = self.dos_df[self.prod1][self.ene1_vect].values
+                    prob_ene1_norm = dostherm_rhovib(temp)
+                    # include translations
+                    #self.rho_non1 = dos_trasl(
+                    #    self.mw_dct[self.prod1], self.ene1_vect, pressure*101325, temp)
+                    # prob_ene1_norm = dosthermtest(np.arange(0, len(self.ene1_vect)), temp).values
+                                    
                 ped_df_prod[pressure][temp] = pd.Series(
                     prob_ene1_norm, index=self.ene1_vect)
 
                 # remove comments to print P(E1)|T,P
-                # prob_ene1_df = ped_df_prod[pressure][temp].reset_index()
-                # header_label = np.array(prob_ene1_df.columns, dtype=str)
-                # header_label[0] = 'E [kcal/mol]'
-                # labels = '\t\t'.join(header_label)
-                # np.savetxt('PE1_{}_{}.txt'.format(pressure,temp), prob_ene1_df.values,
-                #         delimiter='\t', header=labels, fmt='%1.3e')
-                # print(pressure, temp, ped_df_prod[pressure][temp].idxmax(), '\n')
-
+                """
+                prob_ene1_df = ped_df_prod[pressure][temp].reset_index()
+                header_label = np.array(prob_ene1_df.columns, dtype=str)
+                header_label[0] = 'E [kcal/mol]'
+                labels = '\t\t'.join(header_label)
+                np.savetxt('PE1_{}_{}.txt'.format(pressure,temp), prob_ene1_df.values,
+                        delimiter='\t', header=labels, fmt='%1.3e')
+                print(pressure, temp, ped_df_prod[pressure][temp].idxmax(), '\n')
+                """
         return ped_df_prod
 
     def equip_phi(self):
@@ -538,13 +617,17 @@ class PEDModels:
 
         # dos functions for prod1, prod2: more convenient because
         # many values are duplicate
-        self.f_rho_rovib_prod1 = interp1d(
-            ene_dos0, self.dos_df[self.prod1][ene_dos0].values, kind='cubic',
-            fill_value='extrapolate')
-        self.f_rho_rovib_prod2 = interp1d(
-            ene_dos0, self.dos_df[self.prod2][ene_dos0].values, kind='cubic',
-            fill_value='extrapolate')
+        if self.mdl == 'rovib_dos':
+            # interp dos
+            self.f_rho_rovib_prod1 = interp1d(
+                ene_dos0, self.dos_df[self.prod1][ene_dos0].values, kind='cubic',
+                fill_value='extrapolate')
+            self.f_rho_rovib_prod2 = interp1d(
+                ene_dos0, self.dos_df[self.prod2][ene_dos0].values, kind='cubic',
+                fill_value='extrapolate')
 
-        ped_df_prod = self.prob_ene1_fct('dos')
+        distr_type = 'dos'*(self.mdl == 'rovib_dos') + 'therm'*(self.mdl == 'thermal')
+        ped_df_prod = self.prob_ene1_fct(distr_type)
 
         return ped_df_prod
+

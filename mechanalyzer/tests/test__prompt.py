@@ -99,8 +99,8 @@ def test_equip_phi():
     ped_600 = ped_df_frag1_dct['equip_phi'][1.0][600]
     ped_1200 = ped_df_frag1_dct['equip_phi'][1.0][1200]
 
-    assert np.isclose((ped_600.iloc[500]), 0.04439, atol=1e-4, rtol=1e-4)
-    assert np.isclose((ped_1200.iloc[500]), 0.03752, atol=1e-4, rtol=1e-4)
+    assert np.isclose((ped_600.iloc[166]), 0.04439, atol=1e-4, rtol=1e-4)
+    assert np.isclose((ped_1200.iloc[166]), 0.03766, atol=1e-4, rtol=1e-4)
     assert np.isclose(np.trapz(ped_600.values, x=ped_600.index), 1)
     assert np.isclose(np.trapz(ped_1200.values, x=ped_1200.index), 1)
 
@@ -118,8 +118,8 @@ def test_beta_phi1a():
     ped_400 = ped_df_frag1_dct['beta_phi1a'][1.0][400]
     ped_800 = ped_df_frag1_dct['beta_phi1a'][1.0][800]
 
-    assert np.isclose((ped_400.iloc[500]), 0.000845, atol=1e-4, rtol=1e-4)
-    assert np.isclose((ped_800.iloc[500]), 0.05871, atol=1e-4, rtol=1e-4)
+    assert np.isclose((ped_400.iloc[166]), 0.000845, atol=1e-4, rtol=1e-4)
+    assert np.isclose((ped_800.iloc[166]), 0.05907, atol=1e-4, rtol=1e-4)
     assert np.isclose(np.trapz(ped_400.values, x=ped_400.index), 1)
     assert np.isclose(np.trapz(ped_800.values, x=ped_800.index), 1)
 
@@ -137,8 +137,8 @@ def test_beta_phi2a():
     ped_400 = ped_df_frag1_dct['beta_phi2a'][1.0][400]
     ped_800 = ped_df_frag1_dct['beta_phi2a'][1.0][800]
 
-    assert np.isclose((ped_400.iloc[500]), 0.00036755, atol=1e-5, rtol=1e-5)
-    assert np.isclose((ped_800.iloc[500]), 0.05173655, atol=1e-5, rtol=1e-5)
+    assert np.isclose((ped_400.iloc[166]), 0.00038416, atol=1e-5, rtol=1e-5)
+    assert np.isclose((ped_800.iloc[166]), 0.05214565, atol=1e-5, rtol=1e-5)
     assert np.isclose(np.trapz(ped_400.values, x=ped_400.index), 1)
     assert np.isclose(np.trapz(ped_800.values, x=ped_800.index), 1)
 
@@ -156,8 +156,8 @@ def test_beta_phi3a():
     ped_400 = ped_df_frag1_dct['beta_phi3a'][1.0][400]
     ped_800 = ped_df_frag1_dct['beta_phi3a'][1.0][800]
 
-    assert np.isclose((ped_400.iloc[500]), 0.000845, atol=1e-5, rtol=1e-5)
-    assert np.isclose((ped_800.iloc[500]), 0.05871, atol=1e-4, rtol=1e-4)
+    assert np.isclose((ped_400.iloc[166]), 0.0008806, atol=1e-5, rtol=1e-5)
+    assert np.isclose((ped_800.iloc[166]), 0.0590781, atol=1e-4, rtol=1e-4)
     assert np.isclose(np.trapz(ped_400.values, x=ped_400.index), 1)
     assert np.isclose(np.trapz(ped_800.values, x=ped_800.index), 1)
 
@@ -177,11 +177,30 @@ def test_rovib_dos():
     ped_1800 = ped_df_frag1_dct['rovib_dos'][1.0][1800]
     ped_2000 = ped_df_frag1_dct['rovib_dos'][1.0][2000]
 
-    assert np.isclose((ped_1800.iloc[500]), 0.0162937, atol=1e-5, rtol=1e-5)
-    assert np.isclose((ped_2000.iloc[500]), 0.013778, atol=1e-5, rtol=1e-5)
+    assert np.isclose((ped_1800.iloc[166]), 0.017304767635587, atol=1e-5, rtol=1e-5)
+    assert np.isclose((ped_2000.iloc[166]), 0.014791598878596728, atol=1e-5, rtol=1e-5)
     assert np.isclose(np.trapz(ped_1800.values, x=ped_1800.index), 1)
     assert np.isclose(np.trapz(ped_2000.values, x=ped_2000.index), 1)
 
+def test_thermal():
+    """ test statmodels.pedmodels.thermal
+    """
+
+    dof_dct, ped_dct, dos_rovib, _, _ = _read_data()
+
+    ped_df_frag1_dct = mechanalyzer.builder.ped.ped_frag1(
+        ped_dct[(('C3H8+OH',), ('CH3CHCH3+H2O',), (None,))
+                ], 'CH3CHCH3', 'H2O', ['thermal'],
+        dos_df=dos_rovib, dof_info=dof_dct[(
+            ('C3H8+OH',), ('CH3CHCH3+H2O',), (None,))],
+        ene_bw=ENE_BW_DCT[(('C3H8+OH',), ('CH3CHCH3+H2O',), (None,))])
+    ped_1800 = ped_df_frag1_dct['thermal'][1.0][1800]
+    ped_2000 = ped_df_frag1_dct['thermal'][1.0][2000]
+
+    assert np.isclose((ped_1800.iloc[166]), 0.01924792, atol=1e-5, rtol=1e-5)
+    assert np.isclose((ped_2000.iloc[166]), 0.01132143, atol=1e-5, rtol=1e-5)
+    assert np.isclose(np.trapz(ped_1800.values, x=ped_1800.index), 1)
+    assert np.isclose(np.trapz(ped_2000.values, x=ped_2000.index), 1)
 
 def test_bf_from_phi1a():
     """ test builder.bf.bf_tp_dct
@@ -199,18 +218,18 @@ def test_bf_from_phi1a():
 
     assert np.allclose(
         bf_tp_dct['beta_phi1a']['CH3CHCH3'][1.0][1],
-        np.array([1.,  0.99999536, 0.99908752, 0.88695499]))
+        np.array([1.,  0.99999536, 0.99908752, 0.88924096]))
     assert np.allclose(
         bf_tp_dct['beta_phi1a']['CH3CHCH3'][100.0][1],
-        np.array([1., 0.99999995, 0.99998904, 0.99578776, 0.80484198, 0.65943241]))
+        np.array([1., 0.99999995, 0.99998904, 0.99578776, 0.83006612, 0.68010454]))
     assert np.allclose(
         bf_tp_dct['beta_phi1a']['CH3CHCH2+H'][1.0][1],
-        np.array([1.74401541e-10, 4.63189988e-06, 9.09523592e-04, 1.12149452e-01,
-                  9.85959735e-01, 9.82235670e-01]))
+        np.array([1.74401541e-10, 4.63189988e-06, 9.09523592e-04, 1.09881590e-01,
+                  9.85959784e-01, 9.82235603e-01]))
     assert np.allclose(
         bf_tp_dct['beta_phi1a']['CH3CHCH2+H'][100.0][1],
-        np.array([4.58544169e-08, 1.09178981e-05, 4.15796784e-03, 1.90520262e-01,
-                  3.31633290e-01]))
+        np.array([4.58544169e-08, 1.09178981e-05, 4.15796784e-03, 1.65868286e-01,
+                  3.11452409e-01]))
 
 
 def test_bf_from_fne():
@@ -284,7 +303,7 @@ def _read_data():
         prods = label[1][0]
         # NB FCT TESTED IN TEST__CALC_STATMODELS
         dof_dct[label] = mechanalyzer.calculator.statmodels.get_dof_info(
-            spc_blocks_ped[prods], ask_for_ts=True)
+            spc_blocks_ped[prods])
     # GET PED
     ped_dct = mess_io.reader.ped.get_ped(
         PED_OUT, PEDSPECIES, ENERGY_DCT)
@@ -305,6 +324,7 @@ if __name__ == '__main__':
     test_beta_phi1a()
     test_beta_phi2a()
     test_beta_phi3a()
+    test_thermal()
     test_bf_from_phi1a()
     test_bf_from_fne()
     test_rovib_dos()
