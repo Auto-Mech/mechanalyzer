@@ -26,7 +26,7 @@ def order_rct_bystoich(rct_names_lst, spc_dct=None):
         for key, val in enumerate(rct_names_lst_ordered):
             rct_names = val
             rct_ichs = list(map(ich_dct.__getitem__, rct_names))
-            fml_rct = list(map(automol.inchi.formula, rct_ichs))
+            fml_rct = list(map(automol.chi.formula, rct_ichs))
             atoms_rct = list(map(automol.formula.atom_count, fml_rct))
             if len(rct_names) == 2:
                 if atoms_rct[1] > atoms_rct[0]:
@@ -110,7 +110,7 @@ def get_fml(rxn_ichs):
     '''
     formula_dct = ''
     for rct_ich in rxn_ichs:
-        formula_i_dct = automol.inchi.formula(rct_ich)
+        formula_i_dct = automol.chi.formula(rct_ich)
         formula_dct = automol.formula.join(formula_dct, formula_i_dct)
     formula_str = automol.formula.string2(formula_dct)
 

@@ -2,7 +2,7 @@
 """
 
 import numpy
-import automol.inchi
+import automol.chi
 import automol.graph
 import automol.formula
 import automol.reac
@@ -180,7 +180,7 @@ def cbh_basis(zrxn, scheme):
     if not radrad:
         rcts_gra = automol.reac.reactants_graph(zrxn)
         for rgra in automol.graph.connected_components(rcts_gra):
-            if automol.graph.inchi(rgra) == 'InChI=1S/O2/c1-2':
+            if automol.graph.chi(rgra) == 'InChI=1S/O2/c1-2':
                 radrad = True
                 # rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
                 adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
@@ -222,7 +222,7 @@ def cbh_basis(zrxn, scheme):
     clist = []
     for frag_gra in frags.values():
         if 'exp_gra' in frag_gra:
-            fraglist.append(automol.graph.inchi(frag_gra['exp_gra']))
+            fraglist.append(automol.graph.chi(frag_gra['exp_gra']))
             clist.append(frag_gra['coeff'])
         else:
             # if rxnclass == ReactionClass.Typ.HYDROGEN_ABSTRACTION and radrad:

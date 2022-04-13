@@ -5,7 +5,7 @@ Extract PES and SUBPESs from a given mechanism
 import pandas as pd
 import numpy
 from mechanalyzer.parser._util import order_rct_bystoich
-import automol.inchi
+import automol.chi
 import automol.formula
 from mechanalyzer.parser import pes
 from mechanalyzer.parser.ckin_ import parse_pes_dct
@@ -36,8 +36,8 @@ def pes_dictionary(mech_str, mech_type, spc_dct, printlog=True):
         for (_, pes_idx, subpes_idx), chnls in pes_dct.items():
             rcts = chnls[0][1][0]
             rct_ichs = tuple(spc_dct[rct]['inchi'] for rct in rcts)
-            rct_ich = automol.inchi.join(rct_ichs)
-            fml = automol.formula.string(automol.inchi.formula(rct_ich))
+            rct_ich = automol.chi.join(rct_ichs)
+            fml = automol.formula.string(automol.chi.formula(rct_ich))
             new_pes_dct[(fml, pes_idx, subpes_idx)] = chnls
         return new_pes_dct
 

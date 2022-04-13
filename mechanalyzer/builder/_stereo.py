@@ -129,12 +129,12 @@ def valid_enantiomerically(ste_mech_spc_dct):
     rule_out = False
     for spc_name_i, spc_name_j in list(
             it.combinations(ste_mech_spc_dct.keys(), 2)):
-        no_ste_ich_i = automol.inchi.standard_form(
+        no_ste_ich_i = automol.chi.standard_form(
             ste_mech_spc_dct[spc_name_i]['inchi'], stereo=False)
-        no_ste_ich_j = automol.inchi.standard_form(
+        no_ste_ich_j = automol.chi.standard_form(
             ste_mech_spc_dct[spc_name_j]['inchi'], stereo=False)
         if no_ste_ich_i == no_ste_ich_j:
-            if automol.inchi.are_enantiomers(
+            if automol.chi.are_enantiomers(
                     ste_mech_spc_dct[spc_name_i]['inchi'],
                     ste_mech_spc_dct[spc_name_j]['inchi']):
                 print(
@@ -191,7 +191,7 @@ def _enant_rxn(rxn_i):
         uses None if there is no enantiomer
     """
     check_ent = [
-        tuple(map(automol.inchi.reflect, ichs)) for ichs in rxn_i[:-1]]
+        tuple(map(automol.chi.reflect, ichs)) for ichs in rxn_i[:-1]]
     if check_ent[0] == rxn_i[0]:
         check_ent[0] = None
     if check_ent[1] == rxn_i[1]:
@@ -371,11 +371,11 @@ def _noste_rxn(rxn_ichs):
     form1 = ()
     form2 = ()
     for ich in ichs1:
-        noste_ichs1 += (automol.inchi.standard_form(ich, stereo=False),)
-        form1 += (automol.inchi.formula(ich),)
+        noste_ichs1 += (automol.chi.standard_form(ich, stereo=False),)
+        form1 += (automol.chi.formula(ich),)
     for ich in ichs2:
-        noste_ichs2 += (automol.inchi.standard_form(ich, stereo=False),)
-        form2 += (automol.inchi.formula(ich),)
+        noste_ichs2 += (automol.chi.standard_form(ich, stereo=False),)
+        form2 += (automol.chi.formula(ich),)
     form1 = automol.formula.join(*form1) if len(form1) > 1 else form1[0]
     form2 = automol.formula.join(*form2) if len(form2) > 1 else form2[0]
     noste_rxn = (automol.inchi.sorted_(noste_ichs1), automol.inchi.sorted_(noste_ichs2))
@@ -402,7 +402,7 @@ def _sort_expansion(all_ste_rxns):
         for rxn in rxn_lst:
             ichs1, ichs2, _ = rxn
             for ich in ichs1 + ichs2:
-                ich_no_ste = automol.inchi.standard_form(ich, stereo=False)
+                ich_no_ste = automol.chi.standard_form(ich, stereo=False)
                 if ich_no_ste not in rxn_ich_count:
                     rxn_ich_count[ich_no_ste] = 1
                 elif ich_no_ste != ich:
@@ -413,7 +413,7 @@ def _sort_expansion(all_ste_rxns):
         for rxn in rxn_lst:
             ichs1, ichs2, _ = rxn
             for ich in ichs1 + ichs2:
-                ich_no_ste = automol.inchi.standard_form(ich, stereo=False)
+                ich_no_ste = automol.chi.standard_form(ich, stereo=False)
                 sort_val += rxn_ich_count[ich_no_ste]
         sort_val_lst.append(sort_val)
 
@@ -467,10 +467,11 @@ def _ste_rxn_lsts(rxn_ich):
         attempt = 1
         while attempt < 4:
             try:
-                rct_ichs = automol.inchi.sorted_(
-                    tuple(map(automol.graph.stereo_inchi, rct_gras)))
-                prd_ichs = automol.inchi.sorted_(
-                    tuple(map(automol.graph.stereo_inchi, prd_gras)))
+                rct_ichs, prd_ichs = (), ()
+                for gra in rct_gras:
+                    rct_ichs += (automol.graph.chi(gra, stereo=True),)
+                for gra in prd_gras:
+                    prd_ichs += (automol.graph.chi(gra, stereo=True),)
                 ste_rxn_ichs += ((rct_ichs, prd_ichs),)
                 break
             except:
@@ -509,7 +510,7 @@ def _remove_enantiomer_reactions(ste_rxn_lst, reacs_stereo_inchi=None):
                               if set(rxn[0]) == reacs_stereo_inchi)
     else:
         log = ' - Reducing reactions to enforce InChI/m0 stereo throughout\n'
-        f_ste_rxn_lst = automol.inchi.filter_enantiomer_reactions(ste_rxn_lst)
+        f_ste_rxn_lst = automol.chi.filter_enantiomer_reactions(ste_rxn_lst)
 
     # Print the removed reactions
     removed_ste_rxn_lst = set(ste_rxn_lst) - set(f_ste_rxn_lst)
@@ -694,8 +695,8 @@ def _remove_rxn_stereo(rxn):
     """
 
     return (
-        tuple(automol.inchi.standard_form(ich, stereo=False) for ich in rxn[0]),
-        tuple(automol.inchi.standard_form(ich, stereo=False) for ich in rxn[1]),
+        tuple(automol.chi.standard_form(ich, stereo=False) for ich in rxn[0]),
+        tuple(automol.chi.standard_form(ich, stereo=False) for ich in rxn[1]),
         rxn[2]
     )
 
@@ -704,6 +705,6 @@ def _rxn_smiles(rxn):
     """ write a reaction into smles
     """
     return (
-        tuple(automol.inchi.smiles(rgt) for rgt in rxn[0]),
-        tuple(automol.inchi.smiles(rgt) for rgt in rxn[1]),
+        tuple(automol.chi.smiles(rgt) for rgt in rxn[0]),
+        tuple(automol.chi.smiles(rgt) for rgt in rxn[1]),
     )

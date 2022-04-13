@@ -6,11 +6,11 @@ Read the csv file
 import sys
 from io import StringIO
 import pandas
-from automol.smiles import inchi as _inchi
-from automol.inchi import smiles as _smiles
-from automol.inchi import formula as _fml_inchi
-from automol.inchi import low_spin_multiplicity as _low_spin_mult
-from automol.inchi import recalculate
+from automol.smiles import chi as _inchi
+from automol.chi import smiles as _smiles
+from automol.chi import formula as _fml_inchi
+from automol.chi import low_spin_multiplicity as _low_spin_mult
+from automol.chi import recalculate
 
 
 # What columns are allowed in the CSV file
