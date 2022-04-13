@@ -3,7 +3,7 @@
 """
 
 import numpy
-import automol.inchi
+import automol.chi
 import automol.graph
 import automol.formula
 from thermfit.cbh import _util as util
@@ -48,7 +48,7 @@ def basic_spc_basis(ich):
     """
 
     # Get a list of all the atom types in the molecule
-    fml = automol.inchi.formula(ich)
+    fml = automol.chi.formula(ich)
     symbs = tuple(fml.keys())
 
     # Create list of inchi keys corresponding to basis species
@@ -99,7 +99,7 @@ def _coefficients(basis, spc_fml):
     basis_mat = numpy.zeros((nbasis, nbasis))
 
     # Get the basis formulae list
-    basis_fml_str = [automol.inchi.formula_string(spc) for spc in basis]
+    basis_fml_str = [automol.chi.formula_string(spc) for spc in basis]
     for spc in basis_fml_str:
         basis_atom_dict = automol.formula.from_string(spc)
         for atom in basis_atom_dict:
@@ -144,7 +144,7 @@ def cbhzed(ich, balance=True):
     """
 
     # Graphical info about molecule
-    gra = automol.inchi.graph(ich)
+    gra = automol.chi.graph(ich)
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
     atm_vals = automol.graph.atom_element_valences(gra)
     atms = automol.graph.atoms(gra)
@@ -163,7 +163,7 @@ def cbhzed(ich, balance=True):
             atm_vals[atm] -= 1
         atm_dic = {0: (atms[atm][0], int(atm_vals[atm]), None)}
         gra = (atm_dic, {})
-        frag = automol.graph.inchi(gra)
+        frag = automol.graph.chi(gra)
         util.add2dic(frags, frag, coeff)
 
     if balance:
@@ -186,7 +186,7 @@ def cbhone(ich, balance=True):
     """
 
     # Graphical info about molecule
-    gra = automol.inchi.graph(ich)
+    gra = automol.chi.graph(ich)
     atms = automol.graph.atoms(gra)
     bnd_ords = automol.graph.one_resonance_dominant_bond_orders(gra)
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
@@ -212,7 +212,7 @@ def cbhone(ich, balance=True):
                            1: (atms[adj][0], int(valj), None)}
                 bnd_dic = {frozenset({0, 1}): (1, None)}
                 gra = (atm_dic, bnd_dic)
-                frag = automol.graph.inchi(gra)
+                frag = automol.graph.chi(gra)
                 util.add2dic(frags, frag)
     frags = {k: v for k, v in frags.items() if v}
     if not frags:
@@ -245,7 +245,7 @@ def cbhtwo(ich, balance=True):
     """
 
     # Graphical info about molecule
-    gra = automol.inchi.graph(ich)
+    gra = automol.chi.graph(ich)
     atms = automol.graph.atoms(gra)
     bnd_ords = automol.graph.one_resonance_dominant_bond_orders(gra)
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
@@ -284,7 +284,7 @@ def cbhtwo(ich, balance=True):
             atm_dic[j] = (atms[adj][0], int(valj), None)
             bnd_dic[frozenset({0, j})] = (1, None)
         gra = (atm_dic, bnd_dic)
-        frag = automol.graph.inchi(gra)
+        frag = automol.graph.chi(gra)
         util.add2dic(frags, frag, coeff)
 
     frags = {k: v for k, v in frags.items() if v}
@@ -330,7 +330,7 @@ def cbhthree(ich, balance=True):
     """
 
     # Graphical info about molecule
-    gra = automol.inchi.graph(ich)
+    gra = automol.chi.graph(ich)
     atms = automol.graph.atoms(gra)
     bnd_ords = automol.graph.one_resonance_dominant_bond_orders(gra)
     rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
@@ -364,7 +364,7 @@ def cbhthree(ich, balance=True):
                     atm_dic[i*4+j+1] = (atms[adj][0], int(valj), None)
                     bnd_dic[frozenset({i, i*4+j+1})] = (bnd_ord, None)
         gra = (atm_dic, bnd_dic)
-        frag = automol.graph.inchi(gra)
+        frag = automol.graph.chi(gra)
         util.add2dic(frags, frag)
 
     if not frags:
@@ -419,7 +419,7 @@ def cbhthree(ich, balance=True):
 #    value as INT their coefficient
 #    """
 #    #Graphical info about molecule
-#    gra      = automol.inchi.graph(ich)
+#    gra      = automol.chi.graph(ich)
 #    atms     = automol.graph.atoms(gra)
 #    bnd_ords = automol.graph.one_resonance_dominant_bond_orders(gra)
 #    rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
@@ -474,7 +474,7 @@ def cbhthree(ich, balance=True):
 #                   k -= 1
 #
 #        gra     = (atm_dic, bnd_dic)
-#        frag = automol.graph.inchi(gra)
+#        frag = automol.graph.chi(gra)
 #        util.add2dic(frags, frag)
 #    frags =  {k: v for k, v in frags.items() if v}
 #    ioprinter.info_message(frags)

@@ -2,7 +2,7 @@
 """
 
 import numpy
-import automol.inchi
+import automol.chi
 import automol.graph
 
 
@@ -81,14 +81,14 @@ def balance(ich, frags):
     """
     stoichs = {}
     for frag in frags:
-        _stoich = automol.inchi.formula(frag)
+        _stoich = automol.chi.formula(frag)
         for atm in _stoich:
             if atm in stoichs:
                 stoichs[atm] += _stoich[atm] * frags[frag]
             else:
                 stoichs[atm] = _stoich[atm] * frags[frag]
     balance_ = {}
-    _stoich = automol.inchi.formula(ich)
+    _stoich = automol.chi.formula(ich)
     for atom in _stoich:
         if atom in stoichs:
             balance_[atom] = _stoich[atom] - stoichs[atom]
@@ -127,10 +127,10 @@ def balance_frags(ich, frags):
     """ balance the equation?
     """
     balance_ = balance(ich, frags)
-    methane = automol.smiles.inchi('C')
-    water = automol.smiles.inchi('O')
-    ammonm = automol.smiles.inchi('N')
-    hydrgn = automol.smiles.inchi('[H][H]')
+    methane = automol.smiles.chi('C')
+    water = automol.smiles.chi('O')
+    ammonm = automol.smiles.chi('N')
+    hydrgn = automol.smiles.chi('[H][H]')
     if 'C' in balance_:
         add2dic(frags, methane, balance_['C'])
     if 'N' in balance_:
@@ -147,14 +147,14 @@ def balance_frags_ts(gra, frags):
     """ balance the equation?
     """
     balance_ = balance_ts(gra, frags)
-    methane = automol.smiles.inchi('C')
-    water = automol.smiles.inchi('O')
-    ammonm = automol.smiles.inchi('N')
-    hydrgn = automol.smiles.inchi('[H][H]')
-    methane = automol.inchi.graph(methane)
-    water = automol.inchi.graph(water)
-    ammonm = automol.inchi.graph(ammonm)
-    hydrgn = automol.inchi.graph(hydrgn)
+    methane = automol.smiles.chi('C')
+    water = automol.smiles.chi('O')
+    ammonm = automol.smiles.chi('N')
+    hydrgn = automol.smiles.chi('[H][H]')
+    methane = automol.chi.graph(methane)
+    water = automol.chi.graph(water)
+    ammonm = automol.chi.graph(ammonm)
+    hydrgn = automol.chi.graph(hydrgn)
     idx_dct = []
     for spc in [methane, water, ammonm, hydrgn]:
         spc = automol.graph.explicit(spc)
@@ -201,14 +201,14 @@ def print_lhs_rhs(ich, frags):
     """ print the fragments from each side of the reaction
     """
     lhs, rhs = _lhs_rhs(frags)
-    lhsprint = automol.inchi.smiles(ich)
+    lhsprint = automol.chi.smiles(ich)
     rhsprint = ''
     for frag, side in rhs.values():
         if rhsprint:
-            rhsprint += f' +  {side:.1f} {automol.inchi.smiles(frag)} '
+            rhsprint += f' +  {side:.1f} {automol.chi.smiles(frag)} '
         else:
-            rhsprint = f' {rhs[frag]:.1f} {automol.inchi.smiles(frag)} '
+            rhsprint = f' {rhs[frag]:.1f} {automol.chi.smiles(frag)} '
     for frag, side in lhs.values():
-        lhsprint += f' +  {side:.1f} {automol.inchi.smiles(frag)} '
+        lhsprint += f' +  {side:.1f} {automol.chi.smiles(frag)} '
 
     return f'{lhsprint} --> {rhsprint}'

@@ -5,11 +5,11 @@ Parses a spc.csv file containing species information to obtain a mech_spc_dct
 import csv
 import copy
 from ioformat import pathtools
-from automol.smiles import inchi as smi_to_ich
-from automol.inchi import smiles as ich_to_smi
-from automol.inchi import formula as ich_to_fml
-from automol.inchi import low_spin_multiplicity as _low_spin_mult
-from automol.inchi import is_complete
+from automol.smiles import chi as smi_to_ich
+from automol.chi import smiles as ich_to_smi
+from automol.chi import formula as ich_to_fml
+from automol.chi import low_spin_multiplicity as _low_spin_mult
+from automol.chi import is_complete
 from automol.formula import from_string as str_to_fml
 import rdkit.Chem as _rd_chem
 

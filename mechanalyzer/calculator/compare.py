@@ -8,7 +8,7 @@ import numpy
 from phydat import phycon
 from chemkin_io.writer import _util as writer_util
 import ratefit
-from automol.inchi import without_stereo
+from automol.chi import without_stereo
 
 RC_CAL = phycon.RC_CAL  # universal gas constant in cal/mol-K
 

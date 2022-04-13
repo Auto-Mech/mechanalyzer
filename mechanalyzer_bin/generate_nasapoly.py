@@ -109,7 +109,7 @@ def _read_csv(input_name):
     data = _get_data(input_name)
     spc_lst = ()
     for name, smi, hof in zip(data.name, data.smiles, data.hof):
-        fml = automol.inchi.formula(automol.smiles.inchi(smi))
+        fml = automol.chi.formula(automol.smiles.chi(smi))
         _hof = hof * phycon.KCAL2EH
 
         spc_lst += ((name, fml, _hof),)

@@ -6,7 +6,7 @@
 """
 
 import os
-import automol.inchi
+import automol.chi
 import automol.geom
 from phydat import phycon
 import autorun
@@ -82,11 +82,11 @@ def _prepare_basis(ref_scheme, spc_dct, zrxn, print_log,
         ste_basis = ()
         for bas in spc_basis:
             if isinstance(bas, str):
-                ste_basis += (automol.inchi.add_stereo(bas),)
+                ste_basis += (automol.chi.add_stereo(bas),)
             else:
                 ste_basis += (
-                    (tuple(automol.inchi.add_stereo(b) for b in bas[0]),
-                     tuple(automol.inchi.add_stereo(b) for b in bas[1])),
+                    (tuple(automol.chi.add_stereo(b) for b in bas[0]),
+                     tuple(automol.chi.add_stereo(b) for b in bas[1])),
                 )
 
         # need to figure out print for TS basis
@@ -168,8 +168,8 @@ def create_ts_spc(ref, spc_dct, mult):
     print('ref test', ref)
     reacs, prods = ref[0], ref[1]
     rxn_ichs = (
-        tuple(automol.inchi.add_stereo(ich) for ich in reacs if ich),
-        tuple(automol.inchi.add_stereo(ich) for ich in prods if ich)
+        tuple(automol.chi.add_stereo(ich) for ich in reacs if ich),
+        tuple(automol.chi.add_stereo(ich) for ich in prods if ich)
     )
 
     rxn_muls, rxn_chgs = (), ()
@@ -208,16 +208,16 @@ def create_spec(ich, charge=0,
                 hind_inc=30.):
     """ add a species to the species dictionary
     """
-    rad = automol.formula.electron_count(automol.inchi.formula(ich)) % 2
+    rad = automol.formula.electron_count(automol.chi.formula(ich)) % 2
     mult = 1 if not rad else 2
 
     return {
-        'smiles': automol.inchi.smiles(ich),
+        'smiles': automol.chi.smiles(ich),
         'inchi': ich,
-        'inchikey': automol.inchi.inchi_key(ich),
+        'inchikey': automol.chi.inchi_key(ich),
         'charge': charge,
         'mult': mult,
-        'fml': automol.inchi.formula(ich),
+        'fml': automol.chi.formula(ich),
         'mc_nsamp': mc_nsamp,
         'hind_inc': hind_inc * phycon.DEG2RAD,
         'hbond_cutoffs': (4.55, 1.92)

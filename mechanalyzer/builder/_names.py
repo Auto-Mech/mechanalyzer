@@ -3,7 +3,7 @@
 
 import copy
 import ioformat
-import automol.inchi
+import automol.chi
 import automol.geom
 import automol.graph
 from automol.graph import FunctionalGroup
@@ -137,15 +137,15 @@ def functional_group_name(ich, name='', rename_rule_dct=None):
         """ Get the connectivity string
         """
         # OLD SCHEME
-        # conn_string = automol.inchi.connectivity(
+        # conn_string = automol.chi.connectivity(
         #     ich, parse_connection_layer=True, parse_h_layer=True)
         # return ioformat.hash_string(
         #   conn_string, 3, remove_char_lst=('-', '_'))
 
         # NEW SCHEME
-        c_conn_str = automol.inchi.connectivity(
+        c_conn_str = automol.chi.connectivity(
             ich, parse_connection_layer=True, parse_h_layer=False)
-        h_conn_str = automol.inchi.connectivity(
+        h_conn_str = automol.chi.connectivity(
             ich, parse_connection_layer=False, parse_h_layer=True)
         chash = ioformat.hash_string(c_conn_str, 3, remove_char_lst=('-', '_'))
         hhash = ioformat.hash_string(h_conn_str, 3, remove_char_lst=('-', '_'))
@@ -192,8 +192,8 @@ def functional_group_name(ich, name='', rename_rule_dct=None):
                        for fgrp_name, fgrp_lst in rename_rule_dct.items()}
 
     # Get the ich, geom, and gra and other info used for getting name
-    geo = automol.inchi.geometry(ich)
-    gra = automol.inchi.graph(ich)
+    geo = automol.chi.geometry(ich)
+    gra = automol.chi.graph(ich)
 
     # Get the number of atoms and functional groups
     c_cnt = automol.geom.atom_count(geo, 'C', match=True)
@@ -234,7 +234,7 @@ def functional_group_name(ich, name='', rename_rule_dct=None):
         if name:
             re_name = name
         else:
-            re_name = automol.inchi.formula_string(ich)
+            re_name = automol.chi.formula_string(ich)
             if c_cnt > 1:
                 conn_lbl = _conn_string(ich)
                 re_name += f'-{conn_lbl}'
@@ -295,7 +295,7 @@ def formula_name(ich, fml_cnt_dct, spc_dct):
         formula appears in some mechanism.
     """
 
-    fml_str = automol.inchi.formula_string(ich)
+    fml_str = automol.chi.formula_string(ich)
 
     if fml_str in fml_cnt_dct:
 
@@ -356,7 +356,7 @@ def stereo_name_suffix(ich):
     ste_str = ''
 
     # Read the stereo chemistry from the InChI string
-    ste_slyrs = automol.inchi.stereo_sublayers(ich)
+    ste_slyrs = automol.chi.stereo_layers(ich)
 
     tlyr = ste_slyrs.get('t')
     blyr = ste_slyrs.get('b')

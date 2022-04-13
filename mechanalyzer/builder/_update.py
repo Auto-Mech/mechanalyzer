@@ -50,7 +50,7 @@ def update_spc_dct(spc_ichs, spc_dct):
             rgt_dct = thermfit.create_spec(ich)
 
             # Add to the overall mechanism spc_dct and new species lst
-            smi = automol.inchi.smiles(ich)
+            smi = automol.chi.smiles(ich)
             print(f'Adding species {name} = {smi} = {ich}')
 
             spc_dct.update({name: rgt_dct})
@@ -153,7 +153,7 @@ def remove_unstable_reactions(rxn_param_dct, mech_spc_dct):
     for rxn, params in rxn_param_dct.items():
         reacs, prods, _ = rxn
         if len(reacs) == 1 and len(prods) == 2:
-            rct_geo = automol.inchi.geometry(mech_spc_dct[reacs[0]]['inchi'])
+            rct_geo = automol.chi.geometry(mech_spc_dct[reacs[0]]['inchi'])
             rct_zma = automol.geom.zmatrix(rct_geo)
             instab_zmas = automol.reac.instability_product_zmas(rct_zma)
             if instab_zmas:

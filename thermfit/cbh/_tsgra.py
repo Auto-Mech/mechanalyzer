@@ -3,7 +3,7 @@
 
 import numpy as np
 import automol.graph
-import automol.inchi
+import automol.chi
 
 
 # Check TS keys
@@ -199,9 +199,9 @@ def split_radradabs_gras(gras):
             atms, bnd_ords = rct_gra
     rct_gras = automol.graph.connected_components(rct_gra)
     for rgra in rct_gras:
-        rct_ichs.append(automol.graph.inchi(rgra))
+        rct_ichs.append(automol.graph.chi(rgra))
     if len(rct_ichs) > 1:
-        rct_ichs = automol.inchi.sorted_(rct_ichs)
+        rct_ichs = automol.chi.sorted_(rct_ichs)
     atms, bnd_ords = gras
     for bnd_ord in bnd_ords:
         order, tmp = bnd_ords[bnd_ord]
@@ -238,9 +238,9 @@ def split_radradabs_gras(gras):
             atms, bnd_ords = prd_gra
     prd_gras = automol.graph.connected_components(prd_gra)
     for pgra in prd_gras:
-        prd_ichs.append(automol.graph.inchi(pgra))
+        prd_ichs.append(automol.graph.chi(pgra))
     if len(prd_ichs) > 1:
-        prd_ichs = automol.inchi.sorted_(prd_ichs)
+        prd_ichs = automol.chi.sorted_(prd_ichs)
     return (rct_ichs, prd_ichs)
 
 
@@ -296,13 +296,13 @@ def split_gras(gras):
     rct_ichs = []
     prd_ichs = []
     for rgra in rct_gras:
-        rct_ichs.append(automol.graph.inchi(rgra))
+        rct_ichs.append(automol.graph.chi(rgra))
     for pgra in prd_gras:
-        prd_ichs.append(automol.graph.inchi(pgra))
+        prd_ichs.append(automol.graph.chi(pgra))
     if len(rct_ichs) > 1:
-        rct_ichs = automol.inchi.sorted_(rct_ichs)
+        rct_ichs = automol.chi.sorted_(rct_ichs)
     if len(prd_ichs) > 1:
-        prd_ichs = automol.inchi.sorted_(prd_ichs)
+        prd_ichs = automol.chi.sorted_(prd_ichs)
     return rct_ichs, prd_ichs
 
 
