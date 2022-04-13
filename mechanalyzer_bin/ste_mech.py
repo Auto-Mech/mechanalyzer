@@ -18,8 +18,8 @@ def main(
     """
     # Build the initial dictionaries
     mech_spc_dct = mechanalyzer.parser.spc.build_spc_dct(inp_spc_str, 'csv')
-    rxn_param_dct, _, _ = mechanalyzer.parser.mech.parse_mechanism(
-        inp_mech_str, 'chemkin', mech_spc_dct)
+    rxn_param_dct = mechanalyzer.parser.mech.parse_mechanism(
+        inp_mech_str, 'chemkin')
     isolate_spc, sort_lst = mechanalyzer.parser.mech.parse_sort(sort_str)
 
     # Remove reactions that should not be there
@@ -120,9 +120,8 @@ def write_mechanism(
         rxn_cmts_dct=None)
 
     # Use strings to generate ordered objects
-    ret = sorter.sorted_mech(
+    param_dct_sort, _, ste_mech_spc_dct_sort, cmts_dct = sorter.sorted_mech(
         csv_str, mech_str, isolate_spc, sort_lst)
-    param_dct_sort, _, ste_mech_spc_dct_sort, cmts_dct, elems = ret
     rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(
         rxn_sort_dct=cmts_dct)
 
@@ -131,7 +130,7 @@ def write_mechanism(
     csv_str = mechanalyzer.parser.spc.csv_string(
         ste_mech_spc_dct_sort, header_lst)
     mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
-        elem_tuple=elems,
+        elem_tuple=(),
         mech_spc_dct=ste_mech_spc_dct_sort,
         spc_nasa7_dct=None,
         rxn_param_dct=param_dct_sort,
@@ -176,7 +175,7 @@ def dictionaries_from_rxn_lst(sccs_rxn_lst):
     """ transform the reaction list to the dictionaries the writer likes
     """
     ste_mech_spc_dct, ste_rxn_dct = {}, {}
-    ste_mech_spc_dct, _ = mechanalyzer.builder.update_spc_dct_from_reactions(
+    ste_mech_spc_dct = mechanalyzer.builder.update_spc_dct_from_reactions(
         sccs_rxn_lst, ste_mech_spc_dct)
     ste_rxn_dct = mechanalyzer.builder.update_rxn_dct(
         sccs_rxn_lst, ste_rxn_dct, ste_mech_spc_dct)
