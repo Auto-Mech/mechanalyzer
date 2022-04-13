@@ -62,6 +62,9 @@ def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct,
 
     # Loop over the PES (stoich similar)
     forms = list(pes_noste_rxns_dct.keys())
+    # ste_rxn_cnt = 0
+    full_ste_rxn_lst = []
+    full_ste_spc_lst = []
     for formula in forms:
         if formula != 'C5H11':
             continue
@@ -81,9 +84,31 @@ def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct,
             ccs_rxn_gra = _make_ccs_rxn_gra(
                 ste_rxn_dct, pes_gra)
 
+            # Count all of the stereo reactions
+            # Build list of stereo species
+            for _rxn_lst in ste_rxns:
+                # ste_rxn_cnt += len(_rxn_lst)
+                for _rxnx in _rxn_lst:
+                    for rct in _rxnx[0]:
+                        if rct not in full_ste_spc_lst:
+                            full_ste_spc_lst.append(rct)
+                    for prd in _rxnx[1]:
+                        if prd not in full_ste_spc_lst:
+                            full_ste_spc_lst.append(prd)
+                    full_ste_rxn_lst.append(_rxnx)
+
             # split into ccs to sccs
             sccs_rxn_gra = _split_ste_ccs(ccs_rxn_gra)
             all_ste_rxns += (sccs_rxn_gra,)
+
+    print('Number of reactions in the full expansion:', len(full_ste_rxn_lst))
+    print('Number of species in the full expansion:', len(full_ste_spc_lst))
+    for x in full_ste_rxn_lst:
+        print(x)
+    print('-----')
+    print('-----')
+    print('-----')
+    print('-----')
 
     return all_ste_rxns
 

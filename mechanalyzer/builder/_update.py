@@ -43,7 +43,7 @@ def update_spc_dct(spc_ichs, spc_dct):
             name = functional_group_name(ich, name='')
 
             if name in spc_dct:
-                print('WARNING: GENERATED NAME FOR SPECIES IN DCT!!!')
+                print(f'WARNING: GENERAED NAME {name} ALREADY IN DCT!!!')
                 sys.exit()
 
             # Generate the data dct
