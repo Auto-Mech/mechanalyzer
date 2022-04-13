@@ -350,7 +350,7 @@ def ich_name_dct(spc_dct):
 
 def stereo_name_suffix(ich):
     """ Parse the stereo from the InChI and write a string describing the
-        stereo that is present.
+        stereochemistry that is present.
     """
 
     ste_str = ''
