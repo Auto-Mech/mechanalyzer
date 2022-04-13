@@ -41,11 +41,8 @@ if any(string is None for string in (INP_SPC_STR, INP_MECH_STR, SORT_STR)):
 
 mech_spc_dct = mechanalyzer.parser.spc.build_spc_dct(
     INP_SPC_STR, 'csv')
-
-rxn_param_dct, _, _ = mechanalyzer.parser.mech.parse_mechanism(
-    INP_MECH_STR, 'chemkin', mech_spc_dct)
-rxn_param_dct = rxn_param_dct if rxn_param_dct is not None else {}
-
+rxn_param_dct = mechanalyzer.parser.mech.parse_mechanism(
+    INP_MECH_STR, 'chemkin')
 isolate_spc, sort_lst = mechanalyzer.parser.mech.parse_sort(SORT_STR)
 
 # Generate the requested reactions
@@ -65,7 +62,7 @@ mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
     rxn_cmts_dct=None)
 
 # Use strings to generate ordered objects
-param_dct_sort, _, mech_spc_dct, cmts_dct, elems = sorter.sorted_mech(
+param_dct_sort, _, mech_spc_dct, cmts_dct = sorter.sorted_mech(
     csv_str, mech_str, isolate_spc, sort_lst)
 rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(
     rxn_sort_dct=cmts_dct)
@@ -74,7 +71,7 @@ rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(
 sortd_csv_str = mechanalyzer.parser.spc.csv_string(
     mech_spc_dct, FILE_DCT['headers'])
 sortd_mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
-    elem_tuple=elems,
+    elem_tuple=None,
     mech_spc_dct=mech_spc_dct,
     spc_nasa7_dct=None,
     rxn_param_dct=param_dct_sort,

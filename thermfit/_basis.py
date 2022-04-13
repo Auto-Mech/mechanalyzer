@@ -217,6 +217,7 @@ def create_spec(ich, charge=0,
         'inchikey': automol.inchi.inchi_key(ich),
         'charge': charge,
         'mult': mult,
+        'fml': automol.inchi.formula(ich),
         'mc_nsamp': mc_nsamp,
         'hind_inc': hind_inc * phycon.DEG2RAD,
         'hbond_cutoffs': (4.55, 1.92)

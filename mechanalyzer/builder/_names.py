@@ -43,27 +43,45 @@ def remap_mechanism_names(mech_spc_dct, rxn_param_dct, map_dct):
 # FUNCTIONAL NAME MAPPING
 # Build various dictionaries
 DEFAULT_FGRP_RENAME_RULE_DCT = {
-    'ADHY': (FunctionalGroup.HYDROPEROXY,
+    # Three Functional Groups
+    'ADHY': (FunctionalGroup.ALKENE,
              FunctionalGroup.HYDROPEROXY,
-             FunctionalGroup.ALKENE),
-    'DHY': (FunctionalGroup.HYDROPEROXY, FunctionalGroup.HYDROPEROXY),
-    'OOHY': (FunctionalGroup.PEROXY, FunctionalGroup.HYDROPEROXY),
-    'ANHY': (FunctionalGroup.ALKENE, FunctionalGroup.HYDROPEROXY),
-    'EPHY': (FunctionalGroup.EPOXIDE, FunctionalGroup.HYDROPEROXY),
-    'KHP': (FunctionalGroup.HYDROPEROXY, FunctionalGroup.KETONE),
-    'AHP': (FunctionalGroup.HYDROPEROXY, FunctionalGroup.ALDEHYDE),
-    'KKOX': (FunctionalGroup.ALKOXY, FunctionalGroup.KETONE),
-    'AKOX': (FunctionalGroup.ALKOXY, FunctionalGroup.ALDEHYDE),
-    'KALD': (FunctionalGroup.ALDEHYDE, FunctionalGroup.KETONE),
-    'DKET': (FunctionalGroup.KETONE, FunctionalGroup.KETONE),
+             FunctionalGroup.HYDROPEROXY),
+    'AAOH': (FunctionalGroup.ALCOHOL,
+             FunctionalGroup.ALKENE,
+             FunctionalGroup.ALKOXY),
+    'AAK': (FunctionalGroup.ALCOHOL,
+            FunctionalGroup.ALKENE,
+            FunctionalGroup.KETONE),
+    # Two Functional Groups
+    'ADOH': (FunctionalGroup.ALCOHOL, FunctionalGroup.ALDEHYDE),
+    'ALOH': (FunctionalGroup.ALCOHOL, FunctionalGroup.ALKENE),
+    'KEOH': (FunctionalGroup.ALCOHOL, FunctionalGroup.KETONE),
     'DALD': (FunctionalGroup.ALDEHYDE, FunctionalGroup.ALDEHYDE),
-    'QOOH': (FunctionalGroup.HYDROPEROXY,),
-    'RO2': (FunctionalGroup.PEROXY,),
-    'EPX': (FunctionalGroup.EPOXIDE,),
-    'ALK': (FunctionalGroup.ALKENE,),
-    'KET': (FunctionalGroup.KETONE,),
+    'ALAD': (FunctionalGroup.ALDEHYDE, FunctionalGroup.ALKENE),
+    'AKOX': (FunctionalGroup.ALDEHYDE, FunctionalGroup.ALKOXY),
+    'AHP': (FunctionalGroup.ALDEHYDE, FunctionalGroup.HYDROPEROXY),
+    'KALD': (FunctionalGroup.ALDEHYDE, FunctionalGroup.KETONE),
+    'ANHY': (FunctionalGroup.ALKENE, FunctionalGroup.HYDROPEROXY),
+    'ALOX': (FunctionalGroup.ALKENE, FunctionalGroup.ALKOXY),
+    'ALKE': (FunctionalGroup.ALKENE, FunctionalGroup.KETONE),
+    'KKOX': (FunctionalGroup.ALKOXY, FunctionalGroup.KETONE),
+    'EPHY': (FunctionalGroup.EPOXIDE, FunctionalGroup.HYDROPEROXY),
+    'DHY': (FunctionalGroup.HYDROPEROXY, FunctionalGroup.HYDROPEROXY),
+    'KHP': (FunctionalGroup.HYDROPEROXY, FunctionalGroup.KETONE),
+    'OOHY': (FunctionalGroup.HYDROPEROXY, FunctionalGroup.PEROXY),
+    'DKET': (FunctionalGroup.KETONE, FunctionalGroup.KETONE),
+    # One Functional Group
     'ALD': (FunctionalGroup.ALDEHYDE,),
+    'ALK': (FunctionalGroup.ALKENE,),
+    'EPX': (FunctionalGroup.EPOXIDE,),
+    'QOOH': (FunctionalGroup.HYDROPEROXY,),
+    'KET': (FunctionalGroup.KETONE,),
+    'RO2': (FunctionalGroup.PEROXY,),
 }
+
+# Functional groups to ignore when considering the naming scheme
+IGNORE_FGRPS = ('methyl',)
 
 # Dictionary to remap names to more common ones
 NAME_EXCEPTION_DCT = {
@@ -109,17 +127,21 @@ def functional_group_name(ich, name='', rename_rule_dct=None):
     def _conn_string(ich):
         """ Get the connectivity string
         """
-        conn_string = automol.inchi.connectivity(
-            ich, parse_connection_layer=True, parse_h_layer=True)
-        return ioformat.hash_string(conn_string, 3, remove_char_lst=('-', '_'))
-        # c_conn_str = automol.inchi.connectivity(
-        #     ich, parse_connection_layer=True, parse_h_layer=False)
-        # h_conn_str = automol.inchi.connectivity(
-        #     ich, parse_connection_layer=False, parse_h_layer=True)
-        # chash = ioformat.hash_string(c_conn_str, 3, remove_char_lst=('-', '_'))
-        # hhash = ioformat.hash_string(h_conn_str, 3, remove_char_lst=('-', '_'))
-        # lbl = chash + hhash
-        # return lbl
+        # OLD SCHEME
+        # conn_string = automol.inchi.connectivity(
+        #     ich, parse_connection_layer=True, parse_h_layer=True)
+        # return ioformat.hash_string(
+        #   conn_string, 3, remove_char_lst=('-', '_'))
+
+        # NEW SCHEME
+        c_conn_str = automol.inchi.connectivity(
+            ich, parse_connection_layer=True, parse_h_layer=False)
+        h_conn_str = automol.inchi.connectivity(
+            ich, parse_connection_layer=False, parse_h_layer=True)
+        chash = ioformat.hash_string(c_conn_str, 3, remove_char_lst=('-', '_'))
+        hhash = ioformat.hash_string(h_conn_str, 3, remove_char_lst=('-', '_'))
+        lbl = chash + hhash
+        return lbl
 
     def _fgrp_name_string(fgrp_cnt_dct, rule_dct):
         """ Determines what the new name for a species should
@@ -130,12 +152,14 @@ def functional_group_name(ich, name='', rename_rule_dct=None):
         """
 
         # Build a list of all present func groups, if multiple found
+        # ignore certain functional groups
         # put multiple iterations in that list
         # then sort it
         fgrps = []
         for fgrp, count in fgrp_cnt_dct.items():
-            for _ in range(count):
-                fgrps.append(fgrp)
+            if fgrp not in IGNORE_FGRPS:
+                for _ in range(count):
+                    fgrps.append(fgrp)
         fgrps = tuple(sorted(fgrps))
 
         # Figure out which renaming rule to use
@@ -172,41 +196,42 @@ def functional_group_name(ich, name='', rename_rule_dct=None):
         c_cnt > 2 and
         fgrp_cnt_dct
     ):
-        # Get the labels
-        conn_lbl = _conn_string(ich)
-        ste_lbl = stereo_name_suffix(ich)
-        fgrp_lbl = _fgrp_name_string(fgrp_cnt_dct, rename_rule_dct)
-
-        # Build the names string
-        re_name = f'C{c_cnt}'
-        re_name += f'-{conn_lbl}'
-        if ste_lbl:
-            re_name += f'{ste_lbl}'
-        re_name += f'-{fgrp_lbl}'
-        
+        # OLD SCHEME
+        # # Get the labels
         # conn_lbl = _conn_string(ich)
         # ste_lbl = stereo_name_suffix(ich)
         # fgrp_lbl = _fgrp_name_string(fgrp_cnt_dct, rename_rule_dct)
+
         # # Build the names string
         # re_name = f'C{c_cnt}'
-        # re_name += f'{fgrp_lbl}'
-        # re_name += '-'
-        # re_name += f'{conn_lbl}'
+        # re_name += f'-{conn_lbl}'
         # if ste_lbl:
         #     re_name += f'{ste_lbl}'
+        # re_name += f'-{fgrp_lbl}'
+
+        # NEW SCHEME
+        conn_lbl = _conn_string(ich)
+        ste_lbl = stereo_name_suffix(ich)
+        fgrp_lbl = _fgrp_name_string(fgrp_cnt_dct, rename_rule_dct)
+        # Build the names string
+        re_name = f'C{c_cnt}'
+        re_name += f'{fgrp_lbl}'
+        re_name += '-'
+        re_name += f'{conn_lbl}'
+        if ste_lbl:
+            re_name += f'{ste_lbl}'
     else:
         # Use input name or use formula
         if name:
             re_name = name
         else:
             re_name = automol.inchi.formula_string(ich)
-            if c_cnt > 2:
+            if c_cnt > 1:
                 conn_lbl = _conn_string(ich)
                 re_name += f'-{conn_lbl}'
 
     # Put in name exception remapping
-    if re_name in NAME_EXCEPTION_DCT:
-        re_name = NAME_EXCEPTION_DCT[re_name]
+    re_name = NAME_EXCEPTION_DCT.get(re_name, re_name)
 
     return re_name
 
