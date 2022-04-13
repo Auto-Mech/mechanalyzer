@@ -41,7 +41,7 @@ def calc_hform_0k(spc_h0, basis_h0,
         print('dHzero test', dhzero, ich, basis_coeffs[i], ref_h0, basis_h0[i])
         dhzero += basis_coeffs[i] * (ref_h0 - basis_h0[i])
 
-        # print('Contribution from:', automol.inchi.smiles(ich))
+        # print('Contribution from:', automol.chi.smiles(ich))
         # print(
         #     'HF0K in kcal: {:g} * {:.5f}'.format(
         #     basis_coeffs[i], ref_h0 *phycon.EH2KCAL))

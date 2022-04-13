@@ -68,11 +68,11 @@
 #                 # rct_names.append(rct['name'])
 #                 rct_smis.append(rct['smiles'][0])
 #
-#                 ich = automol.smiles.inchi(rct['smiles'][0])
+#                 ich = automol.smiles.chi(rct['smiles'][0])
 #                 if check_stereo:
-#                     if not automol.inchi.is_complete(ich):
+#                     if not automol.chi.is_complete(ich):
 #                         print('adding stereochemsiry for {}'.format(ich))
-#                         ich = automol.inchi.add_stereo(ich)[0]
+#                         ich = automol.chi.add_stereo(ich)[0]
 #                 rct_ichs.append(ich)
 #                 rct_muls.append(rct['multiplicity'])
 #             # rad_rad_reac = True
@@ -84,11 +84,11 @@
 #             for prd in reaction['products']:
 #                 # prd_names.append(rct['name'])
 #                 prd_smis.append(prd['smiles'][0])
-#                 ich = automol.smiles.inchi(prd['smiles'][0])
+#                 ich = automol.smiles.chi(prd['smiles'][0])
 #                 if check_stereo:
-#                     if not automol.inchi.is_complete(ich):
+#                     if not automol.chi.is_complete(ich):
 #                         print('adding stereochemsiry for {}'.format(ich))
-#                         ich = automol.inchi.add_stereo(ich)[0]
+#                         ich = automol.chi.add_stereo(ich)[0]
 #                 prd_ichs.append(ich)
 #                 prd_muls.append(prd['multiplicity'])
 #             # rad_rad_prod = True
@@ -129,7 +129,7 @@
 #
 #         formula_dct = ''
 #         for rct_ich in rct_ichs:
-#             formula_i_dct = automol.inchi.formula(rct_ich)
+#             formula_i_dct = automol.chi.formula(rct_ich)
 #             formula_dct = automol.formula.join(
 #                 formula_dct, formula_i_dct)
 #         formula_str = automol.formula.string2(formula_dct)
@@ -155,7 +155,7 @@
 #                 unq_mul_lst.append(mul)
 #                 unq_smi_lst.append(smi)
 #
-#                 formula_dct = automol.inchi.formula(ich)
+#                 formula_dct = automol.chi.formula(ich)
 #                 lab = automol.formula.string2(formula_dct)
 #                 unq_lab_lst.append(lab)
 #                 lab_idx = -1
@@ -182,7 +182,7 @@
 #                 unq_mul_lst.append(mul)
 #                 unq_smi_lst.append(smi)
 #
-#                 formula_dct = automol.inchi.formula(ich)
+#                 formula_dct = automol.chi.formula(ich)
 #                 lab = automol.formula.string2(formula_dct)
 #
 #                 unq_lab_lst.append(lab)
