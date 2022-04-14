@@ -69,8 +69,8 @@ def plot_single_sccs(
     # automol.inchi.draw_grid(spc_ichs, names=spc_names, save_path=img_path)
 
     G = mechanalyzer.plotter.pes.sccs_graph(conn_lst, (i, j))
-    if len(G.nodes) > 0:
-        mechanalyzer.plotter.pes.show_sccs(G, '{:g}_{:g}'.format(i, j))
+    # if len(G.nodes) > 0:
+    #     mechanalyzer.plotter.pes.show_sccs(G, '{:g}_{:g}'.format(i, j))
     return G, conn_lst
 
 

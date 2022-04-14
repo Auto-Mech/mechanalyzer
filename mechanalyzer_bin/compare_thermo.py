@@ -13,18 +13,38 @@ import mechanalyzer.parser.ckin_ as ckin_parser
 # INPUTS
 # Filenames
 THERMO_FILENAMES = [
-    'therm.dat',
-    'healy_2010.therm',
+    # 'NUIGMech1.2.Therm.DAT',
+    # 'b2t_hr_nohb_1-19.ckin',
+    # 'RO4_tzf.ckin',
+    'all_therm.ckin_0',
+    'b2t_hr_nohb_1-19.ckin'
+    # 'C3H8NGA.DAT',
+    # 'glarborg.therm',
+    # 'stagni.therm',
+    # 'alturaifi.therm',
 ]
 SPC_CSV_FILENAMES = [
-    'species_no_ste.csv',
-    'healy_2010.csv',
+    'species.csv',
+    'species.csv',
+    #'species.csv',
+    # 'NUIG_species.csv',
+    # 'NUIG_species.csv',
+    # 'nh3_species.csv',
+    # 'nh3_species.csv',
+    # 'nh3_species.csv',
 ]
 MECH_NAMES = [
-    'ANL',
-    'Healy 2010',
+    # 'NUIG',
+    'old',
+    'new',
+    #'QM3',
+    # 'NGA',
+    # 'Glarborg',
+    # 'Stagni',
+    # 'Alturaifi',
 ]
-OUTPUT_FILENAME = 'compare_thermo.pdf'
+OUTPUT_FILENAME = 'C3_compare.pdf'
+# OUTPUT_FILENAME = 'compare_thermo.pdf'
 
 # Conditions
 TEMPS = numpy.linspace(300, 1500, 13)

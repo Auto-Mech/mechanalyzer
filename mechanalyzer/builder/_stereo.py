@@ -63,6 +63,8 @@ def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct,
     # Loop over the PES (stoich similar)
     forms = list(pes_noste_rxns_dct.keys())
     for formula in forms:
+        if formula != 'C5H11':
+            continue
         noste_rxns_dct = pes_noste_rxns_dct[formula]
         print('PES: {} has {:g} reactions'.format(
             formula, len(noste_rxns_dct.keys())))
@@ -341,7 +343,7 @@ def _noste_rxn(rxn_ichs):
         form2 += (automol.inchi.formula(ich),)
     form1 = automol.formula.join(*form1) if len(form1) > 1 else form1[0]
     form2 = automol.formula.join(*form2) if len(form2) > 1 else form2[0]
-    noste_rxn = (noste_ichs1, noste_ichs2)
+    noste_rxn = (automol.inchi.sorted_(noste_ichs1), automol.inchi.sorted_(noste_ichs2))
     return noste_rxn, form1, form2
 
 
@@ -404,7 +406,7 @@ def remove_stereochemistry(inp_mech_rxn_dct, inp_mech_spc_dct):
 
     # Update the mechanism objects with unique spc and rxns
     noste_spc_dct, noste_rxn_dct = {}, {}
-    noste_spc_dct, _ = update_spc_dct_from_reactions(noste_rxns, noste_spc_dct)
+    noste_spc_dct = update_spc_dct_from_reactions(noste_rxns, noste_spc_dct)
     noste_rxn_dct = update_rxn_dct(noste_rxns, noste_rxn_dct, noste_spc_dct)
 
     return noste_rxn_dct, noste_spc_dct
@@ -418,7 +420,6 @@ def _ste_rxn_lsts(rxn_ich):
     rxn_obj_sets = automol.reac.util.rxn_objs_from_inchi(
         rxn_ich[0], rxn_ich[1])
     rxn_obj = rxn_obj_sets[0][0]  # expand just with rxn object
-
     # Build a list of stereo reactions
     ste_rxn_ichs = ()
     for ste_rxn in automol.reac.expand_stereo(rxn_obj):
@@ -427,8 +428,10 @@ def _ste_rxn_lsts(rxn_ich):
         attempt = 1
         while attempt < 4:
             try:
-                rct_ichs = tuple(map(automol.graph.stereo_inchi, rct_gras))
-                prd_ichs = tuple(map(automol.graph.stereo_inchi, prd_gras))
+                rct_ichs = automol.inchi.sorted_(
+                    tuple(map(automol.graph.stereo_inchi, rct_gras)))
+                prd_ichs = automol.inchi.sorted_(
+                    tuple(map(automol.graph.stereo_inchi, prd_gras)))
                 ste_rxn_ichs += ((rct_ichs, prd_ichs),)
                 break
             except:

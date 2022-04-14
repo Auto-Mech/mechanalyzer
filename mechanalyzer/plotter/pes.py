@@ -563,6 +563,25 @@ def sccs_graph(conn_lst, sccs_idx=None):
     return G
 
 
+def _cluster_label_dct(nodes):
+    """ simplify the label for the plot
+    """
+    label_dct = {}
+    for node in nodes:
+        label = node.split('!')[0].replace('_', ':')
+        if (label not in label_dct.values() and
+                '+' not in node.split('!')[1]):
+            label_dct[node] = label
+        else:
+            label_dct[node] = ''
+    # Loop again incase any sccs have no wells
+    for node in nodes:
+        label = node.split('!')[0].replace('_', ':')
+        if label not in label_dct.values():
+            label_dct[node] = label
+    return label_dct
+
+
 def _label_dct(nodes):
     """ simplify the label for the plot
     """
@@ -590,22 +609,27 @@ def show_sccs(G, plt_title=None, save=False):
     plt.figure(figsize=(10, 10), dpi=80)
     pos = nx.spring_layout(G, seed=3113794652)
 
-    options = {"edgecolors": "tab:gray", "node_size": 3000, "alpha": 0.9}
+    options = {
+        "edgecolors": "black", "node_size": 3000,
+        "alpha": 0.9, "linewidths": 3}
     nx.draw_networkx_nodes(
         G, pos,
         nodelist=_well_nodes(G.nodes), node_color="tab:cyan", **options)
 
-    options = {"edgecolors": "tab:gray", "node_size": 3000, "alpha": 0.9}
+    options = {
+        "edgecolors": "black", "node_size": 1800,
+        "alpha": 0.6, "linewidths": 3}
     nx.draw_networkx_nodes(
         G, pos,
-        nodelist=_prod_nodes(G.nodes), node_color="tab:orange", **options)
+        nodelist=_prod_nodes(G.nodes), node_color="tab:red", 
+        node_shape="s", **options)
 
     nx.draw_networkx_edges(
         G, pos, edgelist=_well_edges(G.edges), width=4.0,
         alpha=0.4, edge_color='tab:cyan')
     nx.draw_networkx_edges(
         G, pos, edgelist=_prod_edges(G.edges), width=2.0,
-        alpha=0.6, edge_color='tab:orange')
+        alpha=0.6, edge_color='tab:red')
     nx.draw_networkx_labels(
         G, pos, font_size=8, labels=_label_dct(G.nodes), font_color="black")
 
@@ -654,6 +678,8 @@ def show_pes(G_lst, g_conn_lst, idx_lst, save=False):
     """
     cross_ccs_conns = ()
     chosen = ((0, 0), (1, 1), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0))
+    chosen = ((0, 0), (1, 1), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 1), (8, 0), (9, 0), (10, 0), (11, 0), (12, 0), (13, 0), (14, 0), (15, 0), (16, 0), (17, 0), (18, 0), (19, 0), (20, 0), (21, 0), (22, 0), (23, 0), (24, 0))
+
     for idx_a, (ia, ja) in enumerate(idx_lst):
         for idx_b, (ib, jb) in enumerate(idx_lst):
             if ia > ib:
@@ -672,39 +698,44 @@ def show_pes(G_lst, g_conn_lst, idx_lst, save=False):
     colors = [
         'tab:red', 'tab:blue', 'tab:orange', 'tab:pink',
         'tab:green', 'tab:purple', 'tab:cyan', 'tab:olive',
-        'black', 'black', 'black', 'black', 'black', 'black'
-        'black', 'black', 'black', 'black', 'black', 'black'
-        'black', 'black', 'black', 'black', 'black', 'black'
-        'black', 'black', 'black', 'black', 'black', 'black'
-        'black', 'black', 'black', 'black', 'black', 'black'
+        'tab:gray', 'tab:brown', 'white', 
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
         'black', 'black', 'black', 'black', 'black', 'black'
         ]
     edge_colors = [
         'tab:red', 'tab:blue', 'tab:orange', 'tab:pink',
         'tab:green', 'tab:purple', 'tab:cyan', 'tab:olive',
-        'black', 'black', 'black', 'black', 'black', 'black'
-        'black', 'black', 'black', 'black', 'black', 'black'
-        'black', 'black', 'black', 'black', 'black', 'black'
-        'black', 'black', 'black', 'black', 'black', 'black'
-        'black', 'black', 'black', 'black', 'black', 'black'
+        'tab:gray', 'tab:brown', 
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
         'black', 'black', 'black', 'black', 'black', 'black'
         ]
     plt.figure(figsize=(14, 14), dpi=80)
     pos = nx.spring_layout(full_G, seed=3113794652)
     for idx, G in enumerate(G_lst):
         i, j = idx_lst[idx]
-        if (i, j) in chosen:
+        #if (i, j) in chosen:
+        if True:
             alpha = 0.9
         else:
             alpha = 0.2
         options = {
-            "edgecolors": edge_colors[j], "node_size": 600, "alpha": alpha}
+            "edgecolors": edge_colors[j], "node_size": 600, "alpha": alpha,
+            "linewidths": 3}
         nx.draw_networkx_nodes(
             full_G, pos,
             nodelist=_well_nodes(G.nodes), node_color=colors[i], **options)
 
         options = {
-            "edgecolors": edge_colors[j], "node_size": 200, "alpha": alpha}
+            "edgecolors": edge_colors[j], "node_size": 200, "alpha": alpha,
+            "linewidths": 3, 'node_shape':'s'}
         nx.draw_networkx_nodes(
             full_G, pos,
             nodelist=_prod_nodes(G.nodes), node_color=colors[i], **options)
@@ -721,7 +752,8 @@ def show_pes(G_lst, g_conn_lst, idx_lst, save=False):
     for cross_conn in cross_ccs_conns:
         ia, ja = cross_conn[0].split('!')[0].split('_')
         ib, jb = cross_conn[1].split('!')[0].split('_')
-        if (int(ia), int(ja),) in chosen and (int(ib), int(jb),) in chosen:
+        #if (int(ia), int(ja),) in chosen and (int(ib), int(jb),) in chosen:
+        if True:
             chosen_edges += (cross_conn,)
         else:
             other_edges += (cross_conn,)
@@ -735,6 +767,9 @@ def show_pes(G_lst, g_conn_lst, idx_lst, save=False):
     # nx.draw_networkx_labels(
     #     full_G, pos, font_size=8,
     #     labels=_label_dct(full_G.nodes), font_color="black")
+    # nx.draw_networkx_labels(
+    #     full_G, pos, font_size=28,
+    #     labels=_cluster_label_dct(full_G.nodes), font_color="black")
     if save:
         pass
     else:
