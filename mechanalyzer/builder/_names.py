@@ -356,7 +356,7 @@ def stereo_name_suffix(ich):
     ste_str = ''
 
     # Read the stereo chemistry from the InChI string
-    ste_slyrs = automol.chi.stereo_layers(ich)
+    ste_slyrs = automol.chi.stereo_sublayers(ich)
 
     tlyr = ste_slyrs.get('t')
     blyr = ste_slyrs.get('b')
