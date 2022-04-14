@@ -161,8 +161,13 @@ def _make_ste_rxn_dct(ste_rxns):
 def _make_ccs_rxn_gra(ste_rxn_dct, pes_gra):
     """ merges the pes_gra and the reaction list
     """
+    print('pes_gra test')
+    for x in pes_gra:
+        print(x)
+    print('-----')
     ccs_rxn_gra = {}
     for noste_rxn, ste_exp_lst in ste_rxn_dct.items():
+        print('noste_rxn', noste_rxn)
         ccs_rxn_gra[noste_rxn] = (
             pes_gra[noste_rxn],
             ste_exp_lst)
