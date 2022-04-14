@@ -176,7 +176,7 @@ def dictionaries_from_rxn_lst(sccs_rxn_lst):
     """ transform the reaction list to the dictionaries the writer likes
     """
     ste_mech_spc_dct, ste_rxn_dct = {}, {}
-    ste_mech_spc_dct, _ = mechanalyzer.builder.update_spc_dct_from_reactions(
+    ste_mech_spc_dct = mechanalyzer.builder.update_spc_dct_from_reactions(
         sccs_rxn_lst, ste_mech_spc_dct)
     ste_rxn_dct = mechanalyzer.builder.update_rxn_dct(
         sccs_rxn_lst, ste_rxn_dct, ste_mech_spc_dct)
