@@ -83,7 +83,7 @@ DEFAULT_FGRP_RENAME_RULE_DCT = {
     # One Functional Group
     'ALD': (FunctionalGroup.ALDEHYDE,),
     'ALK': (FunctionalGroup.ALKENE,),
-    'EPX': (FunctionalGroup.CYCLIC_ETHER,),
+    'CETH': (FunctionalGroup.CYCLIC_ETHER,),
     'QOOH': (FunctionalGroup.HYDROPEROXY,),
     'KET': (FunctionalGroup.KETONE,),
     'RO2': (FunctionalGroup.PEROXY,),
