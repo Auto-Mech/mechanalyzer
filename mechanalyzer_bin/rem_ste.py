@@ -1,4 +1,4 @@
-""" Script to generate files with reactions
+""" Removal script
 """
 
 import os
