@@ -336,11 +336,13 @@ def check_ich(ich, spc, chk_ste=True):
         :rtype: Bool
     """
 
-    error = False
-    mol = _rd_chem.MolFromInchi(ich)
-    if mol is None:
-        print(f"The spc '{spc}' has an invalid InChI, '{ich}'")
-        error = True
+    if 'AMChI' not in ich:
+        mol = _rd_chem.MolFromInchi(ich)
+        if mol is None:
+            print(f"The spc '{spc}' has an invalid InChI, '{ich}'")
+            error = True
+    else:
+        print(f"Assuming AMChI string '{ich}' for '{spc}' is valid")
 
     # If indicated, check for stereochemical completeness of inchi
     if chk_ste:

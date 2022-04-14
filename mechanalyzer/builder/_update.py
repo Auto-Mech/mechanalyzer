@@ -108,15 +108,18 @@ def remove_improper_reactions(rxn_param_dct, mech_spc_dct,
     """ Remove reactions from the mechanism that do not correspond
         to proper, physical elementary step reactions.
     """
-
+    print('call improper')
     ste_rxn_param_dct = {}
     for rxn, params in rxn_param_dct.items():
+        print(f'Checking {rxn[0]}->{rxn[1]}')
         rcts_ich = tuple(mech_spc_dct[rct]['inchi'] for rct in rxn[0])
         prds_ich = tuple(mech_spc_dct[prd]['inchi'] for prd in rxn[1])
 
         rxn_obj_sets = automol.reac.rxn_objs_from_inchi(
             rcts_ich, prds_ich, stereo=stereo)
         if rxn_obj_sets is not None:
+            rxn_class = rxn_obj_sets[0][0].class_
+            print(f' - Keep: IDd {rxn_class} for reaction {rxn[0]}->{rxn[1]}')
             ste_rxn_param_dct[rxn] = params
         else:
             # Check if the reverse reaction cannot be ID'd
@@ -124,13 +127,19 @@ def remove_improper_reactions(rxn_param_dct, mech_spc_dct,
                 rxn_obj_sets = automol.reac.rxn_objs_from_inchi(
                     prds_ich, rcts_ich, stereo=stereo)
                 if rxn_obj_sets is not None:
-                    print('Checking if Reverse reaction can be identified...')
                     rev_rxn = (rxn[1], rxn[0], rxn[2])
                     ste_rxn_param_dct[rev_rxn] = params
+                    print(
+                        f' - Keep: (Reverse) IDd {rxn_class} for '
+                        f'reaction {rxn[0]}->{rxn[1]}')
                 else:
-                    print(f'Removing reaction {rcts_ich}->{prds_ich}')
+                    # print(f'Removing reaction {rcts_ich}->{prds_ich}')
+                    print(
+                        ' - Remove: No ID in either direction for '
+                        f'reaction {rxn[0]}->{rxn[1]}')
             else:
-                print(f'Removing reaction {rcts_ich}->{prds_ich}')
+                # print(f'Removing reaction {rcts_ich}->{prds_ich}')
+                print(f' - Remove: No ID for reaction {rxn[0]}->{rxn[1]}')
 
     return ste_rxn_param_dct
 

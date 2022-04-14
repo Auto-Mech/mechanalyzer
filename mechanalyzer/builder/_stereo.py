@@ -444,7 +444,11 @@ def _ste_rxn_lsts(rxn_ich):
     # Build reaction objects
     rxn_obj_sets = automol.reac.util.rxn_objs_from_inchi(
         rxn_ich[0], rxn_ich[1])
-    rxn_obj = rxn_obj_sets[0][0]  # expand just with rxn object
+    try:
+        rxn_obj = rxn_obj_sets[0][0]  # expand just with rxn object
+    except TypeError:
+        print('No ID', rxn_ich)
+
     # Build a list of stereo reactions
     ste_rxn_ichs = ()
     for ste_rxn in automol.reac.expand_stereo(rxn_obj):
