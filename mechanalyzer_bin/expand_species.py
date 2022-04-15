@@ -22,6 +22,8 @@ PAR.add_argument('-s', '--stereo', default=False, type=bool,
                  help='add stereochemistry to species (False)')
 PAR.add_argument('-b', '--hof-basis', default=False, type=bool,
                  help='add heat-of-formation species (False)')
+PAR.add_argument('-u', '--instability', default=False, type=bool,
+                 help='add instability product species (False)')
 PAR.add_argument('-g', '--sort', default=False, type=bool,
                  help='sort the species in the CSV file by atom counts')
 PAR.add_argument('-n', '--nprocs', default=1, type=int,
@@ -36,34 +38,40 @@ OPTS = vars(PAR.parse_args())
 t0 = time.time()
 
 # Check if any runtime options
-if not OPTS['hof_basis'] and not OPTS['stereo']:
-    print('Neither stereo or basis job specified.')
-    print('Add either a -b or -s flag to command.')
+if not OPTS['hof_basis'] and not OPTS['stereo'] and not OPTS['instability']:
+    print('Neither stereo, basis, nor instabiltiy job specified.')
+    print('Add one of [-b, -s, -u] flags to command.')
     print('Exiting...')
     sys.exit()
 
 # Read input species file into a species dictionary
 SPC_STR = ioformat.pathtools.read_file(CWD, OPTS['input'])
-spc_dct = mechanalyzer.parser.spc.build_spc_dct(SPC_STR, 'csv')
+mech_spc_dct = mechanalyzer.parser.spc.build_spc_dct(SPC_STR, 'csv')
+
+# Add species relating to unstable because of nearby radicals
+if OPTS['instability']:
+    mech_spc_dct = mechanalyzer.parser.spc.add_instability_products(
+        mech_spc_dct, nprocs=OPTS['nprocs'], stereo=True)
 
 # Add the thermochemical species to the species dictionary
 if OPTS['hof_basis']:
-    spc_dct = mechanalyzer.parser.spc.add_heat_of_formation_basis(
-        spc_dct, ref_schemes=('cbh0', 'cbh1', 'cbh2'),
+    mech_spc_dct = mechanalyzer.parser.spc.add_heat_of_formation_basis(
+        mech_spc_dct, ref_schemes=('cbh0', 'cbh1', 'cbh2'),
         nprocs=OPTS['nprocs'])
 
 # Add the stereochemical labels to the species
 if OPTS['stereo']:
-    spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
-        spc_dct, nprocs=OPTS['nprocs'], all_stereo=False)
+    mech_spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
+        mech_spc_dct, nprocs=OPTS['nprocs'], all_stereo=False)
 
 # Sort the species dictionary, if requested
 if OPTS['sort']:
-    spc_dct = mechanalyzer.parser.spc.reorder_by_atomcount(spc_dct)
+    mech_spc_dct = mechanalyzer.parser.spc.reorder_by_atomcount(
+        mech_spc_dct)
 
 # Write the new species dictionary to a string
 HEADERS = ('smiles', 'inchi', 'inchikey', 'mult', 'charge')
-csv_str = mechanalyzer.parser.spc.csv_string(spc_dct, HEADERS)
+csv_str = mechanalyzer.parser.spc.csv_string(mech_spc_dct, HEADERS)
 
 # Write the string to a file
 ioformat.pathtools.write_file(csv_str, CWD, OPTS['output'])
