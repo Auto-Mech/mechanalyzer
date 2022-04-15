@@ -214,6 +214,41 @@ def add_heat_of_formation_basis(spc_dct,
     return spc_dct
 
 
+def add_instability_products(mech_spc_dct, nprocs='auto', stereo=True):
+    """ Add species related to the instability products
+    """
+
+    print('Finding unstable molecules:')
+    all_instab_ichs = ()
+    for name, dct in mech_spc_dct.items():
+        ich = dct['inchi']
+        instab_ichs = automol.reac.instability_product_inchis(
+            ich, stereo=stereo)
+        if instab_ichs is not None:
+            print(f'Found instability for {name} = {ich}')
+            print(f'- {instab_ichs}')
+            all_instab_ichs += instab_ichs
+
+    if all_instab_ichs:
+
+        print('Adding unstablie species to species dictionary')
+
+        all_instab_ichs = tuple(set(all_instab_ichs))
+
+        _name_ich_dct = name_inchi_dct(mech_spc_dct)
+        _ich_name_dct = {ich: name for name, ich in _name_ich_dct.items()}
+        for ich in all_instab_ichs:
+            _name = _ich_name_dct.get(ich)
+            if _name is None:
+                _name = f'instab_{automol.inchi.smiles(ich)}'
+                mech_spc_dct[_name] = thermfit.create_spec(ich)
+                print(f'{_name} = {ich} being added to species dictonary')
+            else:
+                print(f'{_name} = {ich} already in species dictonary')
+
+    return mech_spc_dct
+
+
 def stereochemical_spc_dct(spc_dct, nprocs='auto', all_stereo=False):
     """ read the species file in a .csv format and write a new one
         that has stero information
