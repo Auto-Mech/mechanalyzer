@@ -112,6 +112,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
     full_prompt_rxn_ktp_dct = dict(zip(models, [{}]*len(models)))
 
     for spc in ped_spc:
+
         reacs, prods = spc
         _reacs = tuple(reacs.split('+'))
         _prods = tuple(prods.split('+'))
