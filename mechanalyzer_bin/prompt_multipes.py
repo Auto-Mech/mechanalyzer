@@ -64,9 +64,9 @@ for FLD in HOTFLD:
         FLDPATH = os.path.join(CWD, FLD)
         # Read the input and output files for MESS calculation of 2nd PES
         # Here HotEnergies are calculated
-        flddct['inp'] = pathtools.read_file(CWD, OPTS['hotinput'])
-        flddct['ktp_out'] = pathtools.read_file(CWD, OPTS['hotoutput'])
-        flddct['log'] = pathtools.read_file(CWD, OPTS['hotlog'])
+        flddct['inp'] = pathtools.read_file(FLDPATH, OPTS['hotinput'])
+        flddct['ktp_out'] = pathtools.read_file(FLDPATH, OPTS['hotoutput'])
+        flddct['log'] = pathtools.read_file(FLDPATH, OPTS['hotlog'])
         list_strs_dct.append(flddct)
 
 # Get a list of all the statistical energy distribution models
