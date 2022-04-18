@@ -66,8 +66,6 @@ def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct,
     full_ste_rxn_lst = []
     full_ste_spc_lst = []
     for formula in forms:
-        if formula != 'C5H11':
-            continue
         noste_rxns_dct = pes_noste_rxns_dct[formula]
         print('PES: {} has {:g} reactions'.format(
             formula, len(noste_rxns_dct.keys())))
