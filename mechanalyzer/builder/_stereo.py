@@ -477,8 +477,8 @@ def _ste_rxn_lsts(rxn_ich):
                     rct_ichs += (automol.graph.chi(gra, stereo=True),)
                 for gra in prd_gras:
                     prd_ichs += (automol.graph.chi(gra, stereo=True),)
-                rct_ichs = automol.inchi.sorted_(rct_ichs)
-                prd_ichs = automol.inchi.sorted_(prd_ichs)
+                rct_ichs = automol.chi.sorted_(rct_ichs)
+                prd_ichs = automol.chi.sorted_(prd_ichs)
                 ste_rxn_ichs += ((rct_ichs, prd_ichs),)
                 break
             except:
