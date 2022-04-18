@@ -371,7 +371,7 @@ def _noste_rxn(rxn_ichs):
         form2 += (automol.chi.formula(ich),)
     form1 = automol.formula.join(*form1) if len(form1) > 1 else form1[0]
     form2 = automol.formula.join(*form2) if len(form2) > 1 else form2[0]
-    noste_rxn = (automol.inchi.sorted_(noste_ichs1), automol.inchi.sorted_(noste_ichs2))
+    noste_rxn = (automol.chi.sorted_(noste_ichs1), automol.chi.sorted_(noste_ichs2))
     return noste_rxn, form1, form2
 
 
