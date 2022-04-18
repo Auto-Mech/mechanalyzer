@@ -240,7 +240,7 @@ def add_instability_products(mech_spc_dct, nprocs='auto', stereo=True):
         for ich in all_instab_ichs:
             _name = _ich_name_dct.get(ich)
             if _name is None:
-                _name = f'instab_{automol.inchi.smiles(ich)}'
+                _name = f'instab_{automol.chi.smiles(ich)}'
                 mech_spc_dct[_name] = thermfit.create_spec(ich)
                 print(f'{_name} = {ich} being added to species dictonary')
             else:
