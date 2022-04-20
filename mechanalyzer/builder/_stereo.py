@@ -106,6 +106,21 @@ def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct,
           f'{nrxns} (all) {nrxns_nodup} (no duplicates)')
     print('Number of species in the full expansion:  '
           f'{nspc} (all) {nspc_nodup} (no duplicates)')
+    print('Reaction duplicates:')
+    fin_rxns = []
+    fin_idxs = []
+    for rxn in full_ste_rxn_lst:
+        if full_ste_rxn_lst.count(rxn) == 2:
+            if rxn not in fin_rxns:
+                idxs = [idx for idx, rxn2 in enumerate(full_ste_rxn_lst)
+                        if rxn == rxn2]
+                fin_rxns.append(rxn)
+                fin_idxs.append(idxs)
+    if fin_rxns:
+        for rxn, idxs in zip(fin_rxns, fin_idxs):
+            print(idxs, rxn)
+    else:
+        print('No duplicates')
 
     return all_ste_rxns
 
@@ -174,7 +189,7 @@ def _is_ste_conn(rxn, rxn_lst):
 
 
 def _enant_rxn(rxn_i):
-    """ Returns the enantiomer of a reaction, 
+    """ Returns the enantiomer of a reaction,
         uses None if there is no enantiomer
     """
     check_ent = [
@@ -297,7 +312,7 @@ def _split_ste_ccs(ccs_rxn_gra):
 
 def _pes_gra(noste_rxn_dct):
     """ seperates a list of reactions into graphs
-        pes_gra: graph of a reaction (key) 
+        pes_gra: graph of a reaction (key)
             and a list (value) the reactions with theh same stoichiometry
         ccs_gra: graph of reaction (key
             and list (value) of reactions that are connected through wells
