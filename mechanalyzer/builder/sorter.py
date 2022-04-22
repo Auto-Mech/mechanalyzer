@@ -20,7 +20,7 @@ def sorted_pes_dct(spc_str, mech_str, isolate_spc, sort_lst):
     return srt_mch.return_pes_dct()
 
 
-def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst):
+def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, thresh_flt_groups=30.):
     """ Function that conducts the sorting process for all of the above tests
     """
 
@@ -31,8 +31,16 @@ def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst):
     sorted_idx, cmts_dct, spc_dct_ord = srt_mch.return_mech_df()
     rxn_param_dct_sort = reordered_mech(rxn_param_dct, sorted_idx)
     rxn_param_dct_rest = {}
+    # if prompt groups detected: retrieve grps info
+    pes_groups = None
+    if 'submech_prompt' in sort_lst and spc_therm_dct and thresh_flt_groups:
+        srt_mch.filter_groups_prompt(
+            spc_therm_dct, threshold=thresh_flt_groups)
+        pes_groups = srt_mch.grps
+    elif 'submech_prompt' in sort_lst and not spc_therm_dct:
+        pes_groups = srt_mch.grps
 
-    return rxn_param_dct_sort, rxn_param_dct_rest, spc_dct_ord, cmts_dct
+    return rxn_param_dct_sort, rxn_param_dct_rest, spc_dct_ord, cmts_dct, pes_groups
 
 
 def _sort_objs(spc_str, mech_str, sort_lst, isolate_spc):
@@ -41,8 +49,9 @@ def _sort_objs(spc_str, mech_str, sort_lst, isolate_spc):
 
     # Build mech information
     # spc_dct = sparser.build_spc_dct(spc_str, SPC_TYPE)
-    
-    spc_dct = new_sparser.parse_mech_spc_dct(spc_str, chk_ste=False, chk_match=False)
+
+    spc_dct = new_sparser.parse_mech_spc_dct(
+        spc_str, chk_ste=False, chk_match=False, verbose=False)
     rxn_param_dct = mparser.parse_mechanism(
         mech_str, MECH_TYPE)
 
