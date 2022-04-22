@@ -110,7 +110,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
     # Merge Prompt Rates with Thermal Rates
     prompt_rxns = ()
     full_prompt_rxn_ktp_dct = dict(zip(models, [{}]*len(models)))
-
+    
     for spc in ped_spc:
 
         reacs, prods = spc
@@ -122,6 +122,12 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
 
         ped_df = ped_dct[label]
         ene_bw = ene_bw_dct[label]
+        
+        if ene_bw < 0:
+            print('Warning: endothermic reaction: whatever the model, only fne will be used')
+            models_spc = ['fne']
+        else:
+            models_spc = copy.deepcopy(models)
         # select the fragment of which you want the PED:
         # it is the one in common with hotspecies
         fragments = fragments_dct[label]
@@ -135,7 +141,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
 
         # DERIVE PED OF THE HOT FRAGMENT
         ped_df_frag1_dct = mechanalyzer.builder.ped.ped_frag1(
-            ped_df, frag1, frag2, models,
+            ped_df, frag1, frag2, models_spc,
             dos_df=dos_df, dof_info=dof_dct[label], ene_bw=ene_bw)
 
         # JOIN PED AND HOTEN -> DERIVE PRODUCTS BF
@@ -153,8 +159,12 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
             frag_reacs, frag1, frag2, hot_frag_dct)
 
         prompt_rxns += (relabel,)
-
+        # IF MODELS_SPC != MODELS: IT MEANS YOU GOT AN EXOTHERMIC REACTION - RENAME DICTIONARIES
+        # SO THAT YOU GET FNE RESULTS FOR ANY INPUT MODEL TYPE YOU PROVIDED
+        # -> MAINTAIN CONSISTENCY FOR MULTIPES
         for modeltype in models:
+            if models_spc != models:
+                prompt_rxn_ktp_dct[modeltype] = prompt_rxn_ktp_dct['fne'] 
             # Merge Prompt Rates with all current; Rates added if rxn is prev. found
             full_prompt_rxn_ktp_dct[modeltype] = mechanalyzer.calculator.rates.merge_rxn_ktp_dcts(
                 full_prompt_rxn_ktp_dct[modeltype],
