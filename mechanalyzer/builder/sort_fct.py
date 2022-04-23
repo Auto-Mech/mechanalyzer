@@ -6,6 +6,7 @@ Sorter module - sorting of the mechanism according to various options
 - species subsets
 - submechanism
 """
+import enum
 import time
 import sys
 import copy
@@ -533,7 +534,9 @@ class SortMech:
         filtered_grps = []
         grp_idx = 0
         for grp in self.grps:
+            grp_new = {'grp': 0, 'idxs': [], 'peds': [], 'hot': []}
             check = 0
+            active_hotsp = []
             # lists, potentially more than 1
             for n, ped in enumerate(grp['peds']):
                 for ped_i in ped:
@@ -546,23 +549,32 @@ class SortMech:
                     # check with threshold
                     hot_sp = list(set(self.species_list).intersection(prds))[0]
                     dh_tot = dh + dh_min_hot[hot_sp]
-                    # print(ped_i, dh, dh_min_hot[hot_sp], dh_tot)
+
                     if dh_tot > threshold:
                         ped.remove(ped_i)
                         print('*Warning: rxn {} removed from pes_groups \
                               min overall DH of {:.2f} kcal/mol'.format(ped_i, dh_tot))
                     else:
                         check += 1
+                        active_hotsp.append(hot_sp)
 
-                if not ped and not grp['hot'][n]:  # remove all indices from dct
-                    del grp['idxs'][n]
-                    del grp['peds'][n]
-                    del grp['hot'][n]
+                if ped:
+                    grp_new['idxs'].append(grp['idxs'][n])
+                    grp_new['peds'].append(ped)
+                    grp_new['hot'].append([])
+                    
+            for n, hot in enumerate(grp['hot']):
+                grp['hot'][n] = [hot_i for hot_i in hot if hot_i in active_hotsp]
+                if grp['hot'][n]:
+                    grp_new['idxs'].append(grp['idxs'][n])
+                    grp_new['peds'].append([])
+                    grp_new['hot'].append(grp['hot'][n])
+
 
             if check > 0:
                 grp_idx += 1
-                grp['grp'] = grp_idx
-                filtered_grps.append(grp)
+                grp_new['grp'] = grp_idx
+                filtered_grps.append(grp_new)
 
         self.grps = filtered_grps
 

@@ -92,7 +92,7 @@ def get_dof_info(block):
     return dof_info
 
 
-def max_en_auto(n_atoms, ene_bw, ref_ene=0, T=2000):
+def max_en_auto(n_atoms, ene_bw, ref_ene=0, T=2500):
     """ Determines automatically the max energy of microcanonical output and max
         energy stored in products for appropriate ped and hoten output writing
         :param n_atoms: number of atoms involved in the bimol reaction
@@ -108,7 +108,7 @@ def max_en_auto(n_atoms, ene_bw, ref_ene=0, T=2000):
         :return max_ene: maximum energy written in mess ped/hoten output
 
     """
-    # determine average boltzmann energy for the TS at 2000 K
+    # determine average boltzmann energy for the TS at 2500 K
     # NB equipartition theorem - no trasl bc preserved in rxn
     # assume non-linear
     boltz_ene_T = phycon.RC_KCAL*T*(3*n_atoms-7+3/2)
