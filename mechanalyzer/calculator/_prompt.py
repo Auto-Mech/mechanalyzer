@@ -114,6 +114,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
     for spc in ped_spc:
 
         reacs, prods = spc
+        rxn = '+'.join(spc)
         _reacs = tuple(reacs.split('+'))
         _prods = tuple(prods.split('+'))
 
@@ -147,7 +148,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
         # JOIN PED AND HOTEN -> DERIVE PRODUCTS BF
         bf_tp_dct = mechanalyzer.builder.bf.bf_tp_dct(
             models, ped_df_frag1_dct, hoten_dct[frag1], bf_thresh,
-            savefile=True, reac=reacs, fne=fne_bf[frag1])
+            savefile=True, rxn=rxn, fne=fne_bf[frag1])
 
         # Calculate Prompt Dissociation Rates
         frag_reacs_dct = mess_io.reader.dct_species_fragments(
