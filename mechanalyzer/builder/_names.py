@@ -33,12 +33,12 @@ def remap_mechanism_names(mech_spc_dct, rxn_param_dct, map_dct):
             if map_dct.get(spc) is not None:
                 re_spcs.append(map_dct.get(spc))
             # If species not in map dct, don't remap
-            else: 
+            else:
                 re_spcs.append(spc)
         re_spcs = tuple(re_spcs)
 
         return re_spcs
-        
+
     # Fill the map dict if any names are missing
     for name in mech_spc_dct:
         if name not in map_dct:
@@ -52,12 +52,12 @@ def remap_mechanism_names(mech_spc_dct, rxn_param_dct, map_dct):
     # Alter the names of the reactions
     re_rxn_param_dct = {}
     for rxn, params in rxn_param_dct.items():
-#        rcts, prds, thrd = rxn
-#        re_rxn = (
-#            tuple(map_dct[rct] for rct in rcts),
-#            tuple(map_dct[prd] for prd in prds),
-#            thrd
-#        )
+        #        rcts, prds, thrd = rxn
+        #        re_rxn = (
+        #            tuple(map_dct[rct] for rct in rcts),
+        #            tuple(map_dct[prd] for prd in prds),
+        #            thrd
+        #        )
         re_rxn = remap_single_rxn(rxn, map_dct)
         re_rxn_param_dct[re_rxn] = params
 

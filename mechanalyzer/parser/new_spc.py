@@ -37,8 +37,8 @@ TRIP_DCT = {
 }
 
 
-def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=True,
-                       chk_match=True):
+def load_mech_spc_dcts(filenames, path, quotechar="'",
+                       chk_ste=False, chk_match=False):
     """ Obtains multiple mech_spc_dcts given a list of spc.csv filenames
 
         :param filenames: filenames of the spc.csv file to be read
@@ -57,16 +57,16 @@ def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=True,
     for filename in filenames:
         print(f'Loading mech_spc_dct for the file {filename}...')
         mech_spc_dct = load_mech_spc_dct(filename, path,
-                                             quotechar=quotechar,
-                                             chk_ste=chk_ste,
-                                             chk_match=chk_match)
+                                         quotechar=quotechar,
+                                         chk_ste=chk_ste,
+                                         chk_match=chk_match)
         mech_spc_dcts.append(mech_spc_dct)
 
     return mech_spc_dcts
 
 
-def load_mech_spc_dct(filename, path, quotechar="'", chk_ste=True,
-                          chk_match=True):
+def load_mech_spc_dct(filename, path, quotechar="'",
+                      chk_ste=False, chk_match=False):
     """ Obtains a single mech_spc_dct given a spc.csv filename
 
         :param filename: filename of the spc.csv file to be read
@@ -83,12 +83,13 @@ def load_mech_spc_dct(filename, path, quotechar="'", chk_ste=True,
 
     file_str = pathtools.read_file(path, filename, remove_comments='!')
     mech_spc_dct = parse_mech_spc_dct(file_str, quotechar=quotechar,
-                                    chk_ste=chk_ste, chk_match=chk_match)
+                                      chk_ste=chk_ste, chk_match=chk_match)
 
     return mech_spc_dct
 
 
-def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=True, chk_match=True, verbose=True):
+def parse_mech_spc_dct(file_str, quotechar="'",
+                       chk_ste=False, chk_match=False, verbose=True):
     """ Obtains a single mech_spc_dct given a string parsed from a spc.csv file
 
         :param file_str: the string that was read directly from the .csv file
