@@ -112,7 +112,7 @@ def bf_tp_df_full(ped_df, hoten_df):
     return bf_tp_df
 
 
-def bf_tp_df_todct(bf_tp_df, bf_threshold, savefile=False, reac='', model=''):
+def bf_tp_df_todct(bf_tp_df, bf_threshold, savefile=False, rxn='', model=''):
     """ Converts the dataframe of hot branching fractions to dictionary and
         excludes invalid BFs
 
@@ -122,8 +122,8 @@ def bf_tp_df_todct(bf_tp_df, bf_threshold, savefile=False, reac='', model=''):
             dataframe(series(float))
         :param bf_threshold: threshold to filter out all species with lower BFs
         :type bf_threshold: float
-        :param reac: name of the reaction producing hot species - only for file saving
-        :type reac: str
+        :param rxn: name of the reaction producing hot species - only for file saving
+        :type rxn: str
         :param model: type of model - only required for filename
         :type model: str
         :param savefile: save file with branching fractions?
@@ -170,7 +170,7 @@ def bf_tp_df_todct(bf_tp_df, bf_threshold, savefile=False, reac='', model=''):
             header_label = np.array(bf_df_sp_i.columns, dtype=str)
             header_label[0] = 'T [K]'
             labels = '\t\t'.join(header_label)
-            np.savetxt(f'bf_{reac}_{spc}_{model}.txt', bf_df_sp_i.values,
+            np.savetxt(f'bf_{model}_{rxn}_{spc}.txt', bf_df_sp_i.values,
                        delimiter='\t', header=labels, fmt='%1.2e')
 
     return bf_tp_dct_out

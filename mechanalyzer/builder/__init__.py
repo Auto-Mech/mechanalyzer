@@ -19,6 +19,7 @@ from mechanalyzer.builder._names import functional_group_name
 from mechanalyzer.builder import rxn
 from mechanalyzer.builder import checker
 from mechanalyzer.builder import sorter
+from mechanalyzer.builder import strip_ste
 from mechanalyzer.builder import submech
 from mechanalyzer.builder import sort_fct
 from mechanalyzer.builder import ped
@@ -43,6 +44,7 @@ __all__ = [
     'rxn',
     'checker',
     'sorter',
+    'strip_ste',
     'submech',
     'sort_fct',
     'ped',

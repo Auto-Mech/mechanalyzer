@@ -37,8 +37,8 @@ TRIP_DCT = {
 }
 
 
-def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=True,
-                       chk_match=True):
+def load_mech_spc_dcts(filenames, path, quotechar="'",
+                       chk_ste=False, chk_match=False):
     """ Obtains multiple mech_spc_dcts given a list of spc.csv filenames
 
         :param filenames: filenames of the spc.csv file to be read
@@ -57,16 +57,16 @@ def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=True,
     for filename in filenames:
         print(f'Loading mech_spc_dct for the file {filename}...')
         mech_spc_dct = load_mech_spc_dct(filename, path,
-                                             quotechar=quotechar,
-                                             chk_ste=chk_ste,
-                                             chk_match=chk_match)
+                                         quotechar=quotechar,
+                                         chk_ste=chk_ste,
+                                         chk_match=chk_match)
         mech_spc_dcts.append(mech_spc_dct)
 
     return mech_spc_dcts
 
 
-def load_mech_spc_dct(filename, path, quotechar="'", chk_ste=True,
-                          chk_match=True):
+def load_mech_spc_dct(filename, path, quotechar="'",
+                      chk_ste=False, chk_match=False):
     """ Obtains a single mech_spc_dct given a spc.csv filename
 
         :param filename: filename of the spc.csv file to be read
@@ -83,12 +83,13 @@ def load_mech_spc_dct(filename, path, quotechar="'", chk_ste=True,
 
     file_str = pathtools.read_file(path, filename, remove_comments='!')
     mech_spc_dct = parse_mech_spc_dct(file_str, quotechar=quotechar,
-                                    chk_ste=chk_ste, chk_match=chk_match)
+                                      chk_ste=chk_ste, chk_match=chk_match)
 
     return mech_spc_dct
 
 
-def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=True, chk_match=True):
+def parse_mech_spc_dct(file_str, quotechar="'",
+                       chk_ste=False, chk_match=False, verbose=True):
     """ Obtains a single mech_spc_dct given a string parsed from a spc.csv file
 
         :param file_str: the string that was read directly from the .csv file
@@ -148,7 +149,7 @@ def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=True, chk_match=True):
                 print(f'Line {idx + 1} appears to be empty. Skipping...')
 
     # Find species with the same chemical identifiers but different names
-    check_for_dups(mech_spc_dct)  # prints warnings
+    check_for_dups(mech_spc_dct, printwarnings=verbose)  # prints warnings
 
     assert not errors, ('Errors while parsing the .csv file! See printouts')
 
@@ -337,7 +338,6 @@ def check_ich(ich, spc, chk_ste=True):
     """
 
     error = False
-
     if 'AMChI' not in ich:
         mol = _rd_chem.MolFromInchi(ich)
         if mol is None:
@@ -412,7 +412,7 @@ def check_smi_and_ich(smi, ich, spc, chk_ste=True):
     return error
 
 
-def check_for_dups(mech_spc_dct):
+def check_for_dups(mech_spc_dct, printwarnings=True):
     """ Checks a mech_spc_dct for species that are identical except in name
     """
 
@@ -441,5 +441,5 @@ def check_for_dups(mech_spc_dct):
         for inner_idx in range(outer_idx + 1, len(spcs)):
             inner_spc = spcs[inner_idx]
             inner_dct = spc_dcts[inner_idx]
-            if are_spcs_same(outer_dct, inner_dct):
+            if are_spcs_same(outer_dct, inner_dct) and printwarnings:
                 print(f'{outer_spc} and {inner_spc} are chemical twins!')

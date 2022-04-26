@@ -92,7 +92,7 @@ def get_dof_info(block):
     return dof_info
 
 
-def max_en_auto(n_atoms, ene_bw, ref_ene=0, T=2000):
+def max_en_auto(n_atoms, ene_bw, ref_ene=0, T=2500):
     """ Determines automatically the max energy of microcanonical output and max
         energy stored in products for appropriate ped and hoten output writing
         :param n_atoms: number of atoms involved in the bimol reaction
@@ -108,7 +108,7 @@ def max_en_auto(n_atoms, ene_bw, ref_ene=0, T=2000):
         :return max_ene: maximum energy written in mess ped/hoten output
 
     """
-    # determine average boltzmann energy for the TS at 2000 K
+    # determine average boltzmann energy for the TS at 2500 K
     # NB equipartition theorem - no trasl bc preserved in rxn
     # assume non-linear
     boltz_ene_T = phycon.RC_KCAL*T*(3*n_atoms-7+3/2)
@@ -209,7 +209,7 @@ class PEDModels:
         """ compute ped according to the desired model
         """
         self.mdl = modeltype
-        
+
         try:
             ped_df_prod = self.models_dct[modeltype]()
         except KeyError:
@@ -393,27 +393,29 @@ class PEDModels:
 
                 rho1_ene1_array = self.rho_rovib_prod1[idx_ene1_array]
                 rho_non1_array = self.rho_non1[idx_ene_minus_ene1_array]
-                
+
                 rhotot_E1 = np.trapz(rho1_ene1_array*rho_non1_array,
-                                x=self.ene1_vect[idx_ene1_array])
-                
+                                     x=self.ene1_vect[idx_ene1_array])
+
                 ene = self.ene1_vect[idx_ene1]
                 f_Etot_num.append(rhotot_E1*np.exp(-ene/phycon.RC_KCAL/temp))
 
             den = np.trapz(f_Etot_num, x=self.ene1_vect[idx_ene_vect])
-            f_Etot = pd.Series(f_Etot_num/den, index = self.ene1_vect[idx_ene_vect])
-            
+            f_Etot = pd.Series(
+                f_Etot_num/den, index=self.ene1_vect[idx_ene_vect])
+
             return f_Etot
 
         def dostherm_rhovib(temp):
             """ Calculate density of states """
             # rovib only
-            rho1_ene1_array = self.rho_rovib_prod1 * np.exp(-self.ene1_vect/phycon.RC_KCAL/temp)
+            rho1_ene1_array = self.rho_rovib_prod1 * \
+                np.exp(-self.ene1_vect/phycon.RC_KCAL/temp)
             den = np.trapz(rho1_ene1_array, x=self.ene1_vect)
-            f_Etot = pd.Series(rho1_ene1_array/den, index = self.ene1_vect)
-            
+            f_Etot = pd.Series(rho1_ene1_array/den, index=self.ene1_vect)
+
             return f_Etot
-                
+
         # preallocations
         ped_df_prod = pd.DataFrame(index=self.ped_df.index,
                                    columns=self.ped_df.columns, dtype=object)
@@ -442,11 +444,11 @@ class PEDModels:
                     # if idx_en and ped not the same length: drop 1 ped val
                     if len(idx_ene_vect) == len(ped_series.values)-1:
                         ped_series = ped_series.iloc[:-1]
-                        
+
                     if distr_type == 'dos':
                         self.rho_rovib_prod1, self.rho_non1 = init_dos(
                             pressure, temp)
-                    
+
                     prob_ene1_vect = []
 
                     for idx_ene1, ene1 in enumerate(self.ene1_vect):
@@ -458,33 +460,33 @@ class PEDModels:
                             prob_ene1ene = norm_distr(
                                 ene1, ene_new, self.phi, self.ene_bw)
                         elif distr_type == 'dos':
-                        #elif distr_type == 'dos' or distr_type == 'therm':
+                            # elif distr_type == 'dos' or distr_type == 'therm':
                             prob_ene1ene = dos(idx_ene1, idx_ene_new)
 
-                        #if distr_type != 'therm':
+                        # if distr_type != 'therm':
                         prob_ene1ene_tot_pressure_ped = (
                             prob_ene1ene *
                             ped_series.values[idx_ene_vect >= idx_ene1]
                         )
-                        
+
                         prob_ene1 = np.trapz(
                             prob_ene1ene_tot_pressure_ped, ene_new)
                         prob_ene1_vect.append(prob_ene1)
-                   
+
                     norm_factor_prob_ene1 = np.trapz(
                         prob_ene1_vect, x=self.ene1_vect)
                     prob_ene1_norm = prob_ene1_vect/norm_factor_prob_ene1
 
-                #optn 2
+                # optn 2
                 elif distr_type == 'therm':
                     self.ene1_vect = self.ene_dos0
                     self.rho_rovib_prod1 = self.dos_df[self.prod1][self.ene1_vect].values
                     prob_ene1_norm = dostherm_rhovib(temp)
                     # include translations
-                    #self.rho_non1 = dos_trasl(
+                    # self.rho_non1 = dos_trasl(
                     #    self.mw_dct[self.prod1], self.ene1_vect, pressure*101325, temp)
                     # prob_ene1_norm = dosthermtest(np.arange(0, len(self.ene1_vect)), temp).values
-                                    
+
                 ped_df_prod[pressure][temp] = pd.Series(
                     prob_ene1_norm, index=self.ene1_vect)
 
@@ -600,12 +602,20 @@ class PEDModels:
             print('*Error: dos not defined, exiting now \n')
             sys.exit()
 
-        if (
-            self.prod1 not in self.dos_df.columns or
-            self.prod2 not in self.dos_df.columns
-        ):
+        if self.prod1 not in self.dos_df.columns:
             print('*Error: rovibrational density of states unavailable '
-                  'for prod1/prod2. add "Fragment" next to frag name')
+                  'for prod1. add "Fragment" next to frag name')
+            sys.exit()
+        # if prod2 is unavailable but is an atom: extend dos_df
+        # and set all 0 dos for the atom
+        elif (self.prod2 not in self.dos_df.columns and
+              self.dof_info['n_atoms'][self.prod2] == 1):
+            self.dos_df[self.prod2] = self.dos_df[self.prod1].values*0
+
+        elif (self.prod2 not in self.dos_df.columns and
+              self.dof_info['n_atoms'][self.prod2] != 1):
+            print('*Error: rovibrational density of states unavailable '
+                  'for prod2. add "Fragment" next to frag name')
             sys.exit()
 
         # preallocations
@@ -626,8 +636,8 @@ class PEDModels:
                 ene_dos0, self.dos_df[self.prod2][ene_dos0].values, kind='cubic',
                 fill_value='extrapolate')
 
-        distr_type = 'dos'*(self.mdl == 'rovib_dos') + 'therm'*(self.mdl == 'thermal')
+        distr_type = 'dos'*(self.mdl == 'rovib_dos') + \
+            'therm'*(self.mdl == 'thermal')
         ped_df_prod = self.prob_ene1_fct(distr_type)
 
         return ped_df_prod
-

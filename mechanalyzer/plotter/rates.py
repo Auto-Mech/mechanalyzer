@@ -90,8 +90,6 @@ def plot_single_rxn(rxn, ktp_dcts, ratio_dcts, fig, axs, mech_names, format_dct)
         :type: dct {pressure1: (color1, label1), pressure2: ...}
     """
 
-    # Gr
-
     ratios_plotted = False
     for mech_idx, ktp_dct in enumerate(ktp_dcts):
         if ktp_dct is not None:
@@ -349,3 +347,86 @@ def build_fig_and_axs(molecularity, ratio_dcts, mech_names):
     axs[1].yaxis.set_major_formatter(FormatStrFormatter('%0.2f'))
 
     return fig, axs
+
+
+def plot_k_vs_p(ktp_dct):
+    """ Makes a plot of k vs P for a single reaction
+    """
+
+    fig = plt.figure(figsize=(8.5, 11))
+    axs = []
+    axs.append(fig.add_subplot(211))
+    plt.xlabel('log$_{10}$(P) (atm)', fontsize=14)
+    plt.ylabel('log$_{10}$($k$/$k_{inf}$)', fontsize=14)
+    plt.xticks(fontsize=12)
+    plt.yticks(fontsize=12)
+    axs[0].yaxis.set_major_formatter(FormatStrFormatter('%0.2f'))
+    # Get the k_of_p numpy array
+    k_high = get_k_high(ktp_dct)
+    kpt, temps, pressures = get_kpt(ktp_dct)
+    # Plot a line for every temperature in the array
+    for temp_idx, temp in enumerate(temps):
+        plt.plot(numpy.log10(pressures), numpy.log10(kpt[temp_idx] / k_high[temp_idx]), 
+                 label=f'{temp:.0f} K')
+    axs[0].legend(fontsize=12, loc='upper left')
+    
+    return [fig]
+    
+
+def get_k_high(ktp_dct):
+    """ Gets the HPL values as a function of T
+
+        numpy array of shape (num_temps,)
+    """ 
+
+    k_high = ktp_dct['high'][1]
+
+    return k_high
+
+
+def get_kpt(ktp_dct):
+    """ Gets an array describing k as a function of P for multiple temps
+        Accompanies the plot_k_vs_p function above
+
+        :return kpt: rate constants as function of P for multiple temps
+        :type kpt: numpy array of shape (num_temps, num_pressures)
+    """
+
+    def get_temps_pressures(ktp_dct):
+        """ Reads a ktp_dct and gets the list of pressure and corresponding list of
+            temperature arrays
+    
+            :param ktp_dct: k(T,P) values
+            :type ktp_dct: dict {pressure: (temps, kts)}
+            :return temps_lst: list of temperature arrays at each pressure (K) 
+            :rtype: list [numpy.ndarray1, numpy.ndarray2, ...]
+            :return pressures: list of pressures (atm)
+            :rtype: list
+        """ 
+    
+        temps_lst = []
+        pressures = []
+        if 'high' in ktp_dct:
+            ktp_dct.pop('high')
+        for pressure, (temps, _) in ktp_dct.items():
+            temps_lst.append(temps)
+            pressures.append(pressure)
+    
+        return temps_lst, pressures
+    
+    # Get the rates as functions of pressure
+    temps_lst, pressures = get_temps_pressures(ktp_dct)
+    temps = temps_lst[0]
+    kpt = []
+    for temp_idx, temp in enumerate(temps):
+        k_of_p = []
+        for pressure in pressures:
+            pressure
+            k_of_p.append(ktp_dct[pressure][1][temp_idx])
+        
+        kpt.append(k_of_p)
+
+    kpt = numpy.array(kpt)    
+
+    return kpt, temps, pressures
+

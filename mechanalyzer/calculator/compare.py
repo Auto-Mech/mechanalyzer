@@ -684,8 +684,6 @@ def assess_rxn_match(rxn1, rxn_ktp_dct2):
     rcts1_perm = list(itertools.permutations(rcts1, len(rcts1)))
     prds1_perm = list(itertools.permutations(prds1, len(prds1)))
 
-    if isinstance(rxn_ktp_dct2, tuple):
-        print('rxn_ktp_dct2:\n', rxn_ktp_dct2)
     matching_rxn_name = None
     rev_rate = None
     already_found = False
@@ -704,7 +702,7 @@ def assess_rxn_match(rxn1, rxn_ktp_dct2):
             else:
                 already_found = True
 
-        if rcts2 in prds1_perm and prds2 in rcts1_perm and same_third_bod:
+        elif rcts2 in prds1_perm and prds2 in rcts1_perm and same_third_bod:
             matching_rxn_name = rxn2
             rev_rate = True
             if already_found:

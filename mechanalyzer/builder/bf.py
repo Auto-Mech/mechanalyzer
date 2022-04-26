@@ -5,7 +5,7 @@ from mechanalyzer.calculator import bf
 # probably more useful to turn this into a class
 
 
-def bf_tp_dct(modeltype_list, ped_dct, hoten_df, bf_threshold, reac='', savefile=False, fne=None):
+def bf_tp_dct(modeltype_list, ped_dct, hoten_df, bf_threshold, rxn='', savefile=False, fne=None):
     """ Build a branching fractions dictionary as a
         function of temeprature and pressure
         containing the BFs of each product of the PES
@@ -37,7 +37,7 @@ def bf_tp_dct(modeltype_list, ped_dct, hoten_df, bf_threshold, reac='', savefile
             bf_tp_df = bf.bf_tp_df_full(ped_df, hoten_df)
 
         bf_tp_dct_species = bf.bf_tp_df_todct(
-            bf_tp_df, bf_threshold, model=modeltype, reac=reac, savefile=savefile)
+            bf_tp_df, bf_threshold, model=modeltype, rxn=rxn, savefile=savefile)
         _bf_tp_dct[modeltype] = bf_tp_dct_species
 
     return _bf_tp_dct

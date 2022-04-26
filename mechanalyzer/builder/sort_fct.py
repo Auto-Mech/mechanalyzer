@@ -6,6 +6,7 @@ Sorter module - sorting of the mechanism according to various options
 - species subsets
 - submechanism
 """
+import enum
 import time
 import sys
 import copy
@@ -102,17 +103,17 @@ class SortMech:
         # set labels for all the possible criteria
         # maybe turn into dataframe with criteria, labels, fct names, and ascending opts
         criteria_all = ['molecularity', 'N_of_prods', 'species',
-                        'pes', 'subpes', 'chnl', 
+                        'pes', 'subpes', 'chnl',
                         'r1', 'mult',
                         'rxn_class_broad', 'rxn_class_graph',
-                        'submech', 'submech_ext',
-                        'rxn_max_vals', 'rxn_max_ratio', 
+                        'submech', 'submech_prompt', 'submech_ext',
+                        'rxn_max_vals', 'rxn_max_ratio',
                         ]
         labels_all = ['NR', 'N_of_prods', 'SPECIES',
                       'pes', 'subpes', 'channel',
                       'Heavier_rct', 'Totalmultiplicity',
                       'rxntype', 'rxnclass',
-                      'SUBMECH','submech_ext',
+                      'SUBMECH', 'submech_prompt', 'submech_ext',
                       'maxval', 'maxratio',
                       ]
 
@@ -131,7 +132,14 @@ class SortMech:
 
         # if species_list is not empty: pre-process the mechanism
         if len(species_list) > 0:
-            if len(species_list) == 1 and 'submech' in hierarchy:
+            if len(species_list) >= 1 and 'submech_prompt' in hierarchy:
+                filtertype = 'submech_prompt'
+                # add pes, subpes, chnl:
+                hierarchy_new = ['pes', 'subpes', 'chnl']
+                [hierarchy_new.append(h)
+                 for h in hierarchy if h not in hierarchy_new]
+                hierarchy = hierarchy_new
+            elif len(species_list) == 1 and 'submech' in hierarchy:
                 # Select subset of species according to stoichiometries
                 # specified in submech.py
                 species_list, species_subset_df = submech.species_subset(
@@ -149,7 +157,7 @@ class SortMech:
                 print('Error: pyr/ox submech extraction available ',
                       'for only 1 species')
                 sys.exit()
-                
+
             else:
                 filtertype = 'submech'
 
@@ -161,12 +169,13 @@ class SortMech:
         # List of available sorting options with specific sorting functions
         sort_optns_dct = {
             'species': self.group_species,
-            'subpes': self.conn_chn,
+            'subpes': self.chnl,
             'chnl': self.chnl,
             'mult': self.reac_mult,
             'rxn_class_broad': self.rxnclass_broad,
             'rxn_class_graph': self.rxnclass_graph,
             'submech': self.group_submech,
+            'submech_prompt': self.group_prompt,
             'submech_ext': self.group_submech,
             'rxn_max_vals': self.rxn_max_vals,
             'rxn_max_ratio': self.rxn_max_ratio
@@ -190,15 +199,15 @@ class SortMech:
         asc_series = pd.Series(asc_val, index=criteria_all + ['rxn_names'])
 
         try:
-            # last "stndard" criterion: rxn name
+            # last "standard" criterion: rxn name
             asclst = list(asc_series[hierarchy[:-1] + ['rxn_names']].values)
             self.mech_df = self.mech_df.sort_values(
                 by=hierarchy[:-1] + ['rxn_names'],
                 ascending=asclst)
         except KeyError as err:
             print(
-                'WARNING: Reactions not sorted according ',
-                f'to all criteria: missing {err}')
+                'Error: Reactions not sorted according ',
+                f'to all criteria: missing {err}, exiting')
             sys.exit()
 
         # 2. assign class headers
@@ -213,29 +222,34 @@ class SortMech:
         :param self.mech_df: dataframe with mech info (contains all reactions)
         :param self.spc_dct: species dictionary
         :param species_list: list of species subsets
-        :param filtertype: can be 'submech' or 'submech_ext'
-            the latter removes reactions not containing only the considered species
+        :param filtertype: can be 'submech', 'submech_ext', 'submech_prompt'
 
         :returns: mech_df, spc_dct
         :rtype: dataframe, dict
         """
-
+        # add classification by subpes first
+        if filtertype == 'submech_prompt':
+            self.mech_df = pd.concat(
+                [self.mech_df, self.chnl('')], axis=1)  # add subpes
+            self.mech_df['prompt'] = ''
+        # deepcopy
         mech_df = copy.deepcopy(self.mech_df)
         # check that all species selected are in the species dictionary
         if any(i not in self.spc_dct.keys() for i in species_list):
             print('Error in ISOLATE_SPECIES: ',
-                  'not all species are in the species list ')
+                  'not all species are in the species list. Exiting')
             sys.exit()
 
-        spc_list = []
         # For all reactions in dataframe: check if species in selected list.
         # Otherwise remove the reaction
+        spc_list = []
+
         for rxn in mech_df.index:
             rcts = list(mech_df['rct_names_lst'][rxn])
             prds = list(mech_df['prd_names_lst'][rxn])
             # Check if one species in the list is among reactants or products
             # of the reaction considered
-            if filtertype == 'submech':
+            if filtertype in ['submech', 'submech_prompt']:
                 _rchk = any(
                     rct == _spc for _spc in species_list for rct in rcts)
                 _pchk = any(
@@ -243,7 +257,7 @@ class SortMech:
                 chk = int(_rchk or _pchk)
 
             elif filtertype == 'submech_ext':
-                # filter out bimol/bimol reactions if it some bimol rcts/prds are not in the species list
+                # filter out bimol/bimol reactions if some bimol rcts/prds are not in the species list
                 # equivalent to saying: at least all reactants (also single react works) or all products
                 # must be in the species list
                 chk = 0
@@ -252,18 +266,44 @@ class SortMech:
                 chk += int(all(any(prd == _spc for _spc in species_list)
                                for prd in prds))*int(len(prds) <= 2)
 
+            if filtertype == 'submech_prompt' and chk >= 1:
+                # subpes list to keep
+                # rxn is bimol on both sides
+                if len(rcts) == 2 and len(prds) == 2:
+                    mech_df['prompt'][rxn] = 'RAD_GEN'
+                elif len(prds) > 2 and any(pr in species_list for pr in prds):
+                    mech_df['prompt'][rxn] = 'PROMPT_LUMPED'
+                # rxn is unimol deco/formation of the radical
+                elif ((len(rcts) == 1 and rcts[0] in species_list and len(prds) == 2) or
+                      (len(prds) == 1 and prds[0] in species_list and len(rcts) == 2)):
+                    mech_df['prompt'][rxn] = 'RAD_DECO'
+
+                continue  # next for loop
+
             if chk >= 1:  # keep reaction and add to species list
                 spc_list.extend(rcts)
                 spc_list.extend(prds)
             elif chk == 0:  # reaction filtered out
                 mech_df = mech_df.drop(index=[rxn])
 
+        if filtertype == 'submech_prompt':
+            # submech_prompt: if RAD_GEN/RAD_DECO in list, keep the rxns
+            for _, subpes_df in mech_df.groupby(['pes', 'subpes']):
+                if any(pr in ['RAD_GEN', 'RAD_DECO', 'PROMPT_LUMPED'] for pr in subpes_df['prompt'].values):
+                    [spc_list.extend(list(rcts_tup))
+                     for rcts_tup in mech_df['rct_names_lst'].values]
+                    [spc_list.extend(list(prds_tup))
+                     for prds_tup in mech_df['prd_names_lst'].values]
+                else:
+                    # drop the corrisponding pes/subpes
+                    mech_df = mech_df.drop(index=subpes_df.index)
+
         # filter spc_list: unique elements
         spc_list = list(set(spc_list))
         # new spc_dct
         spc_dct_val = list(map(self.spc_dct.get, spc_list))
         spc_dct = dict(zip(spc_list, spc_dct_val))
-
+        # print('line 298 in sort_fct', mech_df)
         return mech_df, spc_dct
 
     def conn_chn(self, conn_chn_df):
@@ -335,7 +375,6 @@ class SortMech:
             of self.species_list and if so it marks the species.
             Assignment is hierarchical: the first species of species_list
             found determines the label of the reaction being checked
-            WARNING FUNCTION STILL IN PROGRESS
 
         :param self.mech_df: dataframe with mech info (contains all reactions)
         :param self.species_list: list of subset of species considered
@@ -361,14 +400,13 @@ class SortMech:
     def group_submech(self, submech_df):
         """ Assigns a submechanism (fuel, fuel radical, fuel add ..) to the reaction
             according to the species taking part to it.
-            WARNING FUNCTION STILL IN PROGRESS
 
         :param self.mech_df: dataframe with mech info (contains all reactions)
         :param self.species_list: list of subset of species considered
         :param self.species_subset_df: dataframe with species assigned to a
                                         certain type (fuel, fuel radical..)
         :param submech_df: empty dataframe index=rxns, column: 'submech'
-                                                        or 'submech_ext
+                                                        or 'submech_ext'
         :returns: submech_df dataframe with reactants
             mult dataframe[submech][rxn]
         :rtype: dataframe[str][tuple]
@@ -388,6 +426,157 @@ class SortMech:
                     submech_df[lbl_col][rxn] = self.species_subset_df[sp_i]
 
         return submech_df
+
+    def group_prompt(self, submech_df):
+        """ group reactions according to prompt dissociation channels
+            builds group dictionary list:
+            :param grps: [{'grp': 0, 'idxs': [], 'peds': [], 'hot': []}, ...]
+            :type grps: list(dct)
+        """
+        # assign group values:
+        # 1. groups by PES
+        # 2. if PES is rad_deco: renames as rad_deco_radname
+        # 3. if PES produces hot radical: adds it to a group ['grp N']
+        #       then specifies the name in ['groupname'] nb add to same list if same subpes
+        submech_df['submech_prompt'] = 'unclassified'
+        grps = []
+        species_deco_dct = dict.fromkeys(self.species_list)
+        # filter by RAD_DECO: save the pes/subpes value
+        hot_df = self.mech_df[self.mech_df['prompt'] == 'RAD_DECO']
+        for rxn in hot_df.index:
+            for sp in self.species_list:
+                if sp in (hot_df['rct_names_lst'][rxn][0], hot_df['prd_names_lst'][rxn][0]):
+                    species_deco_dct[sp] = '{}:{}'.format(
+                        hot_df['pes'][rxn], hot_df['subpes'][rxn])
+                    submech_df['submech_prompt'][rxn] = 'RAD_DECO_{}'.format(
+                        sp)
+
+        prompt_df = self.mech_df[self.mech_df['prompt'] == 'PROMPT_LUMPED']
+        for rxn in prompt_df.index:
+            for sp in self.species_list:
+                if sp in prompt_df['prd_names_lst'][rxn]:
+                    submech_df['submech_prompt'][rxn] = 'PROMPT_LUMPED_{}'.format(
+                        sp)
+
+        grp_dct_template = {'grp': 0, 'idxs': [], 'peds': [], 'hot': []}
+        grpN = 0
+        ped_df = self.mech_df[self.mech_df['prompt'] == 'RAD_GEN']
+        for pes, pesdf in ped_df.groupby('pes'):
+            grpN += 1
+            hotspc_dct = {}  # 'pes:subpes':[sp1, sp2]
+            grp_dct = copy.deepcopy(grp_dct_template)
+            grp_dct['grp'] = grpN
+
+            for subpes, subpesdf in pesdf.groupby('subpes'):
+                peds = []
+                grp_dct['hot'].append([])
+                grp_dct['idxs'].append('{}:{}'.format(pes, subpes))
+
+                for rxn in subpesdf.index:
+                    # sp in products
+                    if any(sp in subpesdf['prd_names_lst'][rxn] for sp in self.species_list):
+                        sp = self.species_list[[
+                            i in subpesdf['prd_names_lst'][rxn] for i in self.species_list].index(True)]
+                        rxn_ped = rxn[0]
+                    # species in reactants
+                    elif any(sp in subpesdf['rct_names_lst'][rxn] for sp in self.species_list):
+                        sp = self.species_list[[
+                            i in subpesdf['rct_names_lst'][rxn] for i in self.species_list].index(True)]
+                        r1, r2 = subpesdf['rct_names_lst'][rxn]
+                        p1, p2 = subpesdf['prd_names_lst'][rxn]
+                        # switch rcts and prds
+                        rxn_ped = '{}+{}={}+{}'.format(p1, p2, r1, r2)
+                    submech_df['submech_prompt'][rxn] = 'RAD_GEN_{}'.format(sp)
+                    peds.append(rxn_ped)
+                    # deal with hotspecies
+                    hotpes = species_deco_dct[sp]
+                    if hotpes in hotspc_dct.keys():
+                        hotspc_dct[hotpes].append(sp)
+                    else:
+                        hotspc_dct[hotpes] = [sp]
+                grp_dct['peds'].append(peds)
+            # assign hot species
+            for hotpes in hotspc_dct.keys():
+                grp_dct['peds'].append([])
+                grp_dct['idxs'].append(hotpes)
+                grp_dct['hot'].append(list(set(hotspc_dct[hotpes])))
+
+            grps.append(grp_dct)
+
+        self.grps = grps
+
+        return submech_df
+
+    def filter_groups_prompt(self, therm_dct, threshold=30.):
+        """ filter prompt groups according to
+            A+B->B+C->B+(D+E) must be < 30 kcal/mol endothermic
+            otherwise remove from dct
+        """
+        # 1 find min endothermicity of deco reactions of hotspecies
+        dh_min_hot = dict.fromkeys(self.species_list)
+        for hot_sp in self.species_list:
+            hot_sp_df = self.mech_df[self.mech_df['submech_prompt']
+                                     == 'RAD_DECO_{}'.format(hot_sp)]
+            dh = []
+            for rxn in hot_sp_df.index:
+                rcts = hot_sp_df['rct_names_lst'][rxn]
+                prds = hot_sp_df['prd_names_lst'][rxn]
+                dh_rcts = [therm_dct[rct][1][0]/1000 for rct in rcts]
+                dh_prds = [therm_dct[prd][1][0]/1000 for prd in prds]
+                dh_rxn = sum(dh_prds) - sum(dh_rcts)
+                if hot_sp in prds:  # revert sign
+                    dh_rxn = -dh_rxn
+                dh.append(dh_rxn)
+                # print(rcts, prds, dh_rcts, dh_prds, dh_rxn)
+            dh_min_hot[hot_sp] = min(dh)
+
+        # loop over groups and delete too endothermic reactions
+        filtered_grps = []
+        grp_idx = 0
+        for grp in self.grps:
+            grp_new = {'grp': 0, 'idxs': [], 'peds': [], 'hot': []}
+            check = 0
+            active_hotsp = []
+            # lists, potentially more than 1
+            for n, ped in enumerate(grp['peds']):
+                for ped_i in ped:
+                    # extract rxn exo/endo thermicity
+                    rcts = ped_i.split('=')[0].split('+')
+                    prds = ped_i.split('=')[1].split('+')
+                    dh_rcts = [therm_dct[rct][1][0]/1000 for rct in rcts]
+                    dh_prds = [therm_dct[prd][1][0]/1000 for prd in prds]
+                    dh = sum(dh_prds) - sum(dh_rcts)
+                    # check with threshold
+                    hot_sp = list(set(self.species_list).intersection(prds))[0]
+                    dh_tot = dh + dh_min_hot[hot_sp]
+
+                    if dh_tot > threshold:
+                        ped.remove(ped_i)
+                        print('*Warning: rxn {} removed from pes_groups \
+                              min overall DH of {:.2f} kcal/mol'.format(ped_i, dh_tot))
+                    else:
+                        check += 1
+                        active_hotsp.append(hot_sp)
+
+                if ped:
+                    grp_new['idxs'].append(grp['idxs'][n])
+                    grp_new['peds'].append(ped)
+                    grp_new['hot'].append([])
+                    
+            for n, hot in enumerate(grp['hot']):
+                grp['hot'][n] = [hot_i for hot_i in hot if hot_i in active_hotsp]
+                if grp['hot'][n]:
+                    grp_new['idxs'].append(grp['idxs'][n])
+                    grp_new['peds'].append([])
+                    grp_new['hot'].append(grp['hot'][n])
+
+
+            if check > 0:
+                grp_idx += 1
+                grp_new['grp'] = grp_idx
+                filtered_grps.append(grp_new)
+
+        self.grps = filtered_grps
 
     def reac_mult(self, reac_mult_df):
         """ determines the multiplicity of the reactants of the reactions
@@ -455,14 +644,8 @@ class SortMech:
         :rtype: dataframe[str][tuple]
         """
 
-        # 1. Group by subpes
-        # Check SUBPES present in idxs, otherwise make corresponding dataframe
-        if 'subpes' not in self.mech_df.columns:
-            df_optn = pd.DataFrame(
-                index=self.mech_df.index, columns=['subpes'])
-            df_optn = self.conn_chn(df_optn)
-            # concatenate the new portion of dataframe
-            self.mech_df = pd.concat([self.mech_df, df_optn], axis=1)
+        # 1. Group by subpes if absent
+        self.mech_df = pd.concat([self.mech_df, self.chnl('')], axis=1)
 
         # 2. Graph classification or each subpes
         for _, subpes_df in self.mech_df.groupby(['pes', 'subpes']):
@@ -652,13 +835,8 @@ class SortMech:
         :rtype: dct{tuple: tuple}
         """
 
-        # Check SUBPES present in idxs, otherwise make corresponding dataframe
-        if 'subpes' not in self.mech_df.columns:
-            df_optn = pd.DataFrame(
-                index=self.mech_df.index, columns=['subpes'])
-            df_optn = self.conn_chn(df_optn)
-            # concatenate the new portion of dataframe
-            self.mech_df = pd.concat([self.mech_df, df_optn], axis=1)
+        # Check by subpes if absent
+        self.mech_df = pd.concat([self.mech_df, self.chnl('')], axis=1)
 
         # get the pes dictionary
         pes_dct = {}
@@ -675,7 +853,6 @@ class SortMech:
                 pes_dct[pes_dct_key] = chnl_lst
 
         return pes_dct
-
 
 # FUNCTIONS FOR RXN GRAPH CLASSIFICATION #
 

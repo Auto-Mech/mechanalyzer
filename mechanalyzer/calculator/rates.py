@@ -518,21 +518,13 @@ def merge_rxn_ktp_dcts(full_rxn_ktp_dct, rxn_ktp_dct):
         else:
             # Add the existing rates from the full and small dct together
             _ktp2 = full_rxn_ktp_dct[rxn]
-            # print('add rxn test')
-            # print(rxn)
-            # print(_ktp2)
-            # print(_ktp1)
             full_rxn_ktp_dct[rxn] = add_ktp_dcts(_ktp1, _ktp2)
 
     return full_rxn_ktp_dct
 
 
 def add_ktp_dcts(ktp_dct1, ktp_dct2):
-    """ Add the rates in two ktp_dcts.
-
-        The input dcts should have identical P and T values. May not always
-        be true if one is from PLOG and one is from an expression
-        with a pressure-independent rate.
+    """ Add the rates in two ktp_dcts
     """
 
     # If either starting dct is empty, simply copy the other
@@ -731,3 +723,14 @@ def remove_high(temps_lst, pressures):
         fixed_temps_lst.pop(high_idx)
 
     return fixed_temps_lst, fixed_pressures
+
+
+def mult_by_factor(ktp_dct, factor):
+    """ Multiplies all k(T,P) values in a ktp_dct by a fixed constant
+    """
+
+    new_ktp_dct = {}
+    for pressure, (temps, kts) in ktp_dct.items():
+        new_ktp_dct[pressure] = (temps, kts * factor)
+
+    return new_ktp_dct
