@@ -32,10 +32,10 @@ def multipes_prompt_dissociation_ktp_dct(list_strs_dct, models, bf_thresh):
             sys.exit()
         rxn_ktp_dct_full.update(extract_ktp_dct(strs_dct['ktp_out']))
 
-    rxn_ktp_dct_models_full = dict(zip(models, [{}]*len(models)))
+    rxn_ktp_dct_models_full = dict.fromkeys(models)
 
     for ped_strs_dct in rxn_type_dct['ped']:
-        rxn_ktp_dct_models_ped = dict(zip(models, [{}]*len(models)))
+        rxn_ktp_dct_models_ped = dict.fromkeys(models)
         for hot_strs_dct in rxn_type_dct['hot']:
             # call the usual function of the prompt dissociation
             rxn_ktp_dct_models = prompt_dissociation_ktp_dct(
@@ -46,19 +46,23 @@ def multipes_prompt_dissociation_ktp_dct(list_strs_dct, models, bf_thresh):
 
             # update dct
             for modeltype in models:
+                if not rxn_ktp_dct_models_ped[modeltype]:
+                    rxn_ktp_dct_models_ped[modeltype] ={}
                 rxn_ktp_dct_models_ped[modeltype].update(
                     rxn_ktp_dct_models[modeltype])
 
         # print('pedhot dct {}'.format(rxn_ktp_dct_models_ped[models[0]]))
         # merge the ped dct with the full one
         for modeltype in models:
+            if not rxn_ktp_dct_models_full[modeltype]:
+                rxn_ktp_dct_models_full[modeltype] = {}
             rxn_ktp_dct_models_full[modeltype] = mechanalyzer.calculator.rates.merge_rxn_ktp_dcts(
                 rxn_ktp_dct_models_full[modeltype],
                 rxn_ktp_dct_models_ped[modeltype]
             )
         # print('pedhot dct merged {}'.format(rxn_ktp_dct_models_full[models[0]]))
 
-    # print('first model prompt dct {}'.format(rxn_ktp_dct_models_full[models[0]]))
+    # print('prompt dct {}'.format(rxn_ktp_dct_models_full))
     # Add in the prompt versions of the reactions
 
     for modeltype in models:
@@ -109,12 +113,11 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
     # Derive Branching Fractions, Calculate Prompt Rates
     # Merge Prompt Rates with Thermal Rates
     prompt_rxns = ()
-    full_prompt_rxn_ktp_dct = dict(zip(models, [{}]*len(models)))
+    full_prompt_rxn_ktp_dct = dict.fromkeys(models)
     
     for spc in ped_spc:
-
         reacs, prods = spc
-        rxn = '+'.join(spc)
+        rxn = '='.join(spc)
         _reacs = tuple(reacs.split('+'))
         _prods = tuple(prods.split('+'))
 
@@ -159,19 +162,23 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
             bf_tp_dct, rxn_ktp_dct[relabel],
             frag_reacs, frag1, frag2, hot_frag_dct)
 
-        prompt_rxns += (relabel,)
         # IF MODELS_SPC != MODELS: IT MEANS YOU GOT AN EXOTHERMIC REACTION - RENAME DICTIONARIES
         # SO THAT YOU GET FNE RESULTS FOR ANY INPUT MODEL TYPE YOU PROVIDED
         # -> MAINTAIN CONSISTENCY FOR MULTIPES
         for modeltype in models:
+            if not full_prompt_rxn_ktp_dct[modeltype]:
+                full_prompt_rxn_ktp_dct[modeltype] = {}
             if models_spc != models:
                 prompt_rxn_ktp_dct[modeltype] = prompt_rxn_ktp_dct['fne'] 
             # Merge Prompt Rates with all current; Rates added if rxn is prev. found
+            # print(modeltype, full_prompt_rxn_ktp_dct[modeltype], '\n', prompt_rxn_ktp_dct[modeltype], '\n','\n','stop')
             full_prompt_rxn_ktp_dct[modeltype] = mechanalyzer.calculator.rates.merge_rxn_ktp_dcts(
                 full_prompt_rxn_ktp_dct[modeltype],
                 prompt_rxn_ktp_dct[modeltype]
             )
-
+                        
+            #print('line 173', full_prompt_rxn_ktp_dct, modeltype, '\n')
+        #print('line 174', full_prompt_rxn_ktp_dct, '\n')
     if fullktpout:
         # Remove the original reaction
         for rxn in prompt_rxns:
@@ -179,8 +186,9 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
             rxn_ktp_dct.pop(rxn)
 
         # Add in the prompt versions of the reactions
-        rxn_ktp_dct_models = dict(zip(models, [rxn_ktp_dct]*len(models)))
+        rxn_ktp_dct_models = dict.fromkeys(models)
         for modeltype in models:
+            rxn_ktp_dct_models[modeltype] = copy.deepcopy(rxn_ktp_dct)
             rxn_ktp_dct_models[modeltype].update(
                 full_prompt_rxn_ktp_dct[modeltype])
 
