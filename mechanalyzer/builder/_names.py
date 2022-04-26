@@ -15,7 +15,30 @@ def remap_mechanism_names(mech_spc_dct, rxn_param_dct, map_dct):
     """ Change all of the names in a spc_dct and rxn_param_dct
         according to the provided dictionary
     """
+    def remap_single_rxn(rxn, map_dct):
+        """ Remaps names for a single reaction
+        """
+        rcts, prds, thrd = rxn
+        re_rcts = remap_rcts_or_prds(rcts, map_dct)
+        re_prds = remap_rcts_or_prds(prds, map_dct)
 
+        return (re_rcts, re_prds, thrd)
+
+    def remap_rcts_or_prds(spcs, map_dct):
+        """ Remaps names for a single set of species (rcts or prds)
+        """
+        re_spcs = []
+        for spc in spcs:
+            # Remap species name if in map_dct
+            if map_dct.get(spc) is not None:
+                re_spcs.append(map_dct.get(spc))
+            # If species not in map dct, don't remap
+            else: 
+                re_spcs.append(spc)
+        re_spcs = tuple(re_spcs)
+
+        return re_spcs
+        
     # Fill the map dict if any names are missing
     for name in mech_spc_dct:
         if name not in map_dct:
@@ -29,12 +52,13 @@ def remap_mechanism_names(mech_spc_dct, rxn_param_dct, map_dct):
     # Alter the names of the reactions
     re_rxn_param_dct = {}
     for rxn, params in rxn_param_dct.items():
-        rcts, prds, thrd = rxn[0], rxn[1], rxn[2]
-        re_rxn = (
-            tuple(map_dct[rct] for rct in rcts),
-            tuple(map_dct[prd] for prd in prds),
-            thrd
-        )
+#        rcts, prds, thrd = rxn
+#        re_rxn = (
+#            tuple(map_dct[rct] for rct in rcts),
+#            tuple(map_dct[prd] for prd in prds),
+#            thrd
+#        )
+        re_rxn = remap_single_rxn(rxn, map_dct)
         re_rxn_param_dct[re_rxn] = params
 
     return re_mech_spc_dct, re_rxn_param_dct
