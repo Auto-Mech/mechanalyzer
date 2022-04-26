@@ -335,6 +335,7 @@ def check_ich(ich, spc, chk_ste=True):
         :return error: whether or not an error was found with the inchi
         :rtype: Bool
     """
+
     error = False
     if 'AMChI' not in ich:
         mol = _rd_chem.MolFromInchi(ich)
