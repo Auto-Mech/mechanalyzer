@@ -33,12 +33,12 @@ def remap_mechanism_names(mech_spc_dct, rxn_param_dct, map_dct):
             if map_dct.get(spc) is not None:
                 re_spcs.append(map_dct.get(spc))
             # If species not in map dct, don't remap
-            else: 
+            else:
                 re_spcs.append(spc)
         re_spcs = tuple(re_spcs)
 
         return re_spcs
-        
+
     # Fill the map dict if any names are missing
     for name in mech_spc_dct:
         if name not in map_dct:
@@ -52,12 +52,12 @@ def remap_mechanism_names(mech_spc_dct, rxn_param_dct, map_dct):
     # Alter the names of the reactions
     re_rxn_param_dct = {}
     for rxn, params in rxn_param_dct.items():
-#        rcts, prds, thrd = rxn
-#        re_rxn = (
-#            tuple(map_dct[rct] for rct in rcts),
-#            tuple(map_dct[prd] for prd in prds),
-#            thrd
-#        )
+        #        rcts, prds, thrd = rxn
+        #        re_rxn = (
+        #            tuple(map_dct[rct] for rct in rcts),
+        #            tuple(map_dct[prd] for prd in prds),
+        #            thrd
+        #        )
         re_rxn = remap_single_rxn(rxn, map_dct)
         re_rxn_param_dct[re_rxn] = params
 
@@ -402,11 +402,12 @@ def stereo_name_suffix(ich):
         # _tlyr = _tlyr.replace(',', '')
         # ste_str += _tlyr
         # (2) Replace +=A -=B, remove the numbers
-        plus_cnt, minus_cnt = tlyr.count('+'), tlyr.count('-')
-        for _ in range(plus_cnt):
-            ste_str += 'A'
-        for _ in range(minus_cnt):
-            ste_str += 'B'
+        # Loop over characters of tetrahedral layer adding A/B from +/-
+        for char in tlyr:
+            if char == '-':
+                ste_str += 'A'
+            elif char == '+':
+                ste_str += 'B'
 
         # Write additional label to describe enantiomer if needed
         if 'm' in ste_slyrs:

@@ -13,7 +13,6 @@ import mechanalyzer.parser
 from mechanalyzer.builder._update import update_spc_dct_from_reactions
 from mechanalyzer.builder._update import update_rxn_dct
 from mechanalyzer.builder._names import rxn_name_str
-from chemkin_io.writer._util import format_rxn_name
 
 
 # MAIN CALLABLE
@@ -66,14 +65,12 @@ def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct,
     full_ste_rxn_lst = []
     full_ste_spc_lst = []
     for formula in forms:
-        if formula != 'C5H11':
-            continue
         noste_rxns_dct = pes_noste_rxns_dct[formula]
         print('PES: {} has {:g} reactions'.format(
             formula, len(noste_rxns_dct.keys())))
         pes_gra, ccs_dct = _pes_gra(noste_rxns_dct)
         # Loop over ccs (connected channels)
-        for ccs_idx, rxns in ccs_dct.items():
+        for _, rxns in ccs_dct.items():
             args = (name_ich_dct,)
             ste_rxns = [
                 key for key, val in noste_rxns_dct.items() if val in rxns]
@@ -101,14 +98,29 @@ def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct,
             sccs_rxn_gra = _split_ste_ccs(ccs_rxn_gra)
             all_ste_rxns += (sccs_rxn_gra,)
 
-    print('Number of reactions in the full expansion:', len(full_ste_rxn_lst))
-    print('Number of species in the full expansion:', len(full_ste_spc_lst))
-    for x in full_ste_rxn_lst:
-        print(x)
-    print('-----')
-    print('-----')
-    print('-----')
-    print('-----')
+    nrxns = len(full_ste_rxn_lst)
+    nrxns_nodup = len(list(set(full_ste_rxn_lst)))
+    nspc = len(full_ste_spc_lst)
+    nspc_nodup = len(list(set(full_ste_spc_lst)))
+    print('Number of reactions in the full expansion:  '
+          f'{nrxns} (all) {nrxns_nodup} (no duplicates)')
+    print('Number of species in the full expansion:  '
+          f'{nspc} (all) {nspc_nodup} (no duplicates)')
+    print('Reaction duplicates:')
+    fin_rxns = []
+    fin_idxs = []
+    for rxn in full_ste_rxn_lst:
+        if full_ste_rxn_lst.count(rxn) == 2:
+            if rxn not in fin_rxns:
+                idxs = [idx for idx, rxn2 in enumerate(full_ste_rxn_lst)
+                        if rxn == rxn2]
+                fin_rxns.append(rxn)
+                fin_idxs.append(idxs)
+    if fin_rxns:
+        for rxn, idxs in zip(fin_rxns, fin_idxs):
+            print(idxs, rxn)
+    else:
+        print('No duplicates')
 
     return all_ste_rxns
 
@@ -177,7 +189,7 @@ def _is_ste_conn(rxn, rxn_lst):
 
 
 def _enant_rxn(rxn_i):
-    """ Returns the enantiomer of a reaction, 
+    """ Returns the enantiomer of a reaction,
         uses None if there is no enantiomer
     """
     check_ent = [
@@ -300,7 +312,7 @@ def _split_ste_ccs(ccs_rxn_gra):
 
 def _pes_gra(noste_rxn_dct):
     """ seperates a list of reactions into graphs
-        pes_gra: graph of a reaction (key) 
+        pes_gra: graph of a reaction (key)
             and a list (value) the reactions with theh same stoichiometry
         ccs_gra: graph of reaction (key
             and list (value) of reactions that are connected through wells

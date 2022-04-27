@@ -120,7 +120,7 @@ def write_mechanism(
         rxn_cmts_dct=None)
 
     # Use strings to generate ordered objects
-    param_dct_sort, _, ste_mech_spc_dct_sort, cmts_dct = sorter.sorted_mech(
+    param_dct_sort, _, ste_mech_spc_dct_sort, cmts_dct, _ = sorter.sorted_mech(
         csv_str, mech_str, isolate_spc, sort_lst)
     rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(
         rxn_sort_dct=cmts_dct)

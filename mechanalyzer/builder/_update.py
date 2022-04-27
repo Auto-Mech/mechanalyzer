@@ -43,7 +43,9 @@ def update_spc_dct(spc_ichs, spc_dct):
             name = functional_group_name(ich, name='')
 
             if name in spc_dct:
-                print(f'WARNING: GENERAED NAME {name} ALREADY IN DCT!!!')
+                print("WARNING: GENERATED NAME ALREADY IN DCT!!!")
+                print(f" - generated: {name} {ich}")
+                print(f" - in dct   : {name} {spc_dct[name]['inchi']}")
                 sys.exit()
 
             # Generate the data dct
@@ -65,6 +67,7 @@ def update_rxn_dct(rxn_lst, rxn_dct, spc_dct):
 
     print('\nAdding new unique reactions to mechanism...\n')
 
+    rxn_dct = rxn_dct if rxn_dct is not None else {}
     for rxn in rxn_lst:
         rxn_wname = rxn_ich_to_name(rxn, spc_dct)
         if _unique_reaction(rxn_wname, rxn_dct):
@@ -171,8 +174,7 @@ def _unique_reaction(rxn, rxn_dct):
 
         does not deal with the third body, so function does not work
     """
-    rxns = _make_reaction_permutations(rxn)
-    return not any(rxn in rxn_dct for rxn in rxns)
+    return not any(rxn in rxn_dct for rxn in _make_reaction_permutations(rxn))
 
 
 # Other helper functions
