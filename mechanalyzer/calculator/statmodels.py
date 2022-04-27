@@ -113,7 +113,7 @@ def max_en_auto(n_atoms, ene_bw, ref_ene=0, T=2500):
     # assume non-linear
     boltz_ene_T = phycon.RC_KCAL*T*(3*n_atoms-7+3/2)
     sigma = 0.87+0.04*(boltz_ene_T + ene_bw)  # from Danilack 2020
-    print('test statmodels line 115 energies: ref {}, boltz {}, barrier {}, sigma {} \n'.format(
+    print('debug statmodels line 115 energies: ref {}, boltz {}, barrier {}, sigma {} \n'.format(
         ref_ene, boltz_ene_T, ene_bw, sigma))
     max_ene = ref_ene + boltz_ene_T + ene_bw + 4*sigma
 
