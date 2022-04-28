@@ -128,7 +128,7 @@ def test__sort_with_input():
     # Sort mechanism
     isolate_spc, sort_lst = mparser.parse_sort(sort_str)
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     index = 0
@@ -165,7 +165,7 @@ def test__readwrite_thirdbody():
     isolate_spc = []
     sort_lst = ['pes', 0]
 
-    param_dct_sort, _, _, _, _ = sorter.sorted_mech(
+    param_dct_sort, _, _,= sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     # Just checking keys since this is what the sorting is according to
@@ -198,7 +198,7 @@ def test__sortby_mult():
     isolate_spc = []
     sort_lst = ['mult', 0]
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     for rxn in param_dct_sort.keys():
@@ -230,10 +230,10 @@ def test__sortby_molec_r1():
     # ONLY BY MOLEC- CHECK HEADERS WITH INT NUMBER
     sort_lst_2 = ['molecularity', 0]
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
-    param_dct_sort_2, _, _, cmts_dct_2, _ = sorter.sorted_mech(
+    param_dct_sort_2, _, cmts_dct_2 = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst_2)
     # NO NEED TO CALL IT AFTERWARDS
 
@@ -339,7 +339,7 @@ def test__sortby_rxnclass():
 
     print('Sort by rxn class broad+graph test:')
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     sorted_results = []
@@ -385,7 +385,7 @@ def test__sortby_species_subpes():
 
     print('Sort by species subset + subpes test:')
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     sorted_results = []
@@ -449,7 +449,7 @@ def test__sortby_submech_subpes_chnl():
     isolate_spc = []
     sort_lst = ['subpes', 'chnl', 0]
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     print('Sort by submech-subpes-classbroad test:')
@@ -513,7 +513,7 @@ def test__sortby_submech_class():
     isolate_spc = ['IC8']
     sort_lst = ['submech', 'subpes', 'rxn_class_broad', 0]
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     print('Sort by submech-subpes-classbroad test:')
@@ -582,7 +582,7 @@ def test__sortby_submech_ext():
     isolate_spc = ['C2H4']
     sort_lst = ['submech_ext', 'subpes', 0]
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     print('Sort by submech_ext-subpes:')
@@ -641,7 +641,7 @@ def test__sortby_submech_prompt():
     isolate_spc = ['C4H71-3', 'C4H71-4', 'C4H72-2']
     sort_lst = ['submech_prompt', 0]
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     print('Sort by submech_prompt:')
@@ -666,16 +666,17 @@ def test__filter_pesgroups():
     """
     results = [
         {'grp': 1, 'idxs': ['113:8', '113:9', '113:10', '111:1'], 'peds': [['C4H8-1+H=C4H71-3+H2'], [
-            'C4H8-1+H=C4H71-4+H2'], ['C4H8-2+H=C4H71-3+H2'], []], 'hot': [[], [], [], ['C4H71-4', 'C4H71-3', 'C4H72-2']]},
-        {'grp': 2, 'idxs': ['121:5', '121:6', '121:10', '111:1'], 'peds': [['C4H8-1+O=C4H71-3+OH'], [
-            'C4H8-1+O=C4H71-4+OH'], ['C4H8-2+O=C4H72-2+OH'], []], 'hot': [[], [], [], ['C4H71-4', 'C4H71-3', 'C4H72-2']]},
+            'C4H8-1+H=C4H71-4+H2'], ['C4H8-2+H=C4H71-3+H2'], []], 'hot': [[], [], [], ['C4H71-3', 'C4H71-4']]},
+        {'grp': 2, 'idxs': ['121:5', '121:6', '111:1'], 'peds': [['C4H8-1+O=C4H71-3+OH'], [
+            'C4H8-1+O=C4H71-4+OH'], []], 'hot': [[], [], ['C4H71-3', 'C4H71-4']]},
         {'grp': 3, 'idxs': ['122:21', '122:22', '122:23', '122:24', '111:1'], 'peds': [['C4H8-1+OH=C4H71-3+H2O'], ['C4H8-1+OH=C4H71-4+H2O'], [
-            'C4H8-2+OH=C4H71-3+H2O'], ['C4H8-2+OH=C4H72-2+H2O'], []], 'hot': [[], [], [], [], ['C4H71-4', 'C4H71-3', 'C4H72-2']]},
+            'C4H8-2+OH=C4H71-3+H2O'], ['C4H8-2+OH=C4H72-2+H2O'], []], 'hot': [[], [], [], [], ['C4H71-3', 'C4H71-4', 'C4H72-2']]},
         {'grp': 4, 'idxs': ['153:6', '153:7', '153:8', '153:9', '111:1'], 'peds': [['C4H8-1+CH3=C4H71-3+CH4'], ['C4H8-1+CH3=C4H71-4+CH4'], [
-            'C4H8-2+CH3=C4H71-3+CH4'], ['C4H8-2+CH3=C4H72-2+CH4'], []], 'hot': [[], [], [], [], ['C4H71-4', 'C4H71-3', 'C4H72-2']]},
+            'C4H8-2+CH3=C4H71-3+CH4'], ['C4H8-2+CH3=C4H72-2+CH4'], []], 'hot': [[], [], [], [], ['C4H71-3', 'C4H71-4', 'C4H72-2']]},
         {'grp': 5, 'idxs': ['161:5', '161:6', '161:7', '111:1'], 'peds': [['C4H8-1+CH3O=C4H71-3+CH3OH'], [
-            'C4H8-1+CH3O=C4H71-4+CH3OH'], ['C4H8-2+CH3O=C4H71-3+CH3OH'], []], 'hot': [[], [], [], ['C4H71-4', 'C4H71-3']]},
+            'C4H8-1+CH3O=C4H71-4+CH3OH'], ['C4H8-2+CH3O=C4H71-3+CH3OH'], []], 'hot': [[], [], [], ['C4H71-3', 'C4H71-4']]},
     ]
+
     # Read mechanism files into strings
     spc_path = os.path.join(CWD, 'data', 'heptane_cut_species.csv')
     mech_path = os.path.join(CWD, 'data', 'heptane_cut_mech.txt')
@@ -689,7 +690,7 @@ def test__filter_pesgroups():
     isolate_spc = ['C4H71-3', 'C4H71-4', 'C4H72-2']
     sort_lst = ['submech_prompt', 0]
 
-    _, _, _, _, pes_groups = sorter.sorted_mech(
+    _, _, _, pes_groups, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=spc_therm_dct, thresh_flt_groups=30.)
 
     print('Sort by submech_prompt and filter pes groups:')
@@ -765,6 +766,7 @@ def _read_files(spc_path, mech_path, sort_path):
 
 
 if __name__ == '__main__':
+    test__filter_pesgroups()
     test__sort_with_input()
     test__readwrite_thirdbody()
     test__sortby_mult()
@@ -773,8 +775,7 @@ if __name__ == '__main__':
     test__sortby_rxnclass()
     test__sortby_species_subpes()
     test__sortby_submech_subpes_chnl()
-    test__sortby_submech_prompt()
-    test__filter_pesgroups()
+    test__sortby_submech_prompt()    
     test__sortby_submech_ext()
     test__sortby_submech_class()
     test__sort_ktp()
