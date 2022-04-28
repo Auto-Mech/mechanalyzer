@@ -533,6 +533,9 @@ class SortMech:
         # loop over groups and delete too endothermic reactions
         filtered_grps = []
         grp_idx = 0
+        self.rxns_dh = 'prompt rxn{}hot species{}dh1{}dh2{}dhtot{}keep? \n'.format(
+            ' '*(50-len('prompt rxn')), ' '*(15-len('hot species')),
+            ' '*(10-len('dh1')),' '*(10-len('dh2')),' '*(10-len('dhtot')))
         for grp in self.grps:
             grp_new = {'grp': 0, 'idxs': [], 'peds': [], 'hot': []}
             check = 0
@@ -552,30 +555,37 @@ class SortMech:
 
                     if dh_tot > threshold:
                         ped.remove(ped_i)
-                        print('*Warning: rxn {} removed from pes_groups \
-                              min overall DH of {:.2f} kcal/mol'.format(ped_i, dh_tot))
+                        keep = 'NO'
                     else:
                         check += 1
+                        keep = 'YES'
                         active_hotsp.append(hot_sp)
 
+                    self.rxns_dh += '{}{}{}{}{:.1f}{}{:.1f}{}{:.1f}{}{}\n'.format(
+                        ped_i, ' '*(50-len(ped_i)), hot_sp, ' '*(15-len(hot_sp)), 
+                        dh, ' '*(10-len('{:.1f}'.format(dh))), 
+                        dh_min_hot[hot_sp], ' '*(10-len('{:.1f}'.format(dh_min_hot[hot_sp]))),
+                        dh_tot, ' '*(10-len('{:.1f}'.format(dh_tot))), 
+                        keep)
                 if ped:
                     grp_new['idxs'].append(grp['idxs'][n])
                     grp_new['peds'].append(ped)
                     grp_new['hot'].append([])
-                    
+
             for n, hot in enumerate(grp['hot']):
                 grp['hot'][n] = [hot_i for hot_i in hot if hot_i in active_hotsp]
+                grp['hot'][n].sort()  # keep same order
                 if grp['hot'][n]:
                     grp_new['idxs'].append(grp['idxs'][n])
                     grp_new['peds'].append([])
                     grp_new['hot'].append(grp['hot'][n])
-
 
             if check > 0:
                 grp_idx += 1
                 grp_new['grp'] = grp_idx
                 filtered_grps.append(grp_new)
 
+        print('Summary of prompt rxns and decisions:\n', self.rxns_dh)
         self.grps = filtered_grps
 
     def reac_mult(self, reac_mult_df):
