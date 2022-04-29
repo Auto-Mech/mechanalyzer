@@ -519,6 +519,108 @@ def _remove_enantiomer_reactions(ste_rxn_lst, reacs_stereo_inchi=None):
     return f_ste_rxn_lst, removed_ste_rxn_lst, log
 
 
+# Diastereomer Abstraction Code
+def diastereomer_abstraction_idxs(sccs_rxn_dct_lst, ccs_sccs_spc_dct,
+                                  chosen_idx_lst, all_chosen_ichs):
+    """ Get additional (CCS, S-CCS) index pairs for diastereomer S-CCS
+        that were missed in the initial selection process.
+
+        Assuming this only occurs for abstractions of diastereomers.
+    """
+
+    print('Identifying diastereomer abstractions')
+    dias_chosen_idx_lst = ()
+    for ccs_idx, sccs_idx in chosen_idx_lst:
+        if _ccs_is_abstraction(sccs_rxn_dct_lst[ccs_idx]):
+
+            # Get indices for S-CCS containing diastereomers of chosen
+            dias_sccs_idxs = _diastereomer_sccs_idxs(
+                sccs_rxn_dct_lst[ccs_idx], ccs_idx, sccs_idx)
+
+            # Find which indices add diastereomers that maximize overlap
+            dias_max_sccs_idxs, dias_chosen_ichs = _max_overlap(
+                dias_sccs_idxs, ccs_sccs_spc_dct, all_chosen_ichs)
+
+            # Add indices to final list
+            chosen_idx_lst += dias_max_sccs_idxs
+            all_chosen_ichs += dias_chosen_ichs
+
+    if dias_chosen_idx_lst:
+        dia_str = ','.join(
+            (f'({ccs},{sccs})' for (ccs, sccs) in dias_chosen_idx_lst)
+        )
+        print(f'Found new diastereomers to add: {dia_str}')
+
+    return dias_chosen_idx_lst
+
+
+def _ccs_is_abstraction(sccs_rxn_dct):
+    """ ID if it is an abstraction by looking at reactions of each CCS.
+    """
+
+    # Check if each S-CCS is composed of a single reaction
+    # Assume if first S-CCS is an abstraction, they all will be
+    # Assumes the expansion is correct
+    is_abstraction = False
+    if all(len(rxn_lst) == 1 for rxn_lst in sccs_rxn_dct.values()):
+        for sccs_rxn_lst in sccs_rxn_dct.values():
+            # sccs_rxn_ich = _rxn_ich(sscs_rxn_lst[0])
+            print('SCCS rxn lst TEST', sccs_rxn_lst)
+            rxn_obj = automol.reac.rxn_obj_from_inchi(
+                sccs_rxn_ich)
+            if rxn_obj.class_ == 'hydrogen abstraction':
+                is_abstraction = True
+                break
+
+    return is_abstraction
+
+
+def _diastereomer_sccs_idxs(sccs_rxn_dct,
+                            chosen_ccs_idx, chosen_sccs_idx):
+    """ Find idxs for S-CCS that are diasteromer reactions to chosen S-CCS
+    """
+
+    # Get reactants of reaction on the initially chosen S-CCS
+    chosen_sccs_rxn = sccs_rxn_dct[chosen_sccs_idx][0]
+    chosen_rct1, chosen_rct2 = chosen_sccs_rxn[0], chosen_sccs_rxn[1]
+    chosen_rct1_ich = ''
+    chosen_rct2_ich = ''
+
+    dias_sccs_idxs = ()
+    for sccs_idx, sccs_rxn_lst in sccs_rxn_dct.items():
+        rct1 = sccs_rxn_lst[0][0]
+        rct2 = sccs_rxn_lst[0][1]
+        rct1_ich = ''
+        rct2_ich = ''
+        if automol.inchi.are_diastereomer(rct1_ich, chosen_rct1_ich):
+            dias_sccs_idxs += ((chosen_ccs_idx, sccs_idx),)
+        elif automol.inchi.are_diastereomer(rct2_ich, chosen_rct2_ich):
+            dias_sccs_idxs += ((chosen_ccs_idx, sccs_idx),)
+
+    return dias_sccs_idxs
+
+
+def _max_overlap(dias_sccs_idxs,
+                 ccs_sccs_spc_dct,
+                 all_chosen_ichs):
+    """ Need to pick which diastereomers to keep
+    """
+
+    # Sort all of the diastereomers by overlap
+    overlap = ()
+    for (ccs_idx, sccs_idx) in dias_sccs_idxs:
+        spc_dct = ccs_sccs_spc_dct[ccs_idx][sccs_idx]
+        overlap += (len(set(all_chosen_ichs) & set(spc_dct)),)
+
+    sorter_lst = sorted(zip(overlap, dias_sccs_idxs), reverse=True)
+    dias_sccs_idxs = tuple(idx for _, idx in sorter_lst)
+
+    # Loop through sorted diastereomer S-CCS and get all instances w/o enan
+    # for (ccs_idx, sccs_idx) in dias_sccs_idxs:
+
+    return final_dias_sccs_idxs
+
+
 # Formatters and printers
 def _stereo_results(rxn, f_ste_rxns_lst, removed_ste_rxns_lst):
     """ Print the final filtered reactions and those removed
