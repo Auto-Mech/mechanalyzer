@@ -460,3 +460,26 @@ def boltzmann_pf_combination(ln_pf_arrays_lst, hf_lst):
     final_ln_pf_arrays_with_temps = (temps, *final_ln_pf_arrays)
 
     return final_ln_pf_arrays_with_temps
+
+
+def combine_pfs_additively(ln_pf_arrays_lst):
+    """combine pfs additively
+    """
+    pf_arrays_lst = []
+    for ln_pf_array in ln_pf_arrays_lst:
+        temps, lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple = ln_pf_array
+        pf_arrays_lst.append(
+            from_ln_partition_function(
+                lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple))
+    total_pf_arrays = ([], [], [])
+    for idx, temp in enumerate(temps):
+        weight_lst = [1]*len(pf_arrays_lst)
+        pf_arrays_i = additive_pf_combination_at_temp(
+            pf_arrays_lst, weight_lst, idx)
+        total_pf_arrays[0].append(pf_arrays_i[0])
+        total_pf_arrays[1].append(pf_arrays_i[1])
+        total_pf_arrays[2].append(pf_arrays_i[2])
+    final_ln_pf_arrays = to_ln_partition_function(*total_pf_arrays)
+    final_ln_pf_arrays_with_temps = (temps, *final_ln_pf_arrays)
+
+    return final_ln_pf_arrays_with_temps
