@@ -16,6 +16,8 @@ from mechanalyzer.builder._names import rxn_name_str
 from mechanalyzer.builder._names import remap_mechanism_names
 from mechanalyzer.builder._names import functional_group_name_dct
 from mechanalyzer.builder._names import functional_group_name
+from mechanalyzer.builder._names import stereo_name_suffix
+from mechanalyzer.builder._names import remove_stereo_name_suffix
 from mechanalyzer.builder import rxn
 from mechanalyzer.builder import checker
 from mechanalyzer.builder import sorter
@@ -41,6 +43,8 @@ __all__ = [
     'remap_mechanism_names',
     'functional_group_name_dct',
     'functional_group_name',
+    'stereo_name_suffix',
+    'remove_stereo_name_suffix',
     'rxn',
     'checker',
     'sorter',
