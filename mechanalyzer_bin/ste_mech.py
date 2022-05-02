@@ -87,6 +87,19 @@ def main(
         chosen_idx_lst += ((ccs_idx, best_idx),)
         all_chosen_ichs += tuple(sccs_dct[best_idx])
 
+    print('Identifying diastereomer abstractions')
+    dias_idxs = mechanalyzer.builder.diastereomer_abstractions(
+        sccs_rxn_dct_lst, ccs_sccs_spc_dct,
+        chosen_idx_lst, all_chosen_ichs)
+
+    if dias_idxs:
+        dia_str = ', '.join(
+            (f'({ccs}, {sccs})' for (ccs, sccs) in dias_idxs)
+        )
+        print(f'Found new diastereomers to add: {dia_str}')
+
+        chosen_idx_lst += dias_idxs
+
     print('Reduced reactions are from (CCS,SCCS):', chosen_idx_lst)
     reduced_rxn_lst = ()
     for ccs_idx, sccs_idx in chosen_idx_lst:
@@ -120,7 +133,7 @@ def write_mechanism(
         rxn_cmts_dct=None)
 
     # Use strings to generate ordered objects
-    param_dct_sort, _, ste_mech_spc_dct_sort, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, ste_mech_spc_dct_sort, cmts_dct, _, _ = sorter.sorted_mech(
         csv_str, mech_str, isolate_spc, sort_lst)
     rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(
         rxn_sort_dct=cmts_dct)
