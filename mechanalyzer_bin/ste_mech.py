@@ -303,6 +303,7 @@ def find_best_combination(spc_ccs_dct, combo_lst):
     enant_count = 0
     for spc_a, spc_b in it.combinations(uniq_spc_lst_lst[best_combo_idx], 2):
         if automol.inchi.are_enantiomers(spc_a, spc_b):
+            print('Enantiomer pair:', spc_a, spc_b)
             enant_count += 1
     print('found {:g} enantiomers for this combo'.format(enant_count))
     return best_combo
