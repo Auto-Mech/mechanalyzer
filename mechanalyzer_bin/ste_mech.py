@@ -235,17 +235,35 @@ def group_sccs(spc_ccs_dct):
     return all_idxs
 
 
+def seperate_single_ccs(all_idxs):
+    sccs_lsts = ()
+    ccs_lsts = ()
+    for idx_lst in all_idxs:
+        if len(idx_lst) == 1:
+            ccs_lsts += idx_lst
+        else:
+            sccs_lsts += (idx_lst,)
+    return sccs_lsts, ccs_lsts
+
+
 def all_sccs_combos(spc_ccs_dct):
     """ build all possible combinations of sccs
     """
     combo_lst = ((),)
-    for ccs_tups in group_sccs(spc_ccs_dct):
+    all_idxs = group_sccs(spc_ccs_dct)
+    sccs_lsts, ccs_lsts = seperate_single_ccs(all_idxs)
+    for ccs_tups in sccs_lsts:
         new_combo_lst = ()
+        print(ccs_tups)
         for idxs in ccs_tups:
             for combo in combo_lst:
                 new_combo_lst += (combo + (idxs,),)
         combo_lst = new_combo_lst
-    return combo_lst
+
+    new_combo_lst = ()
+    for combo in combo_lst:
+        new_combo_lst += (combo + ccs_lsts,)
+    return new_combo_lst
 
 
 def find_best_combination(spc_ccs_dct, combo_lst):
