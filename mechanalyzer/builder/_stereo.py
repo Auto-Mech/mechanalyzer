@@ -533,24 +533,20 @@ def diastereomer_abstractions(sccs_rxn_dct_lst, ccs_sccs_spc_dct,
 
     dias_chosen_idx_lst = ()
     for ccs_idx, sccs_idx in chosen_idx_lst:
-        print('TEST', ccs_idx, sccs_idx)
         if _ccs_is_abstraction(sccs_rxn_dct_lst[ccs_idx]):
 
-            # # Get indices for S-CCS containing diastereomers of chosen
-            # dias_sccs_idxs = _diastereomer_sccs_idxs(
-            #     sccs_rxn_dct_lst, ccs_sccs_spc_dct,
-            #     ccs_idx, sccs_idx,
-            #     all_chosen_ichs)
+            # Get indices for S-CCS containing diastereomers of chosen
+            dias_sccs_idxs = _diastereomer_sccs_idxs(
+                sccs_rxn_dct_lst, ccs_sccs_spc_dct,
+                ccs_idx, sccs_idx,
+                all_chosen_ichs)
 
-            # # Add indices to final list
-            # dias_chosen_idx_lst += dias_sccs_idxs
-            # print('ret dias_sccs_idxs', ccs_idx, sccs_idx, dias_chosen_idx_lst)
-            print('is abs', ccs_idx, sccs_idx)
+            # Add indices to final list
+            dias_chosen_idx_lst += dias_sccs_idxs
+            # print('dias_sccs_idxs', ccs_idx, sccs_idx, dias_chosen_idx_lst)
+            # print('is abs', ccs_idx, sccs_idx)
         else:
-            print('no abs', ccs_idx, sccs_idx)
-
-    import sys
-    sys.exit()
+            print('not abs', ccs_idx, sccs_idx)
 
     return dias_chosen_idx_lst
 
@@ -563,16 +559,16 @@ def _ccs_is_abstraction(sccs_rxn_dct):
     # Assume if first S-CCS is an abstraction, they all will be
     # Assumes the expansion is correct
     is_abstraction = False
-    print('all1', all(len(rxn_lst) == 1 for rxn_lst in sccs_rxn_dct.values()))
-    print('sccs rxn dct')
-    for x, y in sccs_rxn_dct.items():
-        print(x, y)
+    # print('a1', all(len(rxn_lst) == 1 for rxn_lst in sccs_rxn_dct.values()))
+    # print('sccs rxn dct')
+    # for x, y in sccs_rxn_dct.items():
+    #     print(x, y)
     if all(len(rxn_lst) == 1 for rxn_lst in sccs_rxn_dct.values()):
         for sccs_rxn_lst in sccs_rxn_dct.values():
-            print('SCCS rxn lst TEST', sccs_rxn_lst)
+            # print('SCCS rxn lst TEST', sccs_rxn_lst)
             rxn_obj = automol.reac.rxn_objs_from_inchi(
                 sccs_rxn_lst[0][0], sccs_rxn_lst[0][1])
-            print('rxn obj test', bool(rxn_obj))
+            # print('rxn obj test', bool(rxn_obj))
             if rxn_obj is not None:
                 if rxn_obj[0][0].class_ == 'hydrogen abstraction':
                     is_abstraction = True
