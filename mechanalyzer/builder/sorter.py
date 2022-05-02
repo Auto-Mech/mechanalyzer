@@ -32,7 +32,7 @@ def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, th
     rxn_param_dct_sort = reordered_mech(rxn_param_dct, sorted_idx)
 
     if 'submech_prompt' not in sort_lst:
-        return rxn_param_dct_sort, spc_dct_ord, cmts_dct
+        return rxn_param_dct_sort, spc_dct_ord, cmts_dct, None, None
 
     # if prompt groups detected: retrieve grps info
     elif 'submech_prompt' in sort_lst and spc_therm_dct and thresh_flt_groups:
@@ -43,7 +43,7 @@ def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, th
         return rxn_param_dct_sort, spc_dct_ord, cmts_dct, pes_groups, rxns_filter
     elif 'submech_prompt' in sort_lst and not spc_therm_dct:
         pes_groups = srt_mch.grps
-        return rxn_param_dct_sort, spc_dct_ord, cmts_dct, pes_groups
+        return rxn_param_dct_sort, spc_dct_ord, cmts_dct, pes_groups, None
 
 
 def _sort_objs(spc_str, mech_str, sort_lst, isolate_spc):
