@@ -519,6 +519,130 @@ def _remove_enantiomer_reactions(ste_rxn_lst, reacs_stereo_inchi=None):
     return f_ste_rxn_lst, removed_ste_rxn_lst, log
 
 
+# Diastereomer Abstraction Code
+def diastereomer_abstractions(sccs_rxn_dct_lst, ccs_sccs_spc_dct,
+                              chosen_idx_lst, all_chosen_ichs):
+    """ Get additional (CCS, S-CCS) index pairs for diastereomer S-CCS
+        that were missed in the initial selection process.
+
+        Assuming this only occurs for abstractions of diastereomers.
+    """
+
+    dias_chosen_idx_lst = ()
+    for ccs_idx, sccs_idx in chosen_idx_lst:
+        if _ccs_is_abstraction(sccs_rxn_dct_lst[ccs_idx]):
+
+            # Get indices for S-CCS containing diastereomers of chosen
+            dias_sccs_idxs = _diastereomer_sccs_idxs(
+                sccs_rxn_dct_lst, ccs_sccs_spc_dct,
+                ccs_idx, sccs_idx,
+                all_chosen_ichs)
+
+            # Add indices to final list
+            dias_chosen_idx_lst += dias_sccs_idxs
+            # print('dias_sccs_idxs', ccs_idx, sccs_idx, dias_chosen_idx_lst)
+            # print('is abs', ccs_idx, sccs_idx)
+        else:
+            print('not abs', ccs_idx, sccs_idx)
+
+    return dias_chosen_idx_lst
+
+
+def _ccs_is_abstraction(sccs_rxn_dct):
+    """ ID if it is an abstraction by looking at reactions of each CCS.
+    """
+
+    # Check if each S-CCS is composed of a single reaction
+    # Assume if first S-CCS is an abstraction, they all will be
+    # Assumes the expansion is correct
+    is_abstraction = False
+    # print('a1', all(len(rxn_lst) == 1 for rxn_lst in sccs_rxn_dct.values()))
+    # print('sccs rxn dct')
+    # for x, y in sccs_rxn_dct.items():
+    #     print(x, y)
+    if all(len(rxn_lst) == 1 for rxn_lst in sccs_rxn_dct.values()):
+        for sccs_rxn_lst in sccs_rxn_dct.values():
+            # print('SCCS rxn lst TEST', sccs_rxn_lst)
+            rxn_obj = automol.reac.rxn_objs_from_inchi(
+                sccs_rxn_lst[0][0], sccs_rxn_lst[0][1])
+            # print('rxn obj test', bool(rxn_obj))
+            if rxn_obj is not None:
+                if rxn_obj[0][0].class_ == 'hydrogen abstraction':
+                    is_abstraction = True
+                    break
+
+    return is_abstraction
+
+
+def _diastereomer_sccs_idxs(sccs_rxn_dct_lst, ccs_sccs_spc_dct,
+                            chosen_ccs_idx, chosen_sccs_idx,
+                            all_chosen_ichs):
+    """ Find idxs for S-CCS that are diasteromer reactions to chosen S-CCS
+    """
+
+    # Get the S-CCSs for the CCS
+    sccs_rxn_dct = sccs_rxn_dct_lst[chosen_ccs_idx]
+
+    # Get reactants of reaction on the initially chosen S-CCS
+    chosen_sccs_rxn = sccs_rxn_dct[chosen_sccs_idx][0]
+    chosen_sccs_rxn = (chosen_sccs_rxn[0], chosen_sccs_rxn[1])
+
+    # Find reactions on each S-CCS that diastereoisomeric with chosen S-CCS
+    dias_sccs_idxs, dias_rxn_lst = (), ()
+    for sccs_idx, sccs_rxn_lst in sccs_rxn_dct.items():
+        if sccs_idx != chosen_sccs_idx:
+            sccs_rxn = (sccs_rxn_lst[0][0], sccs_rxn_lst[0][1])
+            if _possible_diastereoisomeric_reaction(chosen_sccs_rxn, sccs_rxn):
+                dias_sccs_idxs += ((chosen_ccs_idx, sccs_idx),)
+                dias_rxn_lst += (sccs_rxn[0] + sccs_rxn[1],)
+
+    # Sort diastereoisomeric S-CCSs and corresponding species by overlap
+    overlap = ()
+    for (ccs_idx, sccs_idx) in dias_sccs_idxs:
+        spc_dct = ccs_sccs_spc_dct[ccs_idx][sccs_idx]
+        overlap += (len(set(all_chosen_ichs) & set(spc_dct)),)
+
+    _sorter = sorted(zip(overlap, dias_sccs_idxs, dias_rxn_lst), reverse=True)
+    dias_sccs_idxs = tuple(idx for _, idx, _ in _sorter)
+    dias_rxn_lst = tuple(rxn for _, _, rxn in _sorter)
+
+    # Loop through diastereomer S-CCSs (start w/ max overlap) & grab any S-CCS
+    # that has a species that is not enantiomeric with chosen ichs
+    # e.g., if R,R first, grab R,S dias then ignore S,S and S,R enantiomers
+    final_dias_sccs_idxs, final_dias_ich_lst = (), ()
+    for (ccs_idx, sccs_idx), dias_rxn in zip(dias_sccs_idxs, dias_rxn_lst):
+        # Assess if any species in the reaction are enantiomers with the
+        # the species we have chosen to maintain from all S-CCSs
+        is_enant = False
+        for dias_ich in dias_rxn:
+            if any(automol.inchi.are_enantiomers(dias_ich, ich)
+                   for ich in final_dias_ich_lst):
+                is_enant = True
+            else:
+                final_dias_ich_lst += (dias_ich,)
+
+        if not is_enant:
+            final_dias_sccs_idxs += ((ccs_idx, sccs_idx),)
+
+    return final_dias_sccs_idxs
+
+
+def _possible_diastereoisomeric_reaction(rxn_a, rxn_b):
+    """ Assess if two reactions contain a diastereomer
+    """
+
+    has_dias = False
+    for side_idx in (0, 1):
+        for rgt_a, rgt_b in zip(rxn_a[side_idx], rxn_b[side_idx]):
+            if automol.inchi.are_diastereomers(rgt_a, rgt_b):
+                has_dias = True
+                break
+        if has_dias:
+            break
+
+    return has_dias
+
+
 # Formatters and printers
 def _stereo_results(rxn, f_ste_rxns_lst, removed_ste_rxns_lst):
     """ Print the final filtered reactions and those removed

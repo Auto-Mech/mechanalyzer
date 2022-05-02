@@ -415,3 +415,22 @@ def stereo_name_suffix(ich):
             ste_str += mlyr
 
     return ste_str
+
+
+def remove_stereo_name_suffix(name):
+    """ Removes a stereo suffix from a name
+
+        Assumes name has the format:
+        <CCNT><FGRP>-<CLYR><HLYR><STE>
+    """
+
+    if '-' in name:
+        part1, part2 = name.split('-')
+        # remove chars past the 6th char since clyr and hlyr are 3-char hash
+        if len(part2) > 6:
+            part2 = part2[:6]
+        _name = '-'.join((part1, part2))
+    else:
+        _name = name
+
+    return _name
