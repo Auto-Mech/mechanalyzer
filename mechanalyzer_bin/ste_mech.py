@@ -3,10 +3,13 @@
 
 import os
 import time
+import itertools as it
 
 import ioformat
 import chemkin_io
 import mechanalyzer
+from autofile import io_ as io
+import automol
 from mechanalyzer.builder import sorter
 
 
@@ -197,6 +200,131 @@ def dictionaries_from_rxn_lst(sccs_rxn_lst):
     return ste_mech_spc_dct, ste_rxn_dct
 
 
+def read_all_sccs_spc(cwd, spc_file_name):
+    """ create a nested dictionary with ccs, sccs, spc_lst
+        where spc lst is the inchis of that ccs, sccs combo
+    """
+    files = os.listdir(cwd)
+    spc_files = [fil for fil in files if spc_file_name + '_' in fil]
+
+    spc_ccs_dct = {}
+    for fil in spc_files:
+        ccs, sccs = [int(idx) for idx in fil.split('_')[-2:]]
+        spc_lines = io.read_file(fil).splitlines()
+        ich_col = [
+            idx for idx, val in enumerate(spc_lines[0].split("'"))
+            if val == 'inchi'][0]
+        spc_ichs = tuple([line.split("'")[ich_col] for line in spc_lines[1:]])
+        if ccs not in spc_ccs_dct:
+            spc_ccs_dct[ccs] = {sccs: spc_ichs}
+        else:
+            spc_ccs_dct[ccs][sccs] = spc_ichs
+    return spc_ccs_dct
+
+
+def group_sccs(spc_ccs_dct):
+    """ using the keys of the spc_ccs_dct group all
+        ccs combos into a tuple of ccs_sccs tuples
+    """
+    all_idxs = ()
+    ccs_lst = sorted(list(spc_ccs_dct.keys()))
+    for ccs in ccs_lst:
+        sccs_lst = sorted(list(spc_ccs_dct[ccs].keys()))
+        sccs_tup = tuple([(ccs, sccs,) for sccs in sccs_lst])
+        all_idxs += (sccs_tup,)
+    return all_idxs
+
+
+def all_sccs_combos(spc_ccs_dct):
+    """ build all possible combinations of sccs
+    """
+    combo_lst = ((),)
+    for ccs_tups in group_sccs(spc_ccs_dct):
+        new_combo_lst = ()
+        for idxs in ccs_tups:
+            for combo in combo_lst:
+                new_combo_lst += (combo + (idxs,),)
+        combo_lst = new_combo_lst
+    return combo_lst
+
+
+def find_best_combination(spc_ccs_dct, combo_lst):
+    """ find the sccs combo that has the shortest unique spc lst
+        which means it has the least number of enantiomers
+    """
+    uniq_spc_lst_lst = ()
+    num_uniq_spc_for_combo = ()
+    print('Checking {:g} combinations'.format(len(combo_lst)))
+    for combo in combo_lst:
+        spc_ich_lst = ()
+        for idxs in combo:
+            spc_ich_lst += spc_ccs_dct[idxs[0]][idxs[1]]
+        uniq_spc_lst = ()
+        for spc in spc_ich_lst:
+            if spc not in uniq_spc_lst:
+                uniq_spc_lst += (spc,)
+        uniq_spc_lst_lst += (uniq_spc_lst,)
+        num_uniq_spc_for_combo += (len(uniq_spc_lst),)
+        # enant_count = 0
+        # for spc_a, spc_b in it.combinations(spc_ich_lst, 2):
+        #     if automol.inchi.are_enantiomers(spc_a, spc_b):
+        #         enant_count += 1
+        # combo_ent_count += (enant_count,)
+        # print('found {:g} enantiomers for this combo'.format(enant_count))
+    # print(combo_ent_count)
+    # min_enants = min(combo_ent_count)
+    # print('minimum overlap', min_enants)
+    # best_combo_idx = combo_ent_count.index(min_enants)
+    # best_combo = combo_ent_count[best_combo_idx]
+    # print('best combo', best_combo)
+    shortest_spc_lst = min(num_uniq_spc_for_combo)
+    print('greatest overlap', shortest_spc_lst)
+    best_combo_idx = num_uniq_spc_for_combo.index(shortest_spc_lst)
+    best_combo = combo_lst[best_combo_idx]
+    print('best combo', best_combo)
+    enant_count = 0
+    for spc_a, spc_b in it.combinations(uniq_spc_lst_lst[best_combo_idx], 2):
+        if automol.inchi.are_enantiomers(spc_a, spc_b):
+            enant_count += 1
+    print('found {:g} enantiomers for this combo'.format(enant_count))
+    return best_combo
+
+
+def write_best_combination(best_combo, loc_dct, cwd):
+    """ make combined species and mechanism dictionaries
+        from a set of sccs
+    """
+    mech_spc_dct = {}
+    rxn_param_dct = {}
+    for (ccs, sccs,) in best_combo:
+        mech_file = '{}_{:g}_{:g}'.format(loc_dct['out_mech'], ccs, sccs)
+        spc_file = '{}_{:g}_{:g}'.format(loc_dct['out_spc'], ccs, sccs)
+        inp_info = input_info_from_file(
+            cwd, spc_file, mech_file, loc_dct['sort'])
+        next_spc_dct = mechanalyzer.parser.spc.build_spc_dct(
+            inp_info[0], 'csv')
+        next_rxn_param_dct = mechanalyzer.parser.mech.parse_mechanism(
+            inp_info[1], 'chemkin')
+        mech_spc_dct.update(next_spc_dct)
+        rxn_param_dct.update(next_rxn_param_dct)
+    isolate_spc, sort_lst = mechanalyzer.parser.mech.parse_sort(inp_info[2])
+    write_mechanism(
+        mech_spc_dct, rxn_param_dct,
+        cwd, 'red_species.csv', 'red_mechanism.dat',
+        sort_lst, isolate_spc)
+
+
+def reduction(cwd, loc_dct):
+    """ reduce by doing all possible combinations
+        of sccss and figuring out
+        which combination results in the shortest unique species list
+    """
+    spc_sccs_dct = read_all_sccs_spc(cwd, loc_dct['out_spc'])
+    sccs_combo_lst = all_sccs_combos(spc_sccs_dct)
+    best_combo = find_best_combination(spc_sccs_dct, sccs_combo_lst)
+    write_best_combination(best_combo, loc_dct, cwd)
+
+
 if __name__ == '__main__':
 
     # Initialize the start time for script execution
@@ -216,8 +344,8 @@ if __name__ == '__main__':
 
     # Read input species and mechanism files into dictionary
     mech_info = input_from_location_dictionary(oscwd, file_dct)
-    main(oscwd, file_dct['out_spc'], file_dct['out_mech'], *mech_info)
-
+    # main(oscwd, file_dct['out_spc'], file_dct['out_mech'], *mech_info)
+    reduction(oscwd, file_dct)
     # Compute script run time and print to screen
     tf = time.time()
     print('\n\nScript executed successfully.')
