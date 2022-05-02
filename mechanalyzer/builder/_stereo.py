@@ -616,7 +616,7 @@ def _diastereomer_sccs_idxs(sccs_rxn_dct_lst, ccs_sccs_spc_dct,
         # the species we have chosen to maintain from all S-CCSs
         is_enant = False
         for dias_ich in dias_rxn:
-            if any(automol.inchi.are_enantiomers(dias_ich, ich)
+            if any(automol.chi.are_enantiomers(dias_ich, ich)
                    for ich in final_dias_ich_lst):
                 is_enant = True
             else:
@@ -635,7 +635,7 @@ def _possible_diastereoisomeric_reaction(rxn_a, rxn_b):
     has_dias = False
     for side_idx in (0, 1):
         for rgt_a, rgt_b in zip(rxn_a[side_idx], rxn_b[side_idx]):
-            if automol.inchi.are_diastereomers(rgt_a, rgt_b):
+            if automol.chi.are_diastereomers(rgt_a, rgt_b):
                 has_dias = True
                 break
         if has_dias:
