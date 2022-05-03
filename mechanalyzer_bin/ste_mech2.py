@@ -2,22 +2,15 @@
     reaction and species list
 """
 
+import sys
 import os
 import argparse
-=======
-""" Script to generate files with reactions
-"""
-
-import os
->>>>>>> therm rewrite script
 import time
 import itertools as it
 
 import ioformat
 import chemkin_io
 import mechanalyzer
-from autofile import io_ as io
-import automol
 from mechanalyzer.builder import sorter
 
 
