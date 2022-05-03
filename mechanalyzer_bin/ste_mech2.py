@@ -1,7 +1,6 @@
 """ Script to generate files with reactions
 """
 
-import sys
 import os
 import argparse
 import time
