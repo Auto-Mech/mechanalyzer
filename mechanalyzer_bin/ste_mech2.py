@@ -1,7 +1,9 @@
 """ Script to generate files with reactions
 """
 
+
 import os
+import argparse
 import time
 import itertools as it
 
@@ -15,10 +17,15 @@ from mechanalyzer.builder import sorter
 
 def main(workdir,
          run_expansion=True,
-         run_reduction='min_enant',
+         run_reduction='enant',
          check_mechanism=False):
     """ carry out all the mechanism things you wanna do
     """
+
+    # Check
+    print(f'Running Expansion: {run_expansion}')
+    print(f'Running Reduction: {run_reduction}')
+    print('---------\n\n')
 
     # Read and parse the build and mechanism file
     print('\n---- Parsing the species and mechanism files ---\n')
@@ -113,17 +120,17 @@ def expand_stereo(rxn_param_dct, mech_spc_dct,
 
 
 # REDUCTION ALGORITHMS #
-def reduction_selection(ccs_sccs_spc_dct, algorithm='min_enant'):
+def reduction_selection(ccs_sccs_spc_dct, algorithm='enant'):
     """ Determine the (CCS, S-CCS) pairs that best represent a sufficient
         mechanism with all required stereoisomers and minimizes redundant
         enantiomers.
     """
 
-    if algorithm == 'min_enant':
+    if algorithm == 'enant':
         sccs_combo_lst = _all_sccs_combos(ccs_sccs_spc_dct)
         best_combo, best_combo_ichs = _reduce_via_enantiomers(
             ccs_sccs_spc_dct, sccs_combo_lst)
-    elif algorithm == 'max_overlap':
+    elif algorithm == 'overlap':
         best_combo, best_combo_ichs = _reduce_via_max_overlap(
             ccs_sccs_spc_dct)
 
@@ -520,6 +527,16 @@ def _write_mechanism(ste_mech_spc_dct, ste_rxn_dct,
 
 if __name__ == '__main__':
 
+    # Check input
+    PAR = argparse.ArgumentParser()
+    PAR.add_argument(
+        '-e', '--expansion', default=True, type=bool,
+        help='Generate stereoexpanded surfaces [True(def), False]')
+    PAR.add_argument(
+        '-r', '--reduction', default='enant', type=str,
+        help='Use reduction algorithm [enant(def), overlap]')
+    OPTS = vars(PAR.parse_args())
+
     # Initialize the start time for script execution
     t0 = time.time()
 
@@ -528,10 +545,8 @@ if __name__ == '__main__':
 
     # Execute all desired algorithms
     main(CWD,
-         run_expansion=True,
-         # run_reduction='',
-         # run_expansion=False,
-         run_reduction='min_enant',
+         run_expansion=OPTS['expansion'],
+         run_reduction=OPTS['reduction'],
          check_mechanism=False)
 
     # Compute script run time and print to screen
