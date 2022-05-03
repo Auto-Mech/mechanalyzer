@@ -2,7 +2,6 @@
     reaction and species list for a mechanism
 """
 
-import sys
 import os
 import argparse
 import time
