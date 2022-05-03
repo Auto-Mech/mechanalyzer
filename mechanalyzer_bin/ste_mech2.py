@@ -1,4 +1,4 @@
-""" Script to add stereo to mechanism
+""" Script to add stereochemsitry to mechanism
 """
 
 import sys
