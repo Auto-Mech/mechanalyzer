@@ -1,4 +1,4 @@
-""" Script to generate files with reactions
+""" Script to add stereo
 """
 
 import sys
