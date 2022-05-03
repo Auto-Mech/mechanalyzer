@@ -441,8 +441,6 @@ def write_all_sccs_mechfiles(sccs_rxn_dct_lst,
                 sccs_rxn_lst)
             is_valid = mechanalyzer.builder.valid_enantiomerically(
                 ste_mech_spc_dct)
-
-            # Write mechanism files of S-CCS
             if is_valid:
                 _write_mechanism(
                     ste_mech_spc_dct, ste_rxn_dct,
