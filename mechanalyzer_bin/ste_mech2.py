@@ -4,6 +4,12 @@
 
 import os
 import argparse
+=======
+""" Script to generate files with reactions
+"""
+
+import os
+>>>>>>> therm rewrite script
 import time
 import itertools as it
 
