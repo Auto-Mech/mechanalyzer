@@ -1,7 +1,6 @@
 """ Script to add stereochemsitry to full mechanism
 """
 
-import sys
 import os
 import argparse
 import time
