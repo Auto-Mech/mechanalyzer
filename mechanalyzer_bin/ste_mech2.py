@@ -418,7 +418,7 @@ def read_all_sccs_rxns(workdir, mech_file_name, name_ich_dct):
         _dct = {}
         for sccs, rxn_lst in sccs_dct.items():
             _dct.update({sccs: rxn_lst})
-            print('test', ccs, sccs)
+            print('read mechfile', ccs, sccs)
         sccs_rxn_dct_lst.append(_dct)
 
     return sccs_rxn_dct_lst
@@ -430,17 +430,32 @@ def write_all_sccs_mechfiles(sccs_rxn_dct_lst,
     """ write the files for each S-CCS
     """
 
+    full_ste_mech_spc_dct, full_ste_rxn_dct = {}, {}
     for ccs_idx, sccs_rxn_dct in enumerate(sccs_rxn_dct_lst):
         for sccs_idx, sccs_rxn_lst in sccs_rxn_dct.items():
+
+            # Get rxns and spc of each individual S-CCS
             ste_mech_spc_dct, ste_rxn_dct = _dictionaries_from_rxn_lst(
                 sccs_rxn_lst)
             is_valid = mechanalyzer.builder.valid_enantiomerically(
                 ste_mech_spc_dct)
+
+            # Write mechanism files of S-CCS
             if is_valid:
                 _write_mechanism(
                     ste_mech_spc_dct, ste_rxn_dct,
                     workdir, out_spc_name, out_mech_name,
                     sort_lst.copy(), isolate_spc, ccs_idx, sccs_idx)
+
+                # Combine all rxn and spc into full dictionary
+                full_ste_mech_spc_dct.update(ste_mech_spc_dct)
+                full_ste_rxn_dct.update(ste_rxn_dct)
+
+    # Write mechanism files for fully expanded mechanism with all stereoisomers
+    _write_mechanism(
+        full_ste_mech_spc_dct, full_ste_rxn_dct,
+        workdir, out_spc_name, out_mech_name,
+        sort_lst.copy(), isolate_spc, 9999, 9999)
 
 
 def write_best_combination(best_combo, workdir,
