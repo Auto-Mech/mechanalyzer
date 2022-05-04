@@ -2,6 +2,7 @@
 """
 
 
+import sys
 import os
 import argparse
 import time
@@ -18,7 +19,8 @@ from mechanalyzer.builder import sorter
 def main(workdir,
          run_expansion=True,
          run_reduction='enant',
-         check_mechanism=False):
+         check_mechanism=False,
+         nprocs='auto'):
     """ carry out all the mechanism things you wanna do
     """
 
@@ -44,7 +46,8 @@ def main(workdir,
         # Expansion mechanism, generating mech,spc files for all S-CCSs
         sccs_rxn_dct_lst, ccs_sccs_spc_dct = expand_stereo(
             rxn_param_dct, mech_spc_dct,
-            check_mechanism=check_mechanism)
+            check_mechanism=check_mechanism,
+            nprocs=nprocs)
 
         # Write the files of all the generated S-CCSs
         write_all_sccs_mechfiles(
@@ -91,7 +94,7 @@ def main(workdir,
 
 # EXPANSION ALGORITHMS #
 def expand_stereo(rxn_param_dct, mech_spc_dct,
-                  check_mechanism=False):
+                  check_mechanism=False, nprocs='auto'):
     """ Generate the fully expanded mechanism
     """
 
@@ -105,7 +108,7 @@ def expand_stereo(rxn_param_dct, mech_spc_dct,
     print('\n---- Adding stereochemistry to InChIs of mechanism'
           ' species where needed ---\n')
     mech_spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
-        mech_spc_dct, nprocs='auto', all_stereo=True)
+        mech_spc_dct, nprocs=nprocs, all_stereo=True)
     print('Mechanism species with stereo added')
     for name, dct in mech_spc_dct.items():
         print(f'Name: {name:<25s} InChI: {dct["inchi"]}')
@@ -113,7 +116,7 @@ def expand_stereo(rxn_param_dct, mech_spc_dct,
     print('\n---- Expanding the list of mechanism reactions to include all'
           ' valid, stereoselective permutations ---\n')
     sccs_rxn_dct_lst = mechanalyzer.builder.expand_mech_stereo(
-        rxn_param_dct, mech_spc_dct, nprocs='auto')
+        rxn_param_dct, mech_spc_dct, nprocs=nprocs)
     ccs_sccs_spc_dct = _build_ccs_sccs_spc_dct(sccs_rxn_dct_lst)
 
     return sccs_rxn_dct_lst, ccs_sccs_spc_dct
@@ -550,7 +553,18 @@ if __name__ == '__main__':
     PAR.add_argument(
         '-r', '--reduction', default='enant', type=str,
         help='Use reduction algorithm [enant(def), overlap]')
+    PAR.add_argument(
+        '-n', '--nprocs', default='auto', type=str,
+        help='Number of processors to use [auto(def)]')
     OPTS = vars(PAR.parse_args())
+
+    # Convert number of processors to an int if an integer is given
+    if OPTS['nprocs'] != 'auto':
+        try:
+            OPTS['nprocs'] = int(OPTS['nprocs'])
+        except ValueError:
+            print('nprocs not set to auto or an integer')
+            sys.exit()
 
     # Initialize the start time for script execution
     t0 = time.time()
@@ -562,7 +576,8 @@ if __name__ == '__main__':
     main(CWD,
          run_expansion=OPTS['expansion'],
          run_reduction=OPTS['reduction'],
-         check_mechanism=False)
+         check_mechanism=False,
+         nprocs=OPTS['nprocs'])
 
     # Compute script run time and print to screen
     tf = time.time()
