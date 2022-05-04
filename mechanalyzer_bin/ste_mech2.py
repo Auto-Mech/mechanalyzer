@@ -1,5 +1,5 @@
 """ Script to generate files with stereoexpanded
-    reaction and species list
+    reaction and species list for a mechanism
 """
 
 import sys
