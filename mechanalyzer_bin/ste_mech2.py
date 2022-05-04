@@ -1,4 +1,5 @@
-""" Script to generate files with reactions
+""" Script to generate files with stereoexpanded
+    reaction and species list
 """
 
 import os
