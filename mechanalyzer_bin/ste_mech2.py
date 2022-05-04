@@ -9,6 +9,7 @@ import time
 import itertools as it
 
 import ioformat
+import automol
 import chemkin_io
 import mechanalyzer
 from mechanalyzer.builder import sorter
