@@ -16,9 +16,7 @@ from mechanalyzer.builder._names import rxn_name_str
 
 
 # MAIN CALLABLE
-# def expand_mech_stereo(mech_rxn_dct, mech_spc_dct, nprocs='auto'):
-def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct,
-                       remove_enantiomer_rxns=True, nprocs='auto'):
+def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct, nprocs='auto'):
     """ Build list of stereochemistry to reactions
 
         Currently, we assume that the species in them mech_spc_dct have
