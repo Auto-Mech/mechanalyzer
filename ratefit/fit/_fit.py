@@ -106,7 +106,7 @@ def fit_ktp_dct(ktp_dct, fit_method, pdep_dct=None, arrfit_dct=None,
     arrfit_dct = arrfit_dct or DEFAULT_ARR
     chebfit_dct = chebfit_dct or DEFAULT_CHEB
     troefit_dct = troefit_dct or DEFAULT_TROE
-            
+
     # If rates exist, fit them to desired functional form
     params, err_dct = None, None
     if ktp_dct:
@@ -274,6 +274,26 @@ def assess_pdep(ktp_dct, assess_temps=DEFAULT_PDEP['temps'],
         :rtype: dict {pressure: (temps, kts)}
     """
 
+    def is_pdep_atT(ktp_dct, plow, phigh, assess_temp):
+        is_pdep = False
+        temps_low = ktp_dct[plow][0]
+        temps_high = ktp_dct[phigh][0]
+        temp_low_match = numpy.where(
+            numpy.isclose(temps_low, assess_temp))[0]
+        temp_high_match = numpy.where(
+            numpy.isclose(temps_high, assess_temp))[0]
+        if temp_low_match.size > 0 and temp_high_match.size > 0:
+            temp_low_idx = temp_low_match[0]
+            temp_high_idx = temp_high_match[0]
+            # Grab k value for the appropriate temp and pressure
+            kt_low = ktp_dct[plow][1][temp_low_idx]
+            kt_high = ktp_dct[phigh][1][temp_high_idx]
+            # Calculate the % difference and see if above threshold
+            kt_dif = (abs(kt_low - kt_high) / kt_low) * 100.0
+            if kt_dif > tol:
+                is_pdep = True
+        return is_pdep
+
     # Get list of pressures, ignoring the high-pressure limit rates
     pressures = [pressure for pressure in ktp_dct
                  if pressure != 'high']
@@ -287,26 +307,19 @@ def assess_pdep(ktp_dct, assess_temps=DEFAULT_PDEP['temps'],
     # Check % difference for k(T, P) vals
     is_pdep = False
     if plow in ktp_dct and phigh in ktp_dct:  # won't get run if only 'high'
-
         # Loop over temps to examine for large % dif in k(T) at low- and high-P
         for assess_temp in assess_temps:
             # For low and high P, find the idx for assess_temp
-            temps_low = ktp_dct[plow][0]
-            temps_high = ktp_dct[phigh][0]
-            temp_low_match = numpy.where(
-                numpy.isclose(temps_low, assess_temp))[0]
-            temp_high_match = numpy.where(
-                numpy.isclose(temps_high, assess_temp))[0]
-            if temp_low_match.size > 0 and temp_high_match.size > 0:
-                temp_low_idx = temp_low_match[0]
-                temp_high_idx = temp_high_match[0]
-                # Grab k value for the appropriate temp and pressure
-                kt_low = ktp_dct[plow][1][temp_low_idx]
-                kt_high = ktp_dct[phigh][1][temp_high_idx]
-                # Calculate the % difference and see if above threshold
-                kt_dif = (abs(kt_low - kt_high) / kt_low) * 100.0
-                if kt_dif > tol:
-                    is_pdep = True
-                    break
+            is_pdep = is_pdep_atT(ktp_dct, plow, phigh, assess_temp)
+            if is_pdep:
+                break
+
+        # additional check: highest T at each P compared to the highest P
+        pressures.sort()
+        for plow in pressures[:-1]:
+            temps_p_max = max(ktp_dct[plow][0])
+            is_pdep = is_pdep_atT(ktp_dct, plow, phigh, temps_p_max)
+            if is_pdep:
+                break
 
     return is_pdep

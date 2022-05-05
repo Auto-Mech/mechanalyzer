@@ -263,7 +263,7 @@ class PEDModels:
         # 3/2: 1/2kbT for each rotation, no trasl (ts trasl energy preserved)
         # 9/2: 1/2kbT*6 rotational dofs for products, +3 for relative trasl
         print(f'Fraction of energy transferred to products: {beta_prod:.2f}')
-
+        
         # rescale all energies with beta: allocate values in new dataframe
         ped_df_prod = pd.DataFrame(index=self.ped_df.index,
                                    columns=self.ped_df.columns, dtype=object)
@@ -288,7 +288,7 @@ class PEDModels:
             c. integrate over dE: int(P(E',E)*PED(E)dE) = P(E')
         """
 
-        def norm_distr(ene1, ene, phi, ene_bw):
+        def norm_distr(ene1, ene, phi):
             """ P(ene1; ene) = exp(
                     -(ene1-phi*ene)^2/(2^0.5*sigma(ene_bw))) /
                     ((2*pi)^0.5*sigma(ene_bw)
@@ -302,7 +302,8 @@ class PEDModels:
             mtermi = np.array(phi*ene, dtype=float)
             # correlation from Danilack-Goldsmith
             # I add additional fraction of energy transferred to the products
-            sigma = np.array(0.87+0.04*(ene_bw+phi*(ene-ene_bw)), dtype=float)
+            # sigma = np.array(0.87+0.04*(ene_bw+phi*(ene-ene_bw)), dtype=float)
+            sigma = np.array(0.87+0.04*ene, dtype=float)
             num = np.exp(-((ene1-mtermi)/(2**0.5)/sigma)**2)
             den = np.power(2*np.pi, 0.5)*sigma
 
@@ -458,7 +459,7 @@ class PEDModels:
                         ene_new = self.ene1_vect[idx_ene_new]
                         if distr_type == 'phi':
                             prob_ene1ene = norm_distr(
-                                ene1, ene_new, self.phi, self.ene_bw)
+                                ene1, ene_new, self.phi)
                         elif distr_type == 'dos':
                             # elif distr_type == 'dos' or distr_type == 'therm':
                             prob_ene1ene = dos(idx_ene1, idx_ene_new)
@@ -492,14 +493,16 @@ class PEDModels:
 
                 # remove comments to print P(E1)|T,P
                 """
-                prob_ene1_df = ped_df_prod[pressure][temp].reset_index()
-                header_label = np.array(prob_ene1_df.columns, dtype=str)
-                header_label[0] = 'E [kcal/mol]'
-                labels = '\t\t'.join(header_label)
-                np.savetxt('PE1_{}_{}.txt'.format(pressure,temp), prob_ene1_df.values,
-                        delimiter='\t', header=labels, fmt='%1.3e')
-                print(pressure, temp, ped_df_prod[pressure][temp].idxmax(), '\n')
+                if pressure == 1 and temp in [600, 1000, 1500, 2000]:
+                    prob_ene1_df = ped_df_prod[pressure][temp].reset_index()
+                    header_label = np.array(prob_ene1_df.columns, dtype=str)
+                    header_label[0] = 'E [kcal/mol]'
+                    labels = '\t\t'.join(header_label)
+                    np.savetxt('PE1_{}_{}_{}_{}_{}.txt'.format(pressure, temp, self.mdl, self.prod1, self.prod2), 
+                            prob_ene1_df.values, delimiter='\t', header=labels, fmt='%1.3e')
+                    # print(pressure, temp, ped_df_prod[pressure][temp].idxmax(), '\n')
                 """
+
         return ped_df_prod
 
     def equip_phi(self):
@@ -538,7 +541,7 @@ class PEDModels:
         phi1a = vibdof_prod1/vibdof_ts
         print('Fraction of energy transferred to '
               f'products phi1a: {phi1a:.2f}')
-
+        
         # rescale all energies with beta: allocate values in new dataframe
         self.phi = phi1a
         ped_df_prod = self.prob_ene1_fct('phi')
