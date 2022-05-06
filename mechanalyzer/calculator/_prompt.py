@@ -236,10 +236,10 @@ def prompt_ped_info(ped_inp_str, ped_out_str,
             'for hoten this would be {} kcal/mol \n'.format(max_ene-energy_dct[prods]))
     # Read ped.out file for product energy distributions
     ped_dct = mess_io.reader.ped.get_ped(
-        ped_ped_str, ped_spc, energy_dct, sp_labels='inp')
+        ped_ped_str, ped_spc, energy_dct, sp_labels='auto')
 
     # Read ke_ped.out file for energy density of each fragment
-    dos_df = mess_io.reader.rates.dos_rovib(ped_ke_out_str, sp_labels='inp')
+    dos_df = mess_io.reader.rates.dos_rovib(ped_ke_out_str, sp_labels='auto')
 
     rxn_ktp_dct_ped = extract_ktp_dct(ped_out_str)
 
@@ -255,9 +255,9 @@ def prompt_hot_info(hot_inp_str, hot_log_str):
     hot_spc_en = mess_io.reader.hoten.get_hot_species(hot_inp_str)
 
     hoten_dct = mess_io.reader.hoten.extract_hot_branching(
-        hot_log_str, hot_spc_en, list(spc_blocks_hoten.keys()), sp_labels='inp')
+        hot_log_str, hot_spc_en, list(spc_blocks_hoten.keys()), sp_labels='auto')
 
-    fne_bf = mess_io.reader.hoten.extract_fne(hot_log_str)
+    fne_bf = mess_io.reader.hoten.extract_fne(hot_log_str, sp_labels='auto')
 
     return hot_frag_dct, hot_spc_en, hoten_dct, fne_bf
 
