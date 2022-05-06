@@ -21,6 +21,7 @@ from mechanalyzer.parser._util import extract_spc
 from mechanalyzer.parser._util import get_mult
 from mechanalyzer.parser.spc import name_inchi_dct
 from mechanalyzer.parser._util import get_fml
+from mechanalyzer.calculator import rates as calc_rates
 
 
 class SortMech:
@@ -512,30 +513,62 @@ class SortMech:
             A+B->B+C->B+(D+E) must be < 30 kcal/mol endothermic
             otherwise remove from dct
         """
+
         # 1 find min endothermicity of deco reactions of hotspecies
         dh_min_hot = dict.fromkeys(self.species_list)
+        k_max_hot = dict.fromkeys(self.species_list)
+
         for hot_sp in self.species_list:
             hot_sp_df = self.mech_df[self.mech_df['submech_prompt']
                                      == 'RAD_DECO_{}'.format(hot_sp)]
             dh = []
+            kmax = []
             for rxn in hot_sp_df.index:
                 rcts = hot_sp_df['rct_names_lst'][rxn]
                 prds = hot_sp_df['prd_names_lst'][rxn]
-                dh_rcts = [therm_dct[rct][1][0]/1000 for rct in rcts]
-                dh_prds = [therm_dct[prd][1][0]/1000 for prd in prds]
+                idx_300 = numpy.where(therm_dct[rcts[0]][0] == 300)[0][0]
+                dh_rcts = [therm_dct[rct][1][idx_300]/1000 for rct in rcts]
+                dh_prds = [therm_dct[prd][1][idx_300]/1000 for prd in prds]
                 dh_rxn = sum(dh_prds) - sum(dh_rcts)
+
+                # get rate at 1500K
+                try:
+                    idx_1500 = numpy.where(
+                        hot_sp_df['param_vals'][rxn][0][1.][0] == 1500)[0][0]
+                    k = hot_sp_df['param_vals'][rxn][0][1.][1][idx_1500]
+                except IndexError:
+                    print('*Warning: 1500 K not found - k not extracted')
+                    k = numpy.NaN
+
                 if hot_sp in prds:  # revert sign
                     dh_rxn = -dh_rxn
+                    try:
+                        idx_1500_dg = numpy.where(
+                            therm_dct[rcts[0]][0] == 1500)[0][0]
+                        dg_rcts = [therm_dct[rct][4][idx_1500_dg]
+                                   for rct in rcts]
+                        dg_prds = [therm_dct[prd][4][idx_1500_dg]
+                                   for prd in prds]
+                        dg_rxn = sum(dg_prds) - sum(dg_rcts)
+                        k = k*(101325/8.314/1500./numpy.power(10, 6)) * \
+                            numpy.exp(dg_rxn/1.987/1500.)
+                    except IndexError:
+                        print('*Warning: 1500 K not found - dg not extracted')
+                        dg_rxn = numpy.NaN
+                        k = numpy.NaN
+
                 dh.append(dh_rxn)
+                kmax.append(k)
                 # print(rcts, prds, dh_rcts, dh_prds, dh_rxn)
             dh_min_hot[hot_sp] = min(dh)
+            k_max_hot[hot_sp] = max(kmax)
 
         # loop over groups and delete too endothermic reactions
         filtered_grps = []
         grp_idx = 0
-        self.rxns_dh = 'prompt rxn{}hot species{}dh1{}dh2{}dhtot{}keep? \n'.format(
+        self.rxns_dh = 'prompt rxn{}hot species{}dh1-300{}dh2-300{}dhtot-300{}k1500{}keep? \n'.format(
             ' '*(50-len('prompt rxn')), ' '*(15-len('hot species')),
-            ' '*(10-len('dh1')),' '*(10-len('dh2')),' '*(10-len('dhtot')))
+            ' '*(10-len('dh1-300')), ' '*(10-len('dh2-300')), ' '*(10-len('dhtot-300')), ' '*(10-len('k1500')))
         for grp in self.grps:
             grp_new = {'grp': 0, 'idxs': [], 'peds': [], 'hot': []}
             check = 0
@@ -546,13 +579,14 @@ class SortMech:
                     # extract rxn exo/endo thermicity
                     rcts = ped_i.split('=')[0].split('+')
                     prds = ped_i.split('=')[1].split('+')
-                    dh_rcts = [therm_dct[rct][1][0]/1000 for rct in rcts]
-                    dh_prds = [therm_dct[prd][1][0]/1000 for prd in prds]
+                    idx_300 = numpy.where(therm_dct[rcts[0]][0] == 300)[0][0]
+                    dh_rcts = [therm_dct[rct][1][idx_300]/1000 for rct in rcts]
+                    dh_prds = [therm_dct[prd][1][idx_300]/1000 for prd in prds]
                     dh = sum(dh_prds) - sum(dh_rcts)
                     # check with threshold
                     hot_sp = list(set(self.species_list).intersection(prds))[0]
                     dh_tot = dh + dh_min_hot[hot_sp]
-
+                    
                     if dh_tot > threshold:
                         ped.remove(ped_i)
                         keep = 'NO'
@@ -561,11 +595,14 @@ class SortMech:
                         keep = 'YES'
                         active_hotsp.append(hot_sp)
 
-                    self.rxns_dh += '{}{}{}{}{:.1f}{}{:.1f}{}{:.1f}{}{}\n'.format(
-                        ped_i, ' '*(50-len(ped_i)), hot_sp, ' '*(15-len(hot_sp)), 
-                        dh, ' '*(10-len('{:.1f}'.format(dh))), 
-                        dh_min_hot[hot_sp], ' '*(10-len('{:.1f}'.format(dh_min_hot[hot_sp]))),
-                        dh_tot, ' '*(10-len('{:.1f}'.format(dh_tot))), 
+                    self.rxns_dh += '{}{}{}{}{:.1f}{}{:.1f}{}{:.1f}{}{:.2e}{}{}\n'.format(
+                        ped_i, ' '*(50-len(ped_i)), hot_sp, ' '*(15-len(hot_sp)),
+                        dh, ' '*(10-len('{:.1f}'.format(dh))),
+                        dh_min_hot[hot_sp], ' '*
+                            (10-len('{:.1f}'.format(dh_min_hot[hot_sp]))),
+                        dh_tot, ' '*(10-len('{:.1f}'.format(dh_tot))),
+                        k_max_hot[hot_sp],
+                        ' '*(10-len('{:.2e}'.format(k_max_hot[hot_sp]))),
                         keep)
                 if ped:
                     grp_new['idxs'].append(grp['idxs'][n])
@@ -1053,13 +1090,16 @@ def get_max_aligned_values(aligned_rxn_dct_entry):
         either an aligned_rxn_ktp_dct or an aligned_rxn_ratio_dct
 
     :param aligned_rxn_dct_entry: entry of aligned_rxn_ktp/ratio_dct
+                                  or of ktp dct
     :type aligned_rxn_dct_entry:
         list[dct{pressure: numpy.array(temps), numpy.array(values)}]
+        or directly dct{pressure: numpy.array(temps), numpy.array(values)}
     :return max_val: max value
     :rtype: float
     """
 
     max_val = 0
+
     for single_dct in aligned_rxn_dct_entry:
         if single_dct is not None:
             for _, (_, values) in single_dct.items():
@@ -1116,6 +1156,17 @@ def mech_info(rxn_param_dct, spc_dct):
 
         return formula_dct_lst, formula_str_lst, rxn_name_lst
 
+    if not all([isinstance(val, dict) or isinstance(val, list) for val in rxn_param_dct.values()]):
+        print(
+            '*Warning: ktp dct vals for sorting purposes derived at [300, 1000, 1500, 2000] K at 1 atm')
+        rxn_ktp_dct = calc_rates.eval_rxn_param_dct(rxn_param_dct, [numpy.array([300, 1000, 1500, 2000])],
+                                                    [1])
+        for key, val in rxn_ktp_dct.items():
+            if isinstance(val, dict):
+                rxn_ktp_dct[key] = [val]
+    else:
+        rxn_ktp_dct = rxn_param_dct  # it means you already provided a ktp dct as input
+
     # Extract info from dictionary
     rcts, prds, thrdbdy = zip(*rxn_param_dct.keys())
     rct_names, prd_names, thrdbdy_lst = list(rcts), list(prds), list(thrdbdy)
@@ -1129,4 +1180,4 @@ def mech_info(rxn_param_dct, spc_dct):
 
     return [formula_dct, formula_str,
             rct_names, prd_names, thrdbdy_lst,
-            rxn_name, list(rxn_param_dct.values())]
+            rxn_name, list(rxn_ktp_dct.values())]

@@ -128,7 +128,7 @@ def test__sort_with_input():
     # Sort mechanism
     isolate_spc, sort_lst = mparser.parse_sort(sort_str)
 
-    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     index = 0
@@ -165,7 +165,7 @@ def test__readwrite_thirdbody():
     isolate_spc = []
     sort_lst = ['pes', 0]
 
-    param_dct_sort, _, _,= sorter.sorted_mech(
+    param_dct_sort, _, _, _, _= sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     # Just checking keys since this is what the sorting is according to
@@ -198,7 +198,7 @@ def test__sortby_mult():
     isolate_spc = []
     sort_lst = ['mult', 0]
 
-    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     for rxn in param_dct_sort.keys():
@@ -230,10 +230,10 @@ def test__sortby_molec_r1():
     # ONLY BY MOLEC- CHECK HEADERS WITH INT NUMBER
     sort_lst_2 = ['molecularity', 0]
 
-    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
-    param_dct_sort_2, _, cmts_dct_2 = sorter.sorted_mech(
+    param_dct_sort_2, _, cmts_dct_2, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst_2)
     # NO NEED TO CALL IT AFTERWARDS
 
@@ -339,7 +339,7 @@ def test__sortby_rxnclass():
 
     print('Sort by rxn class broad+graph test:')
 
-    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     sorted_results = []
@@ -385,7 +385,7 @@ def test__sortby_species_subpes():
 
     print('Sort by species subset + subpes test:')
 
-    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     sorted_results = []
@@ -449,7 +449,7 @@ def test__sortby_submech_subpes_chnl():
     isolate_spc = []
     sort_lst = ['subpes', 'chnl', 0]
 
-    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     print('Sort by submech-subpes-classbroad test:')
@@ -513,7 +513,7 @@ def test__sortby_submech_class():
     isolate_spc = ['IC8']
     sort_lst = ['submech', 'subpes', 'rxn_class_broad', 0]
 
-    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     print('Sort by submech-subpes-classbroad test:')
@@ -582,7 +582,7 @@ def test__sortby_submech_ext():
     isolate_spc = ['C2H4']
     sort_lst = ['submech_ext', 'subpes', 0]
 
-    param_dct_sort, _, cmts_dct = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     print('Sort by submech_ext-subpes:')
@@ -641,7 +641,7 @@ def test__sortby_submech_prompt():
     isolate_spc = ['C4H71-3', 'C4H71-4', 'C4H72-2']
     sort_lst = ['submech_prompt', 0]
 
-    param_dct_sort, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     print('Sort by submech_prompt:')
