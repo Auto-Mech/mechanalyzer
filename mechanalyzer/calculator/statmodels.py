@@ -424,6 +424,7 @@ class PEDModels:
         for pressure in self.ped_df.columns:
             for temp in self.ped_df.sort_index().index:
                 ped_series = self.ped_df[pressure][temp].sort_index()
+
                 if distr_type != 'therm':
                     ene = ped_series.index
                     if ene[0] > 0:

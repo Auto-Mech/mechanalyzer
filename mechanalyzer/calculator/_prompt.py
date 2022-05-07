@@ -30,6 +30,7 @@ def multipes_prompt_dissociation_ktp_dct(list_strs_dct, models, bf_thresh):
         else:
             print('Error: no PED/HOT pes, useless to call this fct - exiting')
             sys.exit()
+
         rxn_ktp_dct_full.update(extract_ktp_dct(strs_dct['ktp_out']))
 
     rxn_ktp_dct_models_full = dict.fromkeys(models)
@@ -123,7 +124,10 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
 
         label = ((reacs,), (prods,), (None,))
         relabel = (_reacs, _prods, (None,))
-
+        # if for some reason relabeling did not occur: switch label
+        if relabel not in rxn_ktp_dct.keys() and label in rxn_ktp_dct.keys():
+            relabel = copy.deepcopy(label)
+            
         ped_df = ped_dct[label]
         ene_bw = ene_bw_dct[label]
         
@@ -150,7 +154,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
 
         # JOIN PED AND HOTEN -> DERIVE PRODUCTS BF
         bf_tp_dct = mechanalyzer.builder.bf.bf_tp_dct(
-            models, ped_df_frag1_dct, hoten_dct[frag1], bf_thresh,
+            models_spc, ped_df_frag1_dct, hoten_dct[frag1], bf_thresh,
             savefile=True, rxn=rxn, fne=fne_bf[frag1])
 
         # Calculate Prompt Dissociation Rates
@@ -162,7 +166,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
             bf_tp_dct, rxn_ktp_dct[relabel],
             frag_reacs, frag1, frag2, hot_frag_dct)
 
-        # IF MODELS_SPC != MODELS: IT MEANS YOU GOT AN EXOTHERMIC REACTION - RENAME DICTIONARIES
+        # IF MODELS_SPC != MODELS: IT MEANS YOU GOT AN ENDOTHERMIC REACTION - RENAME DICTIONARIES
         # SO THAT YOU GET FNE RESULTS FOR ANY INPUT MODEL TYPE YOU PROVIDED
         # -> MAINTAIN CONSISTENCY FOR MULTIPES
         for modeltype in models:
