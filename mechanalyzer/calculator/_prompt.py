@@ -30,6 +30,7 @@ def multipes_prompt_dissociation_ktp_dct(list_strs_dct, models, bf_thresh):
         else:
             print('Error: no PED/HOT pes, useless to call this fct - exiting')
             sys.exit()
+
         rxn_ktp_dct_full.update(extract_ktp_dct(strs_dct['ktp_out']))
 
     rxn_ktp_dct_models_full = dict.fromkeys(models)
@@ -123,7 +124,10 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
 
         label = ((reacs,), (prods,), (None,))
         relabel = (_reacs, _prods, (None,))
-
+        # if for some reason relabeling did not occur: switch label
+        if relabel not in rxn_ktp_dct.keys() and label in rxn_ktp_dct.keys():
+            relabel = copy.deepcopy(label)
+            
         ped_df = ped_dct[label]
         ene_bw = ene_bw_dct[label]
         
@@ -150,7 +154,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
 
         # JOIN PED AND HOTEN -> DERIVE PRODUCTS BF
         bf_tp_dct = mechanalyzer.builder.bf.bf_tp_dct(
-            models, ped_df_frag1_dct, hoten_dct[frag1], bf_thresh,
+            models_spc, ped_df_frag1_dct, hoten_dct[frag1], bf_thresh,
             savefile=True, rxn=rxn, fne=fne_bf[frag1])
 
         # Calculate Prompt Dissociation Rates
@@ -162,7 +166,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
             bf_tp_dct, rxn_ktp_dct[relabel],
             frag_reacs, frag1, frag2, hot_frag_dct)
 
-        # IF MODELS_SPC != MODELS: IT MEANS YOU GOT AN EXOTHERMIC REACTION - RENAME DICTIONARIES
+        # IF MODELS_SPC != MODELS: IT MEANS YOU GOT AN ENDOTHERMIC REACTION - RENAME DICTIONARIES
         # SO THAT YOU GET FNE RESULTS FOR ANY INPUT MODEL TYPE YOU PROVIDED
         # -> MAINTAIN CONSISTENCY FOR MULTIPES
         for modeltype in models:
@@ -236,10 +240,10 @@ def prompt_ped_info(ped_inp_str, ped_out_str,
             'for hoten this would be {} kcal/mol \n'.format(max_ene-energy_dct[prods]))
     # Read ped.out file for product energy distributions
     ped_dct = mess_io.reader.ped.get_ped(
-        ped_ped_str, ped_spc, energy_dct, sp_labels='inp')
+        ped_ped_str, ped_spc, energy_dct, sp_labels='auto')
 
     # Read ke_ped.out file for energy density of each fragment
-    dos_df = mess_io.reader.rates.dos_rovib(ped_ke_out_str, sp_labels='inp')
+    dos_df = mess_io.reader.rates.dos_rovib(ped_ke_out_str, sp_labels='auto')
 
     rxn_ktp_dct_ped = extract_ktp_dct(ped_out_str)
 
@@ -255,9 +259,9 @@ def prompt_hot_info(hot_inp_str, hot_log_str):
     hot_spc_en = mess_io.reader.hoten.get_hot_species(hot_inp_str)
 
     hoten_dct = mess_io.reader.hoten.extract_hot_branching(
-        hot_log_str, hot_spc_en, list(spc_blocks_hoten.keys()), sp_labels='inp')
+        hot_log_str, hot_spc_en, list(spc_blocks_hoten.keys()), sp_labels='auto')
 
-    fne_bf = mess_io.reader.hoten.extract_fne(hot_log_str)
+    fne_bf = mess_io.reader.hoten.extract_fne(hot_log_str, sp_labels='auto')
 
     return hot_frag_dct, hot_spc_en, hoten_dct, fne_bf
 

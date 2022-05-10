@@ -149,7 +149,7 @@ def bf_tp_df_todct(bf_tp_df, bf_threshold, savefile=False, rxn='', model=''):
             temp_new = []
             for temp in temps:
                 bfrac = bf_tp_df[pressure][temp][spc]
-                if 1> bfrac >= 1e-10 :  
+                if 1> bfrac >= 1e-30 :  
                     # avoid too small values and 1 to avoid discontinuities
                     temp_new.append(temp)
                     bf_temp.append(bfrac)
