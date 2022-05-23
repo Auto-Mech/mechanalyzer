@@ -94,6 +94,8 @@ def plot_all_sccs(cwd, options):
             sccs_idx_lst = [int(sccs_idx)]
         for i in ccs_idx_lst:
             for j in sccs_idx_lst:
+                if i in [9, 10, 11, 12, 13, 14]:
+                    continue
                 mech_file = options['mechanism'] + '_{:g}_{:g}'.format(i, j)
                 spc_file = options['species'] + '_{:g}_{:g}'.format(i, j)
                 if not os.path.exists(mech_file):

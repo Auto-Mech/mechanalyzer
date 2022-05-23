@@ -75,12 +75,14 @@ def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct, nprocs='auto'):
             # expand each reaction to all valid stoich versions
             ste_rxns = execute_function_in_parallel(
                 _expand, ste_rxns, args, nprocs=nprocs)
+            print('FINISHED EXPANSION beginning organizing onto SCCSs')
             ste_rxn_dct = _make_ste_rxn_dct(ste_rxns)
+
             ccs_rxn_gra = _make_ccs_rxn_gra(
                 ste_rxn_dct, pes_gra)
 
             # Count all of the stereo reactions
-            # Build list of stereo species
+            Build list of stereo species
             for _rxn_lst in ste_rxns:
                 # ste_rxn_cnt += len(_rxn_lst)
                 for _rxnx in _rxn_lst:
@@ -169,16 +171,18 @@ def _make_ccs_rxn_gra(ste_rxn_dct, pes_gra):
     return ccs_rxn_gra
 
 
-def _is_ste_conn(rxn, rxn_lst):
+def _is_ste_conn(rxn, rxn_lst, prev_rxns_lst):
     """ Are to rxns connected stereochemically?
     """
     all_pes_ichs = []
     ichsi, ichsj, _ = rxn
     i_is_conn = False
     j_is_conn = False
-    for ichs1, ichs2, _ in rxn_lst:
-        all_pes_ichs.append(ichs1)
-        all_pes_ichs.append(ichs2)
+    for rxn in rxn_lst:
+        if rxn in prev_rxns_lst or prev_rxns_lst == []:
+            ichs1, ichs2, _ = rxn
+            all_pes_ichs.append(ichs1)
+            all_pes_ichs.append(ichs2)
     if ichsi in all_pes_ichs:
         i_is_conn = True
     if ichsj in all_pes_ichs:
@@ -207,13 +211,21 @@ def _split_ste_ccs(ccs_rxn_gra):
     """
     def _recursive_step(
             noste_rxn, ccs_rxn_gra, sccs_rxn_gra,
-            considered_rxns):
+            considered_rxns, prev_rxn_lst):
         adj_noste_rxn_lst, exp_rxns_lst = ccs_rxn_gra[noste_rxn]
         considered_rxns.append(noste_rxn)
         orig_sccs_rxn_gra = sccs_rxn_gra.copy()
 
         # Loop through reaction's expansions and put them
         # in appropriate sccs graph
+        print(
+            'next reaction in ccs has {:g} expansions'.format(len(exp_rxns_lst)))
+        exp_rxns_lst = list(set(exp_rxns_lst))
+        print(
+            'next reaction in ccs has {:g} expansions'.format(len(exp_rxns_lst)))
+        exp_rxns_lst = list(set(exp_rxns_lst))
+        for erxn in exp_rxns_lst:
+            print(erxn)
         for rxn_i in exp_rxns_lst:
             is_new_stereo = True
             enant_idx_lst = []
@@ -222,11 +234,11 @@ def _split_ste_ccs(ccs_rxn_gra):
             for idx in sccs_rxn_gra:
 
                 # check if this stereo-rxn is connected to the sccs
-                if _is_ste_conn(rxn_i, sccs_rxn_gra[idx]):
+                if _is_ste_conn(rxn_i, sccs_rxn_gra[idx], prev_rxn_lst):
                     check_ent = _enant_rxn(rxn_i)
 
                     # check if this rxns enantiomers are also in the sccs
-                    if _is_ste_conn(check_ent, sccs_rxn_gra[idx]):
+                    if _is_ste_conn(check_ent, sccs_rxn_gra[idx], []):
                         if idx < len(orig_sccs_rxn_gra):
                             enant_idx_lst.append(idx)
                         continue
@@ -244,68 +256,227 @@ def _split_ste_ccs(ccs_rxn_gra):
                 else:
                     # if it was just totally independent, create a new sccs
                     sccs_rxn_gra[len(sccs_rxn_gra)] = (rxn_i,)
+        # Need to make sure we add rxns possible on the new surfaces
+        for rxn_i in exp_rxns_lst:
+            is_new_stereo = True
+            enant_idx_lst = []
 
+            # Loop over propogating sccs graphs
+            for idx in sccs_rxn_gra:
+                if idx < len(orig_sccs_rxn_gra.keys()):
+                    continue
+                if rxn_i in sccs_rxn_gra[idx]:
+                    continue
+                # check if this stereo-rxn is connected to the sccs
+                if _is_ste_conn(rxn_i, sccs_rxn_gra[idx], prev_rxn_lst):
+                    check_ent = _enant_rxn(rxn_i)
+                    if _is_ste_conn(check_ent, sccs_rxn_gra[idx], []):
+                        continue
+                    sccs_rxn_gra[idx] += (rxn_i,)
+
+
+        print()
+        print('resulting in the following set of sccss')
+        # max_len = max([len(lst) for lst in sccs_rxn_gra.values()])
+        # keep_sccs_rxn_gra = {}
+        # new_idx = 0
+        # for idx in sccs_rxn_gra.keys():
+        #     print(idx, len(sccs_rxn_gra[idx]))
+        #     if len(sccs_rxn_gra[idx]) == max_len:
+        #         keep_sccs_rxn_gra[new_idx] = sccs_rxn_gra[idx]
+        #         new_idx += 1
+        #     else:
+        #         for p in sccs_rxn_gra[idx]:
+        #             print(p)
+        # sccs_rxn_gra = keep_sccs_rxn_gra
+        for idx in sccs_rxn_gra.keys():
+            print(idx, len(sccs_rxn_gra[idx]))
+            for p in sccs_rxn_gra[idx]:
+                print(p)
         # walk through adjacent reactions and repeat the procedure recursively
         # until all reactions are considered
-        for noste_rxn_i in adj_noste_rxn_lst:
+        for noste_rxn_i in sorted(
+                adj_noste_rxn_lst, key=lambda d: len(ccs_rxn_gra[d][0]) + len(ccs_rxn_gra[d][1]), reverse=False):
+            # for noste_rxn_i in adj_noste_rxn_lst:
             if noste_rxn_i not in considered_rxns:
                 sccs_rxn_gra, considered_rxns = _recursive_step(
                     noste_rxn_i, ccs_rxn_gra, sccs_rxn_gra,
-                    considered_rxns)
+                    considered_rxns, exp_rxns_lst)
         return sccs_rxn_gra, considered_rxns
 
     # initialize
-    sccs_rxn_gra = {}
+    save_sccs_rxn_gra = {}
+    save_sccs_rxn_gra_max_len = 0
     considered_rxns = []
 
     # pass through first reaction in a ccs
-    start_key = list(ccs_rxn_gra.keys())[0]
-    adj_noste_rxn_lst, exp_rxns_lst = ccs_rxn_gra[start_key]
-    start_rxn = exp_rxns_lst[0]
-    considered_rxns.append(start_rxn)
-    sccs_rxn_gra[0] = (start_rxn,)
-    orig_sccs_rxn_gra = {0: ()}
+    #start_key = list(ccs_rxn_gra.keys())[0]
+    #adj_noste_rxn_lst, exp_rxns_lst = ccs_rxn_gra[start_key]
+    #for key_i in ccs_rxn_gra:
+    #    adj_noste_rxn_lst_i, exp_rxns_lst_i = ccs_rxn_gra[key_i]
+    #    exp_rxns_lst_i = list(set(exp_rxns_lst_i))
+    #    if len(exp_rxns_lst_i) > len(exp_rxns_lst):
+    #        start_key = key_i
+    #        adj_noste_rxn_lst = adj_noste_rxn_lst_i
+    #        exp_rxns_lst = exp_rxns_lst_i
+    #    elif len(exp_rxns_lst_i) == len(exp_rxns_lst) and len(adj_noste_rxn_lst_i) > len(adj_noste_rxn_lst):
+    #        start_key = key_i
+    #        adj_noste_rxn_lst = adj_noste_rxn_lst_i
+    #        exp_rxns_lst = exp_rxns_lst_i
+    for start_key in list(ccs_rxn_gra.keys()):
+        sccs_rxn_gra = {}
+        considered_rxns = []
+    
+        adj_noste_rxn_lst, exp_rxns_lst = ccs_rxn_gra[start_key]
 
-    # Loop through reaction's expansions and put them
-    # in appropriate sccs graph
-    for rxn_i in exp_rxns_lst[1:]:
-        is_new_stereo = True
-        enant_idx_lst = []
+        print('first reaction in ccs has {:g} expansions'.format(len(exp_rxns_lst)))
+        exp_rxns_lst = list(set(exp_rxns_lst))
+        for erxn in exp_rxns_lst:
+            print(erxn)
+        start_rxn = exp_rxns_lst[0]
+        considered_rxns.append(start_rxn)
+        sccs_rxn_gra[0] = (start_rxn,)
+        orig_sccs_rxn_gra = {0: ()}
 
-        # Loop over propogating sccs graphs
-        for idx in sccs_rxn_gra:
+        # Loop through reaction's expansions and put them
+        # in appropriate sccs graph
+        for rxn_i in exp_rxns_lst[1:]:
+            is_new_stereo = True
+            enant_idx_lst = []
 
-            # check if this stereo-rxn is connected to the sccs
-            if _is_ste_conn(rxn_i, sccs_rxn_gra[idx]):
-                check_ent = _enant_rxn(rxn_i)
+            # Loop over propogating sccs graphs
+            for idx in sccs_rxn_gra:
 
-                # check if this rxns enantiomers are also in the sccs
-                if _is_ste_conn(check_ent, sccs_rxn_gra[idx]):
-                    if idx < len(orig_sccs_rxn_gra):
-                        enant_idx_lst.append(idx)
+                # check if this stereo-rxn is connected to the sccs
+                if _is_ste_conn(rxn_i, sccs_rxn_gra[idx], ['hmm']):
+                    check_ent = _enant_rxn(rxn_i)
+
+                    # check if this rxns enantiomers are also in the sccs
+                    if _is_ste_conn(check_ent, sccs_rxn_gra[idx], []):
+                        if idx < len(orig_sccs_rxn_gra):
+                            enant_idx_lst.append(idx)
+                        continue
+                    sccs_rxn_gra[idx] += (rxn_i,)
+                    sccs_rxn_gra[idx] = tuple(set(
+                        sccs_rxn_gra[idx]))
+                    is_new_stereo = False
+            if is_new_stereo:
+                # if it was both ste-connected and had ents-connected
+                # copy the sccs up to the point that enantiomers got in there
+                # and add this reaction to it
+                if enant_idx_lst:
+                    for enant_idx in enant_idx_lst:
+                        sccs_rxn_gra[len(sccs_rxn_gra)] = orig_sccs_rxn_gra[
+                            enant_idx]
+                        sccs_rxn_gra[len(sccs_rxn_gra) - 1] += (rxn_i,)
+                        sccs_rxn_gra[len(sccs_rxn_gra) - 1] = tuple(set(
+                            sccs_rxn_gra[len(sccs_rxn_gra) - 1]))
+                else:
+                    # if it was just totally independent, create a new sccs
+                    sccs_rxn_gra[len(sccs_rxn_gra)] = (rxn_i,)
+        print()
+        print('resulting in the following set of sccss')
+        for idx in sccs_rxn_gra.keys():
+            print(idx, len(sccs_rxn_gra[idx]))
+            for p in sccs_rxn_gra[idx]:
+                print(p)
+        # walk through adjacent reactions and repeat the procedure recursively
+        # until all reactions are considered
+        for noste_rxn_i in sorted(adj_noste_rxn_lst, key=lambda d: len(ccs_rxn_gra[d][0]) + len(ccs_rxn_gra[d][1]), reverse=False):
+            # adj_noste_rxn_lst:
+            if noste_rxn_i not in considered_rxns:
+                sccs_rxn_gra, considered_rxns = _recursive_step(
+                    noste_rxn_i, ccs_rxn_gra, sccs_rxn_gra, considered_rxns,
+                    exp_rxns_lst)
+            
+        spc_key_dct = {}
+        for idx, rxns in sccs_rxn_gra.items():
+            print(idx, len(sccs_rxn_gra[idx]))
+            spcs = []
+            for rcts, prds, _ in rxns:
+                spcs.extend([rct for rct in rcts if rct not in spcs])
+                spcs.extend([prd for prd in prds if prd not in spcs])
+            spc_key_dct[idx] = spcs
+        keys = list(sccs_rxn_gra.keys())
+        new_sccs_rxn_gra = {}
+        idx_n = 0
+        for r in range(3, 0, -1):
+            for combo in it.combinations(keys, r):
+                spcs = []
+                rxns = sccs_rxn_gra[combo[0]]
+                for idx in combo[1:]:
+                    connects = False
+                    rxns_i = sccs_rxn_gra[idx]
+                    for rxn_i in rxns_i:
+                        if _is_ste_conn(rxn_i, rxns, []):#exp_rxns_lst):
+                            connects = True
+                    if connects:
+                        rxns += rxns_i
+                rxns = tuple(set(rxns))
+                if r > 1 and len(rxns) == len(sccs_rxn_gra[idx]):
                     continue
-                sccs_rxn_gra[idx] += (rxn_i,)
-                is_new_stereo = False
-        if is_new_stereo:
-            # if it was both ste-connected and had ents-connected
-            # copy the sccs up to the point that enantiomers got in there
-            # and add this reaction to it
-            if enant_idx_lst:
-                for enant_idx in enant_idx_lst:
-                    sccs_rxn_gra[len(sccs_rxn_gra)] = orig_sccs_rxn_gra[
-                        enant_idx]
-                    sccs_rxn_gra[len(sccs_rxn_gra) - 1] += (rxn_i,)
-            else:
-                # if it was just totally independent, create a new sccs
-                sccs_rxn_gra[len(sccs_rxn_gra)] = (rxn_i,)
+                for rcts, prds, _ in rxns:
+                    spcs.extend([rct for rct in rcts if rct not in spcs])
+                    spcs.extend([prd for prd in prds if prd not in spcs])
+                enantiomeric = False
+                for spc_a, spc_b in it.combinations(spcs, 2):
+                    if automol.inchi.are_enantiomers(spc_a, spc_b):
+                        enantiomeric = True
+                        break
+                if not enantiomeric:
+                    print(combo)
+                    print('new length', len(rxns), sorted(spcs))
+                    print('No enantiomers found in spc lst')
+                    new_sccs_rxn_gra[idx_n] = tuple(sorted(rxns))
+                    idx_n += 1
 
-    # walk through adjacent reactions and repeat the procedure recursively
-    # until all reactions are considered
-    for noste_rxn_i in adj_noste_rxn_lst:
-        if noste_rxn_i not in considered_rxns:
-            sccs_rxn_gra, considered_rxns = _recursive_step(
-                noste_rxn_i, ccs_rxn_gra, sccs_rxn_gra, considered_rxns)
-    return sccs_rxn_gra
+        #for idx_a in keys:
+        #    spcs_a = spc_key_dct[idx_a]
+        #    rxns_a =  sccs_rxn_gra[idx_a]
+        #    for idx_b in keys[idx_a+1:]  + keys[:idx_a]:
+        #        spcs_b = spc_key_dct[idx_b]
+        #        enantiomeric = False
+        #        for spc_a in spcs_a:
+        #            for spc_b in spcs_b:
+        #                if automol.inchi.are_enantiomers(spc_a, spc_b):
+        #                    enantiomeric = True
+        #        if not enantiomeric:
+        #            connects = False
+        #            print('I CAN COMBINE', idx_a, idx_b)
+        #            for rxn in rxns_a:
+        #                if _is_ste_conn(rxn, sccs_rxn_gra[idx_b], exp_rxns_lst):
+        #                    print('is connected at rxn', rxn)
+        #                    connects = True
+        #                    break
+        #            if connects:
+        #                for rxn in sccs_rxn_gra[idx_b]:
+        #                    if rxn not in rxns_a:
+        #                        rxns_a += (rxn,)
+        #                for spc_b in spcs_b:
+        #                    if spc_b not in spcs_a:
+        #                        spcs_a += (spc_b,)
+        #                print('new length', len(rxns_a))
+        #    if sorted(rxns_a) not in list(new_sccs_rxn_gra.values()):
+        #        new_sccs_rxn_gra[idx_a] = sorted(rxns_a)
+        for idx, rxns in new_sccs_rxn_gra.items():
+            if len(rxns) != len(list(set(rxns))):
+                rxns = list(set(rxns))
+            if len(rxns) > save_sccs_rxn_gra_max_len:
+                save_sccs_rxn_gra_max_len = len(rxns)
+                save_sccs_rxn_gra = new_sccs_rxn_gra
+            print(idx, len(rxns))
+    sccs_rxn_gra = save_sccs_rxn_gra
+    print('BEST NUMBER OF SCCS')
+    max_len = max([len(lst) for lst in sccs_rxn_gra.values()])
+    keep_sccs_rxn_gra = {}
+    new_idx = 0
+    for idx in sccs_rxn_gra.keys():
+        if len(sccs_rxn_gra[idx]) == max_len:
+            keep_sccs_rxn_gra[new_idx] = sccs_rxn_gra[idx]
+            new_idx += 1
+    for idx, rxns in sccs_rxn_gra.items():
+        print(idx, len(rxns))
+    return keep_sccs_rxn_gra
 
 
 def _pes_gra(noste_rxn_dct):
@@ -450,6 +621,7 @@ def remove_stereochemistry(inp_mech_rxn_dct, inp_mech_spc_dct):
 # Build reaction lists
 def _ste_rxn_lsts(rxn_ich):
     """ Build reaction onjects
+
     """
     # Build reaction objects
     rxn_obj_sets = automol.reac.util.rxn_objs_from_inchi(
@@ -688,7 +860,12 @@ def _rxn_name_to_ich(rxn, ich_dct):
         any(rgt is None for rgt in _rxn[1])
     ):
         _rxn = None
-
+    if _rxn is None:
+        print('we got a none')
+        print(rxn)
+        print([ich_dct.get(rgt) for rgt in rxn[0]])
+        print([ich_dct.get(rgt) for rgt in rxn[1]])
+        print(ich_dct)
     return _rxn
 
 

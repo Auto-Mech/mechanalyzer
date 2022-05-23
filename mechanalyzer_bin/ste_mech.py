@@ -4,6 +4,7 @@
 import os
 import time
 import itertools as it
+import numpy
 
 import ioformat
 import chemkin_io
@@ -35,7 +36,7 @@ def main(
     print('\n---- Adding stereochemistry to InChIs of mechanism'
           ' species where needed ---\n')
     mech_spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
-        mech_spc_dct, nprocs='auto', all_stereo=True)
+        mech_spc_dct, nprocs='auto', all_stereo=False)
     print('Mechanism species with stereo added')
     for name, dct in mech_spc_dct.items():
         print(f'Name: {name:<25s} InChI: {dct["inchi"]}')
@@ -51,7 +52,8 @@ def main(
     ccs_sccs_spc_dct = {}
     for ccs_idx, sccs_rxn_dct in enumerate(sccs_rxn_dct_lst):
         for sccs_idx, sccs_rxn_lst in sccs_rxn_dct.items():
-
+            print('Writing CCS:{:g} SCCS:{:g}'.format(ccs_idx, sccs_idx))
+            print(len(sccs_rxn_lst), sccs_rxn_lst)
             ret_dcts = dictionaries_from_rxn_lst(
                 sccs_rxn_lst)
             ste_mech_spc_dct, ste_rxn_dct = ret_dcts
@@ -297,15 +299,18 @@ def find_best_combination(spc_ccs_dct, combo_lst):
     # print('best combo', best_combo)
     shortest_spc_lst = min(num_uniq_spc_for_combo)
     print('greatest overlap', shortest_spc_lst)
-    best_combo_idx = num_uniq_spc_for_combo.index(shortest_spc_lst)
-    best_combo = combo_lst[best_combo_idx]
-    print('best combo', best_combo)
-    enant_count = 0
-    for spc_a, spc_b in it.combinations(uniq_spc_lst_lst[best_combo_idx], 2):
-        if automol.chi.are_enantiomers(spc_a, spc_b):
-            print('Enantiomer pair:', spc_a, spc_b)
-            enant_count += 1
-    print('found {:g} enantiomers for this combo'.format(enant_count))
+    # best_combo_idx = num_uniq_spc_for_combo.index(shortest_spc_lst)
+    best_combo_idxs = numpy.where(
+        numpy.array(num_uniq_spc_for_combo) == shortest_spc_lst)
+    print('number of best combo idxs', len(best_combo_idxs), best_combo_idxs)
+    for best_combo_idx in best_combo_idxs:
+        enant_count = 0
+        best_combo = combo_lst[int(best_combo_idx)]
+        print('best combo', best_combo)
+        for spc_a, spc_b in it.combinations(uniq_spc_lst_lst[int(best_combo_idx)], 2):
+            if automol.inchi.are_enantiomers(spc_a, spc_b):
+                enant_count += 1
+        print('found {:g} enantiomers for this combo'.format(enant_count))
     return best_combo
 
 
@@ -363,7 +368,7 @@ if __name__ == '__main__':
 
     # Read input species and mechanism files into dictionary
     mech_info = input_from_location_dictionary(oscwd, file_dct)
-    # main(oscwd, file_dct['out_spc'], file_dct['out_mech'], *mech_info)
+    main(oscwd, file_dct['out_spc'], file_dct['out_mech'], *mech_info)
     reduction(oscwd, file_dct)
     # Compute script run time and print to screen
     tf = time.time()
