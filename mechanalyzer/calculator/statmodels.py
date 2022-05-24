@@ -21,136 +21,6 @@ MW_dct_elements = {
 }  # kg/mol
 
 
-def get_dof_info(block):
-    """ Gets the N of degrees of freedom and MW of each species
-        :param block: bimol species of which you want the dofs
-        :type block: list(str1, str2)
-        :param ask_for_ts: build the dof info also for the ts
-        :type ask_for_ts: bool
-        :return dof_info: dataframe with vibrat/rot degrees of freedom
-            and molecular weight
-        :rtype: dataframe(index=species, columns=['n_atoms', 'vib dof', 'rot dof', 'mw'])
-    """
-    info_array = np.zeros((3, 4))
-    keys = []
-    atoms_ts = 0
-    # extract N of dofs and MW
-    for i, block_i in enumerate(block):
-        info = block_i.splitlines()
-        where_name = find.where_in('Species', info)[0]
-        where_hind = find.where_in('Hindered', info)
-
-        key = info[where_name].strip().split()[1]
-        keys.append(key)
-
-        try:
-            where_geom = find.where_in('Geometry', info)[0]
-            where_freq = find.where_in('Frequencies', info)[0]
-            num_atoms = int(info[where_geom].strip().split()[1])
-            num_dof = (
-                int(info[where_freq].strip().split()[1]) + len(where_hind)
-            )
-            if 3*num_atoms - num_dof == 6:
-                rot_dof = 3
-            else:
-                rot_dof = 2
-        except IndexError:
-            # if 1 atom only: no 'Frequencies', set to 0
-            num_dof = 0
-            rot_dof = 0
-            num_atoms = 1
-            where_geom = find.where_in('Name', info)[0]
-            atoms_array = np.array([info[where_geom].strip().split()[1]])
-
-        atoms_ts += num_atoms
-        # this allows to get 3N-5 or 3N-6 without analyzing the geometry
-        info_array[i, 0] = num_atoms
-        info_array[i, 1] = num_dof
-        info_array[i, 2] = rot_dof
-
-        # MW from type of atoms:
-        if num_atoms > 1:
-            geom_in = where_geom+1
-            geom_fin = geom_in+num_atoms
-            atoms_array = np.array([geomline.strip().split()[0]
-                                    for geomline in info[geom_in:geom_fin]])
-
-        info_array[i, 3] = np.sum(np.array([MW_dct_elements[at]
-                                            for at in atoms_array], dtype=float))
-
-    # ts info: assume first 2 blocks are 2 reactants of bimol reaction
-    # and derive the DOFs of the TS
-    keys.append('TS')
-
-    # assume there are no linear TSs
-    info_array[2, :] = [atoms_ts, 3*atoms_ts - 7, 3,
-                        info_array[0, 3]+info_array[1, 3]]
-
-    dof_info = pd.DataFrame(info_array, index=keys, columns=[
-                            'n_atoms', 'vib dof', 'rot dof', 'mw'])
-
-    return dof_info
-
-
-def max_en_auto(n_atoms, ene_bw, ref_ene=0, T=2500):
-    """ Determines automatically the max energy of microcanonical output and max
-        energy stored in products for appropriate ped and hoten output writing
-        :param n_atoms: number of atoms involved in the bimol reaction
-        :type n_atoms: int
-        :param ene_bw: backward energy barrier of the reaction
-                       > 0 for exothermic reactions
-                       < 0 for enothermic reactions
-        :type ene_bw: float
-        :param ref_ene: reference energy (bimol prods energy in ped)
-        :type ref_ene: float
-        :param T: reference temperature
-        :type T: float
-        :return max_ene: maximum energy written in mess ped/hoten output
-
-    """
-    # determine average boltzmann energy for the TS at 2500 K
-    # NB equipartition theorem - no trasl bc preserved in rxn
-    # assume non-linear
-    boltz_ene_T = phycon.RC_KCAL*T*(3*n_atoms-7+3/2)
-    sigma = 0.87+0.04*(boltz_ene_T + ene_bw)  # from Danilack 2020
-    print('debug statmodels line 115 energies: ref {}, boltz {}, barrier {}, sigma {} \n'.format(
-        ref_ene, boltz_ene_T, ene_bw, sigma))
-    max_ene = ref_ene + boltz_ene_T + ene_bw + 4*sigma
-
-    return max_ene
-
-
-def dos_trasl(mass1, ene_grid, pressure, temp, mass2=0):
-    """ Compute the translational density of states per unit volume
-        mass1, mass2: MW in kg/mol
-        ene_grid: energy grid in kcal/mol (array)
-        P, T: pressure and temperature in SI units [Pa, K]
-        :return dos_tr_series: dos in mol/kcal
-        :rtype: array
-    """
-
-    # conversions
-    ene_grid_j = ene_grid*4184/phycon.NAVO  # kcal/mol*J/kcal/NAVO=J
-    mass1 /= phycon.NAVO  # kg/mol/(molecule/mol)
-    if mass2 != 0:
-        mass2 /= phycon.NAVO
-        red_mass = (mass1 * mass2) / (mass1 + mass2)    # kg
-    else:
-        red_mass = mass1  # only 1 molecule
-
-    # 1 molecule
-    # rhotr/V = pi/4*(8m/h2)^3/2*e^1/2
-    rho = (np.pi/4*np.power(8*red_mass/phycon.H**2, 3/2) *
-           np.power(ene_grid_j, 1/2))  # unit: 1/m3/J
-
-    # consider the molar volume RT/P [m3/1]
-    v_mol = 1.38e-23*temp/pressure  # m3/1 for ideal gases
-    # 1/m3*(m3/1)/J*(J/kcal)*(mol) = mol/kcal
-    rho_kcal_mol = rho*v_mol*4184/phycon.NAVO
-
-    return rho_kcal_mol
-
-
 class PEDModels:
     """ Statistical models for Product Energy Distributions
     """
@@ -645,3 +515,135 @@ class PEDModels:
         ped_df_prod = self.prob_ene1_fct(distr_type)
 
         return ped_df_prod
+
+
+######## helper functions
+
+def get_dof_info(block):
+    """ Gets the N of degrees of freedom and MW of each species
+        :param block: bimol species of which you want the dofs
+        :type block: list(str1, str2)
+        :param ask_for_ts: build the dof info also for the ts
+        :type ask_for_ts: bool
+        :return dof_info: dataframe with vibrat/rot degrees of freedom
+            and molecular weight
+        :rtype: dataframe(index=species, columns=['n_atoms', 'vib dof', 'rot dof', 'mw'])
+    """
+    info_array = np.zeros((3, 4))
+    keys = []
+    atoms_ts = 0
+    # extract N of dofs and MW
+    for i, block_i in enumerate(block):
+        info = block_i.splitlines()
+        where_name = find.where_in('Species', info)[0]
+        where_hind = find.where_in('Hindered', info)
+
+        key = info[where_name].strip().split()[1]
+        keys.append(key)
+
+        try:
+            where_geom = find.where_in('Geometry', info)[0]
+            where_freq = find.where_in('Frequencies', info)[0]
+            num_atoms = int(info[where_geom].strip().split()[1])
+            num_dof = (
+                int(info[where_freq].strip().split()[1]) + len(where_hind)
+            )
+            if 3*num_atoms - num_dof == 6:
+                rot_dof = 3
+            else:
+                rot_dof = 2
+        except IndexError:
+            # if 1 atom only: no 'Frequencies', set to 0
+            num_dof = 0
+            rot_dof = 0
+            num_atoms = 1
+            where_geom = find.where_in('Name', info)[0]
+            atoms_array = np.array([info[where_geom].strip().split()[1]])
+
+        atoms_ts += num_atoms
+        # this allows to get 3N-5 or 3N-6 without analyzing the geometry
+        info_array[i, 0] = num_atoms
+        info_array[i, 1] = num_dof
+        info_array[i, 2] = rot_dof
+
+        # MW from type of atoms:
+        if num_atoms > 1:
+            geom_in = where_geom+1
+            geom_fin = geom_in+num_atoms
+            atoms_array = np.array([geomline.strip().split()[0]
+                                    for geomline in info[geom_in:geom_fin]])
+
+        info_array[i, 3] = np.sum(np.array([MW_dct_elements[at]
+                                            for at in atoms_array], dtype=float))
+
+    # ts info: assume first 2 blocks are 2 reactants of bimol reaction
+    # and derive the DOFs of the TS
+    keys.append('TS')
+
+    # assume there are no linear TSs
+    info_array[2, :] = [atoms_ts, 3*atoms_ts - 7, 3,
+                        info_array[0, 3]+info_array[1, 3]]
+
+    dof_info = pd.DataFrame(info_array, index=keys, columns=[
+                            'n_atoms', 'vib dof', 'rot dof', 'mw'])
+
+    return dof_info
+
+
+def max_en_auto(n_atoms, ene_bw, ref_ene=0, T=2500):
+    """ Determines automatically the max energy of microcanonical output and max
+        energy stored in products for appropriate ped and hoten output writing
+        :param n_atoms: number of atoms involved in the bimol reaction
+        :type n_atoms: int
+        :param ene_bw: backward energy barrier of the reaction
+                       > 0 for exothermic reactions
+                       < 0 for enothermic reactions
+        :type ene_bw: float
+        :param ref_ene: reference energy (bimol prods energy in ped)
+        :type ref_ene: float
+        :param T: reference temperature
+        :type T: float
+        :return max_ene: maximum energy written in mess ped/hoten output
+
+    """
+    # determine average boltzmann energy for the TS at 2500 K
+    # NB equipartition theorem - no trasl bc preserved in rxn
+    # assume non-linear
+    boltz_ene_T = phycon.RC_KCAL*T*(3*n_atoms-7+3/2)
+    sigma = 0.87+0.04*(boltz_ene_T + ene_bw)  # from Danilack 2020
+    print('debug statmodels line 115 energies: ref {}, boltz {}, barrier {}, sigma {} \n'.format(
+        ref_ene, boltz_ene_T, ene_bw, sigma))
+    max_ene = ref_ene + boltz_ene_T + ene_bw + 4*sigma
+
+    return max_ene
+
+
+def dos_trasl(mass1, ene_grid, pressure, temp, mass2=0):
+    """ Compute the translational density of states per unit volume
+        mass1, mass2: MW in kg/mol
+        ene_grid: energy grid in kcal/mol (array)
+        P, T: pressure and temperature in SI units [Pa, K]
+        :return dos_tr_series: dos in mol/kcal
+        :rtype: array
+    """
+
+    # conversions
+    ene_grid_j = ene_grid*4184/phycon.NAVO  # kcal/mol*J/kcal/NAVO=J
+    mass1 /= phycon.NAVO  # kg/mol/(molecule/mol)
+    if mass2 != 0:
+        mass2 /= phycon.NAVO
+        red_mass = (mass1 * mass2) / (mass1 + mass2)    # kg
+    else:
+        red_mass = mass1  # only 1 molecule
+
+    # 1 molecule
+    # rhotr/V = pi/4*(8m/h2)^3/2*e^1/2
+    rho = (np.pi/4*np.power(8*red_mass/phycon.H**2, 3/2) *
+           np.power(ene_grid_j, 1/2))  # unit: 1/m3/J
+
+    # consider the molar volume RT/P [m3/1]
+    v_mol = 1.38e-23*temp/pressure  # m3/1 for ideal gases
+    # 1/m3*(m3/1)/J*(J/kcal)*(mol) = mol/kcal
+    rho_kcal_mol = rho*v_mol*4184/phycon.NAVO
+
+    return rho_kcal_mol

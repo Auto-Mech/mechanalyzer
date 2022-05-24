@@ -121,7 +121,8 @@ class SortMech:
         # check on pes/subpes criteria:
         # if subpes alone, also add pes
         if (('subpes' in hierarchy and 'pes' not in hierarchy) or
-                ('chnl' in hierarchy and ['pes', 'subpes'] not in hierarchy)):
+                ('chnl' in hierarchy and 'pes' not in hierarchy and
+                 'subpes' not in hierarchy)):
             try:
                 idx_insert_pes = hierarchy.index('subpes')
             except ValueError:
@@ -586,7 +587,7 @@ class SortMech:
                     # check with threshold
                     hot_sp = list(set(self.species_list).intersection(prds))[0]
                     dh_tot = dh + dh_min_hot[hot_sp]
-                    
+
                     if dh_tot > threshold:
                         ped.remove(ped_i)
                         keep = 'NO'
@@ -596,9 +597,10 @@ class SortMech:
                         active_hotsp.append(hot_sp)
 
                     self.rxns_dh += '{}{}{}{}{:.1f}{}{:.1f}{}{:.1f}{}{:.2e}{}{}\n'.format(
-                        ped_i, ' '*(50-len(ped_i)), hot_sp, ' '*(15-len(hot_sp)),
+                        ped_i, ' '*(50-len(ped_i)), hot_sp, ' ' *
+                        (15-len(hot_sp)),
                         dh, ' '*(10-len('{:.1f}'.format(dh))),
-                        dh_min_hot[hot_sp], ' '*
+                        dh_min_hot[hot_sp], ' ' *
                             (10-len('{:.1f}'.format(dh_min_hot[hot_sp]))),
                         dh_tot, ' '*(10-len('{:.1f}'.format(dh_tot))),
                         k_max_hot[hot_sp],
