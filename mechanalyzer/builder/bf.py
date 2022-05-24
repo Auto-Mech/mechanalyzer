@@ -5,16 +5,15 @@ from mechanalyzer.calculator import bf
 # probably more useful to turn this into a class
 
 
-def bf_tp_dct(modeltype_list, ped_dct, hoten_df, bf_threshold, rxn='', savefile=False, fne=None):
+def bf_tp_dct(modeltype, ped_df, hoten_df, bf_threshold, rxn='', savefile=False, fne=None):
     """ Build a branching fractions dictionary as a
         function of temeprature and pressure
         containing the BFs of each product of the PES
 
-        :param modeltype_list: models used for P(E1) calculations
-        :type modeltype_list: list(str)
-        :param ped_dct: dictionary of modeltypes with corresponding
-            dataframe[P][T] with the Series of energy distrib [en: prob(en)]
-        :type ped_dct: dct{str: dataframe(series(float))}
+        :param modeltype: model used for P(E1) calculations
+        :type modeltype: str
+        :param ped_df: dataframe[P][T] with the Series of energy distrib [en: prob(en)]
+        :type ped_df: dataframe(series(float))
         :param hoten_df: hot branching fractions for hotspecies
         :type hoten_df: df[P][T]:df[allspecies][energies]}
         :param reac: label of original reactants producing hot species - only for file save
@@ -25,59 +24,51 @@ def bf_tp_dct(modeltype_list, ped_dct, hoten_df, bf_threshold, rxn='', savefile=
             dataframe(series(float)) (same as bf_tp_df)
         :return bf_tp_dct: branching fractions at T,P for each product
             for the selected hotspecies
-        :rtype: dct{model: dct{species: {pressure: (array(T), array(BF))}}}
+        :rtype: dct{species: {pressure: (array(T), array(BF))}}
     """
 
-    _bf_tp_dct = dict.fromkeys(modeltype_list)
-    for modeltype in modeltype_list:
-        if modeltype == 'fne':
-            bf_tp_df = fne
-        else:
-            ped_df = ped_dct[modeltype]
-            bf_tp_df = bf.bf_tp_df_full(ped_df, hoten_df)
+    if modeltype == 'fne':
+        bf_tp_df = fne
+    else:
+        bf_tp_df = bf.bf_tp_df_full(ped_df, hoten_df)
 
-        bf_tp_dct_species = bf.bf_tp_df_todct(
-            bf_tp_df, bf_threshold, model=modeltype, rxn=rxn, savefile=savefile)
-        _bf_tp_dct[modeltype] = bf_tp_dct_species
+    bf_tp_dct_species = bf.bf_tp_df_todct(
+        bf_tp_df, bf_threshold, model=modeltype, rxn=rxn, savefile=savefile)
+    _bf_tp_dct = bf_tp_dct_species
 
     return _bf_tp_dct
 
 
-def merge_bf_ktp(bf_ktp_dct, ktp_dct, frag_reacs, frag1, frag2, hotsp_dct):
+def merge_bf_ktp(bf_ktp_dct, ktp_dct, frag_reacs, otherprod, hotsp_dct):
     """ derive k' = bf*k and rename final ktp dictionary appropriately
 
         :param bf_tp_dct: branching fractions at T,P for each product
             for the selected hotspecies
-        :type: dct{model: dct{species: {pressure: (array(T), array(BF))}}}
+        :type: dct{species: {pressure: (array(T), array(BF))}}
         :param ktp_dct: rates of the original reaction A=>B to split in A=>Pi
             with Pi = species in bf_ktp_dct (B decomposes to Pi)
         :type ktp_dct: dictionary {P: (T, k)}
         :param frag_reacs: reactant fragments ['A','B']
-        :type frag_reacs: list(str)
-        :param frag1: hot dissociating product
-        :type frag1: str
-        :param frag2: remaining product
-        :type frag2: str
+        :type frag_reacs: tuple/list(str)
+        :param otherprod: remaining product(s)
+        :type otherprod: tuple(str)
         :param hotsp_dct: dictionary of hotspecies and
             corresponding fragments (if bimol)
         :type hotsp_dct: {species_unimol: [species_unimol],
                           species_bimol: [frag1, frag2], ...}
         :return rxn_ktp_dct: ktp dct of final rate constants for channels
-        :rtype: {model: {rxn: {P: (T, k)}}}
+        :rtype: {rxn: {P: (T, k)}}
     """
 
-    modeltype_list = list(bf_ktp_dct.keys())
-    rxn_ktp_dct = dict.fromkeys(modeltype_list)
-    for modeltype in modeltype_list:
-        ktp_dct_model_i = bf.merge_bf_rates(bf_ktp_dct[modeltype], ktp_dct)
-        ktp_dct_model_i_new = rename_ktp_dct(
-            ktp_dct_model_i, frag_reacs, frag1, frag2, hotsp_dct)
-        rxn_ktp_dct[modeltype] = ktp_dct_model_i_new
-        # print(ktp_dct_model_i_new)
+    ktp_dct_model_i = bf.merge_bf_rates(bf_ktp_dct, ktp_dct)
+    ktp_dct_model_i_new = rename_ktp_dct(
+        ktp_dct_model_i, frag_reacs, otherprod, hotsp_dct)
+    rxn_ktp_dct = ktp_dct_model_i_new
+
     return rxn_ktp_dct
 
 
-def rename_ktp_dct(ktp_dct, frag_reacs, hotprod, otherprod, hotsp_dct):
+def rename_ktp_dct(ktp_dct, frag_reacs, otherprod, hotsp_dct):
     """ rename ktp dictionary with appropriate names for prompt dissociation.
         ktp_dct.keys(): sp
         renamed_ktp_dct.keys(): rctname=>sp
@@ -86,21 +77,18 @@ def rename_ktp_dct(ktp_dct, frag_reacs, hotprod, otherprod, hotsp_dct):
         :param rxn_ktp_dct: ktp dct of final rate constants for channels
         :type rxn_ktp_dct: {sp: {P: (T, k)}}
         :param frag_reacs: reactant fragments ['A','B']
-        :type frag_reacs: list(str)
-        :param hotprod: hot dissociating product
-        :type hotprod: str
-        :param otherprod: remaining product
-        :type otherprod: str
+        :type frag_reacs: tuple/list(str)
+        :param otherprod: remaining product(s)
+        :type otherprod: tuple
         :return rename_ktp_dct: dct with new keys
         :rtype: {rxn_name: {P: (T, k)}}
     """
 
-    _ = hotprod  # unneeded since we are not setting linker
-
     renamed_ktp_dct = {}
     for spc in ktp_dct.keys():
-        prods = hotsp_dct[spc] + (otherprod,)
-        newkey = (frag_reacs, prods, (None,))
+        frag_prods = hotsp_dct[spc] + otherprod
+        print(hotsp_dct[spc], otherprod, frag_prods)
+        newkey = (frag_reacs, frag_prods, (None,))
         renamed_ktp_dct[newkey] = ktp_dct[spc]
 
     return renamed_ktp_dct

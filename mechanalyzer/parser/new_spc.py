@@ -10,6 +10,7 @@ from automol.inchi import smiles as ich_to_smi
 from automol.inchi import formula as ich_to_fml
 from automol.inchi import low_spin_multiplicity as _low_spin_mult
 from automol.inchi import is_complete
+from automol.inchi import add_stereo
 from automol.formula import from_string as str_to_fml
 import rdkit.Chem as _rd_chem
 
@@ -89,7 +90,7 @@ def load_mech_spc_dct(filename, path, quotechar="'",
 
 
 def parse_mech_spc_dct(file_str, quotechar="'",
-                       chk_ste=False, chk_match=False, verbose=True):
+                       chk_ste=False, chk_match=False, verbose=True, add_ste=True):
     """ Obtains a single mech_spc_dct given a string parsed from a spc.csv file
 
         :param file_str: the string that was read directly from the .csv file
@@ -100,6 +101,8 @@ def parse_mech_spc_dct(file_str, quotechar="'",
         :type chk_ste: Bool
         :param chk_match: whether or not to check that inchis and smiles match
         :type chk_match: Bool
+        :param add_ste: add stereo layer on inchi if missing
+        :type add_ste: Bool
         :return mech_spc_dct: identifying information on species in a mech
         :rtype: dct {spc1: spc_dct1, spc2: ...}
     """
@@ -141,7 +144,7 @@ def parse_mech_spc_dct(file_str, quotechar="'",
                     f' once. The second time is on line {idx + 1}, {line}.')
                 # Fill in the spc_dct and then add it to the mech_spc_dct
                 spc_dct, error = fill_spc_dct(spc_dct, spc, chk_ste=chk_ste,
-                                              chk_match=chk_match)
+                                              chk_match=chk_match, add_ste=add_ste)
                 mech_spc_dct[spc] = spc_dct
                 if error:
                     errors = True
@@ -194,7 +197,7 @@ def read_spc_dct(cols, col_headers):
     return spc, spc_dct
 
 
-def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True):
+def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True, add_ste=False):
     """ Fills in missing values in a spc_dct
 
         :param spc_dct: identifying information for a single species
@@ -205,6 +208,8 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True):
         :type chk_ste: Bool
         :param chk_match: whether or not to check that inchis and smiles match
         :type chk_match: Bool
+        :param add_ste: add stereo lauer in inchis
+        :type add_ste: Bool
         :return full_spc_dct: beefed-up spc_dct
         :rtype: dct
     """
@@ -259,6 +264,11 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True):
         fml = ich_to_fml(full_spc_dct['inchi'])
         full_spc_dct['fml'] = fml
 
+    # Add stereo if missing
+    if add_ste:
+        ich = full_spc_dct['inchi']
+        full_spc_dct['inchi'] = add_stereo(ich)
+        
     return full_spc_dct, error
 
 
