@@ -285,7 +285,7 @@ def find_best_combination(spc_ccs_dct, combo_lst):
         num_uniq_spc_for_combo += (len(uniq_spc_lst),)
         # enant_count = 0
         # for spc_a, spc_b in it.combinations(spc_ich_lst, 2):
-        #     if automol.inchi.are_enantiomers(spc_a, spc_b):
+        #     if automol.chi.are_enantiomers(spc_a, spc_b):
         #         enant_count += 1
         # combo_ent_count += (enant_count,)
         # print('found {:g} enantiomers for this combo'.format(enant_count))
@@ -302,7 +302,7 @@ def find_best_combination(spc_ccs_dct, combo_lst):
     print('best combo', best_combo)
     enant_count = 0
     for spc_a, spc_b in it.combinations(uniq_spc_lst_lst[best_combo_idx], 2):
-        if automol.inchi.are_enantiomers(spc_a, spc_b):
+        if automol.chi.are_enantiomers(spc_a, spc_b):
             print('Enantiomer pair:', spc_a, spc_b)
             enant_count += 1
     print('found {:g} enantiomers for this combo'.format(enant_count))
