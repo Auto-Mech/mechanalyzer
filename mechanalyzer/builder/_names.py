@@ -1,12 +1,13 @@
 """ Handles names for mechanisms
 """
 
+import copy
 import ioformat
 import automol.inchi
 import automol.geom
 import automol.graph
+from automol.graph import FunctionalGroup
 import automol.formula
-import mechanalyzer.parser.spc
 
 
 # Name remaping function
@@ -14,6 +15,29 @@ def remap_mechanism_names(mech_spc_dct, rxn_param_dct, map_dct):
     """ Change all of the names in a spc_dct and rxn_param_dct
         according to the provided dictionary
     """
+    def remap_single_rxn(rxn, map_dct):
+        """ Remaps names for a single reaction
+        """
+        rcts, prds, thrd = rxn
+        re_rcts = remap_rcts_or_prds(rcts, map_dct)
+        re_prds = remap_rcts_or_prds(prds, map_dct)
+
+        return (re_rcts, re_prds, thrd)
+
+    def remap_rcts_or_prds(spcs, map_dct):
+        """ Remaps names for a single set of species (rcts or prds)
+        """
+        re_spcs = []
+        for spc in spcs:
+            # Remap species name if in map_dct
+            if map_dct.get(spc) is not None:
+                re_spcs.append(map_dct.get(spc))
+            # If species not in map dct, don't remap
+            else:
+                re_spcs.append(spc)
+        re_spcs = tuple(re_spcs)
+
+        return re_spcs
 
     # Fill the map dict if any names are missing
     for name in mech_spc_dct:
@@ -28,19 +52,77 @@ def remap_mechanism_names(mech_spc_dct, rxn_param_dct, map_dct):
     # Alter the names of the reactions
     re_rxn_param_dct = {}
     for rxn, params in rxn_param_dct.items():
-        rcts, prds, thrd = rxn[0], rxn[1], rxn[2]
-        re_rxn = (
-            tuple(map_dct[rct] for rct in rcts),
-            tuple(map_dct[prd] for prd in prds),
-            thrd
-        )
+        #        rcts, prds, thrd = rxn
+        #        re_rxn = (
+        #            tuple(map_dct[rct] for rct in rcts),
+        #            tuple(map_dct[prd] for prd in prds),
+        #            thrd
+        #        )
+        re_rxn = remap_single_rxn(rxn, map_dct)
         re_rxn_param_dct[re_rxn] = params
 
     return re_mech_spc_dct, re_rxn_param_dct
 
 
+# FUNCTIONAL NAME MAPPING
 # Build various dictionaries
-def functional_group_name_dct(mech_spc_dct, rename_rule_dct):
+DEFAULT_FGRP_RENAME_RULE_DCT = {
+    # Three Functional Groups
+    'ADHY': (FunctionalGroup.ALKENE,
+             FunctionalGroup.HYDROPEROXY,
+             FunctionalGroup.HYDROPEROXY),
+    'AAOH': (FunctionalGroup.ALCOHOL,
+             FunctionalGroup.ALKENE,
+             FunctionalGroup.ALKOXY),
+    'AAK': (FunctionalGroup.ALCOHOL,
+            FunctionalGroup.ALKENE,
+            FunctionalGroup.KETONE),
+    'EDHY': (FunctionalGroup.CYCLIC_ETHER,
+             FunctionalGroup.HYDROPEROXY,
+             FunctionalGroup.HYDROPEROXY),
+    'PDHY': (FunctionalGroup.HYDROPEROXY,
+             FunctionalGroup.HYDROPEROXY,
+             FunctionalGroup.PEROXY),
+    'THY': (FunctionalGroup.HYDROPEROXY,
+            FunctionalGroup.HYDROPEROXY,
+            FunctionalGroup.HYDROPEROXY),
+    # Two Functional Groups
+    'ADOH': (FunctionalGroup.ALCOHOL, FunctionalGroup.ALDEHYDE),
+    'ALOH': (FunctionalGroup.ALCOHOL, FunctionalGroup.ALKENE),
+    'KEOH': (FunctionalGroup.ALCOHOL, FunctionalGroup.KETONE),
+    'DALD': (FunctionalGroup.ALDEHYDE, FunctionalGroup.ALDEHYDE),
+    'ALAD': (FunctionalGroup.ALDEHYDE, FunctionalGroup.ALKENE),
+    'AKOX': (FunctionalGroup.ALDEHYDE, FunctionalGroup.ALKOXY),
+    'AHP': (FunctionalGroup.ALDEHYDE, FunctionalGroup.HYDROPEROXY),
+    'KALD': (FunctionalGroup.ALDEHYDE, FunctionalGroup.KETONE),
+    'ANHY': (FunctionalGroup.ALKENE, FunctionalGroup.HYDROPEROXY),
+    'ALOX': (FunctionalGroup.ALKENE, FunctionalGroup.ALKOXY),
+    'ALKE': (FunctionalGroup.ALKENE, FunctionalGroup.KETONE),
+    'KKOX': (FunctionalGroup.ALKOXY, FunctionalGroup.KETONE),
+    'CEHY': (FunctionalGroup.CYCLIC_ETHER, FunctionalGroup.HYDROPEROXY),
+    'DHY': (FunctionalGroup.HYDROPEROXY, FunctionalGroup.HYDROPEROXY),
+    'KHP': (FunctionalGroup.HYDROPEROXY, FunctionalGroup.KETONE),
+    'OOHY': (FunctionalGroup.HYDROPEROXY, FunctionalGroup.PEROXY),
+    'DKET': (FunctionalGroup.KETONE, FunctionalGroup.KETONE),
+    # One Functional Group
+    'ALD': (FunctionalGroup.ALDEHYDE,),
+    'ALK': (FunctionalGroup.ALKENE,),
+    'CETH': (FunctionalGroup.CYCLIC_ETHER,),
+    'QOOH': (FunctionalGroup.HYDROPEROXY,),
+    'KET': (FunctionalGroup.KETONE,),
+    'RO2': (FunctionalGroup.PEROXY,),
+}
+
+# Functional groups to ignore when considering the naming scheme
+IGNORE_FGRPS = ('methyl',)
+
+# Dictionary to remap names to more common ones
+NAME_EXCEPTION_DCT = {
+    'HO': 'OH'
+}
+
+
+def functional_group_name_dct(mech_spc_dct, rename_rule_dct=None):
     """ Build a dictionary to map the names of a mechanism according
         to its functional groups and number of carbon atoms.
 
@@ -64,15 +146,37 @@ def functional_group_name_dct(mech_spc_dct, rename_rule_dct):
         :param rename_rule_dct: assigns string name to set of func. groups
         :type rename_rule_dct: dct[frozenset(grp1, grp2): str]
     """
+    fgrp_map_dct = {}
+    for name, dct in mech_spc_dct.items():
+        fgrp_map_dct[name] = functional_group_name(
+            dct['inchi'], name=name, rename_rule_dct=rename_rule_dct)
+    return fgrp_map_dct
+
+
+def functional_group_name(ich, name='', rename_rule_dct=None):
+    """ Assign the functional group name
+    """
 
     def _conn_string(ich):
         """ Get the connectivity string
         """
-        conn_string = automol.inchi.connectivity(
-            ich, parse_connection_layer=True, parse_h_layer=True)
-        return ioformat.hash_string(conn_string, 3, remove_char_lst=('-', '_'))
+        # OLD SCHEME
+        # conn_string = automol.inchi.connectivity(
+        #     ich, parse_connection_layer=True, parse_h_layer=True)
+        # return ioformat.hash_string(
+        #   conn_string, 3, remove_char_lst=('-', '_'))
 
-    def _fgrp_name_string(fgrp_cnt_dct, rule_dct, name):
+        # NEW SCHEME
+        c_conn_str = automol.inchi.connectivity(
+            ich, parse_connection_layer=True, parse_h_layer=False)
+        h_conn_str = automol.inchi.connectivity(
+            ich, parse_connection_layer=False, parse_h_layer=True)
+        chash = ioformat.hash_string(c_conn_str, 3, remove_char_lst=('-', '_'))
+        hhash = ioformat.hash_string(h_conn_str, 3, remove_char_lst=('-', '_'))
+        lbl = chash + hhash
+        return lbl
+
+    def _fgrp_name_string(fgrp_cnt_dct, rule_dct):
         """ Determines what the new name for a species should
             be according the functional groups it has and the
             rule set by the user.
@@ -81,14 +185,15 @@ def functional_group_name_dct(mech_spc_dct, rename_rule_dct):
         """
 
         # Build a list of all present func groups, if multiple found
+        # ignore certain functional groups
         # put multiple iterations in that list
         # then sort it
         fgrps = []
         for fgrp, count in fgrp_cnt_dct.items():
-            for _ in range(count):
-                fgrps.append(fgrp)
+            if fgrp not in IGNORE_FGRPS:
+                for _ in range(count):
+                    fgrps.append(fgrp)
         fgrps = tuple(sorted(fgrps))
-        print(' - fgrps', fgrps)
 
         # Figure out which renaming rule to use
         if fgrps:
@@ -103,83 +208,229 @@ def functional_group_name_dct(mech_spc_dct, rename_rule_dct):
 
         return _name
 
-    # Build a sorted rule dictionary to be used later
+    # Rebuild the rename rule dct so that the functional group list is sorted
+    # This is required to do the matching later
+    if rename_rule_dct is None:
+        rename_rule_dct = copy.deepcopy(DEFAULT_FGRP_RENAME_RULE_DCT)
     rename_rule_dct = {fgrp_name: tuple(sorted(list(fgrp_lst)))
                        for fgrp_name, fgrp_lst in rename_rule_dct.items()}
 
-    # Asses functional groups and radicals to build names
-    fgrp_map_dct = {}
-    count_dct = {}  # For adding numbers
-    for name, dct in mech_spc_dct.items():
-        # Initialize re_name to None in case we don't wish to establish a rule
-        re_name = None
-        print('inp', name)
-        print(' - ich', dct['inchi'])
-        if 'cbh' not in name:
+    # Get the ich, geom, and gra and other info used for getting name
+    geo = automol.inchi.geometry(ich)
+    gra = automol.inchi.graph(ich)
 
-            # Grab SPC inchi to use to get other info
-            _ich = dct['inchi']
+    # Get the number of atoms and functional groups
+    c_cnt = automol.geom.atom_count(geo, 'C', match=True)
+    fgrp_cnt_dct = automol.graph.functional_group_count_dct(gra)
 
-            # Get the number of atoms
-            geo = automol.inchi.geometry(_ich)
-            c_cnt = automol.geom.atom_count(geo, 'C', match=True)
+    # If certain conditions met, determine a new name
+    if (
+        'cbh' not in name and
+        c_cnt > 2 and
+        fgrp_cnt_dct
+    ):
+        # OLD SCHEME
+        # # Get the labels
+        # conn_lbl = _conn_string(ich)
+        # ste_lbl = stereo_name_suffix(ich)
+        # fgrp_lbl = _fgrp_name_string(fgrp_cnt_dct, rename_rule_dct)
 
-            # Set the name based on the counts and functional groups
-            # Do the formula
-            if c_cnt > 2:
+        # # Build the names string
+        # re_name = f'C{c_cnt}'
+        # re_name += f'-{conn_lbl}'
+        # if ste_lbl:
+        #     re_name += f'{ste_lbl}'
+        # re_name += f'-{fgrp_lbl}'
 
-                # Initialize string for new name
-                re_name = ''
-                re_name += f'C{c_cnt}'
-
-                # Get a hash of the connectivity layer
-                conn_lbl = _conn_string(_ich)
+        # NEW SCHEME
+        conn_lbl = _conn_string(ich)
+        ste_lbl = stereo_name_suffix(ich)
+        fgrp_lbl = _fgrp_name_string(fgrp_cnt_dct, rename_rule_dct)
+        # Build the names string
+        re_name = f'C{c_cnt}'
+        re_name += f'{fgrp_lbl}'
+        re_name += '-'
+        re_name += f'{conn_lbl}'
+        if ste_lbl:
+            re_name += f'{ste_lbl}'
+    else:
+        # Use input name or use formula
+        if name:
+            re_name = name
+        else:
+            re_name = automol.inchi.formula_string(ich)
+            if c_cnt > 1:
+                conn_lbl = _conn_string(ich)
                 re_name += f'-{conn_lbl}'
 
-                # Get the formula
-                # fml_str = automol.formula.string(automol.inchi.formula(_ich))
-                # re_name += f'{fml_str}'
+    # Put in name exception remapping
+    re_name = NAME_EXCEPTION_DCT.get(re_name, re_name)
 
-                # Get the radical sites and functional groups func groups
-                gra = automol.inchi.graph(_ich)
-
-                # rad_sites = automol.graph.radicals_of_type(gra, 'C')
-                # if rad_sites:
-                #     rad_lbl = '-'.join((f'{site+1}R' for site in rad_sites))
-                #     re_name += f'-{rad_lbl}'
-
-                # Generate a stereo label
-                ste_lbl = mechanalyzer.parser.spc.stereo_name_suffix(_ich)
-                if ste_lbl:
-                    re_name += f'{ste_lbl}'
-
-                # Build a list of all present func groups, if multiple found
-                # put multiple iterations in that list
-                fgrp_cnt_dct = automol.graph.functional_group_count_dct(gra)
-                _fgrp_lbl = _fgrp_name_string(
-                    fgrp_cnt_dct, rename_rule_dct, name)
-                if _fgrp_lbl:
-                    re_name += f'-{_fgrp_lbl}'
-
-        # Fill the dictionary, increasing the count as needed
-        if re_name is not None:
-            if re_name in count_dct:
-                count_dct[re_name] += 1
-                fgrp_map_dct[name] = re_name + f'({count_dct[re_name]})'
-            else:
-                count_dct[re_name] = 1
-                # fgrp_map_dct[name] = re_name + '(1)'
-                fgrp_map_dct[name] = re_name
-            print('out', fgrp_map_dct[name])
-        else:
-            print('out', name)
-        print()
-
-    return fgrp_map_dct
+    return re_name
 
 
-def formula_name_dct():
+# FORMULA NAME MAPPING
+def formula_name_dct(spc_dct):
     """ Build a name mapping dictionary that maps according to
         the stoichiometry of the species
     """
-    return NotImplementedError
+
+    # Generate the bookkeeping dictionaries to assign names
+    fml_cnt_dct = formula_count_dct(spc_dct)
+    _ich_name_dct = ich_name_dct(spc_dct)
+
+    # Generate unique name from stoichiometry if species not present
+    map_dct = {}
+    for name, dct in spc_dct.items():
+        _ich = dct['ich']
+        if _ich not in _ich_name_dct:
+            re_name, fml_cnt_dct = formula_name(_ich, fml_cnt_dct, spc_dct)
+            map_dct[name] = re_name
+
+    return map_dct
+
+
+def formula_count_dct(spc_dct):
+    """ get the spc_fml dct
+
+        Loop over the spc dct, obtain the formula
+        and use it to build a count of each formula
+        in the dictionary
+    """
+
+    fml_count_dct = {}
+    for dct in spc_dct.values():
+        _, fml_count_dct = formula_name(
+            dct['inchi'], fml_count_dct, spc_dct)
+
+    return fml_count_dct
+
+
+def formula_name(ich, fml_cnt_dct, spc_dct):
+    """ Generate a unique name for a species with the
+        given formula that corresponds to
+
+        formula(N) where formula is the string N
+        is the Nth iteration of said formula in the
+        dictionary.
+
+        Also, updates the overall formula dictionary
+        which contains a count of how many times the
+        formula appears in some mechanism.
+    """
+
+    fml_str = automol.inchi.formula_string(ich)
+
+    if fml_str in fml_cnt_dct:
+
+        fml_cnt_dct[fml_str] += 1
+
+        fml_cnt = fml_cnt_dct[fml_str]
+        name = fml_str + f'({fml_cnt})'
+
+        name += f'({fml_cnt})'
+
+        # If the number is in the dictionary, increase by one
+        # happen when you have A(5), A(6), A(9)...A(7) miss throws off count
+        while name in spc_dct:
+            fml_cnt += 1
+            name = fml_str + f'({fml_cnt})'
+    else:
+        fml_cnt_dct[fml_str] = 1
+        name = fml_str
+
+    return name, fml_cnt_dct
+
+
+# Other helper functions
+def rxn_ich_to_name(rxn, spc_dct):
+    """ Set a reaction described by inchis to one where it is
+        described by mechanism names
+    """
+
+    _ich_name_dct = ich_name_dct(spc_dct)
+    return (
+        tuple(_ich_name_dct[rgt] for rgt in rxn[0]),
+        tuple(_ich_name_dct[rgt] for rgt in rxn[1]),
+        rxn[2]
+    )
+
+
+def rxn_name_str(rxn, newline=False):
+    """ get a reaction name string
+    """
+    if newline:
+        rstr = ' =\n       '.join((' + '.join(rxn[0]), ' + '.join(rxn[1])))
+    else:
+        rstr = ' = '.join((' + '.join(rxn[0]), ' + '.join(rxn[1])))
+    return rstr
+
+
+def ich_name_dct(spc_dct):
+    """ get dct[ich] = name
+    """
+    return {dct['inchi']: name for name, dct in spc_dct.items()}
+
+
+def stereo_name_suffix(ich):
+    """ Parse the stereo from the InChI and write a string describing the
+        stereo that is present.
+    """
+
+    ste_str = ''
+
+    # Read the stereo chemistry from the InChI string
+    ste_slyrs = automol.inchi.stereo_sublayers(ich)
+
+    tlyr = ste_slyrs.get('t')
+    blyr = ste_slyrs.get('b')
+    mlyr = ste_slyrs.get('m')
+
+    # Write name strings that describe the E/Z stereochemistry
+    if blyr is not None:
+        # Determine if it is E or Z
+        if '+' in blyr and '-' in blyr:
+            _blyr = 'E'
+        else:
+            _blyr = 'Z'
+        ste_str += _blyr
+
+    # Write name strings that describe the R/S stereochemistry
+    if tlyr is not None:
+        # (1) Replace: +=A -=B
+        # _tlyr = tlyr.replace('+', 'A').replace('-', 'B')
+        # _tlyr = _tlyr.replace(',', '')
+        # ste_str += _tlyr
+        # (2) Replace +=A -=B, remove the numbers
+        # Loop over characters of tetrahedral layer adding A/B from +/-
+        for char in tlyr:
+            if char == '-':
+                ste_str += 'A'
+            elif char == '+':
+                ste_str += 'B'
+
+        # Write additional label to describe enantiomer if needed
+        if 'm' in ste_slyrs:
+            # ste_str += '_' + mlyr
+            ste_str += mlyr
+
+    return ste_str
+
+
+def remove_stereo_name_suffix(name):
+    """ Removes a stereo suffix from a name
+
+        Assumes name has the format:
+        <CCNT><FGRP>-<CLYR><HLYR><STE>
+    """
+
+    if '-' in name:
+        part1, part2 = name.split('-')
+        # remove chars past the 6th char since clyr and hlyr are 3-char hash
+        if len(part2) > 6:
+            part2 = part2[:6]
+        _name = '-'.join((part1, part2))
+    else:
+        _name = name
+
+    return _name

@@ -79,7 +79,6 @@ def csv_headers(spc_dct):
     headers = tuple(set(headers))
 
     # Sort the headers by the standard list
-    print('headers', headers)
     headers = automol.util.sort_by_list(
         headers, STD_HEADERS, include_missing=False)
 
@@ -215,6 +214,41 @@ def add_heat_of_formation_basis(spc_dct,
     return spc_dct
 
 
+def add_instability_products(mech_spc_dct, nprocs='auto', stereo=True):
+    """ Add species related to the instability products
+    """
+
+    print('Finding unstable molecules:')
+    all_instab_ichs = ()
+    for name, dct in mech_spc_dct.items():
+        ich = dct['inchi']
+        instab_ichs = automol.reac.instability_product_inchis(
+            ich, stereo=stereo)
+        if instab_ichs is not None:
+            print(f'Found instability for {name} = {ich}')
+            print(f'- {instab_ichs}')
+            all_instab_ichs += instab_ichs
+
+    if all_instab_ichs:
+
+        print('Adding unstablie species to species dictionary')
+
+        all_instab_ichs = tuple(set(all_instab_ichs))
+
+        _name_ich_dct = name_inchi_dct(mech_spc_dct)
+        _ich_name_dct = {ich: name for name, ich in _name_ich_dct.items()}
+        for ich in all_instab_ichs:
+            _name = _ich_name_dct.get(ich)
+            if _name is None:
+                _name = f'instab_{automol.inchi.smiles(ich)}'
+                mech_spc_dct[_name] = thermfit.create_spec(ich)
+                print(f'{_name} = {ich} being added to species dictonary')
+            else:
+                print(f'{_name} = {ich} already in species dictonary')
+
+    return mech_spc_dct
+
+
 def stereochemical_spc_dct(spc_dct, nprocs='auto', all_stereo=False):
     """ read the species file in a .csv format and write a new one
         that has stero information
@@ -274,7 +308,6 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
         # print('expand_stereo inchi test:', automol.inchi.expand_stereo(ich))
         try:
             if not automol.inchi.is_complete(ich):
-                print('testing stereo if block:')
                 ret_ichs = (
                     [automol.inchi.add_stereo(ich)] if not all_stereo else
                     automol.inchi.expand_stereo(ich))
@@ -337,106 +370,6 @@ def name_inchi_dct(spc_dct):
             ich_dct[key] = spc_dct[key]['inchi']
 
     return ich_dct
-
-
-def formula_count_dct(spc_dct):
-    """ get the spc_fml dct
-
-        Loop over the spc dct, obtain the formula
-        and use it to build a count of each formula
-        in the dictionary
-    """
-
-    fml_count_dct = {}
-    for dct in spc_dct.values():
-        fml_str = automol.inchi.formula_string(dct['inchi'])
-        _, fml_count_dct = assign_unique_name(
-            fml_str, fml_count_dct, spc_dct)
-
-    return fml_count_dct
-
-
-def assign_unique_name(fml_str, fml_count_dct, spc_dct):
-    """ Generate a unique name for a species with the
-        given formula that corresponds to
-
-        formula(N) where formula is the string N
-        is the Nth iteration of said formula in the
-        dictionary.
-
-        Also, updates the overall formula dictionary
-        which contains a count of how many times the
-        formula appears in some mechanism.
-    """
-
-    if fml_str in fml_count_dct:
-
-        fml_count_dct[fml_str] += 1
-
-        fml_count = fml_count_dct[fml_str]
-        name = fml_str + f'({fml_count})'
-
-        # if stereo:
-        #     ste_str = stereo_name_suffix(ich)
-        # else:
-        #     ste_str = ''
-
-        name += f'({fml_count})'
-
-        # If the number is in the dictionary, increase by one
-        # happen when you have A(5), A(6), A(9)...A(7) miss throws off count
-        while name in spc_dct:
-            fml_count += 1
-            name = fml_str + f'({fml_count})'
-    else:
-        fml_count_dct[fml_str] = 1
-        name = fml_str
-
-    return name, fml_count_dct
-
-
-def stereo_name_suffix(ich):
-    """ Parse the stereo from the InChI and write a string describing the
-        stereo that is present.
-    """
-
-    ste_str = ''
-
-    # Read the stereo chemistry from the InChI string
-    ste_slyrs = automol.inchi.stereo_sublayers(ich)
-
-    tlyr = ste_slyrs.get('t')
-    blyr = ste_slyrs.get('b')
-    mlyr = ste_slyrs.get('m')
-
-    # Write name strings that describe the E/Z stereochemistry
-    if blyr is not None:
-        # Determine if it is E or Z
-        if '+' in blyr and '-' in blyr:
-            _blyr = 'E'
-        else:
-            _blyr = 'Z'
-        ste_str += _blyr
-
-    # Write name strings that describe the R/S stereochemistry
-    if tlyr is not None:
-        # (1) Replace: +=A -=B
-        # _tlyr = tlyr.replace('+', 'A').replace('-', 'B')
-        # _tlyr = _tlyr.replace(',', '')
-        # ste_str += _tlyr
-        # (2) Replace +=A -=B, remove the numbers
-        plus_cnt, minus_cnt = tlyr.count('+'), tlyr.count('-')
-        for _ in range(plus_cnt):
-            ste_str += 'A'
-        for _ in range(minus_cnt):
-            ste_str += 'B'
-
-        # Write additional label to describe enantiomer if needed
-        if 'm' in ste_slyrs:
-            # ste_str += '_' + mlyr
-            ste_str += mlyr
-
-    return ste_str
 
 
 # add functions like adding the hashkey

@@ -1,8 +1,8 @@
 """ Runs the sorter
 """
-
 from mechanalyzer.parser import mech as mparser
 from mechanalyzer.parser import spc as sparser
+from mechanalyzer.parser import new_spc as new_sparser
 from mechanalyzer.builder import sort_fct
 
 
@@ -15,32 +15,35 @@ def sorted_pes_dct(spc_str, mech_str, isolate_spc, sort_lst):
     """ Function that extracts sorted subpes for a mech
     """
 
-    srt_mch, _, _, _ = _sort_objs(spc_str, mech_str, sort_lst, isolate_spc)
+    srt_mch, _, _ = _sort_objs(spc_str, mech_str, sort_lst, isolate_spc)
 
     return srt_mch.return_pes_dct()
 
 
-def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst):
+def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, thresh_flt_groups=30.):
     """ Function that conducts the sorting process for all of the above tests
     """
 
     # Build mech information
-    srt_mch, rxn_param_dct, spc_dct_ord, elems = _sort_objs(
+    srt_mch, rxn_param_dct, spc_dct_ord = _sort_objs(
         spc_str, mech_str, sort_lst, isolate_spc)
 
     sorted_idx, cmts_dct, spc_dct_ord = srt_mch.return_mech_df()
     rxn_param_dct_sort = reordered_mech(rxn_param_dct, sorted_idx)
 
-    # If isolated species provided, save remaining reactions in another file
-    # if isolate_species:
-    #     rxn_param_dct_rest = filter_keys(
-    #         rxn_param_dct, rxn_param_dct_sorted)
-    #     mech_rest_str = write_chemkin_file(
-    #         elem_tuple=elems, spc_dct=spc_dct_full,
-    #         rxn_param_dct=rxn_param_dct_rest)
-    rxn_param_dct_rest = {}
-
-    return rxn_param_dct_sort, rxn_param_dct_rest, spc_dct_ord, cmts_dct, elems
+    pes_groups = None
+    rxns_filter = None
+    # if prompt groups detected: retrieve grps info
+    if 'submech_prompt' in sort_lst and spc_therm_dct and thresh_flt_groups:
+        srt_mch.filter_groups_prompt(
+            spc_therm_dct, threshold=thresh_flt_groups)
+        pes_groups = srt_mch.grps
+        rxns_filter = srt_mch.rxns_dh
+    
+    elif 'submech_prompt' in sort_lst and not spc_therm_dct:
+        pes_groups = srt_mch.grps
+        
+    return rxn_param_dct_sort, spc_dct_ord, cmts_dct, pes_groups, rxns_filter
 
 
 def _sort_objs(spc_str, mech_str, sort_lst, isolate_spc):
@@ -48,23 +51,26 @@ def _sort_objs(spc_str, mech_str, sort_lst, isolate_spc):
     """
 
     # Build mech information
-    spc_dct = sparser.build_spc_dct(spc_str, SPC_TYPE)
-    rxn_param_dct, mech_info, elems = mparser.parse_mechanism(
-        mech_str, MECH_TYPE, spc_dct)
+    # spc_dct = sparser.build_spc_dct(spc_str, SPC_TYPE)
+
+    spc_dct = new_sparser.parse_mech_spc_dct(
+        spc_str, chk_ste=False, chk_match=False, verbose=False, add_ste=True)
+    rxn_param_dct = mparser.parse_mechanism(
+        mech_str, MECH_TYPE)
 
     # Build the sorted mechanism and species objects
-    srt_mch = sorting(mech_info, spc_dct, sort_lst, isolate_spc)
+    srt_mch = sorting(rxn_param_dct, spc_dct, sort_lst, isolate_spc)
     spc_dct_ord = sparser.reorder_by_atomcount(spc_dct)
 
-    return srt_mch, rxn_param_dct, spc_dct_ord, elems
+    return srt_mch, rxn_param_dct, spc_dct_ord
 
 
 # Functions that perform the individual sorting process
-def sorting(mech_info, spc_dct, sort_lst, isolate_species):
+def sorting(rxn_param_dct, spc_dct, sort_lst, isolate_species):
     """ Uses the SortMech class to sort mechanism info and
         returns the sorted indices and the corresponding comments.
 
-    :param mech_info: formulas, reaction names
+    :param rxn_param_dct: reaction parameter dictionary
     :param spc_dct: species dictionary
     :param sort_lst: list with sorting criteria
     :param isolate_species: species you want to isolate in the final mechanism
@@ -74,7 +80,7 @@ def sorting(mech_info, spc_dct, sort_lst, isolate_species):
     returns the rxn indices associated with the comments about sorting
     """
 
-    srt_mch = sort_fct.SortMech(mech_info, spc_dct)
+    srt_mch = sort_fct.SortMech(rxn_param_dct, spc_dct)
     srt_mch.sort(sort_lst, isolate_species)
 
     return srt_mch

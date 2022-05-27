@@ -223,6 +223,25 @@ def get_duplicates(rxn_param_dct):
 
     duplicate_rxns = {}
     for rxn, params in rxn_param_dct.items():
+        
+        if len(params) > 2:
+            duplicate_rxns[rxn] = len(params)
+
+    return duplicate_rxns
+
+
+def get_duplicates_old(rxn_param_dct):
+    """ Get reactions that have more than 2 rate expressions
+
+        :param rxn_param_dct: rate constant parameters for a mechanism
+        :type rxn_param_dct: dct
+            {rxn1: (param_tuple1, param_tuple2, ...), rxn2: ...}
+        :return duplicate_rxns: duplicate reactions and number of expressions
+        :rtype: dct {rxn1: num_of_expressions1, rxn2: ...}
+    """
+
+    duplicate_rxns = {}
+    for rxn, params in rxn_param_dct.items():
         if len(params) > 2:
             duplicate_rxns[rxn] = len(params)
 

@@ -7,7 +7,7 @@ import numpy
 from mechanalyzer.calculator import compare
 import mechanalyzer.plotter.thermo as plot_thermo
 import mechanalyzer.plotter._util as util
-import mechanalyzer.parser.spc as spc_parser
+import mechanalyzer.parser.new_spc as spc_parser
 import mechanalyzer.parser.ckin_ as ckin_parser
 
 # INPUTS
@@ -16,18 +16,17 @@ THERMO_FILENAMES = [
     # 'NUIGMech1.2.Therm.DAT',
     # 'b2t_hr_nohb_1-19.ckin',
     # 'RO4_tzf.ckin',
-    'C3H8QM1.DAT',
-    'C3H8QM2.DAT',
-    'C3H8QM3.DAT',
+    'all_therm.ckin_0',
+    'b2t_hr_nohb_1-19.ckin'
     # 'C3H8NGA.DAT',
     # 'glarborg.therm',
     # 'stagni.therm',
     # 'alturaifi.therm',
 ]
 SPC_CSV_FILENAMES = [
-    'NUIG_species.csv',
-    'NUIG_species.csv',
-    'NUIG_species.csv',
+    'species.csv',
+    'species.csv',
+    #'species.csv',
     # 'NUIG_species.csv',
     # 'NUIG_species.csv',
     # 'nh3_species.csv',
@@ -36,15 +35,15 @@ SPC_CSV_FILENAMES = [
 ]
 MECH_NAMES = [
     # 'NUIG',
-    'QM1',
-    'QM2',
-    'QM3',
+    'old',
+    'new',
+    #'QM3',
     # 'NGA',
     # 'Glarborg',
     # 'Stagni',
     # 'Alturaifi',
 ]
-OUTPUT_FILENAME = 'C3-C5_compare.pdf'
+OUTPUT_FILENAME = 'C3_compare.pdf'
 # OUTPUT_FILENAME = 'compare_thermo.pdf'
 
 # Conditions
@@ -74,7 +73,7 @@ elif len(sys.argv) == 1:
     print(f'No job path input; using the current directory, {JOB_PATH}')
 SPC_THERM_DCTS = ckin_parser.load_spc_therm_dcts(THERMO_FILENAMES, JOB_PATH,
                                                  TEMPS)
-SPC_DCTS = spc_parser.load_spc_dcts(SPC_CSV_FILENAMES, JOB_PATH)
+SPC_DCTS = spc_parser.load_mech_spc_dcts(SPC_CSV_FILENAMES, JOB_PATH)
 
 # Get the algn_spc_therm_dct
 ALGN_SPC_THERM_DCT = compare.get_algn_spc_therm_dct(
@@ -82,7 +81,7 @@ ALGN_SPC_THERM_DCT = compare.get_algn_spc_therm_dct(
     write_file=WRITE_FILE)
 
 # Get the combined spc_dct (used for including SMILES and InChis)
-COMB_SPC_DCT = compare.get_mult_comb_spc_dct(SPC_DCTS)
+COMB_SPC_DCT = compare.get_mult_comb_mech_spc_dct(SPC_DCTS)
 
 # Run the plotter
 FIGS = plot_thermo.build_plots(

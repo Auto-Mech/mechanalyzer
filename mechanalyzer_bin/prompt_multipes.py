@@ -12,6 +12,9 @@ import chemkin_io
 import mechanalyzer
 import ratefit
 
+PEDFLD = ['',] # equivalent to prompt.py but accepts multiple folder inputs for PED and HOTsp
+               #returns a single ktp dct merging everything
+HOTFLD = ['',] # '' is here
 # Parse the command line into an options dictionary
 DESC = ('Generate Rate Constants including Prompt Dissociation Effects\n'
         'To Run: python prompt.py')
@@ -19,7 +22,7 @@ PAR = argparse.ArgumentParser(description=DESC)
 PAR.add_argument('-iped', '--pedinput', default='me_ktp_ped.inp',
                  help='MESS input name (me_ktp_ped.inp)')
 PAR.add_argument('-oped', '--pedoutput', default='me_ktp_ped.out',
-                 help='MESS ouput name (rate_ped.out)')
+                 help='MESS ouput name (me_ktp_ped.out)')
 PAR.add_argument('-opedmicro', '--pedoutputmicro', default='ke_ped.out',
                  help='MESS microcanonical output name (ke_ped.out)')
 PAR.add_argument('-ihot', '--hotinput', default='me_ktp_hoten.inp',
@@ -40,53 +43,48 @@ OPTS = vars(PAR.parse_args())
 # Set path to current directory where MESS files exist
 CWD = os.getcwd()
 
+list_strs_dct = []
 # Read the input and output files for MESS calculation of 1st PES
 # Here Product Energy Distributions are calculated
-me_ped_inp = pathtools.read_file(CWD, OPTS['pedinput'])
-me_ped_out = pathtools.read_file(CWD, OPTS['pedoutput'])
-ke_ped_out = pathtools.read_file(CWD, OPTS['pedoutputmicro'])
+for FLD in PEDFLD:
+        flddct = dict.fromkeys(['inp','ktp_out','ke_out','ped','log'])
+        FLDPATH = os.path.join(CWD, FLD)
+        me_ped_inp = pathtools.read_file(FLDPATH, OPTS['pedinput'])
+        me_ped_inp = remove_comment_lines(me_ped_inp, delim_pattern=app.escape('!'))
+        me_ped_inp = remove_comment_lines(me_ped_inp, delim_pattern=app.escape('#'))
+        flddct['inp']  = me_ped_inp 
+        flddct['ktp_out']  = pathtools.read_file(FLDPATH, OPTS['pedoutput'])
+        flddct['ke_out']  = pathtools.read_file(FLDPATH, OPTS['pedoutputmicro'])
+        _, pedoutput = mess_io.reader.ped.ped_names(me_ped_inp)
+        flddct['ped'] = pathtools.read_file(FLDPATH, pedoutput)
+        list_strs_dct.append(flddct)
 
-_, pedoutput = mess_io.reader.ped.ped_names(me_ped_inp)
-pedoutput_str = pathtools.read_file(CWD, pedoutput)
-
-me_ped_inp = remove_comment_lines(me_ped_inp, delim_pattern=app.escape('!'))
-me_ped_inp = remove_comment_lines(me_ped_inp, delim_pattern=app.escape('#'))
-
-# Read the input and output files for MESS calculation of 2nd PES
-# Here HotEnergies are calculated
-hot_inp = pathtools.read_file(CWD, OPTS['hotinput'])
-hot_out = pathtools.read_file(CWD, OPTS['hotoutput'])
-hot_log = pathtools.read_file(CWD, OPTS['hotlog'])
-
-# Read the temperatures and presures to determine the rate constants at
-TEMPS, _ = mess_io.reader.rates.temperatures(me_ped_inp, mess_file='inp')
-PRESSURES, _ = mess_io.reader.rates.pressures(me_ped_inp, mess_file='inp')
-PRESSURES = PRESSURES[:-1]  # drop last element pressure in list ('high')
+for FLD in HOTFLD:
+        flddct = dict.fromkeys(['inp','ktp_out','ke_out','ped','log'])
+        FLDPATH = os.path.join(CWD, FLD)
+        # Read the input and output files for MESS calculation of 2nd PES
+        # Here HotEnergies are calculated
+        flddct['inp'] = pathtools.read_file(FLDPATH, OPTS['hotinput'])
+        flddct['ktp_out'] = pathtools.read_file(FLDPATH, OPTS['hotoutput'])
+        flddct['log'] = pathtools.read_file(FLDPATH, OPTS['hotlog'])
+        list_strs_dct.append(flddct)
 
 # Get a list of all the statistical energy distribution models
 MODELS = OPTS['model'].split(',')
-
-# for i, string in enumerate((me_ped_inp, me_ped_out,
-#                pedoutput_str, ke_ped_out,
-#                hot_inp, hot_out, hot_log)):
-#     if string is None:
-#         print(i)
-# import sys
-# sys.exit()
-
+MODELS = ['fne','equip_simple','equip_phi','beta_phi1a','beta_phi2a','beta_phi3a','rovib_dos']
+MODELS = ['thermal']
 # Generate CKIN files
 # This includes both the thermal and non-thermal reactions
-for model in MODELS:
-    # Read and calculate the rate constants into a rxn ktp dictionary
-    rxn_ktp_dct = mechanalyzer.calculator.prompt_dissociation_ktp_dct(
-        me_ped_inp, me_ped_out,
-        pedoutput_str, ke_ped_out,
-        hot_inp, hot_out, hot_log,
-        model, OPTS['bf_threshold'],
-        TEMPS, PRESSURES)
 
+# Read and calculate the rate constants into a rxn ktp dictionary
+rxn_ktp_dct_models = mechanalyzer.calculator.multipes_prompt_dissociation_ktp_dct(
+    list_strs_dct,
+    MODELS, OPTS['bf_threshold']
+    )
+
+for modeltype in MODELS:
     rxn_param_dct, rxn_err_dct = ratefit.fit.fit_rxn_ktp_dct(
-        rxn_ktp_dct,
+        rxn_ktp_dct_models[modeltype],
         OPTS['fit_method'],
         arrfit_dct={'dbltol': 300}
     )
@@ -98,4 +96,4 @@ for model in MODELS:
         rxn_param_dct=rxn_param_dct, rxn_cmts_dct=rxn_cmts_dct)
 
     # Write the fitted rate parameter file
-    pathtools.write_file(ckin_str, CWD, f'rates_LABEL_{model}.txt')
+    pathtools.write_file(ckin_str, CWD, f'rates_{modeltype}.txt')

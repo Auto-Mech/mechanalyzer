@@ -5,8 +5,11 @@
 import os
 import tempfile
 import numpy as np
+from ioformat import pathtools
+import chemkin_io.writer
 from mechanalyzer.builder import sorter
 from mechanalyzer.parser import mech as mparser
+from mechanalyzer.parser import ckin_ as ckin_parser
 from mechanalyzer.parser import spc as sparser
 
 # Set Paths to test/data directory and output directory
@@ -125,7 +128,7 @@ def test__sort_with_input():
     # Sort mechanism
     isolate_spc, sort_lst = mparser.parse_sort(sort_str)
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     index = 0
@@ -162,7 +165,7 @@ def test__readwrite_thirdbody():
     isolate_spc = []
     sort_lst = ['pes', 0]
 
-    param_dct_sort, _, _, _, _ = sorter.sorted_mech(
+    param_dct_sort, _, _, _, _= sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     # Just checking keys since this is what the sorting is according to
@@ -195,7 +198,7 @@ def test__sortby_mult():
     isolate_spc = []
     sort_lst = ['mult', 0]
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     for rxn in param_dct_sort.keys():
@@ -227,10 +230,10 @@ def test__sortby_molec_r1():
     # ONLY BY MOLEC- CHECK HEADERS WITH INT NUMBER
     sort_lst_2 = ['molecularity', 0]
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
-    param_dct_sort_2, _, _, cmts_dct_2, _ = sorter.sorted_mech(
+    param_dct_sort_2, _, cmts_dct_2, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst_2)
     # NO NEED TO CALL IT AFTERWARDS
 
@@ -241,7 +244,7 @@ def test__sortby_molec_r1():
     print('ok')
 
 
-def test_sortby_pes_dct():
+def test__sortby_pes_dct():
     """ test mechanalyzer.parser.sort
 
         sort by pes dct:
@@ -283,7 +286,7 @@ def test_sortby_pes_dct():
     print('ok')
 
 
-def test_sortby_rxnclass():
+def test__sortby_rxnclass():
     """ test mechanalyzer.parser.sort
 
         sort by reaction class:
@@ -336,7 +339,7 @@ def test_sortby_rxnclass():
 
     print('Sort by rxn class broad+graph test:')
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     sorted_results = []
@@ -382,7 +385,7 @@ def test__sortby_species_subpes():
 
     print('Sort by species subset + subpes test:')
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     sorted_results = []
@@ -446,7 +449,7 @@ def test__sortby_submech_subpes_chnl():
     isolate_spc = []
     sort_lst = ['subpes', 'chnl', 0]
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     print('Sort by submech-subpes-classbroad test:')
@@ -497,7 +500,6 @@ def test__sortby_submech_class():
          '  R_O2.3.2.Beta-scission +HO2'],
         [(('IC8OOH1-1AR', 'O2'), ('IC8OOH1-1AO2R',), (None,)),
          '  R_O2.5.1.Recombination O2'],
-
     ]
 
     # Read mechanism files into strings
@@ -511,7 +513,7 @@ def test__sortby_submech_class():
     isolate_spc = ['IC8']
     sort_lst = ['submech', 'subpes', 'rxn_class_broad', 0]
 
-    param_dct_sort, _, _, cmts_dct, _ = sorter.sorted_mech(
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
     print('Sort by submech-subpes-classbroad test:')
@@ -524,7 +526,180 @@ def test__sortby_submech_class():
     print('ok')
 
 
-def test_sort_ktp():
+def test__sortby_submech_ext():
+    """ test mechanalyzer.parser.sort
+
+        sort by fuel submechanism: extract reactions of
+        fuel, fuel radicals, R+O2, R+O4
+        and also the relative submech
+        then order by subpes and broad class
+    """
+    results = [
+        [(('C2H4',), ('H2', 'H2CC'), ('(+M)',)), 'FUEL.42.1'],
+        [(('CH2(S)', 'C2H4'), ('CC3H6',), (None,)), 'FUEL.76.1'],
+        [(('C2H4', 'CH3O'), ('C2H3', 'CH3OH'), (None,)), 'FUEL.85.7'],
+        [(('C3H5-A', 'C2H5'), ('C2H4', 'C3H6'), (None,)), 'FUEL.152.1'],
+        [(('C3H8', 'O2'), ('IC3H7', 'HO2'), (None,)), 'FUEL_ADD_CH3.94.1'],
+        [(('C2H5CHCO', 'OH'), ('NC3H7', 'CO2'), (None,)), 'FUEL_ADD_CH3.128.2'],
+        [(('C2H5', 'O2'), ('C2H4O1-2', 'OH'), (None,)), 'FUEL_ADD_H.57.1'],
+        [(('C4H71-1',), ('C2H5', 'C2H2'), (None,)), 'FUEL_ADD_H.111.1'],
+        [(('C2H3OH', 'H'), ('PC2H4OH',), (None,)), 'FUEL_ADD_O.50.1'],
+        [(('C2H3OH', 'HO2'), ('CH3CHO', 'HO2'), (None,)), 'FUEL_ADD_O.63.4'],
+        [(('C4H6', 'O'), ('C2H2', 'C2H4O1-2'), (None,)), 'FUEL_ADD_O.119.7'],
+        [(('CH3OCHO', 'O2'), ('CH2OCHO', 'HO2'), (None,)), 'FUEL_ADD_O2.67.1'],
+        [(('CH3', 'CH2O'), ('C2H5O',), (None,)), 'FUEL_ADD_OH.50.1'],
+        [(('C2H5OH', 'O2'), ('SC2H4OH', 'HO2'), (None,)), 'FUEL_ADD_OH.64.3'],
+        [(('CH3OCH3', 'CH3O2'), ('CH3OCH2', 'CH3O2H'), (None,)), 'FUEL_ADD_OH.100.5'],
+        [(('C2H3', 'CH3'), ('CH4', 'C2H2'), (None,)), 'FUEL_RAD.76.2'],
+        [(('C4H71-O',), ('C2H3', 'CH3CHO'), (None,)), 'FUEL_RAD.120.5'],
+        [(('C3H6', 'OH'), ('IC3H5OH', 'H'), (None,)), 'R_CH3.85.15'],
+        [(('C4H8-2', 'H'), ('C3H6', 'CH3'), (None,)), 'R_CH3.113.10'],
+        [(('C2H5CHCO', 'O'), ('C3H6', 'CO2'), (None,)), 'R_CH3.127.1'],
+        [(('SC2H2OH', 'O2'), ('CH2CO', 'HO2'), (None,)), 'R_O.61.8'],
+        [(('C2H3OO',), ('CH2CO', 'OH'), (None,)), 'R_O2.55.2'],
+        [(('O', 'O'), ('O2',), ('+M',)), 'SUBFUEL.5.1'],
+        [(('CH', 'H'), ('C', 'H2'), (None,)), 'SUBFUEL.14.1'],
+        [(('CH3O',), ('CH2O', 'H'), ('(+M)',)), 'SUBFUEL.20.2'],
+        [(('CH4', 'O'), ('CH3', 'OH'), (None,)), 'SUBFUEL.21.9'],
+        [(('CH2(S)', 'O2'), ('CO', 'H2O'), (None,)), 'SUBFUEL.25.3'],
+        [(('CH3', 'HO2'), ('CH3O', 'OH'), (None,)), 'SUBFUEL.27.3'],
+        [(('CH2O', 'HO2'), ('OCH2O2H',), (None,)), 'SUBFUEL.32.1'],
+        [(('CH3O2', 'H2O2'), ('CH3O2H', 'HO2'), (None,)), 'SUBFUEL.38.1'],
+        [(('C2H2', 'OH'), ('HCCOH', 'H'), (None,)), 'SUBFUEL.48.2'],
+        [(('CH2(S)', 'CO2'), ('CH2O', 'CO'), (None,)), 'SUBFUEL.54.2'],
+        [(('CH3O', 'CH3O'), ('CH3OH', 'CH2O'), (None,)), 'SUBFUEL.58.9'],
+        [(('C2H', 'CH3'), ('C3H4-P',), (None,)), 'SUBFUEL.74.1'],
+        [(('C3H2C', 'O2'), ('C2H2', 'CO2'), (None,)), 'SUBFUEL.88.1'],
+    ]
+    # Read mechanism files into strings
+    spc_path = os.path.join(CWD, 'data', 'heptane_cut_species.csv')
+    mech_path = os.path.join(CWD, 'data', 'heptane_cut_mech.txt')
+    sort_path = None
+
+    spc_str, mech_str, _ = _read_files(spc_path, mech_path, sort_path)
+
+    # Sort with headers for species subset
+    isolate_spc = ['C2H4']
+    sort_lst = ['submech_ext', 'subpes', 0]
+
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
+        spc_str, mech_str, isolate_spc, sort_lst)
+
+    print('Sort by submech_ext-subpes:')
+    sorted_results = []
+    for i, rxn in enumerate(param_dct_sort.keys()):
+        if i % 20 == 0:
+            sorted_results.append(
+                [rxn, cmts_dct[rxn]['cmts_inline'].split('subpes')[1].strip()])
+
+    assert results == sorted_results
+    print('ok')
+
+
+def test__sortby_submech_prompt():
+    """ test mechanalyzer.parser.sort
+
+        sort by prompt reactions identified
+        based on radical type
+    """
+    results = [
+        [(('C4H72-2',), ('C4H612', 'H'), (None,)), '111.1.1.RAD_DECO_C4H72-2'],
+        [(('C4H71-3',), ('C4H72-2',), (None,)), '111.1.6.unclassified'],
+        [(('C4H8-1', 'H'), ('C4H71-3', 'H2'), (None,)), '113.8.25.RAD_GEN_C4H71-3'],
+        [(('C4H8-1', 'O'), ('C4H71-3', 'OH'), (None,)), '121.5.11.RAD_GEN_C4H71-3'],
+        [(('C4H8-1', 'OH'), ('C4H71-4', 'H2O'), (None,)),
+         '122.22.39.RAD_GEN_C4H71-4'],
+        [(('C4H71-3', 'HO2'), ('C4H71-O', 'OH'), (None,)), '129.3.10.RAD_GEN_C4H71-3'],
+        [(('C4H71-3', 'HO2'), ('C4H72-1OOH',), (None,)), '129.4.18.unclassified'],
+        [(('C4H8-2', 'O2'), ('C4H72-2', 'HO2'), (None,)),
+         '129.16.35.RAD_GEN_C4H72-2'],
+        [(('C4H8-1', 'CH3'), ('C4H71-3', 'CH4'), (None,)), '153.6.6.RAD_GEN_C4H71-3'],
+        [(('C4H8-1', 'CH3O'), ('C4H71-3', 'CH3OH'),
+          (None,)), '161.5.5.RAD_GEN_C4H71-3'],
+        [(('C4H71-3', 'CH3O2'), ('C4H7O2-1', 'CH3O'),
+          (None,)), '166.2.5.RAD_GEN_C4H71-3'],
+        [(('C2H3', 'C4H71-3'), ('C2H4', 'C4H6'), (None,)), '183.3.3.RAD_GEN_C4H71-3'],
+        [(('C4H8-1', 'CH3CO3'), ('C4H71-3', 'CH3CO3H'),
+          (None,)), '196.4.4.RAD_GEN_C4H71-3'],
+        [(('C4H8-1', 'IC3H7O2'), ('C4H71-3', 'IC3H7O2H'),
+          (None,)), '213.3.3.RAD_GEN_C4H71-3'],
+        [(('IC4H9O2', 'C4H71-3'), ('IC4H9O', 'C4H71-O'),
+          (None,)), '230.1.1.RAD_GEN_C4H71-3'],
+        [(('IC4H9O2', 'C4H8-2'), ('IC4H9O2H', 'C4H71-3'),
+          (None,)), '231.2.2.RAD_GEN_C4H71-3'],
+        [(('TC4H9O2', 'C4H8-1'), ('TC4H9O2H', 'C4H71-3'),
+          (None,)), '231.10.10.RAD_GEN_C4H71-3']
+    ]
+    # Read mechanism files into strings
+    spc_path = os.path.join(CWD, 'data', 'heptane_cut_species.csv')
+    mech_path = os.path.join(CWD, 'data', 'heptane_cut_mech.txt')
+    sort_path = None
+
+    spc_str, mech_str, _ = _read_files(spc_path, mech_path, sort_path)
+
+    # Sort with headers for species subset
+    isolate_spc = ['C4H71-3', 'C4H71-4', 'C4H72-2']
+    sort_lst = ['submech_prompt', 0]
+
+    param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
+        spc_str, mech_str, isolate_spc, sort_lst)
+
+    print('Sort by submech_prompt:')
+    sorted_results = []
+
+    for i, rxn in enumerate(param_dct_sort.keys()):
+        if i % 5 == 0:
+            sorted_results.append(
+                [rxn, cmts_dct[rxn]['cmts_inline'].split('submech_prompt')[1].strip()])
+
+    assert results == sorted_results
+    print('ok')
+
+
+def test__filter_pesgroups():
+    """ test mechanalyzer.parser.sort
+
+        sort by fuel submechanism: extract reactions of
+        fuel, fuel radicals, R+O2, R+O4
+        and also the relative submech
+        then order by subpes and broad class
+    """
+    results = [
+        {'grp': 1, 'idxs': ['113:8', '113:9', '113:10', '111:1'], 'peds': [['C4H8-1+H=C4H71-3+H2'], [
+            'C4H8-1+H=C4H71-4+H2'], ['C4H8-2+H=C4H71-3+H2'], []], 'hot': [[], [], [], ['C4H71-3', 'C4H71-4']]},
+        {'grp': 2, 'idxs': ['121:5', '121:6', '111:1'], 'peds': [['C4H8-1+O=C4H71-3+OH'], [
+            'C4H8-1+O=C4H71-4+OH'], []], 'hot': [[], [], ['C4H71-3', 'C4H71-4']]},
+        {'grp': 3, 'idxs': ['122:21', '122:22', '122:23', '122:24', '111:1'], 'peds': [['C4H8-1+OH=C4H71-3+H2O'], ['C4H8-1+OH=C4H71-4+H2O'], [
+            'C4H8-2+OH=C4H71-3+H2O'], ['C4H8-2+OH=C4H72-2+H2O'], []], 'hot': [[], [], [], [], ['C4H71-3', 'C4H71-4', 'C4H72-2']]},
+        {'grp': 4, 'idxs': ['153:6', '153:7', '153:8', '153:9', '111:1'], 'peds': [['C4H8-1+CH3=C4H71-3+CH4'], ['C4H8-1+CH3=C4H71-4+CH4'], [
+            'C4H8-2+CH3=C4H71-3+CH4'], ['C4H8-2+CH3=C4H72-2+CH4'], []], 'hot': [[], [], [], [], ['C4H71-3', 'C4H71-4', 'C4H72-2']]},
+        {'grp': 5, 'idxs': ['161:5', '161:6', '161:7', '111:1'], 'peds': [['C4H8-1+CH3O=C4H71-3+CH3OH'], [
+            'C4H8-1+CH3O=C4H71-4+CH3OH'], ['C4H8-2+CH3O=C4H71-3+CH3OH'], []], 'hot': [[], [], [], ['C4H71-3', 'C4H71-4']]},
+    ]
+
+    # Read mechanism files into strings
+    spc_path = os.path.join(CWD, 'data', 'heptane_cut_species.csv')
+    mech_path = os.path.join(CWD, 'data', 'heptane_cut_mech.txt')
+    sort_path = None
+
+    spc_str, mech_str, _ = _read_files(spc_path, mech_path, sort_path)
+    therm_str = pathtools.read_file(os.path.join(CWD, 'data'), 'therm.dat')
+    spc_therm_dct = ckin_parser.parse_spc_therm_dct(therm_str, [300])
+
+    # Sort with headers for species subset
+    isolate_spc = ['C4H71-3', 'C4H71-4', 'C4H72-2']
+    sort_lst = ['submech_prompt', 0]
+
+    _, _, _, pes_groups, _ = sorter.sorted_mech(
+        spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=spc_therm_dct, thresh_flt_groups=30.)
+
+    print('Sort by submech_prompt and filter pes groups:')
+
+    assert results == pes_groups
+    print('ok')
+
+
+def test__sort_ktp():
     """ test mechanalyzer.parser.sort
 
         sort ktp dictionary according to highest rate values/ratios
@@ -550,14 +725,13 @@ def test_sort_ktp():
 
     # Build spc and mech information
     spc_dct_full = sparser.build_spc_dct(spc_str, SPC_TYPE)
-    mech_info = mparser.mech_info(AL_KTP_DCT, spc_dct_full)
 
     # Sort the mechanism
     isolate_spc = []
     sort_lst = ['rxn_max_vals', 'rxn_max_ratio', 0]
 
     srt_mch = sorter.sorting(
-        mech_info, spc_dct_full, sort_lst, isolate_spc)
+        AL_KTP_DCT, spc_dct_full, sort_lst, isolate_spc)
     sorted_idx, cmts_dct, _ = srt_mch.return_mech_df()
     al_ktp_dct_sorted = sorter.reordered_mech(AL_KTP_DCT, sorted_idx)
     print('ktp dct sorted by max val and ratios test:')
@@ -592,13 +766,16 @@ def _read_files(spc_path, mech_path, sort_path):
 
 
 if __name__ == '__main__':
+    test__filter_pesgroups()
     test__sort_with_input()
     test__readwrite_thirdbody()
     test__sortby_mult()
     test__sortby_molec_r1()
-    test_sortby_pes_dct()
-    test_sortby_rxnclass()
+    test__sortby_pes_dct()
+    test__sortby_rxnclass()
     test__sortby_species_subpes()
     test__sortby_submech_subpes_chnl()
-    #test__sortby_submech_class()
-    #test_sort_ktp()
+    test__sortby_submech_prompt()    
+    test__sortby_submech_ext()
+    test__sortby_submech_class()
+    test__sort_ktp()

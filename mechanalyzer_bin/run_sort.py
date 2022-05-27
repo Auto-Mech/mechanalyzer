@@ -41,7 +41,7 @@ if any(string is None for string in (spc_str, mech_str, sort_str)):
 
 # Build sorted mechanism files
 isolate_spc, sort_lst = mparser.parse_sort(sort_str)
-param_dct_sort, _, mech_spc_dct, cmts_dct, elems = sorter.sorted_mech(
+param_dct_sort, _, mech_spc_dct, cmts_dct, _ = sorter.sorted_mech(
     spc_str, mech_str, isolate_spc, sort_lst)
 rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(
     rxn_sort_dct=cmts_dct)
@@ -50,7 +50,6 @@ rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(
 headers = sparser.csv_headers(mech_spc_dct)
 sortd_csv_str = sparser.csv_string(mech_spc_dct, headers)
 sortd_mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
-    elem_tuple=elems,
     mech_spc_dct=mech_spc_dct,
     rxn_param_dct=param_dct_sort,
     rxn_cmts_dct=rxn_cmts_dct)
