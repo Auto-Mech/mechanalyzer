@@ -106,7 +106,7 @@ def extract_fml_df(spc_dct):
     for key in spc_dct.keys():
         if 'ts' not in key and 'global' not in key:
             ich = spc_dct[key]['inchi']
-            fml_dct = automol.inchi.formula(ich)
+            fml_dct = automol.chi.formula(ich)
             fml_df['fml'][key] = automol.formula.string2(fml_dct)
             fml_df['nC'][key] = automol.formula.element_count(fml_dct, 'C')
             fml_df['nH'][key] = automol.formula.element_count(fml_dct, 'H')

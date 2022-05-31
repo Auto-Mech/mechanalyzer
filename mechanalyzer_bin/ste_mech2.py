@@ -1,5 +1,5 @@
 """ Script to generate files with stereoexpanded
-    reaction and species list
+    reaction and species list for a mechanism.
 """
 
 import os
@@ -8,10 +8,9 @@ import time
 import itertools as it
 
 import ioformat
+import automol
 import chemkin_io
 import mechanalyzer
-from autofile import io_ as io
-import automol
 from mechanalyzer.builder import sorter
 
 
@@ -160,7 +159,7 @@ def _reduce_via_enantiomers(ccs_sccs_spc_dct, combo_lst):
         num_uniq_spc_for_combo += (len(uniq_spc_lst),)
         # enant_count = 0
         # for spc_a, spc_b in it.combinations(spc_ich_lst, 2):
-        #     if automol.inchi.are_enantiomers(spc_a, spc_b):
+        #     if automol.chi.are_enantiomers(spc_a, spc_b):
         #         enant_count += 1
         # combo_ent_count += (enant_count,)
         # print('found {:g} enantiomers for this combo'.format(enant_count))
@@ -177,7 +176,7 @@ def _reduce_via_enantiomers(ccs_sccs_spc_dct, combo_lst):
     print('best combo', best_combo)
     enant_count = 0
     for spc_a, spc_b in it.combinations(uniq_spc_lst_lst[best_combo_idx], 2):
-        if automol.inchi.are_enantiomers(spc_a, spc_b):
+        if automol.chi.are_enantiomers(spc_a, spc_b):
             print('Enantiomer pair:', spc_a, spc_b)
             enant_count += 1
     print('found {:g} enantiomers for this combo'.format(enant_count))

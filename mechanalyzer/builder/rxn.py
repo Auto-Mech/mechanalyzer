@@ -42,7 +42,7 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series, stereo=False):
             # Use SMILES to print info message for what reactions generating
             print(f'\nTrying to find {rtyp} products for reactants')
             for ichs, names in zip(rct_ichs, rct_names):
-                _rct_smis = tuple(map(automol.inchi.smiles, ichs))
+                _rct_smis = tuple(map(automol.chi.smiles, ichs))
                 print(f'{names} = {_rct_smis}')
             print('')
             if allowed_prd_ichs:
@@ -86,7 +86,7 @@ def generate_reactions(rct_ichs, allowed_prd_ichs, rtyp):
     """ For a given reactants
     """
 
-    _rct_smis = tuple(map(automol.inchi.smiles, rct_ichs))
+    _rct_smis = tuple(map(automol.chi.smiles, rct_ichs))
     print(f'Generating Reactions for {_rct_smis}...')
 
     # Generate the products with the desired reactant and reaction type
@@ -104,7 +104,7 @@ def generate_reactions(rct_ichs, allowed_prd_ichs, rtyp):
         if set(rct_ichs) == set(prds):
             continue
         # If continue not hit, save reaction to list and print to stdout
-        _prd_smis = tuple(map(automol.inchi.smiles, prds))
+        _prd_smis = tuple(map(automol.chi.smiles, prds))
         print(f'Found Product(s) {pidx+1}: {_prd_smis}')
 
         rxn_ichs += ((rct_ichs, prds, (None,)),)
@@ -177,7 +177,7 @@ def _radicals(ich_lst, name_lst):
     """
     rad_ichs, rad_names = (), ()
     for ich, name in zip(ich_lst, name_lst):
-        if automol.graph.radical_species(automol.inchi.graph(ich)):
+        if automol.graph.radical_species(automol.chi.graph(ich)):
             rad_ichs += (ich,)
             rad_names += (name,)
 
@@ -188,7 +188,7 @@ def _rct_gras(rct_ichs):
     """ Get reactant graphs from smiles
     """
 
-    rct_geos = list(map(automol.inchi.geometry, rct_ichs))
+    rct_geos = list(map(automol.chi.geometry, rct_ichs))
     rct_gras = tuple(map(automol.geom.connectivity_graph, rct_geos))
     rct_gras, _ = automol.graph.standard_keys_for_sequence(rct_gras)
 
@@ -207,7 +207,7 @@ def _prd_ichs(rct_gras, rxn_class_typ, check=True):
     prd_ichs = ()
     for rxn in rxns:
         prd_gras_ = automol.reac.product_graphs(rxn)
-        prd_ichs_ = tuple(map(automol.graph.inchi, prd_gras_))
+        prd_ichs_ = tuple(map(automol.graph.chi, prd_gras_))
         prd_ichs += (prd_ichs_,)
 
         if check:

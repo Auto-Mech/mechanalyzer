@@ -66,7 +66,7 @@ def plot_single_sccs(
 
     # Produce the 2D image plot
     # img_path = os.path.join(cwd, f'structs_{options["pes"]}.pdf')
-    # automol.inchi.draw_grid(spc_ichs, names=spc_names, save_path=img_path)
+    # automol.chi.draw_grid(spc_ichs, names=spc_names, save_path=img_path)
 
     G = mechanalyzer.plotter.pes.sccs_graph(conn_lst, (i, j))
     # if len(G.nodes) > 0:

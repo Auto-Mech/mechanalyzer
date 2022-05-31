@@ -131,12 +131,12 @@ def spc_dct_from_smiles(smiles_lst, stereo=False):
     spc_dct = {}
     for smi in smiles_lst:
         # Generate InChI string and formula
-        ich = automol.smiles.inchi(smi)
+        ich = automol.smiles.chi(smi)
         if stereo:
-            ich = automol.inchi.add_stereo(ich)
+            ich = automol.chi.add_stereo(ich)
 
         # Generate Name
-        fml = automol.inchi.formula_string(ich)
+        fml = automol.chi.formula_string(ich)
         name, fml_count_dct = assign_unique_name(
             fml, fml_count_dct, spc_dct)
 
@@ -155,7 +155,7 @@ def reorder_by_atomcount(spc_dct):
     natom_df = pd.Series(index=list(spc_dct.keys()))
     for key in spc_dct.keys():
         ich = spc_dct[key]['inchi']
-        fml_dct = automol.inchi.formula(ich)
+        fml_dct = automol.chi.formula(ich)
         natoms = automol.formula.atom_count(fml_dct)
         natom_df[key] = natoms
     natom_df = natom_df.sort_values(ascending=True)
@@ -189,7 +189,7 @@ def add_heat_of_formation_basis(spc_dct,
         """
         new_dct = {}
         for dct in cbh_ref_dct.values():
-            tempn_smiles = automol.inchi.smiles(dct['inchi'])
+            tempn_smiles = automol.chi.smiles(dct['inchi'])
             if tempn_smiles not in cbh_smiles:
                 # Add to new dictionry
                 tempn = ref_scheme + '_' + tempn_smiles
@@ -240,7 +240,7 @@ def add_instability_products(mech_spc_dct, nprocs='auto', stereo=True):
         for ich in all_instab_ichs:
             _name = _ich_name_dct.get(ich)
             if _name is None:
-                _name = f'instab_{automol.inchi.smiles(ich)}'
+                _name = f'instab_{automol.chi.smiles(ich)}'
                 mech_spc_dct[_name] = thermfit.create_spec(ich)
                 print(f'{_name} = {ich} being added to species dictonary')
             else:
@@ -291,7 +291,7 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
     #     """
     #     try:
     #         nrings = len(automol.graph.rings(
-    #             automol.inchi.graph(dct['inchi'])))
+    #             automol.chi.graph(dct['inchi'])))
     #     except:
     #         print('Cannot produce graph for {} '.format(name))
     #         nrings = 2000
@@ -303,14 +303,14 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
         """
         ret_ichs, worked = [ich], True
         # print('inchi test:', name, ich)
-        # print('complete inchi test:', automol.inchi.is_complete(ich))
-        # print('add_stereo  inchi test:', automol.inchi.add_stereo(ich))
-        # print('expand_stereo inchi test:', automol.inchi.expand_stereo(ich))
+        # print('complete inchi test:', automol.chi.is_complete(ich))
+        # print('add_stereo  inchi test:', automol.chi.add_stereo(ich))
+        # print('expand_stereo inchi test:', automol.chi.expand_stereo(ich))
         try:
-            if not automol.inchi.is_complete(ich):
+            if not automol.chi.is_complete(ich):
                 ret_ichs = (
-                    [automol.inchi.add_stereo(ich)] if not all_stereo else
-                    automol.inchi.expand_stereo(ich))
+                    [automol.chi.add_stereo(ich)] if not all_stereo else
+                    automol.chi.expand_stereo(ich))
         except:  # noqa: E722
             print(f'{name} timed out in stereo generation')
             worked = False
@@ -350,7 +350,7 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
             sname = name+f'({str(idx+1)})' if idx != 0 else name
             new_dct[sname] = {
                 'inchi': ste_ich,
-                'inchikey': automol.inchi.inchi_key(ste_ich)
+                'inchikey': automol.chi.inchi_key(ste_ich)
             }
             for key in spc_dct_keys:
                 new_dct[sname][key] = init_dct[name][key]
@@ -379,7 +379,7 @@ def add_hashkey(spc_dct):
 
     for dct in spc_dct.values():
         ich = dct.get('inchi')
-        ick = automol.inchi.inchi_key(ich) if ich is not None else None
+        ick = automol.chi.inchi_key(ich) if ich is not None else None
         dct.update({'inchikey': ick})
 
     return spc_dct
