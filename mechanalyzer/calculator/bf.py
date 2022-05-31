@@ -10,6 +10,16 @@ from scipy.interpolate import interp1d
 import numpy as np
 import pandas as pd
 
+
+def ped_df_rescale_test(starthot_df, energy_scale):
+    for temp in starthot_df.index:
+        for pressure in starthot_df.columns:
+            vals = starthot_df[pressure][temp].values
+            dfnew_index = starthot_df[pressure][temp].index + energy_scale
+            starthot_df[pressure][temp] = pd.Series(vals, index=dfnew_index)
+    return starthot_df
+
+
 def ped_df_rescale(starthot_df, ped_df_fromhot):
     """ obtain a new energy distribution for ped_df_fromhot
         based on the energy distribution of hot_df
@@ -27,40 +37,44 @@ def ped_df_rescale(starthot_df, ped_df_fromhot):
     # sort indexes
     starthot_df = starthot_df.sort_index()
     ped_df_fromhot = ped_df_fromhot.sort_index()
-    starthot_df, ped_df_fromhot = checks_temp_pressure_and_extend(starthot_df, ped_df_fromhot)
+    starthot_df, ped_df_fromhot = checks_temp_pressure_and_extend(
+        starthot_df, ped_df_fromhot)
     temps, pressures = [ped_df_fromhot.index, ped_df_fromhot.columns]
 
     ped_df = pd.DataFrame(index=temps, columns=pressures, dtype=object)
     T_del = []
     for temp in temps:
         for pressure in pressures:
-            
+
             # initial distribution: sort and fit
             starthot = starthot_df[pressure][temp].sort_index()
             # rescale values based on probability - too low probability excluded
-            starthot = starthot[starthot > max(starthot)*1e-4] # 99.99%
+            starthot = starthot[starthot > max(starthot)*1e-4]  # 99.99%
             # refit starthot to derive the weight factors later
-            
+
             f_starthot = interp1d(
-                starthot.index, starthot.values, bounds_error=False, 
+                starthot.index, starthot.values, bounds_error=False,
                 kind='cubic', fill_value=(starthot.values[0], starthot.values[-1]))
-            
+
             # reduce the energy range of ped_fromhot
-            
+
             ped_fromhot = ped_df_fromhot[pressure][temp].sort_index()
             ped_fromhot_0 = ped_fromhot
             # print('before: ', ped_fromhot, '\n')
-            ped_fromhot = ped_fromhot.iloc[(starthot.index[0] <= ped_fromhot.index)*(ped_fromhot.index <= starthot.index[-1])]
+            ped_fromhot = ped_fromhot.iloc[(
+                starthot.index[0] <= ped_fromhot.index)*(ped_fromhot.index <= starthot.index[-1])]
             # print('after: ', ped_fromhot, '\n')
             # set new energy vector from min and max energies in peden_fromhot
-            min_en_fromhot = min([min(ped_fromhot.iloc[i].index) for i in np.arange(0, len(ped_fromhot))])
-            max_en_fromhot = min([max(ped_fromhot.iloc[i].index) for i in np.arange(0, len(ped_fromhot))])
+            min_en_fromhot = min([min(ped_fromhot.iloc[i].index)
+                                  for i in np.arange(0, len(ped_fromhot))])
+            max_en_fromhot = min([max(ped_fromhot.iloc[i].index)
+                                  for i in np.arange(0, len(ped_fromhot))])
             ene_vect = np.arange(min_en_fromhot, max_en_fromhot, 0.5)
             prob_vect = np.zeros(ene_vect.shape)
-            if temp == 1300 and pressure == 0.01:
-                print(temp, pressure, starthot, '\n')
-                print(ped_fromhot_0, '\n', ped_fromhot)
-                
+            # if temp == 1300 and pressure == 0.01:
+            #    print(temp, pressure, starthot, '\n')
+            #    print(ped_fromhot_0, '\n', ped_fromhot)
+
             # weight factor from fitted starthot
             for starten in ped_fromhot.index:
                 weightfactor = f_starthot(starten)
@@ -69,10 +83,10 @@ def ped_df_rescale(starthot_df, ped_df_fromhot):
                 # interpolate values
                 if len(hoten) > 3:
                     f_ped_fromhot = interp1d(
-                        hoten, pedhot, bounds_error=False, 
+                        hoten, pedhot, bounds_error=False,
                         kind='cubic', fill_value=(0., 0.))
                     prob_vect += f_ped_fromhot(ene_vect)*weightfactor
-                    
+
                 elif 1 >= len(hoten) >= 3:
                     # find max val of hoten and set that one
                     idx_max = np.argmax(pedhot)
@@ -87,13 +101,14 @@ def ped_df_rescale(starthot_df, ped_df_fromhot):
             ped_df[pressure][temp] = pd.Series(prob_vect, index=ene_vect)
             if ped_df[pressure][temp].empty:
                 T_del.append(temp)
-            if temp == 1300 and pressure == 0.01:
-                print(ped_df[pressure][temp], '\n')
+            # if temp == 1300 and pressure == 0.01:
+            #    print(ped_df[pressure][temp], '\n')
 
     ped_df = ped_df.drop(index=list(set(T_del)))
 
-    return ped_df    
-    
+    return ped_df
+
+
 def bf_tp_df_full(ped_df, hotbf_df):
     """ Build a branching fractions dataframe as a
         function of temprature and pressure containing the BFs of
@@ -109,7 +124,7 @@ def bf_tp_df_full(ped_df, hotbf_df):
         :rtype: dataframe of series df[P][T]:series[species],
                 dataframe(series(float))
     """
-    
+
     # sort indexes
     ped_df = ped_df.sort_index()
     hotbf_df = hotbf_df.sort_index()
@@ -139,7 +154,7 @@ def bf_tp_df_full(ped_df, hotbf_df):
                 for spc in allspecies:
                     hoten_spc = hotbf_df[pressure][temp][spc][hoten]
                     f_hoten = interp1d(
-                        hoten_spc.index, hoten_spc.values, bounds_error=False, 
+                        hoten_spc.index, hoten_spc.values, bounds_error=False,
                         kind='cubic', fill_value=(hoten_spc.values[0], hoten_spc.values[-1]))
                     hoten_vect = f_hoten(ene_vect)
                     # recompute in an appropriate range
@@ -152,6 +167,7 @@ def bf_tp_df_full(ped_df, hotbf_df):
             bf_tp_df = bf_tp_df.drop(index=[temp])
 
     return bf_tp_df
+
 
 def bf_tp_df_todct(bf_tp_df, bf_threshold, savefile=False, rxn='', model=''):
     """ Converts the dataframe of hot branching fractions to dictionary and
@@ -190,7 +206,7 @@ def bf_tp_df_todct(bf_tp_df, bf_threshold, savefile=False, rxn='', model=''):
             temp_new = []
             for temp in temps:
                 bfrac = bf_tp_df[pressure][temp][spc]
-                if 1> bfrac >= 1e-30 :  
+                if 1 > bfrac >= 1e-30:
                     # avoid too small values and 1 to avoid discontinuities
                     temp_new.append(temp)
                     bf_temp.append(bfrac)
@@ -215,6 +231,7 @@ def bf_tp_df_todct(bf_tp_df, bf_threshold, savefile=False, rxn='', model=''):
                        delimiter='\t', header=labels, fmt='%1.2e')
 
     return bf_tp_dct_out
+
 
 def merge_bf_rates(bf_tp_dct, ktp_dct):
     """ Read the branching fractions of the products and
@@ -247,13 +264,13 @@ def merge_bf_rates(bf_tp_dct, ktp_dct):
             print(' Values at other pressures approximated from available \n')
             ktp_dct = extend_dct_with_pressure(
                 pressure_all, pressure_ktp, ktp_dct)
-            
+
         if not all(pressure in pressure_all for pressure in pressure_ktp):
             print('Warning: P range of BF dictionary extended to match ktp:\n')
             print(' Values at other pressures approximated from available \n')
             bf_tp_dct_sp = extend_dct_with_pressure(
-                pressure_ktp, pressure_all, bf_tp_dct_sp)   
-                
+                pressure_ktp, pressure_all, bf_tp_dct_sp)
+
         pressure_all = list(set(pressure_all + pressure_ktp))
         bf_ktp_dct = dict.fromkeys(pressure_all)
 
@@ -288,7 +305,7 @@ def checks_temp_pressure_and_extend(ped_df, hotbf_df):
     # if they're not, it doesn't make sense to continue
     if not all(temp_ped_i in temp_hot for temp_ped_i in temp_ped):
         print('*Error: temperature range in HOTenergies '
-                'does not cover the full range')
+              'does not cover the full range')
         sys.exit()
 
     # if in pressure_ped not all pressures of hoten are available:
@@ -296,10 +313,10 @@ def checks_temp_pressure_and_extend(ped_df, hotbf_df):
     # ex.: for H abstractions, they will be pressure independent
     # but probably the successive decomposition is not
     if not all(pressure_hot_i in pressure_ped
-                for pressure_hot_i in pressure_hot):
+               for pressure_hot_i in pressure_hot):
         print('*Warning: P range of PedOutput smaller than HOTenergies:\n')
         print('Energy distribution at other pressure '
-                'approximated from available values \n')
+              'approximated from available values \n')
         ped_df = extend_dct_with_pressure(
             pressure_hot, pressure_ped, ped_df)
 
@@ -308,10 +325,10 @@ def checks_temp_pressure_and_extend(ped_df, hotbf_df):
     # ELIF no good here - might be that pressure_ped and pressure_hot
     #   only intersect in a limited range
     if not all(pressure_ped_i in pressure_hot
-                for pressure_ped_i in pressure_ped):
+               for pressure_ped_i in pressure_ped):
         print('Warning: P range of HOTenergies smaller than PEDoutput:')
         print('Energy distribution at other pressures '
-                'approximated from available values \n')
+              'approximated from available values \n')
         hotbf_df = extend_dct_with_pressure(
             pressure_ped, pressure_hot, hotbf_df)
 

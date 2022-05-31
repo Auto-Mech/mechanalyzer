@@ -39,7 +39,7 @@ def bf_tp_dct(modeltype, ped_df, hoten_df, bf_threshold, rxn='', savefile=False,
     return _bf_tp_dct
 
 
-def merge_bf_ktp(bf_ktp_dct, ktp_dct, frag_reacs, otherprod, hotsp_dct):
+def merge_bf_ktp(bf_ktp_dct, ktp_dct, label, hotsp_dct):
     """ derive k' = bf*k and rename final ktp dictionary appropriately
 
         :param bf_tp_dct: branching fractions at T,P for each product
@@ -48,10 +48,7 @@ def merge_bf_ktp(bf_ktp_dct, ktp_dct, frag_reacs, otherprod, hotsp_dct):
         :param ktp_dct: rates of the original reaction A=>B to split in A=>Pi
             with Pi = species in bf_ktp_dct (B decomposes to Pi)
         :type ktp_dct: dictionary {P: (T, k)}
-        :param frag_reacs: reactant fragments ['A','B']
-        :type frag_reacs: tuple/list(str)
-        :param otherprod: remaining product(s)
-        :type otherprod: tuple(str)
+        :param label: label of the original thermal reaction
         :param hotsp_dct: dictionary of hotspecies and
             corresponding fragments (if bimol)
         :type hotsp_dct: {species_unimol: [species_unimol],
@@ -62,33 +59,36 @@ def merge_bf_ktp(bf_ktp_dct, ktp_dct, frag_reacs, otherprod, hotsp_dct):
 
     ktp_dct_model_i = bf.merge_bf_rates(bf_ktp_dct, ktp_dct)
     ktp_dct_model_i_new = rename_ktp_dct(
-        ktp_dct_model_i, frag_reacs, otherprod, hotsp_dct)
+        ktp_dct_model_i, label, hotsp_dct)
     rxn_ktp_dct = ktp_dct_model_i_new
 
     return rxn_ktp_dct
 
 
-def rename_ktp_dct(ktp_dct, frag_reacs, otherprod, hotsp_dct):
+def rename_ktp_dct(ktp_dct, label, hotsp_dct):
     """ rename ktp dictionary with appropriate names for prompt dissociation.
         ktp_dct.keys(): sp
         renamed_ktp_dct.keys(): rctname=>sp
         if sp is the original product, the reaction is reversible =
-
         :param rxn_ktp_dct: ktp dct of final rate constants for channels
         :type rxn_ktp_dct: {sp: {P: (T, k)}}
-        :param frag_reacs: reactant fragments ['A','B']
-        :type frag_reacs: tuple/list(str)
-        :param otherprod: remaining product(s)
-        :type otherprod: tuple
+        :param label: label of the thermal reaction
+        :type label: tuple ((reacs,),(prods,),(None))
         :return rename_ktp_dct: dct with new keys
         :rtype: {rxn_name: {P: (T, k)}}
     """
 
     renamed_ktp_dct = {}
+    spc0 = list(set(hotsp_dct.keys()).intersection(label[1]))[0]
+    renamed_ktp_dct[label] = ktp_dct[spc0]
+    ktp_dct.pop(spc0)
+    
+    label1 = list(label[1])
+    label1.remove(spc0)
+    # other species
     for spc in ktp_dct.keys():
-        frag_prods = hotsp_dct[spc] + otherprod
-        print(hotsp_dct[spc], otherprod, frag_prods)
-        newkey = (frag_reacs, frag_prods, (None,))
+        frag_prods = label1 + list(hotsp_dct[spc])
+        newkey = (label[0], tuple(frag_prods), label[2])
         renamed_ktp_dct[newkey] = ktp_dct[spc]
 
     return renamed_ktp_dct

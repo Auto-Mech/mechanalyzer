@@ -19,6 +19,7 @@ from mechanalyzer.builder._names import functional_group_name_dct
 from mechanalyzer.builder._names import functional_group_name
 from mechanalyzer.builder._names import stereo_name_suffix
 from mechanalyzer.builder._names import remove_stereo_name_suffix
+from mechanalyzer.builder._prompt import multipes_prompt_dissociation_ktp_dct
 from mechanalyzer.builder import rxn
 from mechanalyzer.builder import checker
 from mechanalyzer.builder import sorter
@@ -47,6 +48,7 @@ __all__ = [
     'functional_group_name',
     'stereo_name_suffix',
     'remove_stereo_name_suffix',
+    'multipes_prompt_dissociation_ktp_dct',
     'rxn',
     'checker',
     'sorter',
