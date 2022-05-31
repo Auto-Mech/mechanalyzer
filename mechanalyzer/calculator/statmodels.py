@@ -205,8 +205,11 @@ class PEDModels:
                     rho_rovib_prod2[idx_ene_int] *
                     rho_trasl[idx_ene_minus_ene_int]
                 )
-                rho_non1.append(np.trapz(rho_non1_integrand,
-                                         x=self.ene1_vect[idx_ene_int]))
+                try:
+                    rho_non1.append(np.trapz(rho_non1_integrand,
+                                            x=self.ene1_vect[idx_ene_int]))
+                except IndexError:
+                    print(pressure, temp, self.ene1_vect, idx, idx_ene_int)
 
             rho_non1 = np.array(rho_non1)
 
