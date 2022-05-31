@@ -3,6 +3,7 @@ from mechanalyzer import builder
 from mechanalyzer.calculator import compare
 from mechanalyzer.calculator import combine
 from mechanalyzer.calculator import rates
+from mechanalyzer.builder import checker
 from ratefit.fit import _fit as fit
 from automol import inchi
 
@@ -30,6 +31,7 @@ def regenerate_names(mech_spc_dct_strpd_ich, rxn_param_dct_strpd):
     """
 
     map_dct = builder.functional_group_name_dct(mech_spc_dct_strpd_ich)
+    print('map_dct:\n', map_dct)
     re_mech_spc_dct, re_rxn_param_dct = builder.remap_mechanism_names(
         mech_spc_dct_strpd_ich, rxn_param_dct_strpd, map_dct)
 
@@ -53,14 +55,16 @@ def join_rxns(iso_sets_par_avg):
 
 
 # Step 7
-def get_avg_params(algn_iso_sets_rxns):
+def get_avg_params(algn_iso_sets_rxns, temps_lst, pressures):
 
     iso_sets_par_avg = []
     for iso_set in algn_iso_sets_rxns:
         new_iso_set = {}
-        for rxn, param_list in iso_set.items():
-            new_iso_set[rxn] = param_list[0]  # for now, just take first
-            #new_iso_set[rxn] = ???? # Need to use averaging function
+        for rxn, params_lst in iso_set.items():
+            #new_iso_set[rxn] = params_lst[0]  # for now, just take first
+            print(f'fitting rxn {rxn}')
+            new_iso_set[rxn] = combine_params(params_lst, temps_lst,
+                                              pressures)
         iso_sets_par_avg.append(new_iso_set)
 
     return iso_sets_par_avg
@@ -79,8 +83,7 @@ def align_rxns(iso_sets_rxns_ich):
         algn_iso_set_rxns = compare.align_dcts(iso_set_rxns)
         algn_iso_sets_rxns.append(algn_iso_set_rxns)
 
-    # Check to see if any reactions match
-    algn_rxns = algn_iso_sets_rxns
+    # Check to see if any reactions match within the current iso set
     for iso_set in algn_iso_sets_rxns:
         iso_set_copy = copy.deepcopy(iso_set)
         for rxn in iso_set.keys():
@@ -88,7 +91,30 @@ def align_rxns(iso_sets_rxns_ich):
             matching_rxn, rev_rate = compare.assess_rxn_match(
                 rxn, iso_set_copy)
             if matching_rxn:
-                print('matching rxn found where it should not be!')
+                print(f'matching rxn {rxn} found where it should not be!')
+                print('This occurs b/c the same rxn was written w/a diff. '
+                      'permutation of rcts/prds or in reverse')
+    
+    # Check to see if any reactions match between different iso sets
+    num_iso_sets = len(algn_iso_sets_rxns)
+    # Loop over each iso set
+    for iso_set_idx in range(num_iso_sets):
+        # Copy the current algn_iso_sets_rxns (changes dynamically!)
+        current_lst = copy.deepcopy(algn_iso_sets_rxns)
+        # Get all iso_sets after the current one; these will be searched
+        srch_lst = current_lst[(iso_set_idx + 1):]  
+        # For each rxn in the current iso_set, look for matches
+        for curr_rxn in current_lst[iso_set_idx]:
+            # Look through each iso set in the search list
+            for srch_idx, srch_iso_set in enumerate(srch_lst):
+                match, rev = compare.assess_rxn_match(curr_rxn, srch_iso_set)
+                # If match is found, add current params list to that in the 
+                # original algn_iso_sets_rxns AND remove the rxn from the 
+                # original algn_iso_sets_rxns
+                if match and not rev:
+                    params_lst = srch_iso_set[match]  # list of RxnParams 
+                    algn_iso_sets_rxns[iso_set_idx][curr_rxn] += params_lst
+                    algn_iso_sets_rxns[iso_set_idx + srch_idx + 1].pop(match)
 
     return algn_iso_sets_rxns
 
@@ -158,10 +184,8 @@ def get_ste_rxns(rxn_param_dct, iso_sets):
         for iso in iso_set:
             # Get all rxns that contain this isomer and store
             iso_rxn_params = search_rxns(rxn_param_dct, iso)
-         #   print('iso_rxn_params, in loop:\n', iso_rxn_params)
             iso_set_rxns.append(iso_rxn_params)
         iso_sets_rxns.append(iso_set_rxns)
-        #print('iso_sets_rxns, in loop:\n', iso_sets_rxns)
 
     return iso_sets_rxns
 
@@ -294,21 +318,26 @@ def combine_params(params_lst, temps_lst, pressures, method='avg'):
     # Calculate rates for each params in the list
     ktp_dct_lst = []
     for params in params_lst:
-        ktp_dct = rates.eval_params(params, temps_lst, pressures)
-        ktp_dct_lst.append(ktp_dct)
+        if params is not None:
+            # Get rates
+            ktp_dct = rates.eval_params(params, temps_lst, pressures)
+            ktp_dct_lst.append(ktp_dct)
+            # Get fit form (used later)
+            fit_method = params.get_existing_forms()[0]  # first one
 
     # Average rate constants
-    for idx, ktp_dct in enumerate(ktp_dct_lst):
-        if idx == 0:
-            summed_ktp_dct = copy.deepcopy(ktp_dct)
-        else:
-            summed_ktp_dct = rates.add_ktp_dcts(summed_ktp_dct, ktp_dct)
-    factor = 1 / len(params_lst)
-    avg_ktp_dct = rates.mult_by_factor(summed_ktp_dct, factor)
+    if method == 'avg':
+        for idx, ktp_dct in enumerate(ktp_dct_lst):
+            if idx == 0:
+                summed_ktp_dct = copy.deepcopy(ktp_dct)
+            else:
+                summed_ktp_dct = rates.add_ktp_dcts(summed_ktp_dct, ktp_dct)
+        factor = 1 / len(params_lst)
+        comb_ktp_dct = rates.mult_by_factor(summed_ktp_dct, factor)
 
     # Fit the averaged rate constants
-    fit_methods = params_lst[0].get_existing_forms()
-    fit_method = fit_methods[0]
-    avg_params, _ = fit.fit_ktp_dct(avg_ktp_dct, fit_method)
+#    fit_methods = params_lst[0].get_existing_forms()
+#    fit_method = fit_methods[0]
+    comb_params, _ = fit.fit_ktp_dct(comb_ktp_dct, fit_method)
 
-    return avg_params
+    return comb_params
