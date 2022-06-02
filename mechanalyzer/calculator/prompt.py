@@ -4,7 +4,8 @@ from operator import mod
 import sys
 import copy
 import mess_io
-import mechanalyzer
+from mechanalyzer import builder
+from mechanalyzer import calculator
 
 
 def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
@@ -74,7 +75,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
         print(
             'Processing reaction {} with DH of {:.2f} kcal/mol'.format(label, -ene_bw_dct[label]))
         if model != 'fne':
-            ped_df_frag1 = mechanalyzer.builder.ped.ped_frag1(
+            ped_df_frag1 = builder.ped.ped_frag1(
                 ped_df, frag1, frag2, model,
                 dos_df=dos_df, dof_info=dof_dct[prods])
         else:
@@ -188,12 +189,12 @@ def build_pedhot_df_dct(hot_inp_str, hot_ped_str, hot_ke_out_str,
     # calculate new PED (beta)
     ped_df_fromhot = hot_ped_dct[label]
 
-    ped_df_rescaled = mechanalyzer.calculator.bf.ped_df_rescale(
+    ped_df_rescaled = calculator.bf.ped_df_rescale(
         starthot_df, ped_df_fromhot)
 
     ########################################################################################
     # stupid test to delete later: try to just have the starthot_df but rescale the energy
-    ped_df_rescaled = mechanalyzer.calculator.bf.ped_df_rescale_test(
+    ped_df_rescaled = calculator.bf.ped_df_rescale_test(
         starthot_df, hot_energy_dct[prods]-hot_energy_dct[starthotfrag])
 
     #########################################################################################
@@ -202,12 +203,12 @@ def build_pedhot_df_dct(hot_inp_str, hot_ped_str, hot_ke_out_str,
     if model != 'fne':
 
         # DERIVE PED OF THE HOT FRAGMENT - BOTH , CHECK FRAG2 NOT ATOM
-        pedhot_df_dct[frag1] = mechanalyzer.builder.ped.ped_frag1(
+        pedhot_df_dct[frag1] = builder.ped.ped_frag1(
             ped_df_rescaled, frag1, frag2, model,
             dos_df=hot_dos_df, dof_info=hot_dof_dct[prods])
 
         if hot_dof_dct[prods]['n_atoms'][frag2] > 1:
-            pedhot_df_dct[frag2] = mechanalyzer.builder.ped.ped_frag1(
+            pedhot_df_dct[frag2] = builder.ped.ped_frag1(
                 ped_df_rescaled, frag2, frag1, model,
                 dos_df=hot_dos_df, dof_info=hot_dof_dct[prods])
 
@@ -224,19 +225,19 @@ def calc_bf_ktp(full_prompt_rxn_ktp_dct, model, bf_thresh,
         NB frag2 must be tuple
     """
     # JOIN PED AND HOTEN -> DERIVE PRODUCTS BF
-    bf_tp_dct = mechanalyzer.builder.bf.bf_tp_dct(
+    bf_tp_dct = builder.bf.bf_tp_dct(
         model, ped_df_frag1, hoten_dct_frag, bf_thresh,
         savefile=True, rxn=rxn, fne=fne_bf_frag1)
 
     # CALCULATE PROMPT DISSOCIATION RATES K*BF
 
-    prompt_rxn_ktp_dct = mechanalyzer.builder.bf.merge_bf_ktp(
+    prompt_rxn_ktp_dct = builder.bf.merge_bf_ktp(
         bf_tp_dct, ktp_dct,
         label, hot_frag_dct)
 
     # Merge Prompt Rates with all current; Rates added if rxn is prev. found
     # print(modeltype, full_prompt_rxn_ktp_dct[modeltype], '\n', prompt_rxn_ktp_dct[modeltype], '\n','\n','stop')
-    full_prompt_rxn_ktp_dct = mechanalyzer.calculator.rates.merge_rxn_ktp_dcts(
+    full_prompt_rxn_ktp_dct = calculator.rates.merge_rxn_ktp_dcts(
         full_prompt_rxn_ktp_dct,
         prompt_rxn_ktp_dct
     )
@@ -261,7 +262,7 @@ def ped_info(ped_inp_str, ped_ped_str, ped_ke_out_str):
         _, prods = spc
 
         # Derive dofs involved
-        dof_dct[prods] = mechanalyzer.calculator.statmodels.get_dof_info(
+        dof_dct[prods] = calculator.statmodels.get_dof_info(
             spc_blocks_ped[prods])
 
     # Read ped.out file for product energy distributions
