@@ -54,7 +54,7 @@ def _sort_objs(spc_str, mech_str, sort_lst, isolate_spc):
     # spc_dct = sparser.build_spc_dct(spc_str, SPC_TYPE)
 
     spc_dct = new_sparser.parse_mech_spc_dct(
-        spc_str, chk_ste=False, chk_match=False, verbose=False, add_ste=True)
+        spc_str, chk_ste=False, chk_match=False, verbose=False)
     rxn_param_dct = mparser.parse_mechanism(
         mech_str, MECH_TYPE)
 
