@@ -2,6 +2,7 @@
 """
 
 import numpy
+import pandas
 from phydat import phycon
 
 RC = phycon.RC_CAL  # gas constant in cal/(mol.K)
@@ -45,6 +46,20 @@ def create_spc_therm_dct(spc_nasa7_dct, temps, rval=RC):
         spc_therm_dct[spc] = (temps, h_t, cp_t, s_t, g_t)
 
     return spc_therm_dct
+
+
+def spc_therm_dct_df(spc_therm_dct):
+    """ converts therm dct into a dictionary of dataframes
+        {spc: [index=[temps]][columns=[H, CP, S, G]]}
+    """
+    spc_therm_df = {}
+    for spc, vals in spc_therm_dct.items():
+        matrix_data = numpy.array([vals[1], vals[2], vals[3], vals[4]]).T
+        spc_therm_df[spc] = pandas.DataFrame(
+            matrix_data, index=vals[0], columns=['H', 'Cp', 'S', 'G'])
+        spc_therm_df[spc].sort_index()
+        
+    return spc_therm_df
 
 
 def enthalpy(nasa7_params, temp, rval=RC):
