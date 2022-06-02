@@ -314,6 +314,11 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
         except:  # noqa: E722
             print(f'{name} timed out in stereo generation')
             worked = False
+        
+        # Loop over strings and convert stereo inchi to amchi, if needed
+        # may not work perfectly since you rely on the inchi code
+        ret_ichs = [automol.chi.inchi_to_amchi(ich) for ich in ret_ichs]
+        
         return ret_ichs, worked
 
     # Assess the species the code is able to add stereochemistry to
