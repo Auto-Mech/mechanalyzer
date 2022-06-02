@@ -28,13 +28,13 @@ ALLOWED_COLUMN_NAMES = (
 )
 
 TRIP_DCT = {
-    'O': 'InChI=1S/O',
-    'O2': 'InChI=1S/O2/c1-2',
-    'CH2': 'InChI=1S/CH2/h1H2',
-    'C3H2': 'InChI=1S/C3H2/c1-3-2/h1-2H',
-    'H2CCC': 'InChI=1S/C3H2/c1-3-2/h1H2',
+    'O':        'InChI=1S/O',
+    'O2':       'InChI=1S/O2/c1-2',
+    'CH2':      'InChI=1S/CH2/h1H2',
+    'C3H2':     'InChI=1S/C3H2/c1-3-2/h1-2H',
+    'H2CCC':    'InChI=1S/C3H2/c1-3-2/h1H2',
     'C6H6O-B1': 'InChI=1S/C6H6O/c7-6-4-2-1-3-5-6/h1-2,4-5H,3H2',
-    'CH2CHN': 'InChI=1S/C2H3N/c1-2-3/h2H,1H2',
+    'CH2CHN':   'InChI=1S/C2H3N/c1-2-3/h2H,1H2',
 }
 
 

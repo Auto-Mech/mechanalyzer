@@ -4,7 +4,7 @@ from operator import mod
 import sys
 import copy
 import mess_io
-import mechanalyzer
+from mechanalyzer import calculator
 
 
 def multipes_prompt_dissociation_ktp_dct(list_strs_dct, model, bf_thresh):
@@ -34,9 +34,9 @@ def multipes_prompt_dissociation_ktp_dct(list_strs_dct, model, bf_thresh):
             rxn_type_dct['hot'].append(strs_dct)
 
         rxn_ktp_dct_full0.update(
-            mechanalyzer.calculator.prompt.extract_ktp_dct(strs_dct['ktp_out']))
+            calculator.prompt.extract_ktp_dct(strs_dct['ktp_out']))
     # resort labels to adjust prod order for different PESs with potential same prods
-    rxn_ktp_dct_full0 = mechanalyzer.calculator.prompt.resort_ktp_labels(
+    rxn_ktp_dct_full0 = calculator.prompt.resort_ktp_labels(
         rxn_ktp_dct_full0)
     
     rxn_ktp_dct_full = rxn_chains_calc(
@@ -88,7 +88,7 @@ def rxn_chains_calc(PES_0, PES_i, PES_end, model, bf_thresh):
         if len(hotend) > 0:
             for hot_strs_dct in hotend:
                 # call the usual function of the prompt dissociation
-                rxn_ktp_dct, _, _ = mechanalyzer.calculator.prompt.prompt_dissociation_ktp_dct(
+                rxn_ktp_dct, _, _ = calculator.prompt.prompt_dissociation_ktp_dct(
                     pes0['inp'], pes0['ktp_out'],
                     pes0['ped'], pes0['ke_out'],
                     hot_strs_dct['inp'], hot_strs_dct['log'],
@@ -107,7 +107,7 @@ def rxn_chains_calc(PES_0, PES_i, PES_end, model, bf_thresh):
 
             # PED: PES0, HOT: PEDHOT_I - EXTRACT RATES AND NEW ENERGY DISTRIBUTION
             # call the usual function of the prompt dissociation
-            rxn_ktp_dct, pednew_dct, ene_bw_dct = mechanalyzer.calculator.prompt.prompt_dissociation_ktp_dct(
+            rxn_ktp_dct, pednew_dct, ene_bw_dct = calculator.prompt.prompt_dissociation_ktp_dct(
                 pes0['inp'], pes0['ktp_out'],
                 pes0['ped'], pes0['ke_out'],
                 pedhot_i['inp'], pedhot_i['log'],
@@ -125,7 +125,7 @@ def rxn_chains_calc(PES_0, PES_i, PES_end, model, bf_thresh):
                     pedhot_i = copy.deepcopy(pedhot_new[0])
                     pedhot_all.remove(pedhot_i)
 
-                    prompt_ktp_dct, pednew_dct, ene_bw_dct = mechanalyzer.calculator.prompt.prompt_chain_ktp_dct(
+                    prompt_ktp_dct, pednew_dct, ene_bw_dct = calculator.prompt.prompt_chain_ktp_dct(
                         prompt_ktp_dct, pednew_dct,
                         pedhot_i['inp'], pedhot_i['log'],
                         model, bf_thresh, ene_bw_dct, hot_ped_str=pedhot_i['ped'],
@@ -143,7 +143,7 @@ def rxn_chains_calc(PES_0, PES_i, PES_end, model, bf_thresh):
                 if len(hotend) > 0:
                     hot_strs_dct = hotend[0]
 
-                    prompt_ktp_dct, _, _ = mechanalyzer.calculator.prompt.prompt_chain_ktp_dct(
+                    prompt_ktp_dct, _, _ = calculator.prompt.prompt_chain_ktp_dct(
                         prompt_ktp_dct, pednew_dct,
                         hot_strs_dct['inp'], hot_strs_dct['log'],
                         model, bf_thresh, ene_bw_dct)
@@ -160,9 +160,9 @@ def rxn_chains_calc(PES_0, PES_i, PES_end, model, bf_thresh):
 
         # merge the ped dct with the full one
         # before merging: resort labels
-        rxn_ktp_dct_ped = mechanalyzer.calculator.prompt.resort_ktp_labels(
+        rxn_ktp_dct_ped = calculator.prompt.resort_ktp_labels(
             rxn_ktp_dct_ped)
-        rxn_ktp_dct_full = mechanalyzer.calculator.rates.merge_rxn_ktp_dcts(
+        rxn_ktp_dct_full = calculator.rates.merge_rxn_ktp_dcts(
             rxn_ktp_dct_full, rxn_ktp_dct_ped
         )
 

@@ -1,9 +1,9 @@
 import copy
-from mechanalyzer import builder
 from mechanalyzer.calculator import compare
 from mechanalyzer.calculator import combine
 from mechanalyzer.calculator import rates
 from mechanalyzer.builder import checker
+from mechanalyzer.builder import _names as names
 from ratefit.fit import _fit as fit
 from automol import inchi
 
@@ -30,9 +30,9 @@ def regenerate_names(mech_spc_dct_strpd_ich, rxn_param_dct_strpd):
     """ Takes the dcts in terms of inchis and regenerates names, then renames
     """
 
-    map_dct = builder.functional_group_name_dct(mech_spc_dct_strpd_ich)
+    map_dct = names.functional_group_name_dct(mech_spc_dct_strpd_ich)
     print('map_dct:\n', map_dct)
-    re_mech_spc_dct, re_rxn_param_dct = builder.remap_mechanism_names(
+    re_mech_spc_dct, re_rxn_param_dct = names.remap_mechanism_names(
         mech_spc_dct_strpd_ich, rxn_param_dct_strpd, map_dct)
 
     return re_mech_spc_dct, re_rxn_param_dct
