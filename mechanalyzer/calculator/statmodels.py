@@ -133,7 +133,7 @@ class PEDModels:
         # 3/2: 1/2kbT for each rotation, no trasl (ts trasl energy preserved)
         # 9/2: 1/2kbT*6 rotational dofs for products, +3 for relative trasl
         print(f'Fraction of energy transferred to products: {beta_prod:.2f}')
-        
+
         # rescale all energies with beta: allocate values in new dataframe
         ped_df_prod = pd.DataFrame(index=self.ped_df.index,
                                    columns=self.ped_df.columns, dtype=object)
@@ -207,7 +207,7 @@ class PEDModels:
                 )
                 try:
                     rho_non1.append(np.trapz(rho_non1_integrand,
-                                            x=self.ene1_vect[idx_ene_int]))
+                                             x=self.ene1_vect[idx_ene_int]))
                 except IndexError:
                     print(pressure, temp, self.ene1_vect, idx, idx_ene_int)
 
@@ -415,7 +415,7 @@ class PEDModels:
         phi1a = vibdof_prod1/vibdof_ts
         print('Fraction of energy transferred to '
               f'products phi1a: {phi1a:.2f}')
-        
+
         # rescale all energies with beta: allocate values in new dataframe
         self.phi = phi1a
         ped_df_prod = self.prob_ene1_fct('phi')
@@ -520,7 +520,7 @@ class PEDModels:
         return ped_df_prod
 
 
-######## helper functions
+# helper functions
 
 def get_dof_info(block):
     """ Gets the N of degrees of freedom and MW of each species
