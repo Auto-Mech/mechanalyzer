@@ -7,6 +7,7 @@ Sorter module - sorting of the mechanism according to various options
 - submechanism
 """
 import enum
+from multiprocessing.sharedctypes import Value
 import time
 import sys
 import copy
@@ -274,8 +275,10 @@ class SortMech:
 
             if filtertype == 'submech_prompt' and chk >= 1:
                 # subpes list to keep
-                # rxn is bimol on both sides
-                if len(rcts) == 2 and len(prds) == 2:
+                # radical among 2 rcts or 2 prds: generation; among > 2 prods: lumped; decomposes: rad_deco
+                if len(rcts) == 2 and any(rct in species_list for rct in rcts):
+                    mech_df['prompt'][rxn] = 'RAD_GEN'
+                elif len(prds) == 2 and any(pr in species_list for pr in prds):
                     mech_df['prompt'][rxn] = 'RAD_GEN'
                 elif len(prds) > 2 and any(pr in species_list for pr in prds):
                     mech_df['prompt'][rxn] = 'PROMPT_LUMPED'
@@ -283,6 +286,8 @@ class SortMech:
                 elif ((len(rcts) == 1 and rcts[0] in species_list and len(prds) == 2) or
                       (len(prds) == 1 and prds[0] in species_list and len(rcts) == 2)):
                     mech_df['prompt'][rxn] = 'RAD_DECO'
+                elif (len(rcts) == 1 and rcts[0] in species_list and len(prds) > 2):
+                    mech_df['prompt'][rxn] = 'RAD_DECO_LUMPED'
 
                 continue  # next for loop
 
@@ -295,7 +300,8 @@ class SortMech:
         if filtertype == 'submech_prompt':
             # submech_prompt: if RAD_GEN/RAD_DECO in list, keep the rxns
             for _, subpes_df in mech_df.groupby(['pes', 'subpes']):
-                if any(pr in ['RAD_GEN', 'RAD_DECO', 'PROMPT_LUMPED'] for pr in subpes_df['prompt'].values):
+                if any(CHECK in ['RAD_GEN', 'RAD_DECO', 'PROMPT_LUMPED', 'RAD_DECO_LUMPED']
+                       for CHECK in subpes_df['prompt'].values):
                     [spc_list.extend(list(rcts_tup))
                      for rcts_tup in mech_df['rct_names_lst'].values]
                     [spc_list.extend(list(prds_tup))
@@ -448,7 +454,8 @@ class SortMech:
         grps = []
         species_deco_dct = dict.fromkeys(self.species_list)
         # filter by RAD_DECO: save the pes/subpes value
-        hot_df = self.mech_df[self.mech_df['prompt'] == 'RAD_DECO']
+        hot_df = pd.concat((self.mech_df[self.mech_df['prompt'] == 'RAD_DECO'],
+                            self.mech_df[self.mech_df['prompt'] == 'RAD_DECO_LUMPED']))
         for rxn in hot_df.index:
             for sp in self.species_list:
                 if sp in (hot_df['rct_names_lst'][rxn][0], hot_df['prd_names_lst'][rxn][0]):
@@ -489,9 +496,13 @@ class SortMech:
                         sp = self.species_list[[
                             i in subpesdf['rct_names_lst'][rxn] for i in self.species_list].index(True)]
                         r1, r2 = subpesdf['rct_names_lst'][rxn]
-                        p1, p2 = subpesdf['prd_names_lst'][rxn]
-                        # switch rcts and prds
-                        rxn_ped = '{}+{}={}+{}'.format(p1, p2, r1, r2)
+                        if len(subpesdf['prd_names_lst'][rxn]) == 2:
+                            p1, p2 = subpesdf['prd_names_lst'][rxn]
+                            # switch rcts and prds
+                            rxn_ped = '{}+{}={}+{}'.format(p1, p2, r1, r2)
+                        elif len(subpesdf['prd_names_lst'][rxn]) == 1:
+                            # 1 reactant
+                             rxn_ped = '{}={}+{}'.format(subpesdf['prd_names_lst'][rxn][0], r1, r2)
                     submech_df['submech_prompt'][rxn] = 'RAD_GEN_{}'.format(sp)
                     peds.append(rxn_ped)
                     # deal with hotspecies
@@ -574,9 +585,10 @@ class SortMech:
         # loop over groups and delete too endothermic reactions
         filtered_grps = []
         grp_idx = 0
-        fmt_lbls = numpy.array(['%40s', '%15s', '%.1f', '%.1f', '%.1f', '%1.1e', '%1.1e', '%.0f', '%s'], dtype = object)
+        fmt_lbls = numpy.array(['%40s', '%15s', '%.1f', '%.1f',
+                                '%.1f', '%1.1e', '%1.1e', '%.0f', '%s'], dtype=object)
         lbls = numpy.array(['prompt rxn{}\t'.format(' '*40), 'hot species', 'dh1(300K)', 'dh2(300K)',
-                                    'dhtot(300K)', 'k(1000K)', 'k*(T*(1000K))', 'T*(1000K)', 'keep?'], dtype=object)
+                            'dhtot(300K)', 'k(1000K)', 'k*(T*(1000K))', 'T*(1000K)', 'keep?'], dtype=object)
         self.rxns_dh = numpy.vstack((fmt_lbls, lbls))
         for grp in self.grps:
             grp_new = {'grp': 0, 'idxs': [], 'peds': [], 'hot': []}
@@ -602,7 +614,7 @@ class SortMech:
                     if dh < 0:
                         phi = approx_phi(hot_sp, other[0], self.spc_dct)
                         T_star, k_star = kt_star(-dh*phi*1000,
-                                                therm_df[hot_sp]['Cp'], 1000, k_max_hot[hot_sp])
+                                                 therm_df[hot_sp]['Cp'], 1000, k_max_hot[hot_sp])
                     else:
                         T_star = 1000
                         k_star = k_max_hot[hot_sp][1000]
@@ -615,9 +627,10 @@ class SortMech:
                         keep = 'YES'
                         active_hotsp.append(hot_sp)
 
-                    array_info = numpy.array([ped_i, hot_sp, dh, dh_min_hot[hot_sp], dh_tot, k_max_hot[hot_sp][1000], k_star, T_star, keep], dtype=object)
+                    array_info = numpy.array(
+                        [ped_i, hot_sp, dh, dh_min_hot[hot_sp], dh_tot, k_max_hot[hot_sp][1000], k_star, T_star, keep], dtype=object)
                     self.rxns_dh = numpy.vstack((self.rxns_dh, array_info))
-                    
+
                 if ped:
                     grp_new['idxs'].append(grp['idxs'][n])
                     grp_new['peds'].append(ped)

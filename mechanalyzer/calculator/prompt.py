@@ -36,6 +36,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
     pedhot_df_dct = {}
 
     for label, ped_df in ped_dct.items():
+        modelfor = copy.deepcopy(model)
         # start prompt chains from wells/bimol with ground energies:
         # A+B=>C*+D*, (A+B=>)E=>C*+D*
         frag_reacs = label[0]
@@ -43,28 +44,33 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
         reacs = '+'.join(frag_reacs)
         prods = '+'.join(frag_prods)
         rxn = '='.join([reacs, prods])
-
         ############################ various checks and derivation of frag names ###################
         # skip PEDs going to other wells or PEDs coming from hotenergy for some reason
         # - which means that the ped_df[T][p][energy] is a Series and not a float
-
-        if len(frag_prods) < 2 or not isinstance(ped_df.iloc[0].iloc[0].iloc[0], float):
+        try:
+            if len(frag_prods) < 2 or not isinstance(ped_df.iloc[0].iloc[0].iloc[0], float):
+                continue
+        except AttributeError:
+            # something wrong with the PED
+            print('*Warning: rxn {} skipped'.format(rxn))
             continue
         # select the fragment of which you want the PED:
         try:
             frag1 = list(set(hot_spc_en).intersection(frag_prods))[0]
             frag2 = list(set(frag_prods).difference((frag1,)))[0]
         except IndexError:
-            print('no superposition between PED fragments {} and hot fragments '
-                  '- skipping \n'.format(prods))
+            print('no superposition between PED fragments {} and hot fragments {}'
+                  '- skipping'.format(prods, hot_spc_en.keys()))
             continue
 
         ene_bw_dct[label] = energy_dct[reacs] - energy_dct[prods]
+        print(
+            'Processing reaction {} with DH of {:.2f} kcal/mol'.format(label, -ene_bw_dct[label]))
         if ene_bw_dct[label] < 0 and len(frag_reacs) > 1:
             print(
                 'Warning: endothermic reaction {} with DH of {:.2f} kcal/mol: \
-                    whatever the model, only fne will be used'.format(label, -ene_bw_dct[label]))
-            model = 'fne'
+                    setting thermal model'.format(label, -ene_bw_dct[label]))
+            modelfor = 'thermal'
         elif ene_bw_dct[label] < 0 and len(frag_reacs) == 1:
             print('Endothermic reaction {} with DH of {:.2f} kcal/mol excluded from loop'.format(
                 label, -ene_bw_dct[label]))
@@ -72,17 +78,16 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
         #################################################################################################
 
         # DERIVE PED OF THE HOT FRAGMENT
-        print(
-            'Processing reaction {} with DH of {:.2f} kcal/mol'.format(label, -ene_bw_dct[label]))
-        if model != 'fne':
+        print('deriving fragment energy distributions for {} to {}'.format(reacs, prods))
+        if modelfor != 'fne':
             ped_df_frag1 = builder.ped.ped_frag1(
-                ped_df, frag1, frag2, model,
+                ped_df, frag1, frag2, modelfor,
                 dos_df=dos_df, dof_info=dof_dct[prods])
         else:
             ped_df_frag1 = None
 
         # calculate prompt fraction
-        full_prompt_rxn_ktp_dct = calc_bf_ktp(full_prompt_rxn_ktp_dct, model, bf_thresh,
+        full_prompt_rxn_ktp_dct = calc_bf_ktp(full_prompt_rxn_ktp_dct, modelfor, bf_thresh,
                                               ped_df_frag1, fne_bf[frag1], label,
                                               hoten_dct[frag1], rxn, rxn_ktp_dct[label], hot_frag_dct)
         # print(full_prompt_rxn_ktp_dct.keys(), '\n')
@@ -117,7 +122,7 @@ def prompt_chain_ktp_dct(rxn_ktp_dct, ene_start_df_dct,
     full_prompt_rxn_ktp_dct = {}
     # print(ene_start_df_dct.keys(), hot_spc_en.keys())
     for label, ene_start_df in ene_start_df_dct.items():
-
+        modelfor = copy.deepcopy(model)
         # find dissociating fragment if available
         frag10, frag20 = ene_start_df.keys()
         frag = frag10*(frag10 in hot_spc_en.keys()) + \
@@ -128,14 +133,16 @@ def prompt_chain_ktp_dct(rxn_ktp_dct, ene_start_df_dct,
             continue
 
         rxn = '+'.join(label[0])+'='+'+'.join(label[1])
+        print(
+            'Processing reaction {} with DH of {:.2f} kcal/mol'.format(label, -ene_bw_dct[label]))
         # model checks
         if ene_bw_dct[label] < 0:
             print(
                 'Warning: endothermic reaction {} with DH of {:.2f} kcal/mol: \
-                    whatever the model, only fne will be used'.format(label, -ene_bw_dct[label]))
-            model = 'fne'
+                   setting thermal model'.format(label, -ene_bw_dct[label]))
+            modelfor = 'thermal'
         
-        full_prompt_rxn_ktp_dct = calc_bf_ktp(full_prompt_rxn_ktp_dct, model, bf_thresh,
+        full_prompt_rxn_ktp_dct = calc_bf_ktp(full_prompt_rxn_ktp_dct, modelfor, bf_thresh,
                                               ene_start_df[frag], fne_bf[frag], label,
                                               hoten_dct[frag], rxn, rxn_ktp_dct[label], hot_frag_dct)
 
@@ -177,14 +184,12 @@ def build_pedhot_df_dct(hot_inp_str, hot_ped_str, hot_ke_out_str,
     newlabel = (label_start[0], newprods, label_start[2])
     ene_bw += (hot_energy_dct[starthotfrag] - hot_energy_dct[prods])
     
-    print('deriving hot fragment distribution for {} \n'.format(newlabel))
+    print('deriving hot fragment distribution for {}'.format(newlabel))
     if ene_bw < 0:
         print(
-            'Warning: endothermic reaction {} with DH of {:.2f} kcal/mol: \
-                whatever the model, only fne will be used'.format(newlabel, -ene_bw))
-        model = 'fne'
-        pedhot_df_dct[frag1] = {}
-        pedhot_df_dct[frag2] = {}
+            'endothermic reaction {} with DH of {:.2f} kcal/mol: \
+                setting thermal model'.format(newlabel, -ene_bw))
+        model = 'thermal'
         
     # calculate new PED (beta)
     ped_df_fromhot = hot_ped_dct[label]
@@ -194,9 +199,11 @@ def build_pedhot_df_dct(hot_inp_str, hot_ped_str, hot_ke_out_str,
 
     ########################################################################################
     # stupid test to delete later: try to just have the starthot_df but rescale the energy
-    ped_df_rescaled = calculator.bf.ped_df_rescale_test(
-        starthot_df, hot_energy_dct[prods]-hot_energy_dct[starthotfrag])
+    #if starthotfrag == 'KHP' and prods == 'OQpO+OH':
+    #     boolsave = True
 
+    ped_df_rescaled = calculator.bf.ped_df_rescale_test(
+        starthot_df, hot_energy_dct[starthotfrag]-hot_energy_dct[prods], save = boolsave)
     #########################################################################################
 
     # assign name to the global reaction
