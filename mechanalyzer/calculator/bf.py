@@ -11,12 +11,18 @@ import numpy as np
 import pandas as pd
 
 
-def ped_df_rescale_test(starthot_df, energy_scale):
+def ped_df_rescale_test(starthot_df, energy_scale, save=False):
     for temp in starthot_df.index:
         for pressure in starthot_df.columns:
             vals = starthot_df[pressure][temp].values
             dfnew_index = starthot_df[pressure][temp].index + energy_scale
             starthot_df[pressure][temp] = pd.Series(vals, index=dfnew_index)
+            starthot_df[pressure][temp] = starthot_df[pressure][temp][starthot_df[pressure][temp].index > 0]
+            if pressure == 1 and temp in [500, 1000, 2000] and save == True:
+                tosave = starthot_df[pressure][temp].reset_index()
+                np.savetxt('hotdf_shift_{}_{}.txt'.format(
+                    pressure, temp), tosave, fmt='%1.3e')
+
     return starthot_df
 
 
@@ -59,7 +65,6 @@ def ped_df_rescale(starthot_df, ped_df_fromhot):
             # reduce the energy range of ped_fromhot
 
             ped_fromhot = ped_df_fromhot[pressure][temp].sort_index()
-            ped_fromhot_0 = ped_fromhot
             # print('before: ', ped_fromhot, '\n')
             ped_fromhot = ped_fromhot.iloc[(
                 starthot.index[0] <= ped_fromhot.index)*(ped_fromhot.index <= starthot.index[-1])]
