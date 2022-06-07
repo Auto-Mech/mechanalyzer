@@ -7,11 +7,7 @@ import numpy
 from mechanalyzer.parser._util import order_rct_bystoich
 import automol.chi
 import automol.formula
-from mechanalyzer.parser import pes
 from mechanalyzer.parser.ckin_ import parse_pes_dct
-from mechanalyzer.parser.mech import parse_mechanism
-from mechanalyzer.builder import sorter
-
 
 def pes_dictionary(mech_str, mech_type, spc_dct, printlog=True):
     """ Constructs the Potential-Energy-Surface dictionary for all of the
@@ -41,10 +37,6 @@ def pes_dictionary(mech_str, mech_type, spc_dct, printlog=True):
             new_pes_dct[(fml, pes_idx, subpes_idx)] = chnls
         return new_pes_dct
 
-    # Initialize values used for the basic PES-SUBPES sorting
-    sort_str = ['pes', 'subpes', 0]
-    isolate_species = ()
-
     # Build and print the full sorted PES dict
     pes_dct = None
     if mech_str is not None:
@@ -53,19 +45,9 @@ def pes_dictionary(mech_str, mech_type, spc_dct, printlog=True):
         pes_dct = parse_pes_dct(mech_str)
 
         # If that fails then try and read a file normally and sort it
-        if pes_dct is None:
-            rxn_param_dct = parse_mechanism(mech_str, mech_type)
-            if rxn_param_dct is not None:
-                srt_mch = sorter.sorting(
-                    rxn_param_dct, spc_dct, sort_str, isolate_species)
-                pes_dct = srt_mch.return_pes_dct()
-        else:
+        if pes_dct is not None:
             pes_dct = _fix_formula(pes_dct, spc_dct)
             print('Building PES dictionary from input file specification')
-
-    if pes_dct is not None:
-        if printlog:
-            pes.print_pes_channels(pes_dct)
 
     return pes_dct
 

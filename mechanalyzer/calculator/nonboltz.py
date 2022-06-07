@@ -4,7 +4,6 @@ from operator import mod
 import sys
 import copy
 import mess_io
-from mechanalyzer import builder
 from mechanalyzer import calculator
 
 
@@ -27,8 +26,12 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
 
     # OBTAIN ALL OF THE RATE CONSTANTS FROM THE OUTPUT FILES
     # put dictionaries together
-    rxn_ktp_dct = extract_ktp_dct(ped_out_str)
-
+    rxn_ktp_dct = mess_io.reader.rates.get_rxn_ktp_dct(
+        ped_out_str, filter_kts=True,
+        filter_reaction_types=('fake', 'self',
+                                       'loss', 'capture', 'reverse'),
+        relabel_reactions=True
+    )
     # Derive Branching Fractions, Calculate Prompt Rates
     # Merge Prompt Rates with Thermal Rates
     full_prompt_rxn_ktp_dct = {}
@@ -80,7 +83,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
         # DERIVE PED OF THE HOT FRAGMENT
         print('deriving fragment energy distributions for {} to {}'.format(reacs, prods))
         if modelfor != 'fne':
-            ped_df_frag1 = builder.ped.ped_frag1(
+            ped_df_frag1 = calculator.ene_partition.ped_frag1(
                 ped_df, frag1, frag2, modelfor,
                 dos_df=dos_df, dof_info=dof_dct[prods])
         else:
@@ -141,7 +144,7 @@ def prompt_chain_ktp_dct(rxn_ktp_dct, ene_start_df_dct,
                 'Warning: endothermic reaction {} with DH of {:.2f} kcal/mol: \
                    setting thermal model'.format(label, -ene_bw_dct[label]))
             modelfor = 'thermal'
-        
+
         full_prompt_rxn_ktp_dct = calc_bf_ktp(full_prompt_rxn_ktp_dct, modelfor, bf_thresh,
                                               ene_start_df[frag], fne_bf[frag], label,
                                               hoten_dct[frag], rxn, rxn_ktp_dct[label], hot_frag_dct)
@@ -162,7 +165,7 @@ def build_pedhot_df_dct(hot_inp_str, hot_ped_str, hot_ke_out_str,
                         starthotfrag, starthotfrag_df, ene_bw, model, label_start):
     """ label_start: label of the starting reaction (reaction generating the radical)
     """
-    
+
     pedhot_df_dct_tot = {}
     pedhot_df_dct = {}
     ene_bw_dct = {}
@@ -180,42 +183,42 @@ def build_pedhot_df_dct(hot_inp_str, hot_ped_str, hot_ke_out_str,
 
     newprods = tuple([pr for pr in label_start[1] if pr !=
                       starthotfrag]) + tuple(prods.split('+'))
-    
+
     newlabel = (label_start[0], newprods, label_start[2])
     ene_bw += (hot_energy_dct[starthotfrag] - hot_energy_dct[prods])
-    
+
     print('deriving hot fragment distribution for {}'.format(newlabel))
     if ene_bw < 0:
         print(
             'endothermic reaction {} with DH of {:.2f} kcal/mol: \
                 setting thermal model'.format(newlabel, -ene_bw))
         model = 'thermal'
-        
+
     # calculate new PED (beta)
     ped_df_fromhot = hot_ped_dct[label]
 
-    ped_df_rescaled = calculator.bf.ped_df_rescale(
+    ped_df_rescaled = calculator.ene_partition.ped_df_rescale(
         starthot_df, ped_df_fromhot)
 
     ########################################################################################
     # stupid test to delete later: try to just have the starthot_df but rescale the energy
-    #if starthotfrag == 'KHP' and prods == 'OQpO+OH':
-    #     boolsave = True
+    if starthotfrag == 'KHP' and prods == 'OQpO+OH':
+        boolsave = True
 
-    ped_df_rescaled = calculator.bf.ped_df_rescale_test(
-        starthot_df, hot_energy_dct[starthotfrag]-hot_energy_dct[prods], save = boolsave)
+    ped_df_rescaled = calculator.ene_partition.ped_df_rescale_test(
+        starthot_df, hot_energy_dct[starthotfrag]-hot_energy_dct[prods], save=boolsave)
     #########################################################################################
 
     # assign name to the global reaction
     if model != 'fne':
 
         # DERIVE PED OF THE HOT FRAGMENT - BOTH , CHECK FRAG2 NOT ATOM
-        pedhot_df_dct[frag1] = builder.ped.ped_frag1(
+        pedhot_df_dct[frag1] = calculator.ene_partition.ped_frag1(
             ped_df_rescaled, frag1, frag2, model,
             dos_df=hot_dos_df, dof_info=hot_dof_dct[prods])
 
         if hot_dof_dct[prods]['n_atoms'][frag2] > 1:
-            pedhot_df_dct[frag2] = builder.ped.ped_frag1(
+            pedhot_df_dct[frag2] = calculator.ene_partition.ped_frag1(
                 ped_df_rescaled, frag2, frag1, model,
                 dos_df=hot_dos_df, dof_info=hot_dof_dct[prods])
 
@@ -232,13 +235,13 @@ def calc_bf_ktp(full_prompt_rxn_ktp_dct, model, bf_thresh,
         NB frag2 must be tuple
     """
     # JOIN PED AND HOTEN -> DERIVE PRODUCTS BF
-    bf_tp_dct = builder.bf.bf_tp_dct(
+    bf_tp_dct = calculator.bf.bf_tp_dct(
         model, ped_df_frag1, hoten_dct_frag, bf_thresh,
         savefile=True, rxn=rxn, fne=fne_bf_frag1)
 
     # CALCULATE PROMPT DISSOCIATION RATES K*BF
 
-    prompt_rxn_ktp_dct = builder.bf.merge_bf_ktp(
+    prompt_rxn_ktp_dct = calculator.bf.merge_bf_ktp(
         bf_tp_dct, ktp_dct,
         label, hot_frag_dct)
 
@@ -269,7 +272,7 @@ def ped_info(ped_inp_str, ped_ped_str, ped_ke_out_str):
         _, prods = spc
 
         # Derive dofs involved
-        dof_dct[prods] = calculator.statmodels.get_dof_info(
+        dof_dct[prods] = calculator.ene_partition.get_dof_info(
             spc_blocks_ped[prods])
 
     # Read ped.out file for product energy distributions
@@ -296,34 +299,3 @@ def hot_info(hot_inp_str, hot_log_str):
     fne_bf = mess_io.reader.hoten.extract_fne(hot_log_str, sp_labels='auto')
 
     return hot_frag_dct, hot_spc_en, hoten_dct, fne_bf
-
-
-def extract_ktp_dct(out_str):
-    """ 
-    Extract ktp dct
-    """
-    # extract rate constants
-    rxn_ktp_dct = mess_io.reader.rates.get_rxn_ktp_dct(
-        out_str, filter_kts=True,
-        filter_reaction_types=('fake', 'self',
-                                       'loss', 'capture', 'reverse'),
-        relabel_reactions=True
-    )
-    
-    return rxn_ktp_dct
-
-def resort_ktp_labels(ktp_dct):
-    """
-    takes ktp dct
-    resort labels of products in alphabetical order
-    - only way to guarantee consistency in dct keys when applying prompt
-    """
-    
-    new_ktp_dct = {}
-    for key, val in ktp_dct.items():
-        prods = list(key[1])
-        prods.sort()
-        new_key = (key[0], tuple(prods), key[2])
-        new_ktp_dct[new_key] = copy.deepcopy(val)
-        
-    return new_ktp_dct

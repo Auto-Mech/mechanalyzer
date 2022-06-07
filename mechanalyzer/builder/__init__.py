@@ -26,8 +26,6 @@ from mechanalyzer.builder import sorter
 from mechanalyzer.builder import strip_ste
 from mechanalyzer.builder import submech
 from mechanalyzer.builder import sort_fct
-from mechanalyzer.builder import ped
-from mechanalyzer.builder import bf
 
 
 __all__ = [
@@ -55,6 +53,4 @@ __all__ = [
     'strip_ste',
     'submech',
     'sort_fct',
-    'ped',
-    'bf',
 ]

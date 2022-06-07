@@ -51,6 +51,21 @@ def order_rct_bystoich(rct_names_lst, spc_dct=None):
 
     return rct_names_lst_ordered
 
+def resort_ktp_labels(ktp_dct):
+    """
+    takes ktp dct
+    resort labels of products in alphabetical order
+    - only way to guarantee consistency in dct keys when applying prompt
+    """
+
+    new_ktp_dct = {}
+    for key, val in ktp_dct.items():
+        prods = list(key[1])
+        prods.sort()
+        new_key = (key[0], tuple(prods), key[2])
+        new_ktp_dct[new_key] = copy.deepcopy(val)
+
+    return new_ktp_dct
 
 def count_atoms(fml_list):
     """ Count Cl, S, N, C, O, H atoms in formula list
