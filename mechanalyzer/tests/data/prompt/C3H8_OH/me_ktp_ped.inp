@@ -19,7 +19,7 @@ CalculationMethod                       direct #low-eigenvalue #direct
 
 
 PEDOutput       ped.out
-PEDSpecies      C3H8+OH_CH3CH2CH2+H2O  C3H8+OH_CH3CHCH3+H2O
+PEDSpecies      C3H8+OH=CH3CH2CH2+H2O  C3H8+OH=CH3CHCH3+H2O
 
 
 MicroRateOutput                         ke_ped.out

@@ -2,6 +2,7 @@
 Calculate rates with various fitting functions
 """
 
+import sys
 import copy
 import numpy
 from phydat import phycon
@@ -628,6 +629,69 @@ def check_p_t(temps_lst, pressures):
 
     return new_temps_lst
 
+
+def checks_temp_pressure_and_extend(ped_df, hotbf_df):
+    """ compare T,P """
+    temp_ped, pressure_ped = [ped_df.index, ped_df.columns]
+    temp_hot, pressure_hot = [hotbf_df.index, hotbf_df.columns]
+    # check that T of temp_hot are at least as many as those of temp_ped
+    # if they're not, it doesn't make sense to continue
+    if not all(temp_ped_i in temp_hot for temp_ped_i in temp_ped):
+        print('*Error: temperature range in HOTenergies '
+              'does not cover the full range')
+        sys.exit()
+
+    # if in pressure_ped not all pressures of hoten are available:
+    # extend the range of pressures
+    # ex.: for H abstractions, they will be pressure independent
+    # but probably the successive decomposition is not
+    if not all(pressure_hot_i in pressure_ped
+               for pressure_hot_i in pressure_hot):
+        print('*Warning: P range of PedOutput smaller than HOTenergies:\n')
+        print('Energy distribution at other pressure '
+              'approximated from available values \n')
+        ped_df = extend_dct_with_pressure(
+            pressure_hot, pressure_ped, ped_df)
+
+    # check that pressures of pressure_ped are contained in hot energies
+    # if they are not: extend pressure range assuming behavior is the same
+    # ELIF no good here - might be that pressure_ped and pressure_hot
+    #   only intersect in a limited range
+    if not all(pressure_ped_i in pressure_hot
+               for pressure_ped_i in pressure_ped):
+        print('Warning: P range of HOTenergies smaller than PEDoutput:')
+        print('Energy distribution at other pressures '
+              'approximated from available values \n')
+        hotbf_df = extend_dct_with_pressure(
+            pressure_ped, pressure_hot, hotbf_df)
+
+    return ped_df, hotbf_df
+
+
+def extend_dct_with_pressure(pressure_all, pressure_red, dct_toextend):
+    """ Takes a dictionary(dataframe) with pressure keys(columns) and extends it:
+        approximate the values at missing pressures with available values
+
+        :param pressure_all: all pressures
+        :type pressure_all: list
+        :param dct_toextend: dictionary (dataframe) w/ pressure_reduced as keys
+        :type dct_toextend: dictionary (dataframe)
+        :return dct_extended: dictionary with pressure_all as keys (columns)
+        :rtype: dictionary (dataframe)
+    """
+
+    for pressure in pressure_all:
+        if pressure not in pressure_red:
+            # approximate pressure:
+            # provides the minimum difference with pressure_ped_i
+            pressure_approx = pressure_red[
+                numpy.argmin(
+                    [numpy.log(abs(pressure_red_i-pressure))
+                     for pressure_red_i in pressure_red])]
+            # extend original dataframe
+            dct_toextend[pressure] = dct_toextend[pressure_approx]
+
+    return dct_toextend
 
 def p_to_m(pressure, temps, rval=RC2):
     """ Convert the pressure to the concentration of a gas, [M], assuming an

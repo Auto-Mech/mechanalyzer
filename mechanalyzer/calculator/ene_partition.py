@@ -8,6 +8,7 @@ import pandas as pd
 from scipy.interpolate import interp1d
 from phydat import phycon
 from autoparse import find
+from mechanalyzer import calculator
 
 MW_dct_elements = {
     'C': 12e-3,
@@ -20,6 +21,143 @@ MW_dct_elements = {
     'Cl': 35.45e-3
 }  # kg/mol
 
+#################### wrapper function that calls the class ################################
+
+def ped_frag1(ped_df, hotfrg, otherfrg, modeltype,
+              dos_df=None, dof_info=None):
+    """ call ped_models class in statmodels and compute P(E1)
+
+        :param ped_df: dataframe(columns:P, rows:T) energy distrib. series
+        :type ped_df: dataframe(series(float))
+        :param hotfrg: selected hot fragment between frag1 and frag2
+        :type hotfrg: str
+        :param otherfrg: the other fragment
+        :type otherfrg: str
+        :param dos_df: rovibr dos for each fragment
+        :type dos_df: dataframe(index=energy, columns=[frag1, frag2])
+        :param dof_info: vib-rot degrees of freedom and molecular weight
+        :type: dataframe(index=species, columns=['vib dof', 'rot dof', 'mw'])
+        :param ene_bw: backward energy barrier TS-PRODS
+        :type ene_bw: float
+        :param modeltype: type of model to be implemented
+        :type modeltype: str
+
+        :return P_E1_prod1: energy distribution of the product prod
+        :rtype: dataframe(series(float, index=energy), index=T, columns=P)
+    """
+
+    # call class
+    ped_prod1_fct = PEDModels(
+        ped_df, hotfrg, otherfrg,
+        dos_df=dos_df, dof_info=dof_info)
+
+    ped_df_frag1 = ped_prod1_fct.compute_ped(modeltype)
+
+    return ped_df_frag1
+
+def ped_df_rescale_test(starthot_df, energy_scale, save=False):
+    for temp in starthot_df.index:
+        for pressure in starthot_df.columns:
+            vals = starthot_df[pressure][temp].values
+            dfnew_index = starthot_df[pressure][temp].index + energy_scale
+            starthot_df[pressure][temp] = pd.Series(vals, index=dfnew_index)
+            starthot_df[pressure][temp] = starthot_df[pressure][temp][starthot_df[pressure][temp].index > 0]
+            if pressure == 1 and temp in [500, 1000, 2000] and save == True:
+                tosave = starthot_df[pressure][temp].reset_index()
+                np.savetxt('hotdf_shift_{}_{}.txt'.format(
+                    pressure, temp), tosave, fmt='%1.3e')
+
+    return starthot_df
+
+def ped_df_rescale(starthot_df, ped_df_fromhot):
+    """ obtain a new energy distribution for ped_df_fromhot
+        based on the energy distribution of hot_df
+
+        :param starthot_df: dataframe[P][T] with the
+            Series of energy distrib [en: prob(en)]
+        :type starthot_df: dataframe(series(float))
+        :param ped_df_fromhot: (dataframe(columns:P, rows:T))
+                            with series(hoten: series([en: prob(en)]))
+        :type ped_df_fromhot: df[P][T]:series[energies: df[allspecies][energies]: prob]}
+        :return ped_df: ped_df weighted on hot_df distribution
+        :rtype: df[P][T]:series(en: prob(en))
+        sum(ped_df_fromhot(E';E)*starthot_df(E)), E is the starting hoten, E' is the prod en
+    """
+    # sort indexes
+    starthot_df = starthot_df.sort_index()
+    ped_df_fromhot = ped_df_fromhot.sort_index()
+    starthot_df, ped_df_fromhot = calculator.rates.checks_temp_pressure_and_extend(
+        starthot_df, ped_df_fromhot)
+    temps, pressures = [ped_df_fromhot.index, ped_df_fromhot.columns]
+
+    ped_df = pd.DataFrame(index=temps, columns=pressures, dtype=object)
+    T_del = []
+    for temp in temps:
+        for pressure in pressures:
+
+            # initial distribution: sort and fit
+            starthot = starthot_df[pressure][temp].sort_index()
+            # rescale values based on probability - too low probability excluded
+            starthot = starthot[starthot > max(starthot)*1e-4]  # 99.99%
+            # refit starthot to derive the weight factors later
+
+            f_starthot = interp1d(
+                starthot.index, starthot.values, bounds_error=False,
+                kind='cubic', fill_value=(starthot.values[0], starthot.values[-1]))
+
+            # reduce the energy range of ped_fromhot
+
+            ped_fromhot = ped_df_fromhot[pressure][temp].sort_index()
+            # print('before: ', ped_fromhot, '\n')
+            ped_fromhot = ped_fromhot.iloc[(
+                starthot.index[0] <= ped_fromhot.index)*(ped_fromhot.index <= starthot.index[-1])]
+            # print('after: ', ped_fromhot, '\n')
+            # set new energy vector from min and max energies in peden_fromhot
+            min_en_fromhot = min([min(ped_fromhot.iloc[i].index)
+                                  for i in np.arange(0, len(ped_fromhot))])
+            max_en_fromhot = min([max(ped_fromhot.iloc[i].index)
+                                  for i in np.arange(0, len(ped_fromhot))])
+            ene_vect = np.arange(min_en_fromhot, max_en_fromhot, 0.5)
+            prob_vect = np.zeros(ene_vect.shape)
+            # if temp == 1300 and pressure == 0.01:
+            #    print(temp, pressure, starthot, '\n')
+            #    print(ped_fromhot_0, '\n', ped_fromhot)
+
+            # weight factor from fitted starthot
+            for starten in ped_fromhot.index:
+                weightfactor = f_starthot(starten)
+                hoten = ped_fromhot[starten].index
+                pedhot = ped_fromhot[starten].values
+                # interpolate values
+                if len(hoten) > 3:
+                    f_ped_fromhot = interp1d(
+                        hoten, pedhot, bounds_error=False,
+                        kind='cubic', fill_value=(0., 0.))
+                    prob_vect += f_ped_fromhot(ene_vect)*weightfactor
+
+                elif 1 >= len(hoten) >= 3:
+                    # find max val of hoten and set that one
+                    idx_max = np.argmax(pedhot)
+                    # find where hoten is closest and add 1
+                    idx = np.argmin(ene_vect - hoten[idx_max])
+                    single_1 = np.zeros(ene_vect.shape)
+                    single_1[idx] = pedhot[idx_max]
+                    prob_vect += single_1*weightfactor
+
+            # renormalize and put in dataframe
+            prob_vect /= np.trapz(prob_vect, x=ene_vect)
+            ped_df[pressure][temp] = pd.Series(prob_vect, index=ene_vect)
+            if ped_df[pressure][temp].empty:
+                T_del.append(temp)
+            # if temp == 1300 and pressure == 0.01:
+            #    print(ped_df[pressure][temp], '\n')
+
+    ped_df = ped_df.drop(index=list(set(T_del)))
+
+    return ped_df
+
+
+#########################################################################################
 
 class PEDModels:
     """ Statistical models for Product Energy Distributions
@@ -367,7 +505,7 @@ class PEDModels:
 
                 # remove comments to print P(E1)|T,P
                 """
-                if pressure == 1 and temp in [600, 1000, 1500, 2000]:
+                if pressure == 1 and temp in [1000, 1700, 2000]:
                     prob_ene1_df = ped_df_prod[pressure][temp].reset_index()
                     header_label = np.array(prob_ene1_df.columns, dtype=str)
                     header_label[0] = 'E [kcal/mol]'
@@ -376,7 +514,6 @@ class PEDModels:
                             prob_ene1_df.values, delimiter='\t', header=labels, fmt='%1.3e')
                     # print(pressure, temp, ped_df_prod[pressure][temp].idxmax(), '\n')
                 """
-
         return ped_df_prod
 
     def equip_phi(self):
@@ -445,7 +582,7 @@ class PEDModels:
 
     def beta_phi3a(self):
         """ Derive the energy distribution of 1 product from
-            statistical model phi2a Danilack Goldsmith PROCI 2020
+            statistical model phi3a Danilack Goldsmith PROCI 2020
 
             :return ped_df_prod: energy distribution of the product prod
             :rtype: dataframe(series(float))
@@ -520,7 +657,7 @@ class PEDModels:
         return ped_df_prod
 
 
-# helper functions
+# helper functions ###################################################################
 
 def get_dof_info(block):
     """ Gets the N of degrees of freedom and MW of each species

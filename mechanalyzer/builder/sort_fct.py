@@ -18,16 +18,15 @@ from scipy.integrate import quad
 from scipy.optimize import fsolve
 import automol
 from mechanalyzer.builder import submech
+from mechanalyzer.calculator import rates as calc_rates
+from mechanalyzer.calculator import thermo
 from mechanalyzer.parser import pes
+from mechanalyzer.parser.spc import name_inchi_dct
 from mechanalyzer.parser._util import count_atoms
 from mechanalyzer.parser._util import order_rct_bystoich
 from mechanalyzer.parser._util import extract_spc
 from mechanalyzer.parser._util import get_mult
-from mechanalyzer.parser.spc import name_inchi_dct
 from mechanalyzer.parser._util import get_fml
-from mechanalyzer.calculator import rates as calc_rates
-from mechanalyzer.calculator import thermo
-
 
 class SortMech:
     """ class of methods to organize the mechanism according to given criteria
