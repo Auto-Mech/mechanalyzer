@@ -1,0 +1,39 @@
+ELEMENTS
+
+C
+H
+O
+
+END
+
+
+SPECIES
+
+C4ALK-808sWv      ! SMILES: CC=CC         InChi: InChI=1S/C4H8/c1-3-4-2/h3-4H,1-2H3
+C4CETH-RvEsWv     ! SMILES: CC1OC1C       InChi: InChI=1S/C4H8O/c1-3-4(2)5-3/h3-4H,1-2H3
+H                 ! SMILES: [H]           InChi: InChI=1S/H
+O                 ! SMILES: [O]           InChi: InChI=1S/O
+O2                ! SMILES: O=O           InChi: InChI=1S/O2/c1-2
+OH                ! SMILES: [OH]          InChi: InChI=1S/HO/h1H
+HO2               ! SMILES: O[O]          InChi: InChI=1S/HO2/c1-2/h1H
+H2O               ! SMILES: O             InChi: InChI=1S/H2O/h1H2
+
+END
+
+
+REACTIONS     CAL/MOLE     MOLES
+
+C4ALK-808sWv + HO2 = C4CETH-RvEsWv + OH     5.000E+12     0.000       -0
+
+C4ALK-808sWv + HO2 = H + OH                 3.000E+12     0.000       -0
+
+H + HO2 = C4CETH-RvEsWv + OH                3.500E+12     0.000       -0
+
+O + O = O2                                  1.000E+12     0.000        0
+
+H + OH = H2O                                1.000E+12     0.000        0
+
+
+
+END
+

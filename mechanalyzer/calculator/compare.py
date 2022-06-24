@@ -439,6 +439,7 @@ def rename_species(target_dct, rename_instr, target_type='rxn'):
         :type target_type: str
         :return renamed_dct: dct with all species renamed according to the rename_instr
         :rtype: dct; either a rxn_ktp, rxn_param, or thermo dct
+        :return ste_dct: dct for describing naming redundancies that have been introduced
     """
     def strip_third_bod(third_bod):
         """ Strip away the '(', '+', and ')' from a third body
