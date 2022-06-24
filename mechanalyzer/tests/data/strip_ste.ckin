@@ -1,0 +1,31 @@
+REACTIONS     CAL/MOLE     MOLES
+
+! This includes two pairs of stereoisomers: 
+! 1. C4ALK-808sWvZ and C4ALK-808sWvE
+! 2. C4CETH-RvEsWvBB0 and C4CETH-RvEsWvAB
+
+! Four stereo reactions with stereo species in both reactants and
+! products. They should be condensed to a single reaction (with the rates
+! taken as the sum divided by 2)
+C4ALK-808sWvZ + HO2 = C4CETH-RvEsWvBB0 + OH      1.00E+12     0    0
+C4ALK-808sWvZ + HO2 = C4CETH-RvEsWvAB + OH       2.00E+12     0    0
+C4ALK-808sWvE + HO2 = C4CETH-RvEsWvBB0 + OH      3.00E+12     0    0
+C4ALK-808sWvE + HO2 = C4CETH-RvEsWvAB + OH       4.00E+12     0    0
+
+! Two (nonsense) reactions to check when there is only a single 
+! stereoisomer in the *products*. They should be condensed to a single 
+! reaction (with the rates *averaged*)
+H + HO2 = C4CETH-RvEsWvBB0 + OH      3.00E+12     0    0
+H + HO2 = C4CETH-RvEsWvAB + OH       4.00E+12     0    0
+
+! Two (nonsense) reactions to check when there is only a single 
+! stereoisomer in the *reactants*. They should be condensed to a single 
+! reaction (with the rates *added*)
+C4ALK-808sWvZ + HO2 = H + OH      1.00E+12     0    0
+C4ALK-808sWvE + HO2 = H + OH      2.00E+12     0    0
+
+! Two non-stereo reactions. They should be unchanged
+H + OH = H2O    1.00E+12    0   0
+O + O = O2      1.00E+12    0   0
+
+END
