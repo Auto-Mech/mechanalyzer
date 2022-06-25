@@ -3,7 +3,7 @@
 from operator import mod
 import sys
 import copy
-import mess_io
+from mess_io import reader
 from mechanalyzer import calculator
 
 
@@ -26,7 +26,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
 
     # OBTAIN ALL OF THE RATE CONSTANTS FROM THE OUTPUT FILES
     # put dictionaries together
-    rxn_ktp_dct = mess_io.reader.rates.get_rxn_ktp_dct(
+    rxn_ktp_dct = reader.rates.get_rxn_ktp_dct(
         ped_out_str, filter_kts=True,
         filter_reaction_types=('fake', 'self',
                                        'loss', 'capture', 'reverse'),
