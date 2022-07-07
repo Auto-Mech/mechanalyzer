@@ -61,8 +61,19 @@ def parse_sort(sort_str):
     sort_tup = crit_tup + (nhead,)
     sort_lst = list(sort_tup)
 
+    # prompt criteria
+    prompt_block = ioformat.ptt.end_block(sort_str, 'prompt_filter')
+    prompt_filter_dct = {}
+    if prompt_block is not None:
+        prompt_block = ioformat.ptt.keyword_value_blocks(
+            prompt_block)        
+        dct_0 = dict(prompt_block)
+        for key in dct_0.keys():
+            prompt_filter_dct[key] = float(dct_0[key])
+
+        
     # Print an error message for an isol block
     if isol_block is None:
         print('*ERROR: sort_mech section is not defined')
 
-    return spc_lst, sort_lst
+    return spc_lst, sort_lst, prompt_filter_dct

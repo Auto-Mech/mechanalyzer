@@ -5,9 +5,15 @@
 import sys
 import numpy as np
 import pandas as pd
+from scipy.signal import convolve
 from scipy.interpolate import interp1d
+from scipy.integrate import quad
+from scipy.optimize import fsolve
 from phydat import phycon
 from autoparse import find
+from automol import formula
+from automol import geom
+from automol import chi
 from mechanalyzer import calculator
 
 MW_dct_elements = {
@@ -22,6 +28,7 @@ MW_dct_elements = {
 }  # kg/mol
 
 #################### wrapper function that calls the class ################################
+
 
 def ped_frag1(ped_df, hotfrg, otherfrg, modeltype,
               dos_df=None, dof_info=None):
@@ -55,6 +62,7 @@ def ped_frag1(ped_df, hotfrg, otherfrg, modeltype,
 
     return ped_df_frag1
 
+
 def ped_df_rescale_test(starthot_df, energy_scale, save=False):
     for temp in starthot_df.index:
         for pressure in starthot_df.columns:
@@ -62,14 +70,15 @@ def ped_df_rescale_test(starthot_df, energy_scale, save=False):
             dfnew_index = starthot_df[pressure][temp].index + energy_scale
             starthot_df[pressure][temp] = pd.Series(vals, index=dfnew_index)
             starthot_df[pressure][temp] = starthot_df[pressure][temp][starthot_df[pressure][temp].index > 0]
-            if pressure == 1 and temp in [500, 1000, 2000] and save == True:
+            if pressure == 1 and temp in [300, 1500, 2000] and save == True:
                 tosave = starthot_df[pressure][temp].reset_index()
                 np.savetxt('hotdf_shift_{}_{}.txt'.format(
                     pressure, temp), tosave, fmt='%1.3e')
 
     return starthot_df
 
-def ped_df_rescale(starthot_df, ped_df_fromhot):
+
+def ped_df_rescale(starthot_df, ped_df_fromhot, save=False, name=''):
     """ obtain a new energy distribution for ped_df_fromhot
         based on the energy distribution of hot_df
 
@@ -106,13 +115,12 @@ def ped_df_rescale(starthot_df, ped_df_fromhot):
                 kind='cubic', fill_value=(starthot.values[0], starthot.values[-1]))
 
             # reduce the energy range of ped_fromhot
-
             ped_fromhot = ped_df_fromhot[pressure][temp].sort_index()
             # print('before: ', ped_fromhot, '\n')
             ped_fromhot = ped_fromhot.iloc[(
                 starthot.index[0] <= ped_fromhot.index)*(ped_fromhot.index <= starthot.index[-1])]
             # print('after: ', ped_fromhot, '\n')
-            # set new energy vector from min and max energies in peden_fromhot
+            # set new energy vector from min and max energies in ped_fromhot
             min_en_fromhot = min([min(ped_fromhot.iloc[i].index)
                                   for i in np.arange(0, len(ped_fromhot))])
             max_en_fromhot = min([max(ped_fromhot.iloc[i].index)
@@ -143,14 +151,23 @@ def ped_df_rescale(starthot_df, ped_df_fromhot):
                     single_1 = np.zeros(ene_vect.shape)
                     single_1[idx] = pedhot[idx_max]
                     prob_vect += single_1*weightfactor
-
+            # binning: moving average - kernel size 5; do it multiple times
+            kernelsize = round(len(ene_vect)/20) + 1
+            cycles = 4
+            while cycles > 0:
+                prob_vect = convolve(prob_vect, np.ones(
+                    kernelsize)/kernelsize, mode='same')
+                cycles -= 1
             # renormalize and put in dataframe
             prob_vect /= np.trapz(prob_vect, x=ene_vect)
             ped_df[pressure][temp] = pd.Series(prob_vect, index=ene_vect)
             if ped_df[pressure][temp].empty:
                 T_del.append(temp)
-            # if temp == 1300 and pressure == 0.01:
-            #    print(ped_df[pressure][temp], '\n')
+
+            if pressure == 1 and temp in [300, 1500, 2000] and save == True:
+                prob_save_df = ped_df[pressure][temp].reset_index()
+                np.savetxt('PEhot_{}_{}_{}.txt'.format(pressure, temp, name),
+                           prob_save_df, fmt='%1.3e')
 
     ped_df = ped_df.drop(index=list(set(T_del)))
 
@@ -445,6 +462,7 @@ class PEDModels:
                             ene[0],
                             ene[0]-steps_to_zero*ped_step,
                             steps_to_zero+1)[1:-1]
+
                         # ^ includes enemax
                         self.ene1_vect = np.sort(
                             np.concatenate((ene1_vect_low, ene)))
@@ -505,13 +523,13 @@ class PEDModels:
 
                 # remove comments to print P(E1)|T,P
                 """
-                if pressure == 1 and temp in [1000, 1700, 2000]:
+                if pressure == 1 and temp in [1500, 2000] and self.mdl == 'equip_phi':
                     prob_ene1_df = ped_df_prod[pressure][temp].reset_index()
                     header_label = np.array(prob_ene1_df.columns, dtype=str)
                     header_label[0] = 'E [kcal/mol]'
                     labels = '\t\t'.join(header_label)
-                    np.savetxt('PE1_{}_{}_{}_{}_{}.txt'.format(pressure, temp, self.mdl, self.prod1, self.prod2), 
-                            prob_ene1_df.values, delimiter='\t', header=labels, fmt='%1.3e')
+                    np.savetxt('PE1_{}_{}_{}_{}_{}.txt'.format(pressure, temp, self.mdl, self.prod1, self.prod2),
+                               prob_ene1_df.values, delimiter='\t', header=labels, fmt='%1.3e')
                     # print(pressure, temp, ped_df_prod[pressure][temp].idxmax(), '\n')
                 """
         return ped_df_prod
@@ -685,16 +703,16 @@ def get_dof_info(block):
             where_geom = find.where_in('Geometry', info)[0]
             where_freq = find.where_in('Frequencies', info)[0]
             num_atoms = int(info[where_geom].strip().split()[1])
-            num_dof = (
+            vib_dof = (
                 int(info[where_freq].strip().split()[1]) + len(where_hind)
             )
-            if 3*num_atoms - num_dof == 6:
+            if 3*num_atoms - vib_dof == 6:
                 rot_dof = 3
             else:
                 rot_dof = 2
         except IndexError:
             # if 1 atom only: no 'Frequencies', set to 0
-            num_dof = 0
+            vib_dof = 0
             rot_dof = 0
             num_atoms = 1
             where_geom = find.where_in('Name', info)[0]
@@ -703,7 +721,7 @@ def get_dof_info(block):
         atoms_ts += num_atoms
         # this allows to get 3N-5 or 3N-6 without analyzing the geometry
         info_array[i, 0] = num_atoms
-        info_array[i, 1] = num_dof
+        info_array[i, 1] = vib_dof
         info_array[i, 2] = rot_dof
 
         # MW from type of atoms:
@@ -787,3 +805,80 @@ def dos_trasl(mass1, ene_grid, pressure, temp, mass2=0):
     rho_kcal_mol = rho*v_mol*4184/phycon.NAVO
 
     return rho_kcal_mol
+
+# helper functions for energy partition used in the sorter
+
+def get_dof_info_fromspcdct(sp, spc_dct):
+    """ Gets the N of degrees of freedom and MW of each species
+        :sp: species name
+        :type sp: str
+        :param spc_dct: species dictionary
+        :return dof_info: dictionary with vibrat/rot degrees of freedom
+            and molecular weight
+        :rtype: dct(['n_atoms', 'vib dof', 'rot dof', 'mw'])
+    """
+    dof_info = {}
+    fml = spc_dct[sp]['fml']
+    Nat = formula.atom_count(fml)
+    dof_info['n_atoms'] = Nat
+    dof_info['mw'] = sum(np.array([formula.element_count(fml, at) *
+                       MW_dct_elements[at] for at in MW_dct_elements.keys()]))
+    if Nat == 1:
+        dof_info['vib dof'] = 0
+        dof_info['rot dof'] = 0
+    elif Nat == 2:
+        dof_info['vib dof'] = 1
+        dof_info['rot dof'] = 2
+    else:
+        # derive geometry and check if linear
+        geom_sp = chi.geometry(spc_dct[sp]['inchi'])
+        ilin = int(geom.is_linear(geom_sp))
+        dof_info['rot dof'] = 3 - 1*ilin
+        dof_info['vib dof'] = 3*Nat - 6 + 1*ilin
+        
+    return dof_info
+
+
+def phi_equip_fromich(sp1, sp2, spc_dct):
+    """ quick approximate function to estimate energy partition of sp1
+        does not account for linearity or atomic species
+        not meant to be accurate
+    """
+    dof1 = get_dof_info_fromspcdct(sp1, spc_dct)
+    dof2 = get_dof_info_fromspcdct(sp2, spc_dct)
+    phi = (dof1['vib dof']+dof1['rot dof']/2) / \
+        (dof1['vib dof']+dof2['vib dof']+(3+dof1['rot dof']+dof2['rot dof'])/2)
+
+    return phi
+
+
+def kt_star(DH0, Cp, T0, k_series):
+    """
+    Take a DH0 and Cp(T) and find the T* where DH = sum(Cp*dT) from T0 to T*
+    Then compute k* at the new T*
+    """
+    def tozero(T_star, DH0, f_cp, T0):
+        int_fct, _ = quad(f_cp, T0, T_star)
+        return DH0 - int_fct
+    
+    try:
+        f_cp = interp1d(Cp.index, Cp.values, kind='cubic')
+        f_k = interp1d(k_series.index, k_series.values, kind='cubic')
+    except TypeError:
+        return T0, k_series[T0]
+
+    try:
+        T_star = fsolve(tozero, T0+100, args=(DH0, f_cp, T0))
+    except ValueError:
+        print(
+            '*Warning: fsolve failed, out of range - using fixed Cp at {:.0f} K'.format(T0))
+        T_star = T0+DH0/Cp[T0]
+    try:
+        k_star = f_k(T_star)
+    except ValueError:
+        k_series = k_series.sort_index()
+        k_star = k_series.iloc[-1]
+        print(
+            '*Warning: out of range - determine k at max T of {} K'.format(k_series.index[-1]))
+
+    return T_star, k_star
