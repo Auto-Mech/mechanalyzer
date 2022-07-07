@@ -48,9 +48,9 @@ if any(string is None for string in (spc_str, mech_str, sort_str)):
 spc_therm_dct = ckin_parser.parse_spc_therm_dct(therm_str, np.arange(300,2010,10))
 
 # Build sorted mechanism files
-isolate_spc, sort_lst = mparser.parse_sort(sort_str)
+isolate_spc, sort_lst, prompt_filter_dct = mparser.parse_sort(sort_str)
 param_dct_sort, mech_spc_dct, cmts_dct, pes_groups, rxns_filter = sorter.sorted_mech(
-    spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=spc_therm_dct, thresh_flt_groups=50.)
+                spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=spc_therm_dct, dct_flt_grps=prompt_filter_dct)
 rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(
     rxn_sort_dct=cmts_dct)
 
@@ -64,10 +64,13 @@ sortd_mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
 
 pes_groups_str = chemkin_io.writer.pesgroups.write_pes_groups(pes_groups)
 # replace all '!' with '#' in mech string
-sortd_mech_str = sortd_mech_str.replace('!', '#')
+sortd_mech_str = sortd_mech_str.replace('! pes', '# pes')
 pathtools.write_file(sortd_csv_str, CWD, OPTS['outspc'])
 pathtools.write_file(sortd_mech_str, CWD, OPTS['outmech'])
 pathtools.write_file(pes_groups_str, CWD, 'pes_groups.dat')
-np.savetxt(CWD+'/rxns_prompt_dh.out', rxns_filter[2:,:], delimiter='\t\t', header='\t'.join(rxns_filter[1,:]), fmt = list(rxns_filter[0,:]))
+try:
+    np.savetxt(CWD+'/rxns_prompt_dh.out', rxns_filter[2:,:], delimiter='\t\t', header='\t'.join(rxns_filter[1,:]), fmt = list(rxns_filter[0,:]))
+except TypeError:
+    print('no filtering selected, prompt list not generated')
 # pathtools.write_file(rxns_filter, CWD, 'rxns_prompt_dh.out')
 
