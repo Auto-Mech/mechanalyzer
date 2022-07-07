@@ -198,15 +198,14 @@ def build_pedhot_df_dct(hot_inp_str, hot_ped_str, hot_ke_out_str,
     ped_df_fromhot = hot_ped_dct[label]
 
     ped_df_rescaled = calculator.ene_partition.ped_df_rescale(
-        starthot_df, ped_df_fromhot)
+        starthot_df, ped_df_fromhot, save = True, name = '+'.join(newlabel[0]) + '=' + '+'.join(newlabel[1]))
 
     ########################################################################################
     # stupid test to delete later: try to just have the starthot_df but rescale the energy
-    if starthotfrag == 'KHP' and prods == 'OQpO+OH':
-        boolsave = True
-
+    """
     ped_df_rescaled = calculator.ene_partition.ped_df_rescale_test(
         starthot_df, hot_energy_dct[starthotfrag]-hot_energy_dct[prods], save=boolsave)
+    """
     #########################################################################################
 
     # assign name to the global reaction

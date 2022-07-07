@@ -8,18 +8,17 @@ Sorter module - sorting of the mechanism according to various options
 """
 import enum
 from multiprocessing.sharedctypes import Value
+from re import T
 import time
 import sys
 import copy
 import pandas as pd
 import numpy
-from scipy.interpolate import interp1d
-from scipy.integrate import quad
-from scipy.optimize import fsolve
 import automol
 from mechanalyzer.builder import submech
 from mechanalyzer.calculator import rates as calc_rates
 from mechanalyzer.calculator import thermo
+from mechanalyzer.calculator import ene_partition
 from mechanalyzer.parser import pes
 from mechanalyzer.parser.spc import name_inchi_dct
 from mechanalyzer.parser._util import count_atoms
@@ -27,6 +26,7 @@ from mechanalyzer.parser._util import order_rct_bystoich
 from mechanalyzer.parser._util import extract_spc
 from mechanalyzer.parser._util import get_mult
 from mechanalyzer.parser._util import get_fml
+
 
 class SortMech:
     """ class of methods to organize the mechanism according to given criteria
@@ -137,6 +137,17 @@ class SortMech:
             print('pes criterion added: necessary for subpes/chnls')
 
         # if species_list is not empty: pre-process the mechanism
+        if len(species_list) == 0 and 'submech_prompt' in hierarchy:
+            # species list includes all radicals in the mech
+            print('Prompt selected w/o species specification: \
+                all radicals analyzed ...')
+            for sp_i in self.spc_dct.keys():
+                mult = get_mult(sp_i, self.spc_dct)
+                atoms = sum(automol.chi.formula(
+                    self.spc_dct[sp_i]['inchi']).values())
+                if mult > 1 and atoms > 1:
+                    species_list.append(sp_i)
+
         if len(species_list) > 0:
             if len(species_list) >= 1 and 'submech_prompt' in hierarchy:
                 filtertype = 'submech_prompt'
@@ -501,7 +512,8 @@ class SortMech:
                             rxn_ped = '{}+{}={}+{}'.format(p1, p2, r1, r2)
                         elif len(subpesdf['prd_names_lst'][rxn]) == 1:
                             # 1 reactant
-                             rxn_ped = '{}={}+{}'.format(subpesdf['prd_names_lst'][rxn][0], r1, r2)
+                            rxn_ped = '{}={}+{}'.format(
+                                subpesdf['prd_names_lst'][rxn][0], r1, r2)
                     submech_df['submech_prompt'][rxn] = 'RAD_GEN_{}'.format(sp)
                     peds.append(rxn_ped)
                     # deal with hotspecies
@@ -516,6 +528,7 @@ class SortMech:
                 grp_dct['peds'].append([])
                 grp_dct['idxs'].append(hotpes)
                 grp_dct['hot'].append(list(set(hotspc_dct[hotpes])))
+                grp_dct['modeltype'] = 'rovib_dos'
 
             grps.append(grp_dct)
 
@@ -523,11 +536,44 @@ class SortMech:
 
         return submech_df
 
-    def filter_groups_prompt(self, therm_dct, threshold=30.):
-        """ filter prompt groups according to
-            A+B->B+C->B+(D+E) must be < 30 kcal/mol endothermic
+    def filter_groups_prompt(self, therm_dct, DFG, T0=300.):
+        """ filter prompt groups according to DFG dct criteria:
+            A+B->B+C->B+(D+E) must be < X kcal/mol endothermic
+            If DH1 is added to dissociation reaction: k(T*)/k(T) > RATIO
+            ratio: (DH1+DH3)/DH3 < threshold
+            Absolute threshold for k(T*): should be > k*abs (only for exothermic rxns not fulfilling other criteria)
+            NB all criteria should be strict --> by default, no reaction is kept.
+            the criterion introduced should be the strict one
+            T0 is the T at which DH are considered
+            Tref is the T at which the decomposition rate of the radical is extracted
             otherwise remove from dct
         """
+        def extract_deltaX_therm(therm_df, rcts, prds, var):
+            """ extract from thermo file the DH/DG/DCP/DS of rxn rcts->prds
+                at different T_vect
+            """
+            # extract common indexes
+            T_vect = []
+            [T_vect.extend(list(therm_df[rct][var].index)) for rct in rcts]
+            [T_vect.extend(list(therm_df[prd][var].index)) for prd in prds]
+            T_vect = list(set(T_vect))
+
+            dX_series = pd.Series(index=T_vect, dtype=float)
+            for T in T_vect:
+                dX_rcts = [therm_df[rct][var][T]
+                           for rct in rcts]
+                dX_prds = [therm_df[prd][var][T]
+                           for prd in prds]
+                dX_series[T] = sum(dX_prds) - sum(dX_rcts)
+
+            return dX_series
+        # define criteria
+        DHmax = DFG['DH']
+        H5H3ratio = DFG['H5H3ratio']
+        kratio = DFG['kratio']
+        kabs = DFG['kabs']
+        Tref = DFG['Tref']
+        keepfiltered = int(DFG['keepfiltered'])
         # convert therm dct to dataframe
         therm_df = thermo.spc_therm_dct_df(therm_dct)
         # 1 find min endothermicity of deco reactions of hotspecies
@@ -537,97 +583,102 @@ class SortMech:
         for hot_sp in self.species_list:
             hot_sp_df = self.mech_df[self.mech_df['submech_prompt']
                                      == 'RAD_DECO_{}'.format(hot_sp)]
-            dh = []
+            dhmin = 1e8  # put unphysical value for sure higher than all
             kmax = 0
 
             for rxn in hot_sp_df.index:
                 rcts = hot_sp_df['rct_names_lst'][rxn]
                 prds = hot_sp_df['prd_names_lst'][rxn]
-                dh_rcts = [therm_df[rct]['H'][300]/1000 for rct in rcts]
-                dh_prds = [therm_df[prd]['H'][300]/1000 for prd in prds]
-                dh_rxn = sum(dh_prds) - sum(dh_rcts)
+                dh_rxn = extract_deltaX_therm(therm_df, rcts, prds, 'H')/1000
 
-                # get rate at 1000K
+                # get rate at Tref
                 try:
                     k_series = pd.Series(
                         hot_sp_df['param_vals'][rxn][0][1.][1], index=hot_sp_df['param_vals'][rxn][0][1.][0])
-                    k = k_series[1000]
+                    k = k_series[Tref]
                 except IndexError:
-                    print('*Warning: 1000 K not found - k not extracted')
+                    print('*Warning: {} K not found - k not extracted'.format(Tref))
                     k = numpy.NaN
 
                 if hot_sp in prds:  # revert sign
                     dh_rxn = -dh_rxn
                     try:
-                        for T in k_series.index:
-                            dg_rcts = [therm_df[rct]['G'][T]
-                                       for rct in rcts]
-                            dg_prds = [therm_df[prd]['G'][T]
-                                       for prd in prds]
-                            dg_rxn = sum(dg_prds) - sum(dg_rcts)
-                            k_series[T] = k_series[T]*(101325/8.314/T/numpy.power(10, 6)) * \
-                                numpy.exp(dg_rxn/1.987/T)
-                        k = k_series[1000]
+                        dg_rxn = extract_deltaX_therm(
+                            therm_df, rcts, prds, 'G')
+                        k_series = k_series*(101325/8.314/k_series.index/numpy.power(10, 6)) * \
+                            numpy.exp(dg_rxn/1.987/k_series.index)
+                        k = k_series[Tref]
                     except IndexError:
-                        print('*Warning: 1000 K not found - dg not extracted')
-                        dg_rxn = numpy.NaN
+                        print(
+                            '*Warning: {} K not found - dg not extracted'.format(Tref))
                         k = numpy.NaN
-
-                dh.append(dh_rxn)
 
                 if k > kmax:
                     k_max_hot[hot_sp] = copy.deepcopy(k_series)
 
-                # print(rcts, prds, dh_rcts, dh_prds, dh_rxn)
-            dh_min_hot[hot_sp] = min(dh)
+                if dh_rxn[T0] < dhmin:
+                    dh_min_hot[hot_sp] = copy.deepcopy(dh_rxn)
+                    dhmin = copy.deepcopy(dh_rxn[T0])
 
         # loop over groups and delete too endothermic reactions
         filtered_grps = []
         grp_idx = 0
         fmt_lbls = numpy.array(['%40s', '%15s', '%.1f', '%.1f',
                                 '%.1f', '%1.1e', '%1.1e', '%.0f', '%s'], dtype=object)
-        lbls = numpy.array(['prompt rxn{}\t'.format(' '*40), 'hot species', 'dh1(300K)', 'dh2(300K)',
-                            'dhtot(300K)', 'k(1000K)', 'k*(T*(1000K))', 'T*(1000K)', 'keep?'], dtype=object)
+        lbls = numpy.array(['prompt rxn{}\t'.format(' '*40), 'hot species', 'dh1({:.0f}K)'.format(T0), 'dh2({:.0f}K)'.format(T0),
+                            'dhtot({:.0f}K)'.format(T0), 'k({:.0f}K)'.format(Tref), 'k*(T*({:.0f}K))'.format(Tref), 'T*({:.0f}K)'.format(Tref), 'keep?'], dtype=object)
+
         self.rxns_dh = numpy.vstack((fmt_lbls, lbls))
         for grp in self.grps:
-            grp_new = {'grp': 0, 'idxs': [], 'peds': [], 'hot': []}
+            grp_new = {'grp': 0, 'idxs': [],
+                       'peds': [], 'hot': [], 'modeltype': ''}
             check = 0
+            check_filtered = 0
             active_hotsp = []
             # lists, potentially more than 1
+
             for n, ped in enumerate(grp['peds']):
                 for ped_i in ped:
                     # extract rxn exo/endo thermicity
                     rcts = ped_i.split('=')[0].split('+')
                     prds = ped_i.split('=')[1].split('+')
-                    dh_rcts = [therm_df[rct]['H'][300]/1000 for rct in rcts]
-                    dh_prds = [therm_df[prd]['H'][300]/1000 for prd in prds]
-                    dh = sum(dh_prds) - sum(dh_rcts)
+                    dh = extract_deltaX_therm(therm_df, rcts, prds, 'H')/1000
                     # check with threshold
                     hot_sp = list(set(self.species_list).intersection(prds))[0]
                     other = copy.deepcopy(prds)
                     other.remove(hot_sp)
-                    dh_tot = dh + dh_min_hot[hot_sp]
+                    try:
+                        dh_tot = dh + dh_min_hot[hot_sp]
+                    except TypeError:
+                        print('dh failed for:', rcts, prds, hot_sp)
+                        continue
 
-                    # calculate equivalent T* at 1000 K and corresponding k* rate
+                    # calculate equivalent T* at Tref and corresponding k* rate
                     # phi: fraction of en transferred to prods - very approixmate
-                    if dh < 0:
-                        phi = approx_phi(hot_sp, other[0], self.spc_dct)
-                        T_star, k_star = kt_star(-dh*phi*1000,
-                                                 therm_df[hot_sp]['Cp'], 1000, k_max_hot[hot_sp])
+                    if dh[Tref] < 0:
+                        phi = ene_partition.phi_equip_fromich(
+                            hot_sp, other[0], self.spc_dct)
+                        T_star, k_star = ene_partition.kt_star(-dh[Tref]*phi*1000,
+                                                               therm_df[hot_sp]['Cp'], Tref, k_max_hot[hot_sp])
                     else:
-                        T_star = 1000
-                        k_star = k_max_hot[hot_sp][1000]
+                        T_star = Tref
+                        k_star = k_max_hot[hot_sp][Tref]
 
-                    if dh_tot > threshold:
-                        ped.remove(ped_i)
-                        keep = 'NO'
-                    else:
+                    if dh_tot[T0] < DHmax or dh_tot[T0]/dh_min_hot[hot_sp][T0] < H5H3ratio or (k_star/k_max_hot[hot_sp][Tref] > kratio) or (k_star > kabs and dh[T0] < 0):
                         check += 1
                         keep = 'YES'
                         active_hotsp.append(hot_sp)
+                    else:
+                        if keepfiltered == 0:
+                            ped.remove(ped_i)
+                        else:
+                            active_hotsp.append(hot_sp)
+                            check += 1
+                            check_filtered += 1  # count filtered rxns
+                        keep = 'NO'
 
                     array_info = numpy.array(
-                        [ped_i, hot_sp, dh, dh_min_hot[hot_sp], dh_tot, k_max_hot[hot_sp][1000], k_star, T_star, keep], dtype=object)
+                        [ped_i, hot_sp, dh[T0], dh_min_hot[hot_sp][T0], dh_tot[T0], k_max_hot[hot_sp][Tref], k_star, T_star, keep], dtype=object)
                     self.rxns_dh = numpy.vstack((self.rxns_dh, array_info))
 
                 if ped:
@@ -646,6 +697,10 @@ class SortMech:
             if check > 0:
                 grp_idx += 1
                 grp_new['grp'] = grp_idx
+                if check_filtered == check:
+                    grp_new['modeltype'] = 'thermal'
+                else:
+                    grp_new['modeltype'] = 'rovib_dos'
                 filtered_grps.append(grp_new)
 
         self.grps = filtered_grps
@@ -1133,41 +1188,8 @@ def get_max_aligned_values(aligned_rxn_dct_entry):
 
     return max_val
 
-
-def approx_phi(sp1, sp2, spc_dct):
-    """ quick approximate function to estimate energy partition of sp1
-        does not account for linearity or atomic species
-        not meant to be accurate
-    """
-    vibdof_prod1 = 3*automol.formula.atom_count(spc_dct[sp1]['fml'])-6
-    vibdof_prod2 = 3*automol.formula.atom_count(spc_dct[sp2]['fml'])-6
-    phi = (vibdof_prod1+3/2) / \
-        (vibdof_prod1+vibdof_prod2+(3+3+3)/2)
-
-    return phi
-
-
-def kt_star(DH0, Cp, T0, k_series):
-    """
-    Take a DH0 and Cp(T) and find the T* where DH = sum(Cp*dT) from T0 to T*
-    Then compute k* at the new T*
-    """
-    f_cp = interp1d(Cp.index, Cp.values, kind='cubic')
-
-    def tozero(T_star, DH0, f_cp, T0):
-        int_fct, _ = quad(f_cp, T0, T_star)
-        return DH0 - int_fct
-
-    T_star = fsolve(tozero, T0+100, args=(DH0, f_cp, T0))
-    # simpler
-    # T_star = T0+DH0/Cp[1000]
-    f_k = interp1d(k_series.index, k_series.values, kind='cubic')
-    k_star = f_k(T_star)
-
-    return T_star, k_star
-
-
 # EXTRACT MECH INFO - PREVIOUSLY IN MECHANALYZER PARSER
+
 
 def mech_info(rxn_param_dct, spc_dct):
     """ Build mech_info object for mech sorting

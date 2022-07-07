@@ -8,9 +8,17 @@ from mechanalyzer.builder import sort_fct
 
 SPC_TYPE = 'csv'
 MECH_TYPE = 'chemkin'
-
+DFG = {
+    'Tref': 1500,
+    'keepfiltered': 0,
+    'DH': 0,
+    'H5H3ratio': 0,
+    'kratio': 100,
+    'kabs': 1e50
+}
 
 # Functions to take the mechanism strings (may want to further simplify)
+
 def sorted_pes_dct(spc_str, mech_str, isolate_spc, sort_lst):
     """ Function that extracts sorted subpes for a mech
     """
@@ -20,7 +28,7 @@ def sorted_pes_dct(spc_str, mech_str, isolate_spc, sort_lst):
     return srt_mch.return_pes_dct()
 
 
-def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, thresh_flt_groups=30.):
+def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, dct_flt_grps={}):
     """ Function that conducts the sorting process for all of the above tests
     """
 
@@ -34,15 +42,16 @@ def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, th
     pes_groups = None
     rxns_filter = None
     # if prompt groups detected: retrieve grps info
-    if 'submech_prompt' in sort_lst and spc_therm_dct and thresh_flt_groups:
+    if 'submech_prompt' in sort_lst and spc_therm_dct and dct_flt_grps:
+        DFG.update(dct_flt_grps)
         srt_mch.filter_groups_prompt(
-            spc_therm_dct, threshold=thresh_flt_groups)
+            spc_therm_dct, DFG)
         pes_groups = srt_mch.grps
         rxns_filter = srt_mch.rxns_dh
-    
+
     elif 'submech_prompt' in sort_lst and not spc_therm_dct:
         pes_groups = srt_mch.grps
-        
+
     return rxn_param_dct_sort, spc_dct_ord, cmts_dct, pes_groups, rxns_filter
 
 
