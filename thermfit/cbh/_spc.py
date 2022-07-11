@@ -145,7 +145,7 @@ def cbhzed(ich, balance=True):
 
     # Graphical info about molecule
     gra = automol.chi.graph(ich)
-    rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
+    rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
     atm_vals = automol.graph.atom_element_valences(gra)
     atms = automol.graph.atoms(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
@@ -188,8 +188,8 @@ def cbhone(ich, balance=True):
     # Graphical info about molecule
     gra = automol.chi.graph(ich)
     atms = automol.graph.atoms(gra)
-    bnd_ords = automol.graph.one_resonance_dominant_bond_orders(gra)
-    rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
+    bnd_ords = automol.graph.kekule_bond_orders(gra)
+    rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
     atm_vals = automol.graph.atom_element_valences(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
 
@@ -247,8 +247,8 @@ def cbhtwo(ich, balance=True):
     # Graphical info about molecule
     gra = automol.chi.graph(ich)
     atms = automol.graph.atoms(gra)
-    bnd_ords = automol.graph.one_resonance_dominant_bond_orders(gra)
-    rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
+    bnd_ords = automol.graph.kekule_bond_orders(gra)
+    rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
     atm_vals = automol.graph.atom_element_valences(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
 
@@ -332,8 +332,8 @@ def cbhthree(ich, balance=True):
     # Graphical info about molecule
     gra = automol.chi.graph(ich)
     atms = automol.graph.atoms(gra)
-    bnd_ords = automol.graph.one_resonance_dominant_bond_orders(gra)
-    rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
+    bnd_ords = automol.graph.kekule_bond_orders(gra)
+    rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
     atm_vals = automol.graph.atom_element_valences(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
 
@@ -421,8 +421,8 @@ def cbhthree(ich, balance=True):
 #    #Graphical info about molecule
 #    gra      = automol.chi.graph(ich)
 #    atms     = automol.graph.atoms(gra)
-#    bnd_ords = automol.graph.one_resonance_dominant_bond_orders(gra)
-#    rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
+#    bnd_ords = automol.graph.kekule_bond_orders(gra)
+#    rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
 #    atm_vals = automol.graph.atom_element_valences(gra)
 #    adj_atms = automol.graph.atom_neighbor_keys(gra)
 #
