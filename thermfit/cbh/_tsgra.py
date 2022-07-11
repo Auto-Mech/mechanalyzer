@@ -41,14 +41,14 @@ def xor(lst1, lst2):
 
 
 def ts_graph(gra, site1, site2=None):
-    rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
-    unsat_atms_dct = automol.graph.atom_unsaturated_valences(gra)
+    rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
+    unsat_atms_dct = automol.graph.atom_unsaturations(gra)
     unsat_atms = []
     for atm in unsat_atms_dct:
         if unsat_atms_dct[atm] > 0:
             unsat_atms.append(atm)
     atm_vals = automol.graph.atom_element_valences(gra)
-    rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
+    rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
     atms = automol.graph.atoms(gra)
     bnds = automol.graph.bonds(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
@@ -337,7 +337,7 @@ def add_appropriate_pi_bonds(gra, frm_key):
     """
 
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
-    unsat_atms_dct = automol.graph.atom_unsaturated_valences(gra)
+    unsat_atms_dct = automol.graph.atom_unsaturations(gra)
     atms, bnd_ords = gra
     brk_key = frozenset({})
     unsat_atms = []
@@ -378,7 +378,7 @@ def ring_forming_forming_bond(gra, brk_key):
     """
     frm_key = frozenset({})
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
-    rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
+    rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
     form_atm1 = rad_atms[0]
     for break_atm in brk_key:
         if adj_atms[break_atm] > 1:

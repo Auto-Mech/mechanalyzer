@@ -142,7 +142,7 @@ def cbh_basis(zrxn, scheme):
                 tsutil.xor(brk_key2, frm_key2)]
 
     elif rxnclass == ReactionClass.Typ.BETA_SCISSION:
-        rad_atm = list(automol.graph.sing_res_dom_radical_atom_keys(gra))[0]
+        rad_atm = list(automol.graph.radical_atom_keys(gra, sing_res=True))[0]
         adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
         site = [rad_atm, None, None]
         for atm in brk_key1:
@@ -154,7 +154,7 @@ def cbh_basis(zrxn, scheme):
     #  radical radical hydrogen abstraction needs a second site
     #  where the pi bond is formed
     elif rxnclass == ReactionClass.Typ.HYDROGEN_ABSTRACTION and radrad:
-        rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
+        rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
         adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
         atmc, atmd = frm_key1
         if atmc not in rad_atms:
@@ -182,7 +182,6 @@ def cbh_basis(zrxn, scheme):
         for rgra in automol.graph.connected_components(rcts_gra):
             if automol.graph.chi(rgra) == 'InChI=1S/O2/c1-2':
                 radrad = True
-                # rad_atms = list(automol.graph.sing_res_dom_radical_atom_keys(gra))
                 adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
                 atmc, atmd = frm_key1
                 if atmc not in unsat_atms:
