@@ -108,7 +108,6 @@ def enthalpy(nasa7_params, temp, rval=RC):
         h_t *= (rval * temp)
     else:
         h_t = None
-
     return h_t
 
 
@@ -210,8 +209,7 @@ def coeffs_for_specific_temp(nasa7_params, temp):
     """
 
     cutoff_temps = nasa7_params[3]
-    low_temp, high_temp, mid_temp = cutoff_temps  # order is odd but correct
-
+    low_temp, mid_temp, high_temp = cutoff_temps  # order is odd but correct
     if low_temp <= temp <= mid_temp:
         cfts = nasa7_params[4][1]
     elif mid_temp < temp <= high_temp:

@@ -5,6 +5,7 @@
 """
 import os
 import itertools as it
+from copy import deepcopy
 
 import automol
 from chemkin_io.writer._util import format_rxn_name
@@ -178,11 +179,35 @@ def _is_ste_conn(rxn, rxn_lst, prev_rxns_lst):
     ichsi, ichsj, _ = rxn
     i_is_conn = False
     j_is_conn = False
-    for rxn in rxn_lst:
-        if rxn in prev_rxns_lst or prev_rxns_lst == []:
-            ichs1, ichs2, _ = rxn
+    for rxn_i in rxn_lst:
+        if rxn_i in prev_rxns_lst or prev_rxns_lst == []:
+            ichs1, ichs2, _ = rxn_i
             all_pes_ichs.append(ichs1)
             all_pes_ichs.append(ichs2)
+    if ichsi in all_pes_ichs:
+        i_is_conn = True
+    if ichsj in all_pes_ichs:
+        j_is_conn = True
+    return i_is_conn or j_is_conn or prev_rxns_lst == ['fake']
+
+
+def _missed_rxn(rxn, rxn_lst, ignore_rxns):
+    """ Are to rxns connected stereochemically?
+    """
+    all_pes_ichs = []
+    ichsi, ichsj, _ = rxn
+    enant_rxns = []
+    for rxn_i in ignore_rxns:
+        enant_rxns.append(_enant_rxn(rxn_i))
+    enant_spcs = [ich for ich in rxn_i[:2] for rxn_i in enant_rxns]
+    i_is_conn = False
+    j_is_conn = False
+    for rxn_i in rxn_lst:
+        if rxn_i not in ignore_rxns:
+            ichs1, ichs2, _ = rxn_i
+            if not any(ich in enant_spcs for ich in ichs1 + ichs2):
+                all_pes_ichs.append(
+                    [ichs for ichs in ichs1 + ichs2])# if automol.inchi.is_enantiomer(ichs1)])
     if ichsi in all_pes_ichs:
         i_is_conn = True
     if ichsj in all_pes_ichs:
@@ -209,86 +234,98 @@ def _split_ste_ccs(ccs_rxn_gra):
         where a numeric index is a key and a
         list of stereo-reactions (in ichs) is val
     """
+    def _get_best_combo(exp_rxns_lst, maxcombo=None):
+        nonste_rxns_lst = ()
+        ste_rxns_lst = ()
+        for rxn in exp_rxns_lst:
+            enantiomer = False
+            for ich in rxn[0] + rxn[1]:
+                if automol.inchi.is_enantiomer(ich):
+                    enantiomer = True
+            if enantiomer:
+                ste_rxns_lst += (rxn,)
+            else:
+                nonste_rxns_lst += (rxn,)
+        rxn_combos = (0)
+        if maxcombo is None:
+            maxcombo = len(ste_rxns_lst)
+        if maxcombo > 10 and maxcombo < 15:
+            maxcombo = 12
+        elif maxcombo > 14:
+            maxcombo = 5
+        print('setting r max', maxcombo)
+        #for r in range(1, maxcombo+1, 1):# if len(ste_rxns_lst) % 6 == 0 else 2):
+        for r in range(1, maxcombo, 1):# if  len(ste_rxns_lst) % 6 == 0 or len(ste_rxns_lst)==16 else 2):
+            if rxn_combos == ():
+                break
+            print('combining r=', r)
+            last_combo = deepcopy(rxn_combos)
+            rxn_combos = ()
+            for rxn_combo in it.combinations(ste_rxns_lst, r):
+                good_combo = True
+                for rxn_i in rxn_combo:
+                    check_ent = _enant_rxn(rxn_i)
+                    if _is_ste_conn(check_ent, rxn_combo, []):
+                        good_combo = False
+                        break
+                    if _missed_rxn(rxn_i, ste_rxns_lst, rxn_combo):
+                        good_combo = False
+                        break
+                if good_combo:
+                    rxn_combos += (rxn_combo,)
+        if rxn_combos != () and r < 4:
+            last_combo = deepcopy(rxn_combos)
+        return (combo + nonste_rxns_lst for combo in last_combo)
+
     def _recursive_step(
-            noste_rxn, ccs_rxn_gra, sccs_rxn_gra,
+            noste_rxn, ccs_rxn_gra, old_sccs_rxn_gra,
             considered_rxns, prev_rxn_lst):
         adj_noste_rxn_lst, exp_rxns_lst = ccs_rxn_gra[noste_rxn]
         considered_rxns.append(noste_rxn)
-        orig_sccs_rxn_gra = sccs_rxn_gra.copy()
 
         # Loop through reaction's expansions and put them
         # in appropriate sccs graph
-        print(
-            'next reaction in ccs has {:g} expansions'.format(len(exp_rxns_lst)))
         exp_rxns_lst = list(set(exp_rxns_lst))
         print(
             'next reaction in ccs has {:g} expansions'.format(len(exp_rxns_lst)))
-        exp_rxns_lst = list(set(exp_rxns_lst))
-        for erxn in exp_rxns_lst:
-            print(erxn)
-        for rxn_i in exp_rxns_lst:
+        sccs_rxn_gra = {}
+
+        maxcombo=None
+        best_combos = _get_best_combo(exp_rxns_lst, maxcombo=maxcombo)
+        print("WHAT")
+        for rxn_set in  best_combos:
+            print('rxn set', rxn_set)
             is_new_stereo = True
-            enant_idx_lst = []
 
             # Loop over propogating sccs graphs
-            for idx in sccs_rxn_gra:
-
-                # check if this stereo-rxn is connected to the sccs
-                if _is_ste_conn(rxn_i, sccs_rxn_gra[idx], prev_rxn_lst):
-                    check_ent = _enant_rxn(rxn_i)
-
-                    # check if this rxns enantiomers are also in the sccs
-                    if _is_ste_conn(check_ent, sccs_rxn_gra[idx], []):
-                        if idx < len(orig_sccs_rxn_gra):
-                            enant_idx_lst.append(idx)
-                        continue
-                    sccs_rxn_gra[idx] += (rxn_i,)
+            for idx in old_sccs_rxn_gra:
+                if not all(
+                        _is_ste_conn(
+                            rxn_i, old_sccs_rxn_gra[idx], prev_rxn_lst)
+                        for rxn_i in rxn_set):
+                    continue
+                combo_allowed = True
+                for rxn_i in rxn_set:
+                    # check if this stereo-rxn is connected to the sccs
+                    # if _is_ste_conn(rxn_i, old_sccs_rxn_gra[idx], prev_rxn_lst):
+                    if True:
+                        check_ent = _enant_rxn(rxn_i)
+                        # check if this rxns enantiomers are also in the sccs
+                        if _is_ste_conn(check_ent, old_sccs_rxn_gra[idx], []):
+                            combo_allowed = False
+                            break
+                    else:
+                        combo_allowed = False
+                        break
+                if combo_allowed:
+                    sccs_rxn_gra[len(sccs_rxn_gra)] = deepcopy(old_sccs_rxn_gra[idx]) + rxn_set
                     is_new_stereo = False
             if is_new_stereo:
-                # if it was both ste-connected and had ents-connected
-                # copy the sccs up to the point that enantiomers got in there
-                # and add this reaction to it
-                if enant_idx_lst:
-                    for enant_idx in enant_idx_lst:
-                        sccs_rxn_gra[len(sccs_rxn_gra)] = orig_sccs_rxn_gra[
-                            enant_idx]
-                        sccs_rxn_gra[len(sccs_rxn_gra) - 1] += (rxn_i,)
-                else:
-                    # if it was just totally independent, create a new sccs
-                    sccs_rxn_gra[len(sccs_rxn_gra)] = (rxn_i,)
-        # Need to make sure we add rxns possible on the new surfaces
-        for rxn_i in exp_rxns_lst:
-            is_new_stereo = True
-            enant_idx_lst = []
-
-            # Loop over propogating sccs graphs
-            for idx in sccs_rxn_gra:
-                if idx < len(orig_sccs_rxn_gra.keys()):
-                    continue
-                if rxn_i in sccs_rxn_gra[idx]:
-                    continue
-                # check if this stereo-rxn is connected to the sccs
-                if _is_ste_conn(rxn_i, sccs_rxn_gra[idx], prev_rxn_lst):
-                    check_ent = _enant_rxn(rxn_i)
-                    if _is_ste_conn(check_ent, sccs_rxn_gra[idx], []):
-                        continue
-                    sccs_rxn_gra[idx] += (rxn_i,)
-
+                sccs_rxn_gra[len(sccs_rxn_gra)] = rxn_set
+                # sccs_rxn_gra[len(sccs_rxn_gra)] = (rxn_i,)
 
         print()
         print('resulting in the following set of sccss')
-        # max_len = max([len(lst) for lst in sccs_rxn_gra.values()])
-        # keep_sccs_rxn_gra = {}
-        # new_idx = 0
-        # for idx in sccs_rxn_gra.keys():
-        #     print(idx, len(sccs_rxn_gra[idx]))
-        #     if len(sccs_rxn_gra[idx]) == max_len:
-        #         keep_sccs_rxn_gra[new_idx] = sccs_rxn_gra[idx]
-        #         new_idx += 1
-        #     else:
-        #         for p in sccs_rxn_gra[idx]:
-        #             print(p)
-        # sccs_rxn_gra = keep_sccs_rxn_gra
         for idx in sccs_rxn_gra.keys():
             print(idx, len(sccs_rxn_gra[idx]))
             for p in sccs_rxn_gra[idx]:
@@ -304,177 +341,333 @@ def _split_ste_ccs(ccs_rxn_gra):
                     considered_rxns, exp_rxns_lst)
         return sccs_rxn_gra, considered_rxns
 
+    def _find_allowed_sccs_combos(sccs_rxn_gra, spc_key_dct, idxs_lst, output_queue):
+        combo_lst = ()
+        for (idx_i, idx_j) in idxs_lst:
+            rxns_i = sccs_rxn_gra[idx_i]
+            rxns_j = sccs_rxn_gra[idx_j]
+            connects = False
+            enantiomeric = False
+            spcs = spc_key_dct[idx_i] + spc_key_dct[idx_j]
+            spcs = list(set(spcs))
+            for spc_a, spc_b in it.combinations(spcs, 2):
+                if automol.inchi.are_enantiomers(spc_a, spc_b):
+                    enantiomeric = True
+                    break
+            if enantiomeric:
+                continue
+            connects = True
+            # for rxn_i in rxns_i:
+            #     if _is_ste_conn(rxn_i, rxns_j, []):
+            #         connects = True
+            #         break
+            if connects:
+                print('combo attempt', idx_i, idx_j)
+                combo_lst += ((idx_i, idx_j,),)
+        output_queue.put(combo_lst)
+    def _check_combo_grps(combo_set, combo_idxs_grp_lst, output_queue):
+        full_combo_lst = ()
+        for combo_idxs_lst in combo_idxs_grp_lst:
+            #all_idxs = sorted(list(set(sum(combo_idxs_lst, ()))))
+            all_idxs = list(combo_idxs_lst)
+            print(all_idxs)
+            if any(check_idxs not in combo_set for check_idxs in it.combinations(all_idxs, 2)):
+                continue
+            else:
+                full_combo_lst += (tuple(all_idxs),)
+        output_queue.put(full_combo_lst)
+    def _add_idx_to_combo(combo_set, grp_idxs_lst, idxs, output_queue): 
+        added_idxs_lst = ()
+        print('idxs', idxs)
+        for idx_i in idxs:
+            print('doing idx_i', idx_i)
+            for grp_idxs in grp_idxs_lst:
+                if idx_i in grp_idxs:
+                    continue
+                all_idxs = sorted([idx_i, *grp_idxs])
+                if any(check_idxs not in combo_set for check_idxs in it.combinations(all_idxs, 2)):
+                    continue
+                else:
+                    added_idxs_lst += (tuple(all_idxs),)
+        output_queue.put(added_idxs_lst)
+    def _combine_sccss(sccs_rxn_gra, idxs_lst):
+        new_sccs_rxn_gra = {}
+        for i, idxs in enumerate(idxs_lst):
+            rxns = ()
+            for idx in idxs:
+                rxns += sccs_rxn_gra[idx]
+            new_sccs_rxn_gra[i] = tuple(set(rxns))
+        return new_sccs_rxn_gra
     # initialize
-    save_sccs_rxn_gra = {}
-    save_sccs_rxn_gra_max_len = 0
     considered_rxns = []
 
     # pass through first reaction in a ccs
-    #start_key = list(ccs_rxn_gra.keys())[0]
-    #adj_noste_rxn_lst, exp_rxns_lst = ccs_rxn_gra[start_key]
-    #for key_i in ccs_rxn_gra:
-    #    adj_noste_rxn_lst_i, exp_rxns_lst_i = ccs_rxn_gra[key_i]
-    #    exp_rxns_lst_i = list(set(exp_rxns_lst_i))
-    #    if len(exp_rxns_lst_i) > len(exp_rxns_lst):
-    #        start_key = key_i
-    #        adj_noste_rxn_lst = adj_noste_rxn_lst_i
-    #        exp_rxns_lst = exp_rxns_lst_i
+    start_key = list(ccs_rxn_gra.keys())[0]
+    adj_noste_rxn_lst, exp_rxns_lst = ccs_rxn_gra[start_key]
+    exp_rxns_lst = list(set(exp_rxns_lst))
+    for key_i in ccs_rxn_gra:
+        adj_noste_rxn_lst_i, exp_rxns_lst_i = ccs_rxn_gra[key_i]
+        exp_rxns_lst_i = list(set(exp_rxns_lst_i))
+        #if len(exp_rxns_lst_i) == 16:
+        if len(exp_rxns_lst_i) < len(exp_rxns_lst):
+            start_key = key_i
+            adj_noste_rxn_lst = adj_noste_rxn_lst_i
+            exp_rxns_lst = exp_rxns_lst_i
     #    elif len(exp_rxns_lst_i) == len(exp_rxns_lst) and len(adj_noste_rxn_lst_i) > len(adj_noste_rxn_lst):
     #        start_key = key_i
     #        adj_noste_rxn_lst = adj_noste_rxn_lst_i
     #        exp_rxns_lst = exp_rxns_lst_i
-    for start_key in list(ccs_rxn_gra.keys()):
-        sccs_rxn_gra = {}
-        considered_rxns = []
-    
-        adj_noste_rxn_lst, exp_rxns_lst = ccs_rxn_gra[start_key]
+    sccs_rxn_gra = {}
+    considered_rxns = []
 
-        print('first reaction in ccs has {:g} expansions'.format(len(exp_rxns_lst)))
-        exp_rxns_lst = list(set(exp_rxns_lst))
-        for erxn in exp_rxns_lst:
-            print(erxn)
-        start_rxn = exp_rxns_lst[0]
-        considered_rxns.append(start_rxn)
-        sccs_rxn_gra[0] = (start_rxn,)
-        orig_sccs_rxn_gra = {0: ()}
 
-        # Loop through reaction's expansions and put them
-        # in appropriate sccs graph
-        for rxn_i in exp_rxns_lst[1:]:
-            is_new_stereo = True
-            enant_idx_lst = []
+    print('first reaction in ccs has {:g} expansions'.format(len(exp_rxns_lst)))
+    for erxn in exp_rxns_lst:
+        print(erxn)
+    considered_rxns.append(start_key)
+    sccs_rxn_gra = {}
+    for idx, rxn_set in enumerate(_get_best_combo(exp_rxns_lst)):#, maxcombo=3)):
+        sccs_rxn_gra[idx] = rxn_set
 
-            # Loop over propogating sccs graphs
-            for idx in sccs_rxn_gra:
+    print('resulting in the following set of sccss')
+    for idx in sccs_rxn_gra.keys():
+        print(idx, len(sccs_rxn_gra[idx]))
+        for p in sccs_rxn_gra[idx]:
+            print(p)
+    # old_sccs_rxn_gra = {0: ()}
+    # sccs_rxn_gra = {}
 
-                # check if this stereo-rxn is connected to the sccs
-                if _is_ste_conn(rxn_i, sccs_rxn_gra[idx], ['hmm']):
-                    check_ent = _enant_rxn(rxn_i)
+    # # Loop through reaction's expansions and put them
+    # # in appropriate sccs graph
+    # for rxn_i in exp_rxns_lst[1:]:
+    #     is_new_stereo = True
 
-                    # check if this rxns enantiomers are also in the sccs
-                    if _is_ste_conn(check_ent, sccs_rxn_gra[idx], []):
-                        if idx < len(orig_sccs_rxn_gra):
-                            enant_idx_lst.append(idx)
+    #     # Loop over propogating sccs graphs
+    #     for idx in old_sccs_rxn_gra:
+
+    #         # check if this stereo-rxn is connected to the sccs
+    #         if _is_ste_conn(rxn_i, old_sccs_rxn_gra[idx], ['hmm']):
+
+    #             # check if this rxns enantiomers are also in the sccs
+    #             check_ent = _enant_rxn(rxn_i)
+    #             if _is_ste_conn(check_ent, old_sccs_rxn_gra[idx], []):
+    #                 continue
+
+    #             sccs_rxn_gra[len(sccs_rxn_gra)] = deepcopy(old_sccs_rxn_gra[idx]) + (rxn_i,)
+    #             is_new_stereo = False
+    #     if is_new_stereo:
+    #         # if it was just totally independent, create a new sccs
+    #         sccs_rxn_gra[len(sccs_rxn_gra)] = (rxn_i,)
+    # # walk through adjacent reactions and repeat the procedure recursively
+    # # until all reactions are considered
+    # print('first sccs rxn gra', sccs_rxn_gra)
+    for noste_rxn_i in sorted(adj_noste_rxn_lst, key=lambda d: len(ccs_rxn_gra[d][0]) + len(ccs_rxn_gra[d][1]), reverse=False):
+        # adj_noste_rxn_lst:
+        if noste_rxn_i not in considered_rxns:
+            sccs_rxn_gra, considered_rxns = _recursive_step(
+                noste_rxn_i, ccs_rxn_gra, sccs_rxn_gra, considered_rxns,
+                exp_rxns_lst)
+
+    # get the species of each sccs
+    spc_key_dct = {}
+    for idx, rxns in sccs_rxn_gra.items():
+        print(idx, len(sccs_rxn_gra[idx]))
+        spcs = []
+        for rcts, prds, _ in rxns:
+            spcs.extend([rct for rct in rcts if rct not in spcs])
+            spcs.extend([prd for prd in prds if prd not in spcs])
+        spc_key_dct[idx] = spcs
+
+    # make all possible combinations of sub_sccs
+    # print('len of r=10', sum(1 for i in it.combinations(sccs_idxs_i, 10)))
+    # print('len of r=9', sum(1 for i in it.combinations(sccs_idxs_i, 9)))
+    # print('len of r=8', sum(1 for i in it.combinations(sccs_idxs_i, 8)))
+    # print('len of r=7', sum(1 for i in it.combinations(sccs_idxs_i, 7)))
+    #print('len of r=4', sum(1 for i in it.combinations(sccs_idxs_i, 4)))
+    #print('len of r=3', sum(1 for i in it.combinations(sccs_idxs_i, 3)))
+    sccs_idxs_i = list(sccs_rxn_gra.keys())
+    idxs_lst = list(it.combinations(sccs_idxs_i, 2))
+    args = (sccs_rxn_gra, spc_key_dct)
+    allowed_combo_lst = execute_function_in_parallel(
+        _find_allowed_sccs_combos, idxs_lst, args, nprocs=30)
+    #two_idxs_lst = ()
+    #for (two_idxs, rxn_lst, spcs) in new_sccs_rxn_lst:
+    #    two_idxs = tuple(sorted(two_idxs))
+    #    two_idxs_lst += (two_idxs,)
+    #    sccs_rxn_gra[two_idxs] = rxn_lst
+    #    spc_key_dct[two_idxs] = spcs
+    #enant_lst = [idxs for idxs in idxs_lst if idxs not in two_idxs_lst]
+    # enant_lst = set(idxs_lst) - set(two_idxs_lst)
+    # three_idxs_lst = ()
+    # for idx_i in sccs_idxs_i:
+    #     for (idx_j, idx_k) in two_idxs_lst:
+    #         if idx_i == idx_j and idx_i == idx_k:
+    #             continue
+    #         if tuple(sorted((idx_i, idx_j,))) in enant_lst:
+    #             continue
+    #         if tuple(sorted((idx_i, idx_k,))) in enant_lst:
+    #             continue
+    #     three_idxs_lst += ((idx_i, (idx_j, idx_k,),),)
+    # print('three idxs', len(three_idxs_lst), three_idxs_lst)
+    # args = (sccs_rxn_gra, spc_key_dct)
+    # new_sccs_rxn_lst = execute_function_in_parallel(
+    #     _combine_sccss, three_idxs_lst, args, nprocs=30)
+    print('all combo list len', len(allowed_combo_lst))
+    full_combo_lst = ()
+    combo_set = frozenset(allowed_combo_lst)
+    allow_combo_dct = {}
+    for idx in sccs_idxs_i:
+       allow_combo_dct[idx] = []
+       for idx_i, idx_j in combo_set:
+            if idx_i == idx:
+                allow_combo_dct[idx] += [idx_j]
+            elif idx_j == idx:
+                allow_combo_dct[idx] += [idx_i]
+    print('hi', allow_combo_dct)
+   
+    all_best_combos = ()
+    for idx in allow_combo_dct:
+        allow_idxs = allow_combo_dct[idx]
+        allow_idxs = [allow_idx for allow_idx in allow_idxs if allow_idx > idx]
+        print(idx, allow_idxs)
+        better_r =  True
+        if idx < 10:
+            new_best_combos = ()
+            for r in range(2, 8):#len(allow_idxs)):
+                if not better_r:
+                    break
+                better_r = False
+                best_combos = deepcopy(new_best_combos)
+                new_best_combos = ()
+                print('trying r of', r)
+                combo_idxs_lst = it.combinations(allow_idxs, r)
+                for combo_idxs in combo_idxs_lst:
+                    all_idxs = sorted(combo_idxs)
+                    if any(check_idxs not in combo_set for check_idxs in it.combinations(all_idxs, 2)):
                         continue
-                    sccs_rxn_gra[idx] += (rxn_i,)
-                    sccs_rxn_gra[idx] = tuple(set(
-                        sccs_rxn_gra[idx]))
-                    is_new_stereo = False
-            if is_new_stereo:
-                # if it was both ste-connected and had ents-connected
-                # copy the sccs up to the point that enantiomers got in there
-                # and add this reaction to it
-                if enant_idx_lst:
-                    for enant_idx in enant_idx_lst:
-                        sccs_rxn_gra[len(sccs_rxn_gra)] = orig_sccs_rxn_gra[
-                            enant_idx]
-                        sccs_rxn_gra[len(sccs_rxn_gra) - 1] += (rxn_i,)
-                        sccs_rxn_gra[len(sccs_rxn_gra) - 1] = tuple(set(
-                            sccs_rxn_gra[len(sccs_rxn_gra) - 1]))
-                else:
-                    # if it was just totally independent, create a new sccs
-                    sccs_rxn_gra[len(sccs_rxn_gra)] = (rxn_i,)
-        print()
-        print('resulting in the following set of sccss')
-        for idx in sccs_rxn_gra.keys():
-            print(idx, len(sccs_rxn_gra[idx]))
-            for p in sccs_rxn_gra[idx]:
-                print(p)
-        # walk through adjacent reactions and repeat the procedure recursively
-        # until all reactions are considered
-        for noste_rxn_i in sorted(adj_noste_rxn_lst, key=lambda d: len(ccs_rxn_gra[d][0]) + len(ccs_rxn_gra[d][1]), reverse=False):
-            # adj_noste_rxn_lst:
-            if noste_rxn_i not in considered_rxns:
-                sccs_rxn_gra, considered_rxns = _recursive_step(
-                    noste_rxn_i, ccs_rxn_gra, sccs_rxn_gra, considered_rxns,
-                    exp_rxns_lst)
-            
-        spc_key_dct = {}
-        for idx, rxns in sccs_rxn_gra.items():
-            print(idx, len(sccs_rxn_gra[idx]))
-            spcs = []
-            for rcts, prds, _ in rxns:
-                spcs.extend([rct for rct in rcts if rct not in spcs])
-                spcs.extend([prd for prd in prds if prd not in spcs])
-            spc_key_dct[idx] = spcs
-        keys = list(sccs_rxn_gra.keys())
-        new_sccs_rxn_gra = {}
-        idx_n = 0
-        for r in range(3, 0, -1):
-            for combo in it.combinations(keys, r):
-                spcs = []
-                rxns = sccs_rxn_gra[combo[0]]
-                for idx in combo[1:]:
-                    connects = False
-                    rxns_i = sccs_rxn_gra[idx]
-                    for rxn_i in rxns_i:
-                        if _is_ste_conn(rxn_i, rxns, []):#exp_rxns_lst):
-                            connects = True
-                    if connects:
-                        rxns += rxns_i
-                rxns = tuple(set(rxns))
-                if r > 1 and len(rxns) == len(sccs_rxn_gra[idx]):
+                    else:
+                        better_r = True
+                        new_best_combos += ((idx,) + tuple(all_idxs),)
+        else:
+            best_combos = ()
+            combo_idxs_lst = it.combinations(allow_idxs, r)
+            for combo_idxs in combo_idxs_lst:
+                all_idxs = sorted(combo_idxs)
+                if any(check_idxs not in combo_set for check_idxs in it.combinations(all_idxs, 2)):
                     continue
-                for rcts, prds, _ in rxns:
-                    spcs.extend([rct for rct in rcts if rct not in spcs])
-                    spcs.extend([prd for prd in prds if prd not in spcs])
-                enantiomeric = False
-                for spc_a, spc_b in it.combinations(spcs, 2):
-                    if automol.inchi.are_enantiomers(spc_a, spc_b):
-                        enantiomeric = True
-                        break
-                if not enantiomeric:
-                    print(combo)
-                    print('new length', len(rxns), sorted(spcs))
-                    print('No enantiomers found in spc lst')
-                    new_sccs_rxn_gra[idx_n] = tuple(sorted(rxns))
-                    idx_n += 1
+                else:
+                    better_r = True
+                    best_combos += ((idx,) + tuple(all_idxs),)
+        all_best_combos += best_combos    
+        print('best idxs', idx, best_combos) 
 
-        #for idx_a in keys:
-        #    spcs_a = spc_key_dct[idx_a]
-        #    rxns_a =  sccs_rxn_gra[idx_a]
-        #    for idx_b in keys[idx_a+1:]  + keys[:idx_a]:
-        #        spcs_b = spc_key_dct[idx_b]
-        #        enantiomeric = False
-        #        for spc_a in spcs_a:
-        #            for spc_b in spcs_b:
-        #                if automol.inchi.are_enantiomers(spc_a, spc_b):
-        #                    enantiomeric = True
-        #        if not enantiomeric:
-        #            connects = False
-        #            print('I CAN COMBINE', idx_a, idx_b)
-        #            for rxn in rxns_a:
-        #                if _is_ste_conn(rxn, sccs_rxn_gra[idx_b], exp_rxns_lst):
-        #                    print('is connected at rxn', rxn)
-        #                    connects = True
-        #                    break
-        #            if connects:
-        #                for rxn in sccs_rxn_gra[idx_b]:
-        #                    if rxn not in rxns_a:
-        #                        rxns_a += (rxn,)
-        #                for spc_b in spcs_b:
-        #                    if spc_b not in spcs_a:
-        #                        spcs_a += (spc_b,)
-        #                print('new length', len(rxns_a))
-        #    if sorted(rxns_a) not in list(new_sccs_rxn_gra.values()):
-        #        new_sccs_rxn_gra[idx_a] = sorted(rxns_a)
-        for idx, rxns in new_sccs_rxn_gra.items():
-            if len(rxns) != len(list(set(rxns))):
-                rxns = list(set(rxns))
-            if len(rxns) > save_sccs_rxn_gra_max_len:
-                save_sccs_rxn_gra_max_len = len(rxns)
-                save_sccs_rxn_gra = new_sccs_rxn_gra
-            print(idx, len(rxns))
-    sccs_rxn_gra = save_sccs_rxn_gra
+
+
+    #combo_idxs_grp_lst = list(it.combinations(allowed_combo_lst, 3))
+    # combo_idxs_grp_lst = list(it.combinations(sccs_idxs_i, 3))
+    # print('checking combo groups for r=3', len(combo_idxs_grp_lst))
+    # args = (combo_set,)
+    # full_combo_lst = execute_function_in_parallel(
+    #     _check_combo_grps, combo_idxs_grp_lst, args, nprocs=30)
+    # three_idxs_lst = ()
+    # args = (combo_set, combo_set,)
+    # print(sccs_idxs_i)
+    # three_idxs_lst = execute_function_in_parallel(
+    #     _add_idx_to_combo, sccs_idxs_i, args, nprocs=30)
+    # print('check length', len(three_idxs_lst))
+    # args = (combo_set, three_idxs_lst,)
+    # more_idxs_lst = execute_function_in_parallel(
+    #     _add_idx_to_combo, sccs_idxs_i, args, nprocs=30)
+    # print('check length', len(more_idxs_lst))
+    # args = (combo_set, more_idxs_lst,)
+    # more_idxs_lst = execute_function_in_parallel(
+    #     _add_idx_to_combo, sccs_idxs_i, args, nprocs=30)
+    # print('check length', len(more_idxs_lst))
+    # args = (combo_set, more_idxs_lst,)
+    # more_idxs_lst = execute_function_in_parallel(
+    #     _add_idx_to_combo, sccs_idxs_i, args, nprocs=30)
+    # print('check length', len(more_idxs_lst))
+    # #for idx_k in sccs_idxs_i:
+    # #    print('doing 3s for ', idx_k)
+    # #    for idx_i, idx_j in combo_set:
+    # #        if idx_i == idx_j and idx_i == idx_k:
+    # #            continue
+    # #        if not tuple(sorted((idx_i, idx_k,))) in combo_set:
+    # #            continue
+    # #        if not tuple(sorted((idx_j, idx_k,))) in combo_set:
+    # #            continue
+    # #        three_idxs_lst += ((idx_i, idx_j, idx_k,),)
+    # #four_idxs_lst = ()
+    # #for idx_l in sccs_idxs_i:
+    # #    print('doing 4s for ', idx_l)
+    # #    for idx_i, idx_j, idx_k in three_idxs_lst:
+    # #        if idx_l in [idx_i, idx_j, idx_k]:
+    # #            continue
+    # #        all_idxs = sorted([idx_i, idx_j, idx_k, idx_l])
+    # #        if any(check_idxs not in combo_set for check_idxs in it.combinations(all_idxs, 2)):
+    # #            continue
+    # #        else:
+    # #            four_idxs_lst += (tuple(all_idxs),)
+    # #print('check length', len(four_idxs_lst))
+    #    
+    # #print(len(full_combo_lst))
+    more_idxs_lst = all_best_combos
+    sccs_rxn_gra = _combine_sccss(
+        sccs_rxn_gra, more_idxs_lst)
+    sccs_idxs_i = list(sccs_rxn_gra.keys())
+    idxs_lst = list(it.combinations(sccs_idxs_i, 2))
+    spc_key_dct = {}
+    for idx, rxns in sccs_rxn_gra.items():
+        print(idx, len(sccs_rxn_gra[idx]))
+        spcs = []
+        for rcts, prds, _ in rxns:
+            spcs.extend([rct for rct in rcts if rct not in spcs])
+            spcs.extend([prd for prd in prds if prd not in spcs])
+        spc_key_dct[idx] = spcs
+    # make all possible combinations of sub_sccs
+    args = (sccs_rxn_gra, spc_key_dct)
+    allowed_combo_lst = execute_function_in_parallel(
+        _find_allowed_sccs_combos, idxs_lst, args, nprocs=30)
+    print('any further combos?', allowed_combo_lst)
+    #two_idxs_lst = ()
+    #sccs_rxn_gra, full_combo_lst)
+    #print('parallel list')
+    #print(len(new_sccs_rxn_lst))
+    # for idx_i in sccs_idxs_i:
+    #     sccs_idxs_j = list(sccs_rxn_gra.keys())
+    #     for idx_j in sccs_idxs_j:
+    #         if idx_i >= idx_j:
+    #             continue
+    #         print('combo attempt', idx_i, idx_j)
+    #         connects = False
+    #         rxns_i = sccs_rxn_gra[idx_i]
+    #         rxns_j = sccs_rxn_gra[idx_j]
+    #         enantiomeric = False
+    #         spcs = spc_key_dct[idx_i] + spc_key_dct[idx_j]
+    #         for spc_a, spc_b in it.combinations(spcs, 2):
+    #             if automol.inchi.are_enantiomers(spc_a, spc_b):
+    #                 enantiomeric = True
+    #                 break
+    #         if enantiomeric:
+    #             continue
+    #         for rxn_i in rxns_i:
+    #             if _is_ste_conn(rxn_i, rxns_j, []):
+    #                 connects = True
+    #                 break
+    #         if connects:
+    #             print('new length', len(rxns_i + rxns_j))
+    #             sccs_rxn_gra[len(sccs_rxn_gra)] = tuple(set(sorted(rxns_i + rxns_j)))
+    #             spc_key_dct[len(sccs_rxn_gra)-1] = spc_key_dct[idx_i] + spc_key_dct[idx_j]
     print('BEST NUMBER OF SCCS')
     max_len = max([len(lst) for lst in sccs_rxn_gra.values()])
     keep_sccs_rxn_gra = {}
     new_idx = 0
     for idx in sccs_rxn_gra.keys():
         if len(sccs_rxn_gra[idx]) == max_len:
-            keep_sccs_rxn_gra[new_idx] = sccs_rxn_gra[idx]
-            new_idx += 1
-    for idx, rxns in sccs_rxn_gra.items():
+            if tuple(sorted(sccs_rxn_gra[idx])) not in keep_sccs_rxn_gra.values():
+                keep_sccs_rxn_gra[new_idx] = tuple(sorted(sccs_rxn_gra[idx]))
+                new_idx += 1
+    for idx, rxns in keep_sccs_rxn_gra.items():
         print(idx, len(rxns))
     return keep_sccs_rxn_gra
 
