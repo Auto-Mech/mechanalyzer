@@ -61,6 +61,25 @@ def spc_therm_dct_df(spc_therm_dct):
         
     return spc_therm_df
 
+def extract_deltaX_therm(therm_df, rcts, prds, var):
+    """ extract from thermo file the DH/DG/DCP/DS of rxn rcts->prds
+        at different T_vect
+    """
+    # extract common indexes
+    T_vect = []
+    [T_vect.extend(list(therm_df[rct][var].index)) for rct in rcts]
+    [T_vect.extend(list(therm_df[prd][var].index)) for prd in prds]
+    T_vect = list(set(T_vect))
+
+    dX_series = pandas.Series(index=T_vect, dtype=float)
+    for T in T_vect:
+        dX_rcts = [therm_df[rct][var][T]
+                    for rct in rcts]
+        dX_prds = [therm_df[prd][var][T]
+                    for prd in prds]
+        dX_series[T] = sum(dX_prds) - sum(dX_rcts)
+
+    return dX_series
 
 def enthalpy(nasa7_params, temp, rval=RC):
     """ Calculate the enthalpy of a species using the

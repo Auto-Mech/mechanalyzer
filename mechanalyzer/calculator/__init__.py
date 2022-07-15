@@ -7,8 +7,11 @@ from mechanalyzer.calculator import thermo
 from mechanalyzer.calculator import combine
 from mechanalyzer.calculator import compare
 from mechanalyzer.calculator import ene_partition
+from mechanalyzer.calculator import ene_util
+from mechanalyzer.calculator import ktp_util
 from mechanalyzer.calculator import bf
 from mechanalyzer.calculator import nonboltz
+from mechanalyzer.calculator import formulas
 
 __all__ = [
     'rates',
@@ -16,6 +19,9 @@ __all__ = [
     'combine',
     'compare',
     'ene_partition',
+    'ene_util',
+    'ktp_util',
     'bf',
     'nonboltz',
+    'formulas'
 ]

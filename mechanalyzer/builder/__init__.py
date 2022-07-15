@@ -26,6 +26,7 @@ from mechanalyzer.builder import sorter
 from mechanalyzer.builder import strip_ste
 from mechanalyzer.builder import submech
 from mechanalyzer.builder import sort_fct
+from mechanalyzer.builder import rxnclass
 
 
 __all__ = [
@@ -53,4 +54,5 @@ __all__ = [
     'strip_ste',
     'submech',
     'sort_fct',
+    'rxnclass'
 ]

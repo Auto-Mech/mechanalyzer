@@ -7,8 +7,6 @@ import numpy as np
 import pandas as pd
 from scipy.signal import convolve
 from scipy.interpolate import interp1d
-from scipy.integrate import quad
-from scipy.optimize import fsolve
 from phydat import phycon
 from autoparse import find
 from automol import formula
@@ -747,34 +745,45 @@ def get_dof_info(block):
 
     return dof_info
 
-
-def max_en_auto(n_atoms, ene_bw, ref_ene=0, T=2500):
-    """ Determines automatically the max energy of microcanonical output and max
-        energy stored in products for appropriate ped and hoten output writing
-        :param n_atoms: number of atoms involved in the bimol reaction
-        :type n_atoms: int
-        :param ene_bw: backward energy barrier of the reaction
-                       > 0 for exothermic reactions
-                       < 0 for enothermic reactions
-        :type ene_bw: float
-        :param ref_ene: reference energy (bimol prods energy in ped)
-        :type ref_ene: float
-        :param T: reference temperature
-        :type T: float
-        :return max_ene: maximum energy written in mess ped/hoten output
-
+def get_dof_info_fromspcdct(sp, spc_dct):
+    """ Gets the N of degrees of freedom and MW of each species
+        :sp: species name
+        :type sp: str
+        :param spc_dct: species dictionary
+        :return dof_info: dictionary with vibrat/rot degrees of freedom
+            and molecular weight
+        :rtype: dct(['n_atoms', 'vib dof', 'rot dof', 'mw'])
     """
-    # determine average boltzmann energy for the TS at 2500 K
-    # NB equipartition theorem - no trasl bc preserved in rxn
-    # assume non-linear
-    boltz_ene_T = phycon.RC_KCAL*T*(3*n_atoms-7+3/2)
-    sigma = 0.87+0.04*(boltz_ene_T + ene_bw)  # from Danilack 2020
-    print('debug statmodels line 115 energies: ref {}, boltz {}, barrier {}, sigma {} \n'.format(
-        ref_ene, boltz_ene_T, ene_bw, sigma))
-    max_ene = ref_ene + boltz_ene_T + ene_bw + 4*sigma
+    dof_info = {}
+    fml = spc_dct[sp]['fml']
+    Nat = formula.atom_count(fml)
+    dof_info['n_atoms'] = Nat
+    dof_info['mw'] = sum(np.array([formula.element_count(fml, at) *
+                       MW_dct_elements[at] for at in MW_dct_elements.keys()]))
+    if Nat == 1:
+        dof_info['vib dof'] = 0
+        dof_info['rot dof'] = 0
+    elif Nat == 2:
+        dof_info['vib dof'] = 1
+        dof_info['rot dof'] = 2
+    else:
+        # derive geometry and check if linear
+        geom_sp = chi.geometry(spc_dct[sp]['inchi'])
+        ilin = int(geom.is_linear(geom_sp))
+        dof_info['rot dof'] = 3 - 1*ilin
+        dof_info['vib dof'] = 3*Nat - 6 + 1*ilin
+        
+    return dof_info
 
-    return max_ene
+def phi_equip_fromdct(sp1, sp2, spc_dct):
+    """ quick approximate function to estimate energy partition of sp1
+    """
+    dof1 = get_dof_info_fromspcdct(sp1, spc_dct)
+    dof2 = get_dof_info_fromspcdct(sp2, spc_dct)
+    phi = (dof1['vib dof']+dof1['rot dof']/2) / \
+        (dof1['vib dof']+dof2['vib dof']+(3+dof1['rot dof']+dof2['rot dof'])/2)
 
+    return phi
 
 def dos_trasl(mass1, ene_grid, pressure, temp, mass2=0):
     """ Compute the translational density of states per unit volume
@@ -808,77 +817,4 @@ def dos_trasl(mass1, ene_grid, pressure, temp, mass2=0):
 
 # helper functions for energy partition used in the sorter
 
-def get_dof_info_fromspcdct(sp, spc_dct):
-    """ Gets the N of degrees of freedom and MW of each species
-        :sp: species name
-        :type sp: str
-        :param spc_dct: species dictionary
-        :return dof_info: dictionary with vibrat/rot degrees of freedom
-            and molecular weight
-        :rtype: dct(['n_atoms', 'vib dof', 'rot dof', 'mw'])
-    """
-    dof_info = {}
-    fml = spc_dct[sp]['fml']
-    Nat = formula.atom_count(fml)
-    dof_info['n_atoms'] = Nat
-    dof_info['mw'] = sum(np.array([formula.element_count(fml, at) *
-                       MW_dct_elements[at] for at in MW_dct_elements.keys()]))
-    if Nat == 1:
-        dof_info['vib dof'] = 0
-        dof_info['rot dof'] = 0
-    elif Nat == 2:
-        dof_info['vib dof'] = 1
-        dof_info['rot dof'] = 2
-    else:
-        # derive geometry and check if linear
-        geom_sp = chi.geometry(spc_dct[sp]['inchi'])
-        ilin = int(geom.is_linear(geom_sp))
-        dof_info['rot dof'] = 3 - 1*ilin
-        dof_info['vib dof'] = 3*Nat - 6 + 1*ilin
-        
-    return dof_info
 
-
-def phi_equip_fromich(sp1, sp2, spc_dct):
-    """ quick approximate function to estimate energy partition of sp1
-        does not account for linearity or atomic species
-        not meant to be accurate
-    """
-    dof1 = get_dof_info_fromspcdct(sp1, spc_dct)
-    dof2 = get_dof_info_fromspcdct(sp2, spc_dct)
-    phi = (dof1['vib dof']+dof1['rot dof']/2) / \
-        (dof1['vib dof']+dof2['vib dof']+(3+dof1['rot dof']+dof2['rot dof'])/2)
-
-    return phi
-
-
-def kt_star(DH0, Cp, T0, k_series):
-    """
-    Take a DH0 and Cp(T) and find the T* where DH = sum(Cp*dT) from T0 to T*
-    Then compute k* at the new T*
-    """
-    def tozero(T_star, DH0, f_cp, T0):
-        int_fct, _ = quad(f_cp, T0, T_star)
-        return DH0 - int_fct
-    
-    try:
-        f_cp = interp1d(Cp.index, Cp.values, kind='cubic')
-        f_k = interp1d(k_series.index, k_series.values, kind='cubic')
-    except TypeError:
-        return T0, k_series[T0]
-
-    try:
-        T_star = fsolve(tozero, T0+100, args=(DH0, f_cp, T0))
-    except ValueError:
-        print(
-            '*Warning: fsolve failed, out of range - using fixed Cp at {:.0f} K'.format(T0))
-        T_star = T0+DH0/Cp[T0]
-    try:
-        k_star = f_k(T_star)
-    except ValueError:
-        k_series = k_series.sort_index()
-        k_star = k_series.iloc[-1]
-        print(
-            '*Warning: out of range - determine k at max T of {} K'.format(k_series.index[-1]))
-
-    return T_star, k_star
