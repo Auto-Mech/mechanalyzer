@@ -3,9 +3,17 @@
 from operator import mod
 import sys
 import copy
-from mess_io import reader
+import numpy
+import pandas as pd
+from mess_io.reader import get_species
+from mess_io.reader import rates
+from mess_io.reader import ped_info
+from mess_io.reader import hot_info
 from mechanalyzer import calculator
-
+from mechanalyzer.calculator import thermo
+from scipy.interpolate import interp1d
+from scipy.integrate import quad
+from scipy.optimize import fsolve
 
 def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
                                 ped_ped_str, ped_ke_out_str,
@@ -16,17 +24,18 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
     """
 
     # PED INFO
-    _, ped_dct, dof_dct, \
+    ped_spc, ped_dct, \
         dos_df, energy_dct = ped_info(
             ped_inp_str, ped_ped_str, ped_ke_out_str)
-
+    dof_dct = calc_dof_dct(ped_inp_str, ped_spc)
+    
     # HOTEN INFO
     hot_frag_dct, hot_spc_en, hoten_dct, fne_bf = \
         hot_info(hot_inp_str, hot_log_str)
 
     # OBTAIN ALL OF THE RATE CONSTANTS FROM THE OUTPUT FILES
     # put dictionaries together
-    rxn_ktp_dct = reader.rates.get_rxn_ktp_dct(
+    rxn_ktp_dct = rates.get_rxn_ktp_dct(
         ped_out_str, filter_kts=True,
         filter_reaction_types=('fake', 'self',
                                        'loss', 'capture', 'reverse'),
@@ -253,19 +262,8 @@ def calc_bf_ktp(full_prompt_rxn_ktp_dct, model, bf_thresh,
 
     return full_prompt_rxn_ktp_dct
 
-
-def ped_info(ped_inp_str, ped_ped_str, ped_ke_out_str):
-    """ file strings
-        wellreac: str if you want PEDs of well->bimol 
-    """
-    # Read: ped.inp:
-    #  species names, energies
-    spc_blocks_ped = reader.get_species(ped_inp_str)
-    ped_spc, _ = reader.ped.ped_names(ped_inp_str)  # can supply
-    energy_dct, _, _, _ = reader.pes(ped_inp_str)
-    # if wellreac:
-    # Read: rate_ped.out and ke_ped.out:
-    #  energy barriers, dofs, fragment names
+def calc_dof_dct(ped_inp_str, ped_spc):
+    spc_blocks_ped = get_species(ped_inp_str)
     dof_dct = {}
     for spc in ped_spc:
         _, prods = spc
@@ -273,28 +271,99 @@ def ped_info(ped_inp_str, ped_ped_str, ped_ke_out_str):
         # Derive dofs involved
         dof_dct[prods] = calculator.ene_partition.get_dof_info(
             spc_blocks_ped[prods])
+        
+    return dof_dct
 
-    # Read ped.out file for product energy distributions
-    ped_dct = reader.ped.get_ped(
-        ped_ped_str, energy_dct, sp_labels='auto')
-
-    # Read ke_ped.out file for energy density of each fragment
-    dos_df = reader.rates.dos_rovib(ped_ke_out_str, sp_labels='auto')
-
-    return ped_spc, ped_dct, dof_dct, dos_df, energy_dct
-
-
-def hot_info(hot_inp_str, hot_log_str):
+###################### FUNCTIONS FOR THE SORTER #######################
+################### these work with dataframes ########################
+def get_max_reactivity(hot_sp, hot_sp_df, therm_df, T0, Tref):
+    """ input: dataframe of decomposition reactions of a species
+        return the maximum deco rate k[Tref] and the minimum dh[T0] for dissociation
     """
-    Extract required info for hotenergies
+    dhmin = 1e8  # put unphysical value for sure higher than all
+    kmax = 0
+    for rxn in hot_sp_df.index:
+        rcts = hot_sp_df['rct_names_lst'][rxn]
+        prds = hot_sp_df['prd_names_lst'][rxn]
+        dh_rxn = thermo.extract_deltaX_therm(therm_df, rcts, prds, 'H')/1000
+        label = rxn[0]
+        # get rate at Tref
+        try:
+            k_series = pd.Series(
+                hot_sp_df['param_vals'][rxn][0][1.][1], index=hot_sp_df['param_vals'][rxn][0][1.][0])
+            k = k_series[Tref]
+        except IndexError:
+            print('*Warning: {} K not found - k not extracted'.format(Tref))
+            k = numpy.NaN
+
+        if hot_sp in prds:  # revert sign
+            dh_rxn = -dh_rxn
+            label = '{}={}'.format(rxn[0].split('=')[-1], rxn[0].split('=')[0])
+            try:
+                dg_rxn = thermo.extract_deltaX_therm(
+                    therm_df, rcts, prds, 'G')
+                k_series = k_series*(101325/8.314/k_series.index/numpy.power(10, 6)) * \
+                    numpy.exp(dg_rxn/1.987/k_series.index)
+                k = k_series[Tref]
+            except IndexError:
+                print(
+                    '*Warning: {} K not found - dg not extracted'.format(Tref))
+                k = numpy.NaN
+        
+        if k > kmax:
+            k_max_hot = copy.deepcopy(k_series)
+            kmax = copy.deepcopy(k)
+            rxn_label = copy.deepcopy(label)
+
+        if dh_rxn[T0] < dhmin:
+            dh_min_hot = copy.deepcopy(dh_rxn)
+            dhmin = copy.deepcopy(dh_rxn[T0])
+            
+    return k_max_hot, dh_min_hot, rxn_label
+
+def estimate_hot_hk(dh_pi, Tref, cp_hot, kmax_hot, dhmin_hot):
+    """ estimate dhtot and k* of hot products for non boltzmann PES
+        units cal, mol, K
+        NB dh_pi is the dh transferred to the hot species
     """
-    spc_blocks_hoten = reader.get_species(hot_inp_str)
-    hot_frag_dct = reader.dct_species_fragments(spc_blocks_hoten)
-    hot_spc_en = reader.hoten.get_hot_species(hot_inp_str)
+    if dh_pi[Tref] < 0:
+        T_star, k_star = kt_star(-dh_pi[Tref], cp_hot, Tref, kmax_hot)
+    else:
+        T_star = Tref
+        k_star = kmax_hot[Tref]
 
-    hoten_dct = reader.hoten.extract_hot_branching(
-        hot_log_str, hot_spc_en, list(spc_blocks_hoten.keys()), sp_labels='auto')
+    dh_tot = (dh_pi + dhmin_hot)/1000
+    
+    return T_star, k_star, dh_tot
 
-    fne_bf = reader.hoten.extract_fne(hot_log_str, sp_labels='auto')
+def kt_star(DH0, Cp, T0, k_series):
+    """
+    Take a DH0 and Cp(T) and find the T* where DH = sum(Cp*dT) from T0 to T*
+    Then compute k* at the new T*
+    """
+    def tozero(T_star, DH0, f_cp, T0):
+        int_fct, _ = quad(f_cp, T0, T_star)
+        return DH0 - int_fct
+    
+    try:
+        f_cp = interp1d(Cp.index, Cp.values, kind='cubic')
+        f_k = interp1d(k_series.index, k_series.values, kind='cubic')
+    except TypeError:
+        return T0, k_series[T0]
 
-    return hot_frag_dct, hot_spc_en, hoten_dct, fne_bf
+    try:
+        T_star = fsolve(tozero, T0+100, args=(DH0, f_cp, T0))
+    except ValueError:
+        print(
+            '*Warning: fsolve failed, out of range - using fixed Cp at {:.0f} K'.format(T0))
+        T_star = T0+DH0/Cp[T0]
+    try:
+        k_star = f_k(T_star)
+    except ValueError:
+        k_series = k_series.sort_index()
+        k_star = k_series.iloc[-1]
+        print(
+            '*Warning: out of range - determine k at max T of {} K'.format(k_series.index[-1]))
+
+    return T_star, k_star
+
