@@ -677,12 +677,18 @@ def show_pes(G_lst, g_conn_lst, idx_lst, save=False):
     """ show/save graph of mechanism
     """
     cross_ccs_conns = ()
-    chosen = ((0, 0), (1, 1), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0))
+    #chosen = ((0, 0), (1, 1), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0))
     chosen = ((0, 0), (1, 1), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 1), (8, 0), (9, 0), (10, 0), (11, 0), (12, 0), (13, 0), (14, 0), (15, 0), (16, 0), (17, 0), (18, 0), (19, 0), (20, 0), (21, 0), (22, 0), (23, 0), (24, 0))
 
     for idx_a, (ia, ja) in enumerate(idx_lst):
         for idx_b, (ib, jb) in enumerate(idx_lst):
             if ia > ib:
+                # if ia in [9, 10, 11, 12, 13, 14]:
+                if ia in [2, 3, 4]:
+                    continue
+                # if ib in [9, 10, 11, 12, 13, 14]:
+                if ib in [2, 3, 4]:
+                    continue
                 conns_a = g_conn_lst[idx_a]
                 conns_b = g_conn_lst[idx_b]
                 cross_conns = _cross_conn(
@@ -710,6 +716,24 @@ def show_pes(G_lst, g_conn_lst, idx_lst, save=False):
         'tab:red', 'tab:blue', 'tab:orange', 'tab:pink',
         'tab:green', 'tab:purple', 'tab:cyan', 'tab:olive',
         'tab:gray', 'tab:brown', 
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
+        'black', 'black', 'black', 'black', 'black', 'black',
         'black', 'black', 'black', 'black', 'black', 'black',
         'black', 'black', 'black', 'black', 'black', 'black',
         'black', 'black', 'black', 'black', 'black', 'black',
@@ -762,14 +786,15 @@ def show_pes(G_lst, g_conn_lst, idx_lst, save=False):
         width=2.0, alpha=.95, edge_color='black')
     nx.draw_networkx_edges(
         full_G, pos, edgelist=other_edges,
-        width=1.0, alpha=.2, edge_color='black')
+        width=1.0, alpha=.05, edge_color='black')
     # nx.draw_networkx_labels(full_G, pos, font_size=8, font_color="black")
-    # nx.draw_networkx_labels(
-    #     full_G, pos, font_size=8,
-    #     labels=_label_dct(full_G.nodes), font_color="black")
-    # nx.draw_networkx_labels(
-    #     full_G, pos, font_size=28,
-    #     labels=_cluster_label_dct(full_G.nodes), font_color="black")
+    #nx.draw_networkx_labels(
+    #    full_G, pos, font_size=8,
+    #    labels=_label_dct(full_G.nodes), font_color="black")
+    #nx.draw_networkx_labels(
+    #    full_G, pos, font_size=28,
+    #    labels=_cluster_label_dct(full_G.nodes), font_color="black")
+
     if save:
         pass
     else:

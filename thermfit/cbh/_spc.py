@@ -205,7 +205,7 @@ def cbhone(ich, balance=True):
                 if adj in rad_atms:
                     valj -= 1
                 key = frozenset({atm, adj})
-                bnd_ord = list(bnd_ords[key])[0]
+                bnd_ord = bnd_ords[key]
                 vali -= bnd_ord
                 valj -= bnd_ord
                 atm_dic = {0: (atms[atm][0], int(vali), None),
@@ -261,7 +261,7 @@ def cbhtwo(ich, balance=True):
         # First loop over all atoms of this frag to get saturation of atomi
         for adj in list(adj_atms[atm]):
             key = frozenset({atm, adj})
-            bnd_ord = list(bnd_ords[key])[0]
+            bnd_ord = bnd_ords[key]
             vali -= bnd_ord
         atm_dic = {0: (atms[atm][0], int(vali), None)}
         bnd_dic = {}
@@ -279,7 +279,7 @@ def cbhtwo(ich, balance=True):
             if adj in rad_atms:
                 valj -= 1
             key = frozenset({atm, adj})
-            bnd_ord = list(bnd_ords[key])[0]
+            bnd_ord = bnd_ords[key]
             valj -= bnd_ord
             atm_dic[j] = (atms[adj][0], int(valj), None)
             bnd_dic[frozenset({0, j})] = (1, None)
@@ -343,14 +343,14 @@ def cbhthree(ich, balance=True):
     for bnd in list(bnd_ords):
         atm_dic = {}
         bnd_dic = {}
-        bnd_dic[frozenset({0, 1})] = (list(bnd_ords[bnd])[0], None)
+        bnd_dic[frozenset({0, 1})] = (bnd_ords[bnd], None)
         for i, atm in enumerate(list(bnd)):
             vali = atm_vals[atm]
             if atm in rad_atms:
                 vali -= 1
             for adj in list(adj_atms[atm]):
                 key = frozenset({atm, adj})
-                bnd_ord = list(bnd_ords[key])[0]
+                bnd_ord = bnd_ords[key]
                 vali -= bnd_ord
             atm_dic[i] = (atms[atm][0], int(vali), None)
             for j, adj in enumerate(list(adj_atms[atm]), start=1):
@@ -359,7 +359,7 @@ def cbhthree(ich, balance=True):
                     if adj in rad_atms:
                         valj -= 1
                     key = frozenset({atm, adj})
-                    bnd_ord = list(bnd_ords[key])[0]
+                    bnd_ord = bnd_ords[key]
                     valj -= bnd_ord
                     atm_dic[i*4+j+1] = (atms[adj][0], int(valj), None)
                     bnd_dic[frozenset({i, i*4+j+1})] = (bnd_ord, None)
