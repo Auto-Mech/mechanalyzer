@@ -61,8 +61,6 @@ def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct, nprocs='auto'):
     # Loop over the PES (stoich similar)
     forms = list(pes_noste_rxns_dct.keys())
     # ste_rxn_cnt = 0
-    full_ste_rxn_lst = []
-    full_ste_spc_lst = []
     for formula in forms:
         noste_rxns_dct = pes_noste_rxns_dct[formula]
         print('PES: {} has {:g} reactions'.format(
@@ -76,53 +74,8 @@ def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct, nprocs='auto'):
             # expand each reaction to all valid stoich versions
             ste_rxns = execute_function_in_parallel(
                 _expand, ste_rxns, args, nprocs=nprocs)
-            print('FINISHED EXPANSION beginning organizing onto SCCSs')
-            ste_rxn_dct = _make_ste_rxn_dct(ste_rxns)
-
-            ccs_rxn_gra = _make_ccs_rxn_gra(
-                ste_rxn_dct, pes_gra)
-
-            # Count all of the stereo reactions
-            Build list of stereo species
-            for _rxn_lst in ste_rxns:
-                # ste_rxn_cnt += len(_rxn_lst)
-                for _rxnx in _rxn_lst:
-                    for rct in _rxnx[0]:
-                        if rct not in full_ste_spc_lst:
-                            full_ste_spc_lst.append(rct)
-                    for prd in _rxnx[1]:
-                        if prd not in full_ste_spc_lst:
-                            full_ste_spc_lst.append(prd)
-                    full_ste_rxn_lst.append(_rxnx)
-
-            # split into ccs to sccs
-            sccs_rxn_gra = _split_ste_ccs(ccs_rxn_gra)
-            all_ste_rxns += (sccs_rxn_gra,)
-
-    nrxns = len(full_ste_rxn_lst)
-    nrxns_nodup = len(list(set(full_ste_rxn_lst)))
-    nspc = len(full_ste_spc_lst)
-    nspc_nodup = len(list(set(full_ste_spc_lst)))
-    print('Number of reactions in the full expansion:  '
-          f'{nrxns} (all) {nrxns_nodup} (no duplicates)')
-    print('Number of species in the full expansion:  '
-          f'{nspc} (all) {nspc_nodup} (no duplicates)')
-    print('Reaction duplicates:')
-    fin_rxns = []
-    fin_idxs = []
-    for rxn in full_ste_rxn_lst:
-        if full_ste_rxn_lst.count(rxn) == 2:
-            if rxn not in fin_rxns:
-                idxs = [idx for idx, rxn2 in enumerate(full_ste_rxn_lst)
-                        if rxn == rxn2]
-                fin_rxns.append(rxn)
-                fin_idxs.append(idxs)
-    if fin_rxns:
-        for rxn, idxs in zip(fin_rxns, fin_idxs):
-            print(idxs, rxn)
-    else:
-        print('No duplicates')
-
+            for rxn_lst in ste_rxns:
+                all_ste_rxns += rxn_lst
     return all_ste_rxns
 
 

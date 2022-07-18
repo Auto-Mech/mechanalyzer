@@ -24,7 +24,7 @@ def main(
     mech_spc_dct = mechanalyzer.parser.spc.build_spc_dct(inp_spc_str, 'csv')
     rxn_param_dct = mechanalyzer.parser.mech.parse_mechanism(
         inp_mech_str, 'chemkin')
-    isolate_spc, sort_lst = mechanalyzer.parser.mech.parse_sort(sort_str)
+    isolate_spc, sort_lst, _ = mechanalyzer.parser.mech.parse_sort(sort_str)
 
     # Remove reactions that should not be there
     if check_mechanism:
@@ -44,82 +44,24 @@ def main(
     # Expand the reactions in the mechanism to include stereochemical variants
     print('\n---- Expanding the list of mechanism reactions to include all'
           ' valid, stereoselective permutations ---\n')
-    sccs_rxn_dct_lst = mechanalyzer.builder.expand_mech_stereo(
+    full_rxn_lst, red_rxn_lst = mechanalyzer.builder.expand_mech_stereo(
         rxn_param_dct, mech_spc_dct, nprocs='auto')
-
-    # Loop over all sccs to write their mechfiles and keep track of
-    # the good ones to reduce from
-    ccs_sccs_spc_dct = {}
-    for ccs_idx, sccs_rxn_dct in enumerate(sccs_rxn_dct_lst):
-        for sccs_idx, sccs_rxn_lst in sccs_rxn_dct.items():
-            print('Writing CCS:{:g} SCCS:{:g}'.format(ccs_idx, sccs_idx))
-            print(len(sccs_rxn_lst), sccs_rxn_lst)
-            ret_dcts = dictionaries_from_rxn_lst(
-                sccs_rxn_lst)
-            ste_mech_spc_dct, ste_rxn_dct = ret_dcts
-            is_valid = mechanalyzer.builder.valid_enantiomerically(
-                ste_mech_spc_dct)
-
-            if is_valid:
-                if ccs_idx not in ccs_sccs_spc_dct:
-                    ccs_sccs_spc_dct[ccs_idx] = {0: [
-                        ste_mech_spc_dct[spc_name][
-                            'inchi'] for spc_name in ste_mech_spc_dct.keys()]}
-                else:
-                    ccs_sccs_spc_dct[ccs_idx][sccs_idx] = [
-                        ste_mech_spc_dct[spc_name][
-                            'inchi'] for spc_name in ste_mech_spc_dct.keys()]
-            # OBTAIN SORTED SPECIES AND MECHANISMS
-            write_mechanism(
-                ste_mech_spc_dct, ste_rxn_dct, out_loc, out_spc, out_mech,
-                sort_lst.copy(), isolate_spc, ccs_idx, sccs_idx)
-
-    # Choose the sccs for each ccs that works with the rest of the mech
-    chosen_idx_lst = ()
-    all_chosen_ichs = ()
-    for ccs_idx, sccs_dct in ccs_sccs_spc_dct.items():
-        if not chosen_idx_lst:
-            chosen_idx_lst += ((ccs_idx, 0),)
-            all_chosen_ichs += tuple(sccs_dct[0])
-            continue
-        max_overlap = 0
-        best_idx = 0
-        for sccs_idx, spc_dct in sccs_dct.items():
-            num_overlap = len(set(all_chosen_ichs) & set(spc_dct))
-            if num_overlap > max_overlap:
-                max_overlap = num_overlap
-                best_idx = sccs_idx
-        chosen_idx_lst += ((ccs_idx, best_idx),)
-        all_chosen_ichs += tuple(sccs_dct[best_idx])
-
-    print('Identifying diastereomer abstractions')
-    dias_idxs = mechanalyzer.builder.diastereomer_abstractions(
-        sccs_rxn_dct_lst, ccs_sccs_spc_dct,
-        chosen_idx_lst, all_chosen_ichs)
-
-    if dias_idxs:
-        dia_str = ', '.join(
-            (f'({ccs}, {sccs})' for (ccs, sccs) in dias_idxs)
-        )
-        print(f'Found new diastereomers to add: {dia_str}')
-
-        chosen_idx_lst += dias_idxs
-
-    print('Reduced reactions are from (CCS,SCCS):', chosen_idx_lst)
-    reduced_rxn_lst = ()
-    for ccs_idx, sccs_idx in chosen_idx_lst:
-        reduced_rxn_lst += sccs_rxn_dct_lst[ccs_idx][sccs_idx]
-
+    print('turning reaction list into mechanism dictionary')
     ste_mech_spc_dct, ste_rxn_dct = dictionaries_from_rxn_lst(
-        reduced_rxn_lst)
+        full_rxn_lst)
+    print('Writing expanded stereomechanism')
     write_mechanism(
         ste_mech_spc_dct, ste_rxn_dct, out_loc, out_spc, out_mech,
-        sort_lst.copy(), isolate_spc)
+        sort_lst.copy(), isolate_spc, '_full')
+    print('Writing original mechanism')
+    write_mechanism(
+        mech_spc_dct, rxn_param_dct, out_loc, out_spc, out_mech,
+        sort_lst.copy(), isolate_spc, '_orig')
 
 
 def write_mechanism(
         ste_mech_spc_dct, ste_rxn_dct, out_loc, out_spc, out_mech,
-        sort_lst, isolate_spc, ccs_idx=None, sccs_idx=None):
+        sort_lst, isolate_spc, suffix=''):
     """ write mechanism
     """
     # Write the new (sorted) species dictionary to a string
@@ -154,16 +96,8 @@ def write_mechanism(
         rxn_param_dct=param_dct_sort,
         rxn_cmts_dct=rxn_cmts_dct)
 
-    # Write the species and mechanism files
-    if ccs_idx is not None and sccs_idx is not None:
-        ioformat.pathtools.write_file(
-            csv_str, out_loc, out_spc + '_{:g}_{:g}'.format(ccs_idx, sccs_idx))
-        ioformat.pathtools.write_file(
-            mech_str, out_loc,
-            out_mech + '_{:g}_{:g}'.format(ccs_idx, sccs_idx))
-    else:
-        ioformat.pathtools.write_file(csv_str, out_loc, out_spc)
-        ioformat.pathtools.write_file(mech_str, out_loc, out_mech)
+    ioformat.pathtools.write_file(csv_str, out_loc, out_spc + suffix)
+    ioformat.pathtools.write_file(mech_str, out_loc, out_mech + suffix)
 
 
 def input_from_location_dictionary(cwd, loc_dct):
@@ -365,11 +299,10 @@ if __name__ == '__main__':
         oscwd, 'build.dat',
         remove_comments='#', remove_whitespace=True)
     file_dct, _ = mechanalyzer.parser.build_input_file(bld_str)
-
     # Read input species and mechanism files into dictionary
     mech_info = input_from_location_dictionary(oscwd, file_dct)
     main(oscwd, file_dct['out_spc'], file_dct['out_mech'], *mech_info)
-    reduction(oscwd, file_dct)
+    # reduction(oscwd, file_dct)
     # Compute script run time and print to screen
     tf = time.time()
     print('\n\nScript executed successfully.')
