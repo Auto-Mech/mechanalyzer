@@ -44,7 +44,7 @@ def main(
     # Expand the reactions in the mechanism to include stereochemical variants
     print('\n---- Expanding the list of mechanism reactions to include all'
           ' valid, stereoselective permutations ---\n')
-    full_rxn_lst, red_rxn_lst = mechanalyzer.builder.expand_mech_stereo(
+    full_rxn_lst = mechanalyzer.builder.expand_mech_stereo(
         rxn_param_dct, mech_spc_dct, nprocs='auto')
     print('turning reaction list into mechanism dictionary')
     ste_mech_spc_dct, ste_rxn_dct = dictionaries_from_rxn_lst(
