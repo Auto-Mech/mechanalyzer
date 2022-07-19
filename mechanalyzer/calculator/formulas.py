@@ -55,3 +55,14 @@ def extract_species_sub(n_at, fml_df):
         fml_df['nCl'] <= n_at[5])].index)
 
     return species_set
+
+def extract_species_above(n_at, fml_df):
+    """ extract any fml above the indicated limits
+    """
+    species_set = list(fml_df[(fml_df['nC'] >= n_at[0] ) & (
+         (fml_df['nO'] >= n_at[2]))].index)
+    # also delete anything with N that is not N2
+    species_set.extend(list(fml_df[(fml_df['nN'] >= 1 )].index))
+    species_set.remove('N2')
+    
+    return species_set
