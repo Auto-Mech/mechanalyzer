@@ -237,14 +237,14 @@ class SortMech:
                         'r1', 'mult',
                         'rxn_class_broad', 'rxn_class_graph',
                         'submech', 'submech_prompt', 'submech_ext',
-                        'rxn_max_vals', 'rxn_max_ratio',
+                        'submech_del',  'rxn_max_vals', 'rxn_max_ratio',
                         ]
         labels_all = ['NR', 'N_of_prods', 'SPECIES',
                       'pes', 'subpes', 'channel',
                       'Heavier_rct', 'Totalmultiplicity',
                       'rxntype', 'rxnclass',
                       'SUBMECH', 'submech_prompt', 'submech_ext',
-                      'maxval', 'maxratio',
+                      'submech_del', 'maxval', 'maxratio',
                       ]
 
         # check on pes/subpes criteria:
@@ -282,6 +282,7 @@ class SortMech:
             'submech': self.group_submech,
             'submech_prompt': self.group_prompt,
             'submech_ext': self.group_submech,
+            'submech_del': self.group_submech,
             'rxn_max_vals': self.rxn_max_vals,
             'rxn_max_ratio': self.rxn_max_ratio
         }
@@ -358,6 +359,12 @@ class SortMech:
                 self.species_subset_df = species_subset_df
                 filtertype = 'submech_ext'
 
+            elif len(species_list) == 1 and 'submech_del' in hierarchy:
+                species_list, species_subset_df = submech.species_subset_del(
+                    species_list[0], self.spc_dct)
+                self.species_subset_df = species_subset_df
+                filtertype = 'submech_ext'
+                
             elif len(species_list) > 1 and 'submech' in hierarchy:
                 print('Error: pyr/ox submech extraction available ',
                       'for only 1 species')
@@ -383,7 +390,7 @@ class SortMech:
         :param self.mech_df: dataframe with mech info (contains all reactions)
         :param self.spc_dct: species dictionary
         :param species_list: list of species subsets
-        :param filtertype: can be 'submech', 'submech_ext', 'submech_prompt'
+        :param filtertype: can be 'submech', 'submech_ext/del', 'submech_prompt'
 
         :returns: mech_df, spc_dct
         :rtype: dataframe, dict
@@ -418,7 +425,7 @@ class SortMech:
                     prd == _spc for _spc in species_list for prd in prds)
                 chk = int(_rchk or _pchk)
 
-            elif filtertype == 'submech_ext':
+            elif filtertype =='submech_ext':
                 # filter out bimol/bimol reactions if some bimol rcts/prds are not in the species list
                 # equivalent to saying: at least all reactants (also single react works) or all products
                 # must be in the species list
