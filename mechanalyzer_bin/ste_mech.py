@@ -6,18 +6,20 @@ import time
 import itertools as it
 import numpy
 
+import automol
 import ioformat
 import chemkin_io
-import mechanalyzer
 from autofile import io_ as io
-import automol
+import mechanalyzer
 from mechanalyzer.builder import sorter
 
 
 def main(
         out_loc, out_spc, out_mech,
         inp_spc_str, inp_mech_str, sort_str,
-        check_mechanism=False):
+        check_mechanism=False,
+        enant=True,
+        enant_label=True):
     """ carry out all the mechanism things you wanna do
     """
     # Build the initial dictionaries
@@ -36,7 +38,7 @@ def main(
     print('\n---- Adding stereochemistry to InChIs of mechanism'
           ' species where needed ---\n')
     mech_spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
-        mech_spc_dct, nprocs='auto', all_stereo=False)
+        mech_spc_dct, nprocs='auto', all_stereo=False, enant=enant)
     print('Mechanism species with stereo added')
     for name, dct in mech_spc_dct.items():
         print(f'Name: {name:<25s} InChI: {dct["inchi"]}')
@@ -45,10 +47,10 @@ def main(
     print('\n---- Expanding the list of mechanism reactions to include all'
           ' valid, stereoselective permutations ---\n')
     full_rxn_lst = mechanalyzer.builder.expand_mech_stereo(
-        rxn_param_dct, mech_spc_dct, nprocs='auto')
+        rxn_param_dct, mech_spc_dct, nprocs='auto', enant=enant)
     print('turning reaction list into mechanism dictionary')
     ste_mech_spc_dct, ste_rxn_dct = dictionaries_from_rxn_lst(
-        full_rxn_lst)
+        full_rxn_lst, enant_label=enant_label)
     print('Writing expanded stereomechanism')
     write_mechanism(
         ste_mech_spc_dct, ste_rxn_dct, out_loc, out_spc, out_mech,
@@ -123,12 +125,12 @@ def input_info_from_file(cwd, species_file, mech_file, sort_file):
     return inp_spc_str, inp_mech_str, sort_str
 
 
-def dictionaries_from_rxn_lst(sccs_rxn_lst):
+def dictionaries_from_rxn_lst(sccs_rxn_lst, enant_label=True):
     """ transform the reaction list to the dictionaries the writer likes
     """
     ste_mech_spc_dct, ste_rxn_dct = {}, {}
     ste_mech_spc_dct = mechanalyzer.builder.update_spc_dct_from_reactions(
-        sccs_rxn_lst, ste_mech_spc_dct)
+        sccs_rxn_lst, ste_mech_spc_dct, enant_label=enant_label)
     ste_rxn_dct = mechanalyzer.builder.update_rxn_dct(
         sccs_rxn_lst, ste_rxn_dct, ste_mech_spc_dct)
     ste_mech_spc_dct = mechanalyzer.builder.remove_spc_not_in_reactions(

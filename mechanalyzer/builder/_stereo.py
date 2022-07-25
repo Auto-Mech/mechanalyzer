@@ -17,8 +17,13 @@ from mechanalyzer.builder._names import rxn_name_str
 
 
 # MAIN CALLABLE
-def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct, nprocs='auto'):
+def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct, nprocs='auto',
+                       enant=True):
     """ Build list of stereochemistry to reactions
+
+        :param enant: Include all enantiomers? Otherwise, includes only
+            canonical enantiomer species and reactions.
+        :type enant: bool
 
         Currently, we assume that the species in them mech_spc_dct have
         stereochemistry already added to them.
@@ -41,7 +46,7 @@ def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct, nprocs='auto'):
             thrdbdy = rxn_ich[2]
 
             # Build list of all stereochemically allowed versions of reaction
-            ste_rxns_lst, log2 = _ste_rxn_lsts(_rxn_ich)
+            ste_rxns_lst, log2 = _ste_rxn_lsts(_rxn_ich, enant=enant)
             print(log2)
             # Appropriately format the reactions with third body
             ste_rxns_lst = _add_third(ste_rxns_lst, thrdbdy)
@@ -765,8 +770,12 @@ def remove_stereochemistry(inp_mech_rxn_dct, inp_mech_spc_dct):
 
 
 # Build reaction lists
-def _ste_rxn_lsts(rxn_ich):
+def _ste_rxn_lsts(rxn_ich, enant=True):
     """ Build reaction onjects
+
+        :param enant: Include all enantiomers? Otherwise, includes only
+            canonical enantiomer species and reactions.
+        :type enant: bool
 
     """
     # Build reaction objects
@@ -779,7 +788,7 @@ def _ste_rxn_lsts(rxn_ich):
 
     # Build a list of stereo reactions
     ste_rxn_ichs = ()
-    for ste_rxn in automol.reac.expand_stereo(rxn_obj):
+    for ste_rxn in automol.reac.expand_stereo(rxn_obj, enant=enant):
         rct_gras = automol.reac.reactant_graphs(ste_rxn)
         prd_gras = automol.reac.product_graphs(ste_rxn)
         attempt = 1

@@ -16,18 +16,24 @@ from mechanalyzer.builder._names import functional_group_name
 
 
 # Handles Species Object Updates
-def update_spc_dct_from_reactions(rxns, spc_dct):
+def update_spc_dct_from_reactions(rxns, spc_dct, enant_label=True):
     """ Update a species with species from a set of reactions
+
+        :param enant_label: Include the enantiomer label?
+        :type enant_label: bool
     """
 
     spc_lst = _spc_from_reactions(rxns)
-    spc_dct = update_spc_dct(spc_lst, spc_dct)
+    spc_dct = update_spc_dct(spc_lst, spc_dct, enant_label=enant_label)
 
     return spc_dct
 
 
-def update_spc_dct(spc_ichs, spc_dct):
+def update_spc_dct(spc_ichs, spc_dct, enant_label=True):
     """ Update the species dictionary with a list of species
+
+        :param enant_label: Include the enantiomer label?
+        :type enant_label: bool
     """
 
     print('\nAdding new unique species to mechanism by',
@@ -40,7 +46,8 @@ def update_spc_dct(spc_ichs, spc_dct):
     for ich in spc_ichs:
         if ich not in _ich_name_dct:
             # Generate a functional group name
-            name = functional_group_name(ich, name='')
+            name = functional_group_name(ich, name='',
+                                         enant_label=enant_label)
 
             if name in spc_dct:
                 print("WARNING: GENERATED NAME ALREADY IN DCT!!!")
