@@ -153,8 +153,11 @@ def functional_group_name_dct(mech_spc_dct, rename_rule_dct=None):
     return fgrp_map_dct
 
 
-def functional_group_name(ich, name='', rename_rule_dct=None):
+def functional_group_name(ich, name='', rename_rule_dct=None, enant_label=True):
     """ Assign the functional group name
+
+        :param enant_label: Include the enantiomer label?
+        :type enant_label: bool
     """
 
     def _conn_string(ich):
@@ -244,7 +247,7 @@ def functional_group_name(ich, name='', rename_rule_dct=None):
 
         # NEW SCHEME
         conn_lbl = _conn_string(ich)
-        ste_lbl = stereo_name_suffix(ich)
+        ste_lbl = stereo_name_suffix(ich, enant_label=enant_label)
         fgrp_lbl = _fgrp_name_string(fgrp_cnt_dct, rename_rule_dct)
         # Build the names string
         re_name = f'C{c_cnt}'
@@ -372,9 +375,12 @@ def ich_name_dct(spc_dct):
     return {dct['inchi']: name for name, dct in spc_dct.items()}
 
 
-def stereo_name_suffix(ich):
+def stereo_name_suffix(ich, enant_label=True):
     """ Parse the stereo from the InChI and write a string describing the
         stereochemistry that is present.
+
+        :param enant_label: Include the enantiomer label?
+        :type enant_label: bool
     """
 
     ste_str = ''
@@ -410,7 +416,7 @@ def stereo_name_suffix(ich):
                 ste_str += 'B'
 
         # Write additional label to describe enantiomer if needed
-        if 'm' in ste_slyrs:
+        if enant_label and 'm' in ste_slyrs:
             # ste_str += '_' + mlyr
             ste_str += mlyr
 

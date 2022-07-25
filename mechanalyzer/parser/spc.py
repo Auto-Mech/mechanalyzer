@@ -249,7 +249,7 @@ def add_instability_products(mech_spc_dct, nprocs='auto', stereo=True):
     return mech_spc_dct
 
 
-def stereochemical_spc_dct(spc_dct, nprocs='auto', all_stereo=False):
+def stereochemical_spc_dct(spc_dct, nprocs='auto', all_stereo=False, enant=True):
     """ read the species file in a .csv format and write a new one
         that has stero information
     """
@@ -258,7 +258,7 @@ def stereochemical_spc_dct(spc_dct, nprocs='auto', all_stereo=False):
     init_names = list(spc_dct.keys())
 
     # Add stereo using multiple processes
-    args = (spc_dct, all_stereo)
+    args = (spc_dct, all_stereo, enant)
     ste_dcts = execute_function_in_parallel(
         _add_stereo_to_dct, init_names, args, nprocs=nprocs)
 
@@ -275,7 +275,7 @@ def stereochemical_spc_dct(spc_dct, nprocs='auto', all_stereo=False):
     return ste_spc_dct_ord
 
 
-def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
+def _add_stereo_to_dct(init_dct, all_stereo, enant, names, output_queue):
     """ Builds a modified species dictionary for a set of names where
         each sub species dictionary contains an InChI string with
         stereochemical layers being added.
@@ -310,7 +310,7 @@ def _add_stereo_to_dct(init_dct, all_stereo, names, output_queue):
             if not automol.chi.is_complete(ich):
                 ret_ichs = (
                     [automol.chi.add_stereo(ich)] if not all_stereo else
-                    automol.chi.expand_stereo(ich))
+                     automol.chi.expand_stereo(ich, enant=enant))
         except:  # noqa: E722
             print(f'{name} timed out in stereo generation')
             worked = False
