@@ -14,7 +14,7 @@ from automol.chi import add_stereo
 from automol.formula import from_string as str_to_fml
 import rdkit.Chem as _rd_chem
 
-ALLOWED_COLUMN_NAMES = (
+ALLOWED_COL_NAMES = (
     'name',
     'smiles',
     'inchi',
@@ -39,10 +39,10 @@ TRIP_DCT = {
 
 
 def load_mech_spc_dcts(filenames, path, quotechar="'",
-                       chk_ste=False, chk_match=False):
+                       chk_ste=False, chk_match=False, verbose=True):
     """ Obtains multiple mech_spc_dcts given a list of spc.csv filenames
 
-        :param filenames: filenames of the spc.csv file to be read
+        :param filenames: filenames of the spc.csv files to be read
         :type filename: list
         :param quotechar: character used to optionally ignore commas; " or '
         :type quotechar: str
@@ -50,6 +50,8 @@ def load_mech_spc_dcts(filenames, path, quotechar="'",
         :type chk_ste: Bool
         :param chk_match: whether or not to check that inchis and smiles match
         :type chk_match: Bool
+        :param verbose: whether or not to print lots of warnings
+        :type verbose: Bool
         :return mech_spc_dcts: list of mech_spc_dcts
         :rtype: list
     """
@@ -57,17 +59,16 @@ def load_mech_spc_dcts(filenames, path, quotechar="'",
     mech_spc_dcts = []
     for filename in filenames:
         print(f'Loading mech_spc_dct for the file {filename}...')
-        mech_spc_dct = load_mech_spc_dct(filename, path,
-                                         quotechar=quotechar,
-                                         chk_ste=chk_ste,
-                                         chk_match=chk_match)
+        mech_spc_dct = load_mech_spc_dct(
+            filename, path, quotechar=quotechar, chk_ste=chk_ste,
+            chk_match=chk_match, verbose=verbose)
         mech_spc_dcts.append(mech_spc_dct)
 
     return mech_spc_dcts
 
 
 def load_mech_spc_dct(filename, path, quotechar="'",
-                      chk_ste=False, chk_match=False):
+                      chk_ste=False, chk_match=False, verbose=True):
     """ Obtains a single mech_spc_dct given a spc.csv filename
 
         :param filename: filename of the spc.csv file to be read
@@ -78,13 +79,16 @@ def load_mech_spc_dct(filename, path, quotechar="'",
         :type chk_ste: Bool
         :param chk_match: whether or not to check that inchis and smiles match
         :type chk_match: Bool
+        :param verbose: whether or not to print lots of warnings
+        :type verbose: Bool
         :return mech_spc_dct: identifying information on species in a mech
         :rtype: dct {spc1: spc_dct1, spc2: ...}
     """
 
     file_str = pathtools.read_file(path, filename, remove_comments='!')
-    mech_spc_dct = parse_mech_spc_dct(file_str, quotechar=quotechar,
-                                      chk_ste=chk_ste, chk_match=chk_match)
+    mech_spc_dct = parse_mech_spc_dct(
+        file_str, quotechar=quotechar, chk_ste=chk_ste, chk_match=chk_match,
+        verbose=verbose)
 
     return mech_spc_dct
 
@@ -103,6 +107,8 @@ def parse_mech_spc_dct(file_str, quotechar="'",
         :type chk_match: Bool
         :param add_ste: add stereo layer on inchi if missing
         :type add_ste: Bool
+        :param verbose: whether or not to print lots of warnings
+        :type verbose: Bool
         :return mech_spc_dct: identifying information on species in a mech
         :rtype: dct {spc1: spc_dct1, spc2: ...}
     """
@@ -132,12 +138,13 @@ def parse_mech_spc_dct(file_str, quotechar="'",
     mech_spc_dct = {}
     errors = False
     for idx, line in enumerate(lines):
+        print('current line: ', line)
         if idx == 0:
-            col_headers, num_cols = parse_first_line(line, quotechar=quotechar)
+            headers = parse_first_line(line, quotechar=quotechar)
         else:
-            cols = parse_line(line, idx, num_cols, quotechar=quotechar)
+            cols = parse_line(line, idx, headers, quotechar=quotechar)
             if cols is not None:
-                spc, spc_dct = read_spc_dct(cols, col_headers)
+                spc, spc_dct = make_spc_dct(cols, headers)
                 # Check that the species name was not already defined
                 assert spc not in mech_spc_dct.keys(), (
                     f'The species name {spc} appears in the csv file more than'
@@ -152,20 +159,20 @@ def parse_mech_spc_dct(file_str, quotechar="'",
                 print(f'Line {idx + 1} appears to be empty. Skipping...')
 
     # Find species with the same chemical identifiers but different names
-    check_for_dups(mech_spc_dct, printwarnings=verbose)  # prints warnings
+    check_for_dups(mech_spc_dct, printwarnings=verbose)
 
     assert not errors, ('Errors while parsing the .csv file! See printouts')
 
     return mech_spc_dct
 
 
-def read_spc_dct(cols, col_headers):
-    """ Reads the parsed contents of a single line and converts to a spc_dct
+def make_spc_dct(cols, headers):
+    """ Makes a spc_dct by reading parsed contents of a single line
 
         :param cols: a list of the entries in the line
         :type cols: list
-        :param col_headers: a list of the entries in the first line
-        :type col_headers: list
+        :param headers: column headers (i.e., first line of the csv)
+        :type headers: list
         :return spc: the mechanism name for the species
         :rtype: str
         :return spc_dct: identifying information for a single species
@@ -175,23 +182,23 @@ def read_spc_dct(cols, col_headers):
     # Build the spc_dct for this species, column by column
     spc_dct = {}
     for idx, col in enumerate(cols):
-        col_header = col_headers[idx]
-        if col_header == 'name':
+        header = headers[idx]
+        if header == 'name':
             spc = col
         # If charge or mult or exc_flag, convert to int if not empty
-        elif col_header in ('charge', 'mult', 'exc_flag') and col != '':
-            spc_dct[col_header] = int(col)
+        elif header in ('charge', 'mult', 'exc_flag') and col != '':
+            spc_dct[header] = int(col)
         # If on formula, convert to dict
-        elif col_header == 'fml':
-            spc_dct[col_header] = str_to_fml(col)
+        elif header == 'fml':
+            spc_dct[header] = str_to_fml(col)
         else:
-            spc_dct[col_header] = col
+            spc_dct[header] = col
 
     # If inchi or smiles not in headers, fill in blank value to avoid KeyError
     # (can't both be missing; see parse_first_line)
-    if 'inchi' not in col_headers:
+    if 'inchi' not in headers:
         spc_dct['inchi'] = ''
-    elif 'smiles' not in col_headers:
+    elif 'smiles' not in headers:
         spc_dct['smiles'] = ''
 
     return spc, spc_dct
@@ -218,11 +225,11 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True):
     if full_spc_dct['inchi'] == '' and full_spc_dct['smiles'] == '':
         print(f'For {spc}, both inchi and smiles are empty')
         error = True
-    elif 'inchi' not in full_spc_dct or full_spc_dct['inchi'] == '':
+    elif full_spc_dct['inchi'] == '':
         smi = full_spc_dct['smiles']
         error = check_smi(smi, spc)
         full_spc_dct['inchi'] = smi_to_ich(smi)
-    elif 'smiles' not in full_spc_dct:
+    elif full_spc_dct['smiles'] == '':
         ich = full_spc_dct['inchi']
         error = check_ich(ich, spc, chk_ste=chk_ste)
         full_spc_dct['smiles'] = ich_to_smi(ich)
@@ -273,10 +280,8 @@ def parse_first_line(first_line, quotechar="'"):
         :type first_line: str
         :param quotechar: the quotechar used to optionally ignore commas
         :type quotechar: str
-        :return headers: a list of the entries in the first line
+        :return headers: column headers (i.e., first line of the csv)
         :rtype: list
-        :return num_cols: the number of columns indicated by the first line
-        :rtype: int
     """
 
     # Remove the UTF encoding if present
@@ -285,31 +290,29 @@ def parse_first_line(first_line, quotechar="'"):
 
     # Parse the line
     headers = next(csv.reader([first_line], quotechar=quotechar))
-    num_cols = len(headers)
 
     # Check for appropriateness of column headers (case insensitive)
-    for col_header in headers:
-        assert col_header.lower() in ALLOWED_COLUMN_NAMES, (
-            f'The column header {col_header} is not allowed. Options are'
-            f' {ALLOWED_COLUMN_NAMES}.')
+    for header in headers:
+        assert header.lower() in ALLOWED_COL_NAMES, (
+            f'Header {header} is not allowed. Options: {ALLOWED_COL_NAMES}.')
     assert 'name' in headers, (
-        "The species name, 'name', must be included in the csv file header.")
+        "The species name, 'name', must be included in the csv file headers.")
     assert 'inchi' in headers or 'smiles' in headers, (
         "At least one of the following chemical identifiers must be included in"
-        " the csv file header: 'inchi' or 'smiles'.")
+        " the csv file headers: 'inchi' or 'smiles'.")
 
-    return headers, num_cols
+    return headers 
 
 
-def parse_line(line, idx, num_cols, quotechar="'"):
+def parse_line(line, idx, headers, quotechar="'"):
     """ Parses a line in the spc.csv file (other than the first line)
 
         :param line: a string with the contents of a single line in the csv file
         :type line: str
         :param idx: the index of the line
         :type idx: int
-        :param num_cols: the number of columns in the csv file
-        :type num_cols: int
+        :param headers: column headers (i.e., first line of the csv)
+        :type headers: list
         :param quotechar: the quotechar used to optionally ignore commas
         :type quotechar: str
         :return cols: a list of the entries in the line
@@ -320,9 +323,9 @@ def parse_line(line, idx, num_cols, quotechar="'"):
     if line == '':
         cols = None
     else:
-        assert len(cols) == num_cols, (
+        assert len(cols) == len(headers), (
             f'Line {idx + 1}, {line}, has {len(cols)} columns. The first line '
-            f'in the csv file indicates {num_cols} columns are needed.')
+            f'in the csv file indicates {len(headers)} columns are needed.')
 
     return cols
 
@@ -400,15 +403,12 @@ def check_smi_and_ich(smi, ich, spc, chk_ste=True):
 
     # Recalculate inchi from smiles and see if it's the same
     # Note: only do if both initial tests passed and if not checking stereo
+    error3 = False
     if not any([error1, error2]) and not chk_ste:
         recalc_ich = smi_to_ich(smi)
         if ich != recalc_ich:
-            print(f"The spc '{spc}' has non-matching SMILES and InChI strings")
+            print(f"The spc '{spc}' has non-matching SMILES & InChI strings")
             error3 = True
-        else:
-            error3 = False
-    else:
-        error3 = False
 
     error = any([error1, error2, error3])
 
