@@ -8,6 +8,7 @@ class SPC():
     """
     NAME = 'name'
     INCHI = 'inchi'
+    CANON_ENANT_ICH = 'canon_enant_ich'
     INCHI_KEY = 'inchikey'
     SMILES = 'smiles'
     CHARGE = 'charge'

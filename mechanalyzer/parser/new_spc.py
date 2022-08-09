@@ -9,10 +9,11 @@ from automol.smiles import chi as smi_to_ich
 from automol.chi import add_stereo
 from automol.chi import inchi_to_amchi
 from automol.chi import smiles as ich_to_smi
+from automol.chi import canonical_enantiomer
 from automol.chi import formula as ich_to_fml
 from automol.chi import low_spin_multiplicity as _low_spin_mult
 from automol.chi import is_complete
-from automol.chi import add_stereo 
+from automol.chi import add_stereo
 from automol.formula import from_string as str_to_fml
 import rdkit.Chem as _rd_chem
 
@@ -245,6 +246,11 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True):
             if not error:  # if the inchi passed, check the smiles
                 error = check_smi(full_spc_dct['smiles'], spc)
                     
+    if 'canon_enant_ich' not in full_spc_dct:
+        # full_spc_dct['canon_enant_ich'] = full_spc_dct['inchi']
+        full_spc_dct['canon_enant_ich'] = canonical_enantiomer(
+            full_spc_dct['inchi'])
+        print('canonical enantiomer for', full_spc_dct['inchi'], full_spc_dct['canon_enant_ich'])
     # Add charge and exc_flag if missing; assume 0 for both
     if 'charge' not in full_spc_dct or full_spc_dct['charge'] == '':
         full_spc_dct['charge'] = 0
@@ -270,7 +276,7 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True):
     if 'fml' not in full_spc_dct or full_spc_dct['fml'] == '':
         fml = ich_to_fml(full_spc_dct['inchi'])
         full_spc_dct['fml'] = fml
-        
+
     return full_spc_dct, error
 
 
