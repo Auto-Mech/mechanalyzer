@@ -178,10 +178,10 @@ def build_pedhot_df_dct(hot_inp_str, hot_ped_str, hot_ke_out_str,
     pedhot_df_dct_tot = {}
     pedhot_df_dct = {}
     ene_bw_dct = {}
-
-    hot_ped_spc, hot_ped_dct, hot_dof_dct, \
+    hot_ped_spc, hot_ped_dct, \
         hot_dos_df, hot_energy_dct = ped_info(
             hot_inp_str, hot_ped_str, hot_ke_out_str)
+    hot_dof_dct = calc_dof_dct(hot_inp_str, hot_ped_spc)
     # starting energy distribution
     starthot_df = starthotfrag_df
 

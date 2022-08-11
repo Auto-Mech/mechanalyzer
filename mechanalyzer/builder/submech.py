@@ -15,6 +15,7 @@ from mechanalyzer.calculator import formulas
 # atoms order: C, H, O, N, S, CL
 STOICH_DEFAULT = [0, 2, 2, 0, 0, 0]
 STOICH_DEFAULT_DEL = [1, 0, 2, 0, 0, 0] # DELETE ALL ABOVE THESE STOICH
+STOICH_DEFAULT_DEL = [1, 0, 0, 0, 0, 0] # DELETE ALL ABOVE THESE STOICH simultaneous condition on C and O only
 STOICH_DCT_ADD = {
     'FUEL': [0, 0, 0, 0, 0, 0],
     'FUEL_RAD': [0, -1, 0, 0, 0, 0],

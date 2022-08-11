@@ -434,7 +434,11 @@ class SortMech:
                                for rct in rcts))
                 chk += int(all(any(prd == _spc for _spc in species_list)
                                for prd in prds))*int(len(prds) <= 2)
-
+                """
+                chk = int(all(any(rct == _spc for _spc in species_list)
+                               for rct in rcts))*int(all(any(prd == _spc for _spc in species_list)
+                        for prd in prds))
+                """
             if filtertype == 'submech_prompt' and chk >= 1:
                 for sp in species_list:
                     if len(rcts) == 2 and any(rct == sp for rct in rcts) and len(prds) <= 2:
