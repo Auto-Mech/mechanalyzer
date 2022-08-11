@@ -16,8 +16,8 @@ THERMO_FILENAMES = [
     # 'NUIGMech1.2.Therm.DAT',
     # 'b2t_hr_nohb_1-19.ckin',
     # 'RO4_tzf.ckin',
-    'all_therm.ckin_0',
-    'b2t_hr_nohb_1-19.ckin'
+    'thermo_g_fa.CKIN',
+    'update_therm.ckin',
     # 'C3H8NGA.DAT',
     # 'glarborg.therm',
     # 'stagni.therm',
@@ -43,7 +43,7 @@ MECH_NAMES = [
     # 'Stagni',
     # 'Alturaifi',
 ]
-OUTPUT_FILENAME = 'C3_compare.pdf'
+OUTPUT_FILENAME = 'SENS_compare.pdf'
 # OUTPUT_FILENAME = 'compare_thermo.pdf'
 
 # Conditions
