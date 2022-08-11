@@ -6,6 +6,8 @@ import csv
 import copy
 from ioformat import pathtools
 from automol.smiles import chi as smi_to_ich
+from automol.chi import add_stereo
+from automol.chi import inchi_to_amchi
 from automol.chi import smiles as ich_to_smi
 from automol.chi import formula as ich_to_fml
 from automol.chi import low_spin_multiplicity as _low_spin_mult
@@ -242,7 +244,7 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True):
             error = check_ich(full_spc_dct['inchi'], spc, chk_ste=chk_ste)
             if not error:  # if the inchi passed, check the smiles
                 error = check_smi(full_spc_dct['smiles'], spc)
-
+                    
     # Add charge and exc_flag if missing; assume 0 for both
     if 'charge' not in full_spc_dct or full_spc_dct['charge'] == '':
         full_spc_dct['charge'] = 0
@@ -446,3 +448,11 @@ def check_for_dups(mech_spc_dct, printwarnings=True):
             inner_dct = spc_dcts[inner_idx]
             if are_spcs_same(outer_dct, inner_dct) and printwarnings:
                 print(f'{outer_spc} and {inner_spc} are chemical twins!')
+
+def inchi_to_amchi(full_spc_dct):
+    """ convert inchi to amchi where needed """
+    
+    full_spc_dct['inchi'] = add_stereo(full_spc_dct['inchi'])
+    full_spc_dct['inchi'] = inchi_to_amchi(full_spc_dct['inchi'])
+    
+    return full_spc_dct
