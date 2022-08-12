@@ -5,6 +5,7 @@ Functions for mechanism reading and sorting
 import sys
 import autoparse.pattern as app
 import ioformat.ptt
+from ioformat import remove_comment_lines
 from mechanalyzer.parser import ckin_ as ckin
 
 
@@ -32,14 +33,18 @@ def parse_sort(sort_str):
         :type sort_str: str
         :rtype: (list(str), list(str), int)
     """
+    # remove comments
+    sort_str = remove_comment_lines(
+                sort_str, delim_pattern=app.escape('#'))
+    sort_str = remove_comment_lines(
+            sort_str, delim_pattern=app.escape('!'))
 
     # Read and format information from the isolate_submech block
-    sort_block = ioformat.ptt.end_block(sort_str, 'isolate_submech')
-    spc_block = ioformat.ptt.paren_blocks(sort_block, key='species')
-
+    spc_block = ioformat.ptt.end_block(sort_str, 'isolate_submech')
+    
     if spc_block:
         spc_lst = list(ioformat.ptt.values_from_block(
-            spc_block[0][1], val_ptt=app.one_or_more(app.URLSAFE_CHAR)))
+            spc_block, val_ptt=app.one_or_more(app.CKINSAFE_CHAR)))
     else:
         spc_lst = []
 

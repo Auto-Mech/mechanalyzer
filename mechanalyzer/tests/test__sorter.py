@@ -10,7 +10,7 @@ import chemkin_io.writer
 from mechanalyzer.builder import sorter
 from mechanalyzer.parser import mech as mparser
 from mechanalyzer.parser import ckin_ as ckin_parser
-from mechanalyzer.parser import spc as sparser
+from mechanalyzer.parser import new_spc as sparser
 
 # Set Paths to test/data directory and output directory
 CWD = os.path.dirname(os.path.realpath(__file__))
@@ -126,8 +126,8 @@ def test__sort_with_input():
     spc_str, mech_str, sort_str = _read_files(spc_path, mech_path, sort_path)
 
     # Sort mechanism
-    isolate_spc, sort_lst = mparser.parse_sort(sort_str)
-
+    isolate_spc, sort_lst, _ = mparser.parse_sort(sort_str)
+    print(isolate_spc)
     param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
@@ -691,7 +691,7 @@ def test__filter_pesgroups():
     sort_lst = ['submech_prompt', 0]
 
     _, _, _, pes_groups, _ = sorter.sorted_mech(
-        spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=spc_therm_dct, thresh_flt_groups=30.)
+        spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=spc_therm_dct,  dct_flt_grps={'DH':30.})
 
     print('Sort by submech_prompt and filter pes groups:')
 
@@ -766,8 +766,8 @@ def _read_files(spc_path, mech_path, sort_path):
 
 
 if __name__ == '__main__':
+    test__sort_with_input()   
     test__filter_pesgroups()
-    test__sort_with_input()
     test__readwrite_thirdbody()
     test__sortby_mult()
     test__sortby_molec_r1()
@@ -779,3 +779,4 @@ if __name__ == '__main__':
     test__sortby_submech_ext()
     test__sortby_submech_class()
     test__sort_ktp()
+    
