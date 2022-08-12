@@ -364,7 +364,7 @@ class SortMech:
                     species_list[0], self.spc_dct)
                 self.species_subset_df = species_subset_df
                 filtertype = 'submech_ext'
-                
+
             elif len(species_list) > 1 and 'submech' in hierarchy:
                 print('Error: pyr/ox submech extraction available ',
                       'for only 1 species')
@@ -425,7 +425,7 @@ class SortMech:
                     prd == _spc for _spc in species_list for prd in prds)
                 chk = int(_rchk or _pchk)
 
-            elif filtertype =='submech_ext':
+            elif filtertype == 'submech_ext':
                 # filter out bimol/bimol reactions if some bimol rcts/prds are not in the species list
                 # equivalent to saying: at least all reactants (also single react works) or all products
                 # must be in the species list
@@ -464,12 +464,6 @@ class SortMech:
                             sp)
 
                 continue  # next for loop
-
-            if chk >= 1:  # keep reaction and add to species list
-                spc_list.extend(rcts)
-                spc_list.extend(prds)
-            elif chk == 0:  # reaction filtered out
-                mech_df = mech_df.drop(index=[rxn])
 
         if filtertype == 'submech_prompt':
             # submech_prompt: if RAD_GEN/RAD_DECO in list, keep the rxns
@@ -637,14 +631,16 @@ class SortMech:
             # filter by RAD_DECO: save the pes/subpes value
 
             for hot_label in ['RAD_DECO_{}'.format(sp) for sp in self.species_list]:
-                hot_df = self.mech_df[self.mech_df['submech_prompt'] == hot_label]
+                hot_df = self.mech_df[self.mech_df['submech_prompt']
+                                      == hot_label]
                 sp = hot_label.split('_')[-1]
                 self.species_deco_dct[sp] = '{}:{}'.format(
                     hot_df['pes'].iloc[0], hot_df['subpes'].iloc[0])
 
             grp_dct_template = {'grp': 0, 'idxs': [], 'peds': [], 'hot': []}
             grpN = 0
-            rad_gen_list = ['RAD_GEN_{}'.format(sp) for sp in self.species_list]
+            rad_gen_list = ['RAD_GEN_{}'.format(
+                sp) for sp in self.species_list]
             ped_df = self.mech_df[self.mech_df['submech_prompt'].isin(
                 rad_gen_list)]
 
@@ -831,7 +827,7 @@ class SortMech:
             self.grp_add['idxs'].append(self.species_deco_dct[rad])
             self.grp_add['peds'].append([])
             self.grp_add['hot'].append([rad])
-            
+
         check_break = 0
         while check_break == 0:
             # radical generating reaction (and hot sp)
@@ -865,10 +861,10 @@ class SortMech:
             if sum(automol.chi.formula(
                     self.spc_dct[hot_sp]['inchi']).values()) < 3:
                 break
-            
-            print('prompt chain for {}'.format(self.labels_hot[rad]), \
-                'hot species is {}'.format(hot_sp),
-                'fraction of en transferred: {:.1f}'.format(phi))
+
+            print('prompt chain for {}'.format(self.labels_hot[rad]),
+                  'hot species is {}'.format(hot_sp),
+                  'fraction of en transferred: {:.1f}'.format(phi))
             # 2. NEW HOT SP: NEW PROMPT
             # 2.1 SEARCH FOR DECO OF THE NEW HOT SP
             if hot_sp not in self.k_max_hot.keys():
@@ -900,7 +896,7 @@ class SortMech:
                     [self.labels_hot[rad], hot_sp, dh_start[T0]*phi, self.dh_min_hot[hot_sp][T0], dh_tot[T0], self.k_max_hot[hot_sp][self.Tref], k_star, T_star, keep], dtype=object)
                 self.rxns_dh = numpy.vstack((self.rxns_dh, array_info))
                 peds = [self.labels_hot[rad]]
-                
+
             else:
                 # keep species only as hot
                 check_break = 1
@@ -910,18 +906,18 @@ class SortMech:
                 # find index and replace ped
                 idx = self.grp_add['idxs'].index(self.species_deco_dct[rad])
                 self.grp_add['peds'][idx] = peds
-                
-                if  self.species_deco_dct[hot_sp] not in self.grp_add['idxs']:
+
+                if self.species_deco_dct[hot_sp] not in self.grp_add['idxs']:
                     self.grp_add['idxs'].append(self.species_deco_dct[hot_sp])
                     self.grp_add['peds'].append([])
                     self.grp_add['hot'].append([hot_sp])
-           
+
             # updates for next cycle
             #     - new cycle: rad = hot_sp
             # UPDATE SELF.MECH_DF AND SPECIES TO ADD NEW PESs
-                
+
             rad = copy.deepcopy(hot_sp)
-            
+
     def rxn_chain_prompt2(self, T0, dh_tot, rad, sp_df_dct):
         """ from a given hot product (rad), derive prompt reaction chain complying with thresholds
         """
@@ -930,7 +926,7 @@ class SortMech:
             self.grp_add['idxs'].append(self.species_deco_dct[rad])
             self.grp_add['peds'].append([])
             self.grp_add['hot'].append([rad])
-            
+
         check_break = 0
         while check_break == 0:
             # radical generating reaction (and hot sp)
@@ -947,7 +943,7 @@ class SortMech:
 
             if len(prds) != 2:
                 continue
-            
+
             phis = dict.fromkeys(prds)
             T_stars = dict.fromkeys(prds)
             k_stars = dict.fromkeys(prds)
@@ -957,15 +953,17 @@ class SortMech:
                 if sum(automol.chi.formula(
                         self.spc_dct[prd]['inchi']).values()) < 3:
                     continue
-                phis[prd] = ene_partition.phi_equip_fromdct(
-                    prd, list(set([prd]) ^ set(prds))[0], self.spc_dct)
-                
+
                 if prd not in self.k_max_hot.keys():
                     add_check[prd] = 1
                     hot_mech_df, hot_spc_dct = self.filter_byspecies(
                         [prd], 'submech_prompt')
                     sp_df_dct[prd] = hot_mech_df[hot_mech_df['submech_prompt']
-                                                    == 'RAD_DECO_{}'.format(prd)]
+                                                 == 'RAD_DECO_{}'.format(prd)]
+                    
+                    if len(sp_df_dct[prd]) == 0:
+                        continue # it's possible that the radical deco is not present in the mech!
+                    
                     self.species_deco_dct[prd] = '{}:{}'.format(
                         sp_df_dct[prd]['pes'].iloc[0], sp_df_dct[prd]['subpes'].iloc[0])
                     self.k_max_hot[prd], self.dh_min_hot[prd], self.labels_hot[prd] = nonboltz.get_max_reactivity(
@@ -973,12 +971,14 @@ class SortMech:
                 else:
                     add_check[prd] = 0
                 try:
+                    phis[prd] = ene_partition.phi_equip_fromdct(
+                        prd, list(set([prd]) ^ set(prds))[0], self.spc_dct)
                     T_stars[prd], k_stars[prd], dh_tots[prd] = nonboltz.estimate_hot_hk(
                         dh_start*phis[prd]*1000, self.Tref, self.therm_df[prd]['Cp'], self.k_max_hot[prd], self.dh_min_hot[prd]*1000)
                 except TypeError:
                     print('dh failed for: {}'.format(self.labels_hot[rad]))
                     break
-                
+
             # identify hot species by min dh_tot
             if not any(phis.values()):
                 break
@@ -989,13 +989,13 @@ class SortMech:
                 min_dhtot = min(dh_tots_T0)
                 hot_sp = prds[dh_tots_T0.index(min_dhtot)]
             dh_tot = dh_tots[hot_sp]
-            print('prompt chain for {}'.format(self.labels_hot[rad]), \
-                'hot species is {}'.format(hot_sp),
-                'fraction of en transferred: {:.1f}'.format(phis[hot_sp]))
-            
+            print('prompt chain for {}'.format(self.labels_hot[rad]),
+                  'hot species is {}'.format(hot_sp),
+                  'fraction of en transferred: {:.1f}'.format(phis[hot_sp]))
+
             ##################################################
             if add_check[hot_sp] == 1:
-            # 2.1 SEARCH FOR DECO OF THE NEW HOT SP
+                # 2.1 SEARCH FOR DECO OF THE NEW HOT SP
                 # update mechanism
                 self.mech_df = pd.concat(
                     [self.mech_df, sp_df_dct[hot_sp]], axis=0)
@@ -1008,10 +1008,11 @@ class SortMech:
                     or (k_stars[hot_sp] > self.kabs and dh_start[T0] < 0):
                 keep = 'YES'
                 array_info = numpy.array(
-                    [self.labels_hot[rad], hot_sp, dh_start[T0]*phis[hot_sp], self.dh_min_hot[hot_sp][T0], dh_tot[T0], self.k_max_hot[hot_sp][self.Tref], k_stars[hot_sp], T_stars[hot_sp], keep], dtype=object)
+                    [self.labels_hot[rad], hot_sp, dh_start[T0]*phis[hot_sp], self.dh_min_hot[hot_sp][T0],
+                     dh_tot[T0], self.k_max_hot[hot_sp][self.Tref], k_stars[hot_sp], T_stars[hot_sp], keep], dtype=object)
                 self.rxns_dh = numpy.vstack((self.rxns_dh, array_info))
                 peds = [self.labels_hot[rad]]
-                
+
             else:
                 # keep species only as hot
                 check_break = 1
@@ -1021,18 +1022,18 @@ class SortMech:
                 # find index and replace ped
                 idx = self.grp_add['idxs'].index(self.species_deco_dct[rad])
                 self.grp_add['peds'][idx] = peds
-                
-                if  self.species_deco_dct[hot_sp] not in self.grp_add['idxs']:
+
+                if self.species_deco_dct[hot_sp] not in self.grp_add['idxs']:
                     self.grp_add['idxs'].append(self.species_deco_dct[hot_sp])
                     self.grp_add['peds'].append([])
                     self.grp_add['hot'].append([hot_sp])
-           
+
             # updates for next cycle
             #     - new cycle: rad = hot_sp
             # UPDATE SELF.MECH_DF AND SPECIES TO ADD NEW PESs
-                
+
             rad = copy.deepcopy(hot_sp)
-            
+
     def reac_mult(self, reac_mult_df):
         """ determines the multiplicity of the reactants of the reactions
             considered
@@ -1075,11 +1076,11 @@ class SortMech:
 
             if _smol or _tbody:
                 # unimolecular reaction classification
-                rxn_class_broad = submech.classify_unimol(
+                rxn_class_broad = rxnclass.classify_unimol(
                     rcts, prds, self.spc_dct)
             else:
                 # bimolecular reaction classification
-                rxn_class_broad = submech.classify_bimol(
+                rxn_class_broad = rxnclass.classify_bimol(
                     rcts, prds, self.spc_dct)
             rxncl_broad_df['rxn_class_broad'][rxn] = rxn_class_broad
 

@@ -106,7 +106,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
         # if hot options: it means hoten has also ped - extract info
 
         if hot_ke_out_str and hot_ped_str:
-            # frag1 è hotspecies - devi prendere quella distribuzione dalle hot
+            # frag1 hotspecies - devi prendere quella distribuzione dalle hot
             pedhot_df_dct_spc, ene_bw_spc = build_pedhot_df_dct(hot_inp_str, hot_ped_str, hot_ke_out_str,
                                                                 frag1, ped_df_frag1, ene_bw_dct[label], model, label)
             pedhot_df_dct.update(pedhot_df_dct_spc)
@@ -326,6 +326,9 @@ def estimate_hot_hk(dh_pi, Tref, cp_hot, kmax_hot, dhmin_hot):
         units cal, mol, K
         NB dh_pi is the dh transferred to the hot species
     """
+    # approximate with close Tref if absent
+    if Tref not in dh_pi.keys():
+        print(dh_pi)
     if dh_pi[Tref] < 0:
         T_star, k_star = kt_star(-dh_pi[Tref], cp_hot, Tref, kmax_hot)
     else:
