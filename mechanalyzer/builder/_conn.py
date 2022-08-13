@@ -1,3 +1,8 @@
+""" Determine connectivity within pes and between pess
+"""
+
+import pandas as pd
+
 """ Determine how various PESs may connect
 
     Let PES1 and PES2 be two independent potential energy surfaces.
@@ -56,3 +61,38 @@ def _find_spc(pes_dct, excl_spc=()):
                 spcdct2[name] = _lst
 
     return spcdct2
+
+def connect_rxn_df(rxn_lst):
+    """ from reaction list [[rcts,prds], ...]
+        on same subpes, determine how species are connected
+        warning bimol species must be written in the same order
+        returns: dataframe with cols and index corresponding to species
+        in dataframe: 0 if not connected, 1 if connected
+        df symmetric
+    """
+    
+    # derive list of species
+    all_species = []
+    [all_species.extend(rxn) for rxn in rxn_lst]
+    all_species = list(set(all_species))
+    
+    connect_df = pd.DataFrame(0, index=all_species, columns=all_species)
+    
+    # assign 1 when rxn is found
+    for rxn in rxn_lst:
+        connect_df[rxn[0]][rxn[1]] = 1
+        connect_df[rxn[1]][rxn[0]] = 1
+        
+    return connect_df
+    
+def add_wellskip(rxn_df, sp):
+    """ searches for missing wellskipping reactions for species
+        returns rxn list with missing reactions
+    """
+    rxn_lst_wellskip = []
+    all_species = list(rxn_df.columns)
+    all_species.remove(sp)
+    for rcts in all_species:
+        if rxn_df[sp][rcts] == 0:
+            rxn_lst_wellskip.append([rcts, sp])
+    return rxn_lst_wellskip

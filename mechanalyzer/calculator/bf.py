@@ -135,7 +135,11 @@ def bf_tp_df_full(ped_df, hotbf_df):
         for pressure in pressures:
             # extract ped and hoten by increasing index
 
-            ped = ped_df[pressure][temp].sort_index()
+            try:
+                ped = ped_df[pressure][temp].sort_index()
+            except AttributeError:
+                print('empty ped at {:.0f} K and {:.1e} atm, skipping'.format(temp, pressure),)
+                continue
             hoten = hotbf_df[pressure][temp].sort_index().index
 
             # reduce the energy range of hoten and ped

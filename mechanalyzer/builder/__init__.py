@@ -12,6 +12,8 @@ from mechanalyzer.builder._update import remove_spc_not_in_reactions
 from mechanalyzer.builder._update import remove_improper_reactions
 from mechanalyzer.builder._update import remove_unstable_reactions
 from mechanalyzer.builder._conn import connected_surfaces
+from mechanalyzer.builder._conn import connect_rxn_df
+from mechanalyzer.builder._conn import add_wellskip
 from mechanalyzer.builder._graph import pes_graphs_dct
 from mechanalyzer.builder._names import rxn_name_str
 from mechanalyzer.builder._names import remap_mechanism_names
@@ -40,6 +42,8 @@ __all__ = [
     'remove_improper_reactions',
     'remove_unstable_reactions',
     'connected_surfaces',
+    'connect_rxn_df',
+    'add_wellskip',
     'pes_graphs_dct',
     'rxn_name_str',
     'remap_mechanism_names',
@@ -54,5 +58,5 @@ __all__ = [
     'strip_ste',
     'submech',
     'sort_fct',
-    'rxnclass'
+    'rxnclass',
 ]
