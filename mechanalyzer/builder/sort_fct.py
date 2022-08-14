@@ -17,6 +17,8 @@ import numpy
 import automol
 from mechanalyzer.builder import submech
 from mechanalyzer.builder import rxnclass
+from mechanalyzer.builder import connect_rxn_df
+from mechanalyzer.builder import add_wellskip
 from mechanalyzer.calculator import rates as calc_rates
 from mechanalyzer.calculator import thermo
 from mechanalyzer.calculator import ene_partition
@@ -297,6 +299,10 @@ class SortMech:
                 # Concatenate the new portion of dataframe
                 self.mech_df = pd.concat([self.mech_df, df_optn], axis=1)
 
+        # remove fake rxns
+        rxns_fake =  self.mech_df[self.mech_df['chnl'] == 'WELLSKIPPING FAKE'].index
+        self.mech_df = self.mech_df.drop(index = rxns_fake)
+
         # drop ''
         if '' in self.mech_df.columns:
             self.mech_df = self.mech_df.drop([''], axis=1)
@@ -323,6 +329,7 @@ class SortMech:
         # 2. assign class headers
         labels = pd.Series(labels_all, index=criteria_all)
         self.class_headers(self.hierarchy, labels)
+        
 
     def preproc_specieslist(self, species_list, hierarchy):
 
@@ -463,8 +470,6 @@ class SortMech:
                         mech_df['submech_prompt'][rxn] = 'RAD_DECO_LUMPED_{}'.format(
                             sp)
 
-                continue  # next for loop
-
         if filtertype == 'submech_prompt':
             # submech_prompt: if RAD_GEN/RAD_DECO in list, keep the rxns
             for _, subpes_df in mech_df.groupby(['pes', 'subpes']):
@@ -474,6 +479,11 @@ class SortMech:
                      for rcts_tup in mech_df['rct_names_lst'].values]
                     [spc_list.extend(list(prds_tup))
                      for prds_tup in mech_df['prd_names_lst'].values]
+                    # add wellskipping channels that might be missing
+                    if any('RAD_GEN' in CHECK
+                       for CHECK in subpes_df['submech_prompt'].values):
+                        added_rxns_df = self.add_wellskipping(subpes_df)
+                        mech_df = pd.concat([mech_df, added_rxns_df], axis=0)
                 else:
                     # drop the corrisponding pes/subpes
                     mech_df = mech_df.drop(index=subpes_df.index)
@@ -486,6 +496,53 @@ class SortMech:
 
         return mech_df, spc_dct
 
+    def add_wellskipping(self, subpes_df):
+        """ check channels for a radical generation subset
+            add temporary bimol or unimol wellskiping reactions generating the radical
+            so they will be considered in the generation of prompt channels
+            but removed in the final reaction list
+        """
+
+        # identify radical(s) generating reactions
+        rad_list = []
+        rad_bimol = []
+        for rxn in subpes_df.index:
+            if 'RAD_GEN' in subpes_df['submech_prompt'][rxn]:
+                rad_list.append(subpes_df['submech_prompt'][rxn].split('_')[2])
+                rad_bimol.append(subpes_df['prd_names_lst_ord'][rxn])
+        
+        # get reaction names
+        rxn_list_ordered = list(zip(subpes_df['rct_names_lst_ord'].values, subpes_df['prd_names_lst_ord'].values))
+        # get reactivity matrix for subpes
+        connected_rxns_df = connect_rxn_df(rxn_list_ordered)       
+        # generate new reactions for the radicals
+        new_wskip_rxns = []
+        for rad_bim in rad_bimol:
+            new_wskip_rxns.extend(add_wellskip(connected_rxns_df, rad_bim))
+
+        new_wellskipping_idxs = []
+        for rcts in new_wskip_rxns:
+            rxn = '{}={}'.format(
+                            '+'.join(rcts[0]), '+'.join(rcts[1]))
+            new_wellskipping_idxs.append((rxn, (None,)))
+
+        wellskipp_rxns_df = pd.DataFrame(index=new_wellskipping_idxs, columns=subpes_df.columns, dtype=object)
+        # common values
+        wellskipp_rxns_df[['pes','subpes']] = subpes_df[['pes','subpes']].values[0]
+        wellskipp_rxns_df['chnl'] = 'WELLSKIPPING FAKE'
+        wellskipp_rxns_df['thrdbdy'] = [(None,)]*len(wellskipp_rxns_df.index)
+        # add to dataframe
+        for idx, rxn in enumerate(new_wellskipping_idxs):
+            rad = list(set(rad_list).intersection(new_wskip_rxns[idx][1]))[0]
+            wellskipp_rxns_df['submech_prompt'][rxn] = 'RAD_GEN_{}'.format(rad)
+            wellskipp_rxns_df['rxn_ped'][rxn] =  rxn[0]
+            wellskipp_rxns_df['rct_names_lst'][rxn] =  new_wskip_rxns[idx][0]
+            wellskipp_rxns_df['prd_names_lst'][rxn] =  new_wskip_rxns[idx][1]
+            wellskipp_rxns_df['rct_names_lst_ord'][rxn] =  new_wskip_rxns[idx][0]
+            wellskipp_rxns_df['prd_names_lst_ord'][rxn] =  new_wskip_rxns[idx][1]            
+
+        return wellskipp_rxns_df
+    
     def conn_chn(self, conn_chn_df):
         """ Identifies connected channels and assigns them to the same subpes
             Generate pes dictionary for each reaction and save for later use
@@ -675,6 +732,7 @@ class SortMech:
                 grps.append(grp_dct)
 
             self.grps = grps
+                        
         return submech_df
 
     def filter_groups_prompt(self, therm_dct, DFG, T0=300.):
@@ -725,6 +783,7 @@ class SortMech:
             self.grp_add = {'idxs': [], 'peds': [], 'hot': []}
             check = 0
             check_filtered = 0
+            exceptions = 0
             active_hotsp = []
             # lists, potentially more than 1
 
@@ -741,9 +800,16 @@ class SortMech:
                     phi = ene_partition.phi_equip_fromdct(
                         hot_sp, nonhot, self.spc_dct)
 
-                    dh = thermo.extract_deltaX_therm(
-                        self.therm_df, rcts, prds, 'H')/1000
-
+                    try:
+                        dh = thermo.extract_deltaX_therm(
+                            self.therm_df, rcts, prds, 'H')/1000
+                    except KeyError as keyerr:
+                        # it is possible that the species has no thermo, e.g., unstable species.
+                        print('thermo not found for:', keyerr.args[0])
+                        exceptions += 1
+                        # save hotsp anyway since you don't know what's going to happen
+                        active_hotsp.append(hot_sp)
+                        continue
                     # calculate equivalent T* at Tref and corresponding k* rate
                     # phi: fraction of en transferred to prods - very approixmate
                     try:
@@ -751,6 +817,9 @@ class SortMech:
                             dh*phi*1000, self.Tref, self.therm_df[hot_sp]['Cp'], self.k_max_hot[hot_sp], self.dh_min_hot[hot_sp]*1000)
                     except TypeError:
                         print('dh failed for:', rcts, prds, hot_sp)
+                        exceptions += 1
+                        # save hotsp anyway since you don't know what's going to happen
+                        active_hotsp.append(hot_sp)
                         continue
 
                     if dh_tot[T0] < self.DHmax or dh_tot[T0]/self.dh_min_hot[hot_sp][T0] < self.H5H3ratio \
@@ -776,13 +845,18 @@ class SortMech:
                         [ped_i, hot_sp, dh[T0]*phi, self.dh_min_hot[hot_sp][T0], dh_tot[T0], self.k_max_hot[hot_sp][self.Tref], k_star, T_star, keep], dtype=object)
                     self.rxns_dh = numpy.vstack((self.rxns_dh, array_info))
 
+                if exceptions == len(ped):
+                    check = 1 # keep things you were unable to compute stuff for that ped
+                    print('Warning: unable to derive thermo / rates for set of peds: {}'.format(ped))
+                    print('consequences: ped kept anyways, but no following rxn chains analyzed.')
+                    
                 if ped:
                     grp_new['idxs'].append(grp['idxs'][n])
                     grp_new['peds'].append(ped)
                     grp_new['hot'].append([])
                     # CHECK FOR NEW CHAINS AND UPDATE GRP NEW
                     # NB REMOVE hotsp FROM ACTIVE_HOTSP TO AVOID DOUBLE COUNTING
-
+            
             for n, hot in enumerate(grp['hot']):
                 grp['hot'][n] = [hot_i for hot_i in hot if hot_i in active_hotsp]
                 grp['hot'][n].sort()  # keep same order
@@ -816,8 +890,14 @@ class SortMech:
                 filtered_grps.append(grp_new)
 
         self.grps = filtered_grps
+        
+        # remove fake rxns
+        
+        rxns_fake =  self.mech_df[self.mech_df['chnl'] == 'WELLSKIPPING FAKE'].index
+        self.mech_df = self.mech_df.drop(index = rxns_fake)
         # resort because you added reactions
         self.sort_and_label(self.criteria_all, self.labels_all)
+
 
     def rxn_chain_prompt(self, T0, dh_tot, rad, sp_df_dct):
         """ from a given hot product (rad), derive prompt reaction chain complying with thresholds

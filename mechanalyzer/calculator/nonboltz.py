@@ -280,8 +280,9 @@ def get_max_reactivity(hot_sp, hot_sp_df, therm_df, T0, Tref):
     """ input: dataframe of decomposition reactions of a species
         return the maximum deco rate k[Tref] and the minimum dh[T0] for dissociation
     """
+
     dhmin = 1e8  # put unphysical value for sure higher than all
-    kmax = 0
+    kmax = -1e-6
     for rxn in hot_sp_df.index:
         rcts = hot_sp_df['rct_names_lst'][rxn]
         prds = hot_sp_df['prd_names_lst'][rxn]
