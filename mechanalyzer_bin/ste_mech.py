@@ -18,7 +18,7 @@ def main(
         out_loc, out_spc, out_mech,
         inp_spc_str, inp_mech_str, sort_str,
         check_mechanism=False,
-        enant=True,
+        enant=False,
         enant_label=True):
     """ carry out all the mechanism things you wanna do
     """
@@ -27,7 +27,7 @@ def main(
     rxn_param_dct = mechanalyzer.parser.mech.parse_mechanism(
         inp_mech_str, 'chemkin')
     isolate_spc, sort_lst, _ = mechanalyzer.parser.mech.parse_sort(sort_str)
-
+    print('mechspc dct', mech_spc_dct)
     # Remove reactions that should not be there
     if check_mechanism:
         print('\n Removing improper reactions')
@@ -39,6 +39,7 @@ def main(
           ' species where needed ---\n')
     mech_spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
         mech_spc_dct, nprocs='auto', all_stereo=False, enant=enant)
+    print('mechspc dct2', mech_spc_dct)
     print('Mechanism species with stereo added')
     for name, dct in mech_spc_dct.items():
         print(f'Name: {name:<25s} InChI: {dct["inchi"]}')

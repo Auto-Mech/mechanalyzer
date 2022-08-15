@@ -784,7 +784,7 @@ def _ste_rxn_lsts(rxn_ich, enant=True):
     try:
         rxn_obj = rxn_obj_sets[0][0]  # expand just with rxn object
     except TypeError:
-        print('No ID', rxn_ich)
+        print('No ID', rxn_ich, rxn_obj_sets)
 
     # Build a list of stereo reactions
     ste_rxn_ichs = ()
