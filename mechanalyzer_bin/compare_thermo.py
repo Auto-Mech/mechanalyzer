@@ -17,7 +17,7 @@ THERMO_FILENAMES = [
     # 'b2t_hr_nohb_1-19.ckin',
     # 'RO4_tzf.ckin',
     'thermo_g_fa.CKIN',
-    'update_therm.ckin',
+    'update_therm_retry.ckin',
     # 'C3H8NGA.DAT',
     # 'glarborg.therm',
     # 'stagni.therm',
