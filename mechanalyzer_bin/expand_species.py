@@ -20,6 +20,8 @@ CWD = os.getcwd()
 PAR = argparse.ArgumentParser()
 PAR.add_argument('-s', '--stereo', default=False, type=bool,
                  help='add stereochemistry to species (False)')
+PAR.add_argument('-c', '--canonical', default=False, type=bool,
+                 help='add canonical enantiomer (False)')
 PAR.add_argument('-b', '--hof-basis', default=False, type=bool,
                  help='add heat-of-formation species (False)')
 PAR.add_argument('-u', '--instability', default=False, type=bool,
@@ -38,7 +40,7 @@ OPTS = vars(PAR.parse_args())
 t0 = time.time()
 
 # Check if any runtime options
-if not OPTS['hof_basis'] and not OPTS['stereo'] and not OPTS['instability']:
+if not OPTS['hof_basis'] and not OPTS['stereo'] and not OPTS['instability'] and not OPTS['canonical']:
     print('Neither stereo, basis, nor instabiltiy job specified.')
     print('Add one of [-b, -s, -u] flags to command.')
     print('Exiting...')
@@ -69,8 +71,12 @@ if OPTS['sort']:
     mech_spc_dct = mechanalyzer.parser.spc.reorder_by_atomcount(
         mech_spc_dct)
 
-# Write the new species dictionary to a string
 HEADERS = ('smiles', 'inchi', 'inchikey', 'mult', 'charge')
+if OPTS['canonical']:
+    mech_spc_dct = mechanalyzer.parser.new_spc.add_canonical_enantiomer(
+        mech_spc_dct)
+    HEADERS += ('canon_enant_ich',)
+# Write the new species dictionary to a string
 csv_str = mechanalyzer.parser.spc.csv_string(mech_spc_dct, HEADERS)
 
 # Write the string to a file
