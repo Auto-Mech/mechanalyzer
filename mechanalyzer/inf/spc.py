@@ -10,6 +10,11 @@ SPC_PROPS = [
     par.SPC.MULT
 ]
 
+CANON_SPC_PROPS = [
+    par.SPC.CANON_ENANT_ICH,
+    par.SPC.CHARGE,
+    par.SPC.MULT
+]
 
 def from_data(inchi, charge, mult):
     """ Construct a species info object from the constituent peieces of data.
@@ -27,7 +32,7 @@ def from_data(inchi, charge, mult):
     return (inchi, charge, mult)
 
 
-def from_dct(dct):
+def from_dct(dct, canonical=False):
     """ Construct a species info object by reading the constituent data
         from a dictionary containing the species data.
 
@@ -35,13 +40,15 @@ def from_dct(dct):
         :type dct: dict[str: obj]
         :rtype: tuple(str, int, int)
     """
-
-    assert set(SPC_PROPS) <= set(dct), (
+    spc_props = SPC_PROPS
+    if canonical:
+        spc_props = CANON_SPC_PROPS
+    assert set(spc_props) <= set(dct), (
         f'Properties {" ".join(SPC_PROPS)} not in dict'
     )
 
     inf_obj = tuple()
-    for prop in SPC_PROPS:
+    for prop in spc_props:
         inf_obj += (dct[prop],)
 
     return inf_obj

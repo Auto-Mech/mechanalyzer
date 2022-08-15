@@ -249,7 +249,8 @@ def add_instability_products(mech_spc_dct, nprocs='auto', stereo=True):
     return mech_spc_dct
 
 
-def stereochemical_spc_dct(spc_dct, nprocs='auto', all_stereo=False, enant=True):
+def stereochemical_spc_dct(
+        spc_dct, nprocs='auto', all_stereo=False, enant=True):
     """ read the species file in a .csv format and write a new one
         that has stero information
     """
@@ -306,15 +307,25 @@ def _add_stereo_to_dct(init_dct, all_stereo, enant, names, output_queue):
         # print('complete inchi test:', automol.chi.is_complete(ich))
         # print('add_stereo  inchi test:', automol.chi.add_stereo(ich))
         # print('expand_stereo inchi test:', automol.chi.expand_stereo(ich))
-        try:
-            if not automol.chi.is_complete(ich):
-                ret_ichs = (
-                    [automol.chi.add_stereo(ich)] if not all_stereo else
-                     automol.chi.expand_stereo(ich, enant=enant))
-        except:  # noqa: E722
-            print(f'{name} timed out in stereo generation')
-            worked = False
-        
+        if all_stereo:
+            try:
+                if not automol.chi.is_complete(ich):
+                    ret_ichs = (
+                         automol.chi.expand_stereo(ich, enant=enant))
+            except:  # noqa: E722
+                print(f'{name} timed out in stereo generation')
+                worked = False
+        else: 
+            try:
+                if not automol.chi.is_complete(ich):
+                    ret_ichs = (
+                        [automol.chi.add_stereo(ich)])
+            except:  # noqa: E722
+                ich_attempt = automol.chi.expand_stereo(ich, enant=enant)
+                if len(ich_attempt) > 0:
+                    ret_ichs = [ich_attempt[0]]
+                else:   
+                    worked = False
         # Loop over strings and convert stereo inchi to amchi, if needed
         # may not work perfectly since you rely on the inchi code
         ret_ichs = [automol.chi.inchi_to_amchi(ich) for ich in ret_ichs]

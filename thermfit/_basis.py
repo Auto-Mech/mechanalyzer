@@ -214,6 +214,7 @@ def create_spec(ich, charge=0,
     return {
         'smiles': automol.chi.smiles(ich),
         'inchi': ich,
+        'canon_enant_ich': automol.chi.canonical_enantiomer(ich),
         'inchikey': automol.chi.inchi_key(ich),
         'charge': charge,
         'mult': mult,
