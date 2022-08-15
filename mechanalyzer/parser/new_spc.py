@@ -28,6 +28,7 @@ ALLOWED_COL_NAMES = (
     'fml',
     'sens',
     'hof',
+    'canon_enant_ich'
 )
 
 TRIP_DCT = {
@@ -97,7 +98,7 @@ def load_mech_spc_dct(filename, path, quotechar="'",
 
 
 def parse_mech_spc_dct(file_str, quotechar="'",
-                       chk_ste=False, chk_match=False, verbose=True):
+                       chk_ste=False, chk_match=False, verbose=True, canon_ent=False):
     """ Obtains a single mech_spc_dct given a string parsed from a spc.csv file
 
         :param file_str: the string that was read directly from the .csv file
@@ -153,8 +154,9 @@ def parse_mech_spc_dct(file_str, quotechar="'",
                     f'The species name {spc} appears in the csv file more than'
                     f' once. The second time is on line {idx + 1}, {line}.')
                 # Fill in the spc_dct and then add it to the mech_spc_dct
-                spc_dct, error = fill_spc_dct(spc_dct, spc, chk_ste=chk_ste,
-                                              chk_match=chk_match)
+                spc_dct, error = fill_spc_dct(
+                    spc_dct, spc, chk_ste=chk_ste,
+                    chk_match=chk_match, canon_ent=canon_ent)
                 mech_spc_dct[spc] = spc_dct
                 if error:
                     errors = True
@@ -207,7 +209,8 @@ def make_spc_dct(cols, headers):
     return spc, spc_dct
 
 
-def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True):
+def fill_spc_dct(
+        spc_dct, spc, chk_ste=True, chk_match=True, canon_ent=True):
     """ Fills in missing values in a spc_dct
 
         :param spc_dct: identifying information for a single species
@@ -245,12 +248,21 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True):
             error = check_ich(full_spc_dct['inchi'], spc, chk_ste=chk_ste)
             if not error:  # if the inchi passed, check the smiles
                 error = check_smi(full_spc_dct['smiles'], spc)
-                    
-    if 'canon_enant_ich' not in full_spc_dct:
-        # full_spc_dct['canon_enant_ich'] = full_spc_dct['inchi']
-        full_spc_dct['canon_enant_ich'] = canonical_enantiomer(
-            full_spc_dct['inchi'])
-        print('canonical enantiomer for', full_spc_dct['inchi'], full_spc_dct['canon_enant_ich'])
+    ich_to_amch = inchi_to_amchi(full_spc_dct['inchi'])
+    if ich_to_amch != full_spc_dct['inchi']:
+        full_spc_dct['inchi'] = ich_to_amch
+        print(
+            'InChI: ', full_spc_dct['inchi'],
+            ' updated to AMChI: ', ich_to_amch)
+    if canon_ent:
+        if 'canon_enant_ich' not in full_spc_dct:
+            full_spc_dct['canon_enant_ich'] = canonical_enantiomer(
+                full_spc_dct['inchi'])
+            print(
+                'canonical enantiomer for',
+                full_spc_dct['inchi'], full_spc_dct['canon_enant_ich'])
+    else:
+        full_spc_dct['canon_enant_ich'] = full_spc_dct['inchi']
     # Add charge and exc_flag if missing; assume 0 for both
     if 'charge' not in full_spc_dct or full_spc_dct['charge'] == '':
         full_spc_dct['charge'] = 0
@@ -309,7 +321,7 @@ def parse_first_line(first_line, quotechar="'"):
         "At least one of the following chemical identifiers must be included in"
         " the csv file headers: 'inchi' or 'smiles'.")
 
-    return headers 
+    return headers
 
 
 def parse_line(line, idx, headers, quotechar="'"):
@@ -455,10 +467,20 @@ def check_for_dups(mech_spc_dct, printwarnings=True):
             if are_spcs_same(outer_dct, inner_dct) and printwarnings:
                 print(f'{outer_spc} and {inner_spc} are chemical twins!')
 
-def inchi_to_amchi(full_spc_dct):
+
+def _inchi_to_amchi(full_spc_dct):
     """ convert inchi to amchi where needed """
-    
+
     full_spc_dct['inchi'] = add_stereo(full_spc_dct['inchi'])
     full_spc_dct['inchi'] = inchi_to_amchi(full_spc_dct['inchi'])
-    
+
     return full_spc_dct
+
+
+def add_canonical_enantiomer(mech_spc_dct):
+    """ add canonical enantiomer to species dictionaries
+    """
+    for spc_dct in mech_spc_dct.values():
+        if 'canon_enant_ich' not in spc_dct:
+            spc_dct['canon_enant_ich'] = canonical_enantiomer(spc_dct['inchi'])
+    return mech_spc_dct
