@@ -248,12 +248,12 @@ def fill_spc_dct(
             error = check_ich(full_spc_dct['inchi'], spc, chk_ste=chk_ste)
             if not error:  # if the inchi passed, check the smiles
                 error = check_smi(full_spc_dct['smiles'], spc)
-    ich_to_amch = inchi_to_amchi(full_spc_dct['inchi'])
-    if ich_to_amch != full_spc_dct['inchi']:
-        full_spc_dct['inchi'] = ich_to_amch
-        print(
-            'InChI: ', full_spc_dct['inchi'],
-            ' updated to AMChI: ', ich_to_amch)
+    # ich_to_amch = inchi_to_amchi(full_spc_dct['inchi'])
+    # if ich_to_amch != full_spc_dct['inchi']:
+    #     full_spc_dct['inchi'] = ich_to_amch
+    #     print(
+    #         'InChI: ', full_spc_dct['inchi'],
+    #         ' updated to AMChI: ', ich_to_amch)
     if canon_ent:
         if 'canon_enant_ich' not in full_spc_dct:
             full_spc_dct['canon_enant_ich'] = canonical_enantiomer(
@@ -468,13 +468,13 @@ def check_for_dups(mech_spc_dct, printwarnings=True):
                 print(f'{outer_spc} and {inner_spc} are chemical twins!')
 
 
-def _inchi_to_amchi(full_spc_dct):
+def mech_inchi_to_amchi(mech_spc_dct):
     """ convert inchi to amchi where needed """
 
-    full_spc_dct['inchi'] = add_stereo(full_spc_dct['inchi'])
-    full_spc_dct['inchi'] = inchi_to_amchi(full_spc_dct['inchi'])
+    for spc_dct in mech_spc_dct:
+        spc_dct['inchi'] = inchi_to_amchi(spc_dct['inchi'])
 
-    return full_spc_dct
+    return mech_spc_dct
 
 
 def add_canonical_enantiomer(mech_spc_dct):

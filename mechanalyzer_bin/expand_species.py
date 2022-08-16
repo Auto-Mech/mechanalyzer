@@ -22,6 +22,8 @@ PAR.add_argument('-s', '--stereo', default=False, type=bool,
                  help='add stereochemistry to species (False)')
 PAR.add_argument('-c', '--canonical', default=False, type=bool,
                  help='add canonical enantiomer (False)')
+PAR.add_argument('-a', '--amchi', default=False, type=bool,
+                 help='turn bad inchis into amchis')
 PAR.add_argument('-b', '--hof-basis', default=False, type=bool,
                  help='add heat-of-formation species (False)')
 PAR.add_argument('-u', '--instability', default=False, type=bool,
@@ -40,7 +42,10 @@ OPTS = vars(PAR.parse_args())
 t0 = time.time()
 
 # Check if any runtime options
-if not OPTS['hof_basis'] and not OPTS['stereo'] and not OPTS['instability'] and not OPTS['canonical']:
+if not any([
+        OPTS['hof_basis'], OPTS['stereo'],
+        OPTS['instability'], OPTS['canonical'],
+        OPTS['amchi']]):
     print('Neither stereo, basis, nor instabiltiy job specified.')
     print('Add one of [-b, -s, -u] flags to command.')
     print('Exiting...')
@@ -54,6 +59,10 @@ mech_spc_dct = mechanalyzer.parser.spc.build_spc_dct(SPC_STR, 'csv')
 if OPTS['instability']:
     mech_spc_dct = mechanalyzer.parser.spc.add_instability_products(
         mech_spc_dct, nprocs=OPTS['nprocs'], stereo=True)
+
+if OPTS['amchi']:
+    mech_spc_dct = mechanalyzer.parser.new_spc.mech_inchi_to_amchi(
+        mech_spc_dct)
 
 # Add the thermochemical species to the species dictionary
 if OPTS['hof_basis']:
