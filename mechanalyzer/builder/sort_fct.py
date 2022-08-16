@@ -341,10 +341,12 @@ class SortMech:
                                             'filtertype': 'submech_ext'},
                             'submech_prompt': {'filtertype': 'submech_prompt'}}
         
-        submech_name = [optn for optn in hierarchy[:-1] if 'submech' in optn][0]
-        filtertype = sumbech_optns_dct[submech_name]['filtertype']
+        if len(species_list) > 0:
+            submech_name = [optn for optn in hierarchy[:-1] if 'submech' in optn][0]
+            filtertype = sumbech_optns_dct[submech_name]['filtertype']
         
-        if len(species_list) == 0 and submech_name == 'submech_prompt':
+        """ if len(species_list) == 0 and submech_name == 'submech_prompt':
+            filtertype = 'submech_prompt'
             # species list includes all radicals in the mech
             print('Prompt selected w/o species specification: \
                 all radicals analyzed ...')
@@ -354,6 +356,7 @@ class SortMech:
                     self.spc_dct[sp_i]['inchi']).values())
                 if mult > 1 and atoms > 2:
                     species_list.append(sp_i)
+        """
 
         if len(species_list) > 0:
             if len(species_list) >= 1 and submech_name == 'submech_prompt':
