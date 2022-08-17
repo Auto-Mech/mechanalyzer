@@ -6,6 +6,8 @@ import copy
 import mess_io
 from mechanalyzer import calculator
 from mechanalyzer.parser._util import resort_ktp_labels
+from mechanalyzer.parser._util import remove_fw_rxns
+from mechanalyzer.parser._util import remove_rev_rxns
 
 def multipes_prompt_dissociation_ktp_dct(list_strs_dct, model, bf_thresh):
     """ generation of rxn_ktp_dct for multipes with unknown character
@@ -38,6 +40,7 @@ def multipes_prompt_dissociation_ktp_dct(list_strs_dct, model, bf_thresh):
                 strs_dct['ktp_out'], filter_kts=True,
                 filter_reaction_types=('fake', 'self',
                                        'loss', 'capture', 'reverse'),
+                #   NB KEEP THE REVERSE HERE!! ONLY WANT 1 CHNL
                 relabel_reactions=True
             ))
     # resort labels to adjust prod order for different PESs with potential same prods
@@ -49,9 +52,11 @@ def multipes_prompt_dissociation_ktp_dct(list_strs_dct, model, bf_thresh):
         model, bf_thresh)
 
     # Add in the prompt versions of the reactions
-    # pop values in rxn_ktp_dct_full0
+    # remove reactions possibly written in the fw or bw direction
     ks = rxn_ktp_dct_full.keys()
-    [rxn_ktp_dct_full0.pop(x) for x in ks if x in rxn_ktp_dct_full0.keys()]
+    rxn_ktp_dct_full0 = remove_rev_rxns(rxn_ktp_dct_full0, ks)
+    rxn_ktp_dct_full0 = remove_fw_rxns(rxn_ktp_dct_full0, ks)
+    # updated dct only with necessary rxns
     rxn_ktp_dct_full.update(
         rxn_ktp_dct_full0)
     # alternatively, you can update without popping but you need to update

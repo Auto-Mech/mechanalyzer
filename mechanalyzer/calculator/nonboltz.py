@@ -11,6 +11,7 @@ from mess_io.reader import ped_info
 from mess_io.reader import hot_info
 from mechanalyzer import calculator
 from mechanalyzer.calculator import thermo
+from mechanalyzer.parser._util import remove_rev_rxns
 from scipy.interpolate import interp1d
 from scipy.integrate import quad
 from scipy.optimize import fsolve
@@ -38,9 +39,11 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
     rxn_ktp_dct = rates.get_rxn_ktp_dct(
         ped_out_str, filter_kts=True,
         filter_reaction_types=('fake', 'self',
-                                       'loss', 'capture', 'reverse'),
+                                       'loss', 'capture'),
         relabel_reactions=True
     )
+    # remove bw rxn based on ped_dct
+    rxn_ktp_dct = remove_rev_rxns(rxn_ktp_dct, ped_dct.keys())
     # Derive Branching Fractions, Calculate Prompt Rates
     # Merge Prompt Rates with Thermal Rates
     full_prompt_rxn_ktp_dct = {}

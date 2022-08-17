@@ -341,11 +341,13 @@ class SortMech:
                                             'filtertype': 'submech_ext'},
                             'submech_prompt': {'filtertype': 'submech_prompt'}}
         
-        if len(species_list) > 0:
+        try:
             submech_name = [optn for optn in hierarchy[:-1] if 'submech' in optn][0]
             filtertype = sumbech_optns_dct[submech_name]['filtertype']
+        except IndexError:
+            print('no filtering of species selected')
         
-        """ if len(species_list) == 0 and submech_name == 'submech_prompt':
+        if len(species_list) == 0 and submech_name == 'submech_prompt':
             filtertype = 'submech_prompt'
             # species list includes all radicals in the mech
             print('Prompt selected w/o species specification: \
@@ -356,7 +358,6 @@ class SortMech:
                     self.spc_dct[sp_i]['inchi']).values())
                 if mult > 1 and atoms > 2:
                     species_list.append(sp_i)
-        """
 
         if len(species_list) > 0:
             if len(species_list) >= 1 and submech_name == 'submech_prompt':
@@ -472,12 +473,13 @@ class SortMech:
         if filtertype == 'submech_prompt':
             # submech_prompt: if RAD_GEN/RAD_DECO in list, keep the rxns
             for _, subpes_df in mech_df.groupby(['pes', 'subpes']):
-                if any(len(CHECK.split('_')) > 1   # if len > 1, value was assigned
+                
+                if any('RAD' in CHECK or 'PROMPT' in CHECK   # if len > 1, value was assigned
                        for CHECK in subpes_df['submech_prompt'].values):
                     [spc_list.extend(list(rcts_tup))
-                     for rcts_tup in mech_df['rct_names_lst'].values]
+                     for rcts_tup in subpes_df['rct_names_lst'].values]
                     [spc_list.extend(list(prds_tup))
-                     for prds_tup in mech_df['prd_names_lst'].values]
+                     for prds_tup in subpes_df['prd_names_lst'].values]
                     # add wellskipping channels that might be missing
                     if any('RAD_GEN' in CHECK
                            for CHECK in subpes_df['submech_prompt'].values):

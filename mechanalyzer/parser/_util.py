@@ -51,6 +51,30 @@ def order_rct_bystoich(rct_names_lst, spc_dct=None):
 
     return rct_names_lst_ordered
 
+
+def remove_fw_rxns(rxn_dct, rxn_lst):
+    """ remove all rxns of rxn_list from rxn_dct
+    """
+    for rxn in rxn_lst:
+        if rxn in rxn_dct.keys():
+            rxn_dct.pop(rxn)
+
+    return rxn_dct
+
+def remove_rev_rxns(rxn_dct, rxn_lst):
+    """
+    take a rxn dictionary
+    consider rxn_list: for each rxn,
+    also search for its backward rxn and remove if present
+    """
+    for rxn in rxn_lst:
+        rev_rxn = (rxn[1], rxn[0], (None,))
+        if rev_rxn in rxn_dct.keys():
+            rxn_dct.pop(rev_rxn)
+
+    return rxn_dct
+
+
 def resort_ktp_labels(ktp_dct):
     """
     takes ktp dct
@@ -66,6 +90,7 @@ def resort_ktp_labels(ktp_dct):
         new_ktp_dct[new_key] = copy.deepcopy(val)
 
     return new_ktp_dct
+
 
 def count_atoms(fml_list):
     """ Count Cl, S, N, C, O, H atoms in formula list
