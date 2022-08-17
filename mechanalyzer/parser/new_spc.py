@@ -248,12 +248,16 @@ def fill_spc_dct(
             error = check_ich(full_spc_dct['inchi'], spc, chk_ste=chk_ste)
             if not error:  # if the inchi passed, check the smiles
                 error = check_smi(full_spc_dct['smiles'], spc)
-    # ich_to_amch = inchi_to_amchi(full_spc_dct['inchi'])
-    # if ich_to_amch != full_spc_dct['inchi']:
-        # full_spc_dct['inchi'] = ich_to_amch
-        # print(
-            # 'InChI: ', full_spc_dct['inchi'],
-            # ' updated to AMChI: ', ich_to_amch)
+
+    """
+    ich_to_amch = inchi_to_amchi(full_spc_dct['inchi'])
+    if ich_to_amch != full_spc_dct['inchi']:
+        full_spc_dct['inchi'] = ich_to_amch
+        print(
+            'InChI: ', full_spc_dct['inchi'],
+            ' updated to AMChI: ', ich_to_amch)
+    """
+
     if canon_ent:
         if 'canon_enant_ich' not in full_spc_dct:
             full_spc_dct['canon_enant_ich'] = canonical_enantiomer(
