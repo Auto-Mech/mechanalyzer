@@ -129,7 +129,7 @@ def unique_basis_species(basis_dct, spc_dct):
         )
 
     # Generate list of all species currently in the spc dct
-    mech_ichs = tuple(spc_dct[spc]['inchi'] for spc in spc_dct.keys()
+    mech_ichs = tuple(spc_dct[spc]['canon_enant_ich'] for spc in spc_dct.keys()
                       if 'ts' not in spc)
 
     # Generate list of all prospective basis species
@@ -137,7 +137,7 @@ def unique_basis_species(basis_dct, spc_dct):
     cnt = 1
     for name, (basis, _) in basis_dct.items():
         current_uni_ichs = tuple(
-            unique_refs_dct[spc]['inchi'] for spc in unique_refs_dct.keys()
+            unique_refs_dct[spc]['canon_enant_ich'] for spc in unique_refs_dct.keys()
             if 'ts' not in spc)
         all_ichs = current_uni_ichs + mech_ichs
         for bas in basis:
@@ -191,6 +191,15 @@ def create_ts_spc(ref, spc_dct, mult):
         rxn_muls += (rgt_muls,)
         rxn_chgs += (rgt_chgs,)
 
+    rxn_info = rinfo.from_data(rxn_ichs, rxn_chgs, rxn_muls, mult)
+    canon_rxn_info = rxn_info
+    if not automol.chi.is_canonical_enantiomer_reaction(
+            rxn_info[0][0], rxn_info[0][1]):
+        print('flipping enantiomer reaction to canonical form...')
+        canon_rxn_info = (automol.chi.canonical_enantiomer_reaction(
+            rxn_info[0][0], rxn_info[0][1]),
+            rxn_info[1], rxn_info[2], rxn_info[3])
+
     return {
         'reacs': list(reacs),
         'prods': list(prods),
@@ -198,7 +207,8 @@ def create_ts_spc(ref, spc_dct, mult):
         'inchi': '',
         'mult': mult,
         'ts_locs': (0,),
-        'rxn_info': rinfo.from_data(rxn_ichs, rxn_chgs, rxn_muls, mult),
+        'rxn_info': rxn_info,
+        'canon_rxn_info': canon_rxn_info,
         'hbond_cutoffs': (4.55, 1.92)
     }
 
