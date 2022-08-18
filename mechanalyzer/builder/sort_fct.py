@@ -345,6 +345,7 @@ class SortMech:
             submech_name = [optn for optn in hierarchy[:-1] if 'submech' in optn][0]
             filtertype = sumbech_optns_dct[submech_name]['filtertype']
         except IndexError:
+            submech_name = None
             print('no filtering of species selected')
         
         if len(species_list) == 0 and submech_name == 'submech_prompt':
