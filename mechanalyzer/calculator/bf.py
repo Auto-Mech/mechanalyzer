@@ -228,10 +228,10 @@ def bf_tp_df_todct(bf_tp_df, bf_threshold, savefile=False, rxn='', model=''):
         # write file with the BFs
         if num_data_highenough > 0 and savefile:
             bf_df_sp_i = bf_df_sp_i.reset_index()
-            header_label = np.array(bf_df_sp_i.columns, dtype=str)
+            header_label = np.array(sorted(bf_df_sp_i.columns[1:]), dtype=str)
             header_label[0] = 'T [K]'
             labels = '\t\t'.join(header_label)
-            np.savetxt(f'bf_{model}_{rxn}_{spc}.txt', bf_df_sp_i.values,
+            np.savetxt(f'bf_{model}_{rxn}_{spc}.txt', bf_df_sp_i[sorted(bf_df_sp_i.columns[1:])].values,
                        delimiter='\t', header=labels, fmt='%1.2e')
 
     return bf_tp_dct_out
