@@ -1,7 +1,7 @@
 import sys
 import numpy
 from mechanalyzer.builder import checker
-#import mechanalyzer.parser.spc as spc_parser
+import mechanalyzer.parser.spc as old_spc_parser
 import mechanalyzer.parser.new_spc as spc_parser
 import mechanalyzer.parser.ckin_ as ckin_parser
 from ioformat import pathtools
@@ -10,10 +10,10 @@ from ioformat import pathtools
 # INPUTS
 RXNS_OR_THERMO = 'rxns'  # 'rxns' or 'thermo'
 FILENAMES = [
-    'C4H9O2_4_2.ckin',
+    'rmg_dummy.ckin',
 ]
 SPC_FILENAMES = [
-    'species_no_ste.csv',
+    'rmg.csv',
 ]
 OUTPUT_FILENAME = 'spc_check.txt'
 CHK_STER = False
@@ -51,3 +51,10 @@ else:  # 'thermo'
         OUTPUT_STR += checker.write_missing_spcs(CSV, THERMO)
 
 pathtools.write_file(OUTPUT_STR, JOB_PATH, OUTPUT_FILENAME)
+
+# Write each mech_spc_dct to a new .csv
+headers = ('smiles', 'inchi', 'mult', 'exc_flag', 'charge')
+for MECH_IDX, MECH_SPC_DCT in enumerate(MECH_SPC_DCTS):
+    FNAME = f'reprocessed{MECH_IDX}.csv'
+    CSV_STR = old_spc_parser.csv_string(MECH_SPC_DCT, headers) 
+    pathtools.write_file(CSV_STR, JOB_PATH, FNAME)
