@@ -209,7 +209,8 @@ def create_ts_spc(ref, spc_dct, mult):
         'ts_locs': (0,),
         'rxn_info': rxn_info,
         'canon_rxn_info': canon_rxn_info,
-        'hbond_cutoffs': (4.55, 1.92)
+        'hbond_cutoffs': (4.55, 1.92),
+        'canon_enant_ich': ''
     }
 
 
