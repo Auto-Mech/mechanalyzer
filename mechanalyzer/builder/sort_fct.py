@@ -347,6 +347,7 @@ class SortMech:
         except IndexError:
             submech_name = None
             print('no filtering of species selected')
+
         
         if len(species_list) == 0 and submech_name == 'submech_prompt':
             filtertype = 'submech_prompt'
