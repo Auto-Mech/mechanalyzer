@@ -165,7 +165,6 @@ def cbh_basis(zrxn, scheme):
                     if atmb in rad_atms:
                         frm_key2 = frozenset({atma, atmb})
                         site2 = [atmb, atma, atmd]
-
     fclasses = (
         (ReactionClass.Typ.HYDROGEN_ABSTRACTION, False),
         (ReactionClass.Typ.HYDROGEN_MIGRATION, False),
@@ -260,7 +259,9 @@ def cbhzed_radradabs(
 
     frags = {}
     for atm in atm_vals:
-        grai = (atms.copy(), bnd_ords.copy())
+        grai = (
+            atms.copy(),
+            {key: (val, None) for (key, val) in bnd_ords.copy().items()},)
         if (atms[atm][0] != 'H' or atm in site1 + site2):
             if atm in site1 + site2 and atm != site1[0]:
                 continue
@@ -316,7 +317,9 @@ def cbhone_radradabs(
     for bnd in bnd_ords:
         atma, atmb = bnd
         extended_site = False
-        grai = (atms.copy(), bnd_ords.copy())
+        grai = (
+            atms.copy(),
+            {key: (val, None) for (key, val) in bnd_ords.copy().items()},)
         if atma not in site1 + site2 or atmb not in site1 + site2:
             coeff = 1.0
             if atmb in site1 + site2:
@@ -398,7 +401,9 @@ def cbhzed_elim(
     if not site1[0] == site2[2]:
         site2, site1 = site1, site2
     for atm in atm_vals:
-        grai = (atms.copy(), bnd_ords.copy())
+        grai = (
+            atms.copy(),
+            {key: (val, None) for (key, val) in bnd_ords.copy().items()},)
         if (atms[atm][0] != 'H' or atm in site1 + site2):
             if atm in [site1[1], site1[2], site2[0], site2[1]]:
                 # Dont overcount reactions site
@@ -448,7 +453,9 @@ def cbhzed_habs(
 
     frags = {}
     for atm in atm_vals:
-        grai = (atms.copy(), bnd_ords.copy())
+        grai = (
+            atms.copy(),
+            {key: (val, None) for (key, val) in bnd_ords.copy().items()},)
         if (atms[atm][0] != 'H' or atm in site):
             if atm in (site[1], site[2]):
                 continue
@@ -497,7 +504,9 @@ def cbhone_elim(
     # Determine CBHone fragments
     frags = {}
     for bnd in bnd_ords:
-        grai = (atms.copy(), bnd_ords.copy())
+        grai = (
+            atms.copy(),
+            {key: (val, None) for (key, val) in bnd_ords.copy().items()},)
         extended_site = None
         atma, atmb = bnd
         if atma not in site1 + site2 or atmb not in site1 + site2:
@@ -580,7 +589,9 @@ def cbhone_habs(
     frags = {}
     for bnd in bnd_ords:
         atma, atmb = bnd
-        grai = (atms.copy(), bnd_ords.copy())
+        grai = (
+            atms.copy(),
+            {key: (val, None) for (key, val) in bnd_ords.copy().items()},)
         extended_site = None
         if ((atms[atma][0] != 'H' or atma in site) and
            (atms[atmb][0] != 'H' or atmb in site)):
@@ -602,7 +613,6 @@ def cbhone_habs(
                         if atm_x not in extended_site and atms[atm_x][0] != 'H':
                             grai = cleave_group_and_saturate(
                                 grai, bnd_ords, site_atm, atm_x)
-
                 grai = automol.graph.explicit(grai)
                 frags = _add_frag_to_frags(key, coeff, grai, frags)
     frags = tsutil.simplify_gra_frags(frags)
@@ -689,7 +699,7 @@ def cleave_group_and_saturate(gra, bnd_ords, atmi, atmj):
     """
     # Graphical info about molecule
     if frozenset({atmi, atmj}) in automol.graph.bonds(gra):
-        order = list(bnd_ords[frozenset({atmi, atmj})])[0]
+        order = bnd_ords[frozenset({atmi, atmj})]
         for _ in range(order):
             gra = automol.graph.add_bonded_atom(gra, 'H', atmi)
         gra = automol.graph.remove_bonds(gra, (frozenset({atmi, atmj}),))

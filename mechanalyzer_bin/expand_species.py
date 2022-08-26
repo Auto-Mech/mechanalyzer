@@ -64,12 +64,6 @@ if OPTS['amchi']:
     mech_spc_dct = mechanalyzer.parser.new_spc.mech_inchi_to_amchi(
         mech_spc_dct)
 
-# Add the thermochemical species to the species dictionary
-if OPTS['hof_basis']:
-    mech_spc_dct = mechanalyzer.parser.spc.add_heat_of_formation_basis(
-        mech_spc_dct, ref_schemes=('cbh0', 'cbh1', 'cbh2'),
-        nprocs=OPTS['nprocs'])
-
 # Add the stereochemical labels to the species
 if OPTS['stereo']:
     mech_spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
@@ -85,6 +79,16 @@ if OPTS['canonical']:
     mech_spc_dct = mechanalyzer.parser.new_spc.add_canonical_enantiomer(
         mech_spc_dct)
     HEADERS += ('canon_enant_ich',)
+
+
+# Add the thermochemical species to the species dictionary
+if OPTS['hof_basis']:
+    mech_spc_dct = mechanalyzer.parser.new_spc.add_canonical_enantiomer(
+        mech_spc_dct, dummy=True)
+    mech_spc_dct = mechanalyzer.parser.spc.add_heat_of_formation_basis(
+        mech_spc_dct, ref_schemes=('cbh0', 'cbh1', 'cbh2'),
+        nprocs=OPTS['nprocs'])
+
 # Write the new species dictionary to a string
 csv_str = mechanalyzer.parser.spc.csv_string(mech_spc_dct, HEADERS)
 

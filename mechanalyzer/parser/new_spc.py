@@ -475,16 +475,20 @@ def check_for_dups(mech_spc_dct, printwarnings=True):
 def mech_inchi_to_amchi(mech_spc_dct):
     """ convert inchi to amchi where needed """
 
-    for spc_dct in mech_spc_dct:
+    for spc_dct in mech_spc_dct.values():
         spc_dct['inchi'] = inchi_to_amchi(spc_dct['inchi'])
 
     return mech_spc_dct
 
 
-def add_canonical_enantiomer(mech_spc_dct):
+def add_canonical_enantiomer(mech_spc_dct, dummy=False):
     """ add canonical enantiomer to species dictionaries
     """
     for spc_dct in mech_spc_dct.values():
         if 'canon_enant_ich' not in spc_dct:
-            spc_dct['canon_enant_ich'] = canonical_enantiomer(spc_dct['inchi'])
+            if not dummy:
+                spc_dct['canon_enant_ich'] = canonical_enantiomer(
+                    spc_dct['inchi'])
+            else:
+                spc_dct['canon_enant_ich'] = spc_dct['inchi']
     return mech_spc_dct

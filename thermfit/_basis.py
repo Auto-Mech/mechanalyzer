@@ -205,6 +205,7 @@ def create_ts_spc(ref, spc_dct, mult):
         'prods': list(prods),
         'charge': 0,
         'inchi': '',
+        'canon_enant_ich': '',
         'mult': mult,
         'ts_locs': (0,),
         'rxn_info': rxn_info,
