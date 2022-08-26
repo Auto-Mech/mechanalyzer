@@ -43,14 +43,11 @@ def xor(lst1, lst2):
 def ts_graph(gra, site1, site2=None):
     rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
     unsat_atms_dct = automol.graph.atom_unsaturations(gra)
-    unsat_atms = []
-    for atm in unsat_atms_dct:
-        if unsat_atms_dct[atm] > 0:
-            unsat_atms.append(atm)
+    unsat_atms = [atm for (atm, sat) in unsat_atms_dct.items() if sat > 0]
     atm_vals = automol.graph.atom_element_valences(gra)
     rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
     atms = automol.graph.atoms(gra)
-    bnds = automol.graph.bonds(gra)
+    bnds = automol.graph.kekule_bond_orders(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
     sites_lst = [site1]
     sites = site1
@@ -62,14 +59,14 @@ def ts_graph(gra, site1, site2=None):
             sites.extend(site2)
             sites_lst.append(site2)
             brk_bnd = frozenset({site2[1], site2[2]})
-            bnd_ord = bnds[brk_bnd][0]
+            bnd_ord = bnds[brk_bnd]
             bnds[brk_bnd] = (bnd_ord + 0.9, None)
         else:
             # second site is a forming pi bond
             sites.extend(site2)
             sites_lst.append(site2)
             frm_bnd = frozenset({site2[0], site2[1]})
-            bnd_ord = bnds[frm_bnd][0]
+            bnd_ord = bnds[frm_bnd]
             bnds[frm_bnd] = (bnd_ord + 0.1, None)
 
     # switch resonances so dbl bnd isn't in rction site
