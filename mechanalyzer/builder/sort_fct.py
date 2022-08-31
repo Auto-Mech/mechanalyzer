@@ -300,9 +300,10 @@ class SortMech:
                 self.mech_df = pd.concat([self.mech_df, df_optn], axis=1)
 
         # remove fake rxns
-        rxns_fake = self.mech_df[self.mech_df['chnl']
-                                 == 'WELLSKIPPING FAKE'].index
-        self.mech_df = self.mech_df.drop(index=rxns_fake)
+        if 'chnl' in self.mech_df.columns:
+            rxns_fake = self.mech_df[self.mech_df['chnl']
+                                    == 'WELLSKIPPING FAKE'].index
+            self.mech_df = self.mech_df.drop(index=rxns_fake)
 
         # drop ''
         if '' in self.mech_df.columns:
