@@ -200,7 +200,7 @@ class SortMech:
             columns=['rct_names_lst', 'prd_names_lst', 'rct_names_lst_ord',
                      'prd_names_lst_ord', 'r1', 'r2', 'molecularity',
                      'N_of_prods', 'pes_fml', 'formulas', 'isthrdbdy',
-                     'thrdbdy', 'param_vals', 'rxn_names'])
+                     'thrdbdy', 'param_vals', 'rxn_names'], dtype=object)
 
         # reindex pes
         df_pes = pd.DataFrame(
@@ -474,6 +474,7 @@ class SortMech:
                             sp)
 
         if filtertype == 'submech_prompt':
+            mech_df_new = pd.DataFrame(columns = mech_df.columns, dtype=object)
             # submech_prompt: if RAD_GEN/RAD_DECO in list, keep the rxns
             for _, subpes_df in mech_df.groupby(['pes', 'subpes']):
 
@@ -483,14 +484,15 @@ class SortMech:
                      for rcts_tup in subpes_df['rct_names_lst'].values]
                     [spc_list.extend(list(prds_tup))
                      for prds_tup in subpes_df['prd_names_lst'].values]
+                    mech_df_new = pd.concat([mech_df_new, subpes_df], axis=0)
                     # add wellskipping channels that might be missing
                     if any('RAD_GEN' in CHECK
                            for CHECK in subpes_df['submech_prompt'].values):
                         added_rxns_df = self.add_wellskipping(subpes_df)
-                        mech_df = pd.concat([mech_df, added_rxns_df], axis=0)
-                else:
-                    # drop the corrisponding pes/subpes
-                    mech_df = mech_df.drop(index=subpes_df.index)
+                        # mech_df = pd.concat([mech_df, added_rxns_df], axis=0)
+                        mech_df_new = pd.concat([mech_df_new, added_rxns_df], axis=0)
+
+            mech_df = copy.deepcopy(mech_df_new)
 
         # filter spc_list: unique elements
         spc_list = list(set(spc_list))
@@ -512,9 +514,16 @@ class SortMech:
         rad_bimol = []
         for rxn in subpes_df.index:
             if 'RAD_GEN' in subpes_df['submech_prompt'][rxn]:
-                rad_list.append(subpes_df['submech_prompt'][rxn].split('_')[2])
-                rad_bimol.append(subpes_df['prd_names_lst_ord'][rxn])
-
+                rad = subpes_df['submech_prompt'][rxn].split('_')[2]
+                rad_list.append(rad)
+                if rad in subpes_df['prd_names_lst_ord'][rxn]:
+                    rad_bimol.append(subpes_df['prd_names_lst_ord'][rxn])
+                elif rad in subpes_df['rct_names_lst_ord'][rxn]:
+                    rad_bimol.append(subpes_df['rct_names_lst_ord'][rxn])
+                    
+        rad_list = list(set(rad_list)) # reduce lists, might have found > 1 radical
+        rad_bimol = list(set(rad_bimol))
+        
         # get reaction names
         rxn_list_ordered = list(
             zip(subpes_df['rct_names_lst_ord'].values, subpes_df['prd_names_lst_ord'].values))
@@ -530,7 +539,8 @@ class SortMech:
             rxn = '{}={}'.format(
                 '+'.join(rcts[0]), '+'.join(rcts[1]))
             new_wellskipping_idxs.append((rxn, (None,)))
-
+            
+        #print(subpes_df, '\n', rad_list, rad_bimol, '\n')
         wellskipp_rxns_df = pd.DataFrame(
             index=new_wellskipping_idxs, columns=subpes_df.columns, dtype=object)
         # common values
@@ -541,12 +551,14 @@ class SortMech:
         # add to dataframe
         for idx, rxn in enumerate(new_wellskipping_idxs):
             rad = list(set(rad_list).intersection(new_wskip_rxns[idx][1]))[0]
+
             wellskipp_rxns_df['submech_prompt'][rxn] = 'RAD_GEN_{}'.format(rad)
             wellskipp_rxns_df['rxn_ped'][rxn] = rxn[0]
             wellskipp_rxns_df['rct_names_lst'][rxn] = new_wskip_rxns[idx][0]
             wellskipp_rxns_df['prd_names_lst'][rxn] = new_wskip_rxns[idx][1]
             wellskipp_rxns_df['rct_names_lst_ord'][rxn] = new_wskip_rxns[idx][0]
             wellskipp_rxns_df['prd_names_lst_ord'][rxn] = new_wskip_rxns[idx][1]
+            #print('ok for ', idx, rxn, rad_list, new_wskip_rxns[idx], '\n')
 
         return wellskipp_rxns_df
 
@@ -762,7 +774,6 @@ class SortMech:
         self.kabs = DFG['kabs']
         self.Tref = DFG['Tref']
         self.keepfiltered = int(DFG['keepfiltered'])
-        self.chainsiffail = int(DFG['chainsiffail'])
         # convert therm dct to dataframe
         self.therm_df = thermo.spc_therm_dct_df(therm_dct)
         # 1 find min endothermicity of deco reactions of hotspecies
@@ -797,62 +808,73 @@ class SortMech:
             for n, ped in enumerate(grp['peds']):
                 exceptions = 0
                 for ped_i in ped:
+                    check_ped_i = 0
                     # extract rxn exo/endo thermicity
                     print('anaylze ped .. {}'.format(ped_i))
                     rcts = ped_i.split('=')[0].split('+')
                     prds = ped_i.split('=')[1].split('+')
-                    # check with threshold
-                    hot_sp = list(set(self.species_list) & set(prds))[0]
-                    nonhot = list(set([hot_sp]) ^ set(prds))[0]
-
-                    phi = ene_partition.phi_equip_fromdct(
-                        hot_sp, nonhot, self.spc_dct)
-
-                    try:
-                        dh = thermo.extract_deltaX_therm(
-                            self.therm_df, rcts, prds, 'H')/1000
-                    except KeyError as keyerr:
-                        # it is possible that the species has no thermo, e.g., unstable species.
-                        print('thermo not found for:', keyerr.args[0])
-                        exceptions += 1
-                        # save hotsp anyway since you don't know what's going to happen
-                        active_hotsp.append(hot_sp)
-                        continue
-                    # calculate equivalent T* at Tref and corresponding k* rate
-                    # phi: fraction of en transferred to prods - very approixmate
-                    try:
-                        T_star, k_star, dh_tot = nonboltz.estimate_hot_hk(
-                            dh*phi*1000, self.Tref, self.therm_df[hot_sp]['Cp'], self.k_max_hot[hot_sp], self.dh_min_hot[hot_sp]*1000)
-                    except TypeError:
-                        print('dh failed for:', rcts, prds, hot_sp)
-                        exceptions += 1
-                        # save hotsp anyway since you don't know what's going to happen
-                        active_hotsp.append(hot_sp)
-                        continue
-
-                    if dh_tot[T0] < self.DHmax or dh_tot[T0]/self.dh_min_hot[hot_sp][T0] < self.H5H3ratio \
-                        or (k_star/self.k_max_hot[hot_sp][self.Tref] > self.kratio) \
-                            or (k_star > self.kabs and dh[T0] < 0):
-                        check += 1
-                        keep = 'YES'
-                        active_hotsp.append(hot_sp)
-                        # BUILD REACTION CHAINS STARTING FROM HERE
-                        # look for chains
-                        self.rxn_chain_prompt2(
-                            T0, dh_tot, hot_sp, hot_sp_df_dct)
-                    else:
-                        if self.keepfiltered == 0:
-                            ped.remove(ped_i)
+                    
+                    hot_spcs = list(set(self.species_list) & set(prds))
+                    
+                    for hot_sp in hot_spcs:
+                        
+                        nonhot = list(set([hot_sp]) ^ set(prds))
+                        if len(nonhot) == 0:
+                            nonhot = hot_sp #it means you have something like A+B=>2C (disproport. or dissociation)
                         else:
+                            nonhot = nonhot[0]
+                            
+                        phi = ene_partition.phi_equip_fromdct(
+                            hot_sp, nonhot, self.spc_dct)
+
+                        try:
+                            dh = thermo.extract_deltaX_therm(
+                                self.therm_df, rcts, prds, 'H')/1000
+                        except KeyError as keyerr:
+                            # it is possible that the species has no thermo, e.g., unstable species.
+                            print('thermo not found for:', keyerr.args[0])
+                            exceptions += 1
+                            # save hotsp anyway since you don't know what's going to happen
                             active_hotsp.append(hot_sp)
+                            continue
+                        # calculate equivalent T* at Tref and corresponding k* rate
+                        # phi: fraction of en transferred to prods - very approixmate
+                        try:
+                            T_star, k_star, dh_tot = nonboltz.estimate_hot_hk(
+                                dh*phi*1000, self.Tref, self.therm_df[hot_sp]['Cp'], self.k_max_hot[hot_sp], self.dh_min_hot[hot_sp]*1000)
+                        except TypeError:
+                            print('dh failed for:', rcts, prds, hot_sp)
+                            exceptions += 1
+                            # save hotsp anyway since you don't know what's going to happen
+                            active_hotsp.append(hot_sp)
+                            continue
+
+                        if dh_tot[T0] < self.DHmax or dh_tot[T0]/self.dh_min_hot[hot_sp][T0] < self.H5H3ratio \
+                            or (k_star/self.k_max_hot[hot_sp][self.Tref] > self.kratio) \
+                                or (k_star > self.kabs and dh[T0] < 0):
                             check += 1
-                            check_filtered += 1  # count filtered rxns
-                        keep = 'NO'
+                            keep = 'YES'
+                            active_hotsp.append(hot_sp)
+                            # BUILD REACTION CHAINS STARTING FROM HERE
+                            # look for chains
+                            self.rxn_chain_prompt2(
+                                T0, dh_tot, hot_sp, hot_sp_df_dct)
+                            check_ped_i += 1
+                        else:
+                            if self.keepfiltered != 0:
+                                check_ped_i += 1
+                                active_hotsp.append(hot_sp)
+                                check += 1
+                                check_filtered += 1  # count filtered rxns
+                            keep = 'NO'
 
-                    array_info = numpy.array(
-                        [ped_i, hot_sp, dh[T0]*phi, self.dh_min_hot[hot_sp][T0], dh_tot[T0], self.k_max_hot[hot_sp][self.Tref], k_star, T_star, keep], dtype=object)
-                    self.rxns_dh = numpy.vstack((self.rxns_dh, array_info))
-
+                        array_info = numpy.array(
+                            [ped_i, hot_sp, dh[T0]*phi, self.dh_min_hot[hot_sp][T0], dh_tot[T0], self.k_max_hot[hot_sp][self.Tref], k_star, T_star, keep], dtype=object)
+                        self.rxns_dh = numpy.vstack((self.rxns_dh, array_info))
+                        
+                    if check_ped_i == 0:
+                        ped.remove(ped_i)
+                    
                 if exceptions == len(ped) and len(ped) > 0:
                     check = 1  # keep things you were unable to compute stuff for that ped
                     print(

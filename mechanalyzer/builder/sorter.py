@@ -11,7 +11,6 @@ MECH_TYPE = 'chemkin'
 DFG = {
     'Tref': 1500,
     'keepfiltered': 0,
-    'chainsiffails': 0,
     'DH': 0,
     'H5H3ratio': 0,
     'kratio': 100,

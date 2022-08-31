@@ -95,4 +95,5 @@ def add_wellskip(rxn_df, sp):
     for rcts in all_species:
         if rxn_df[sp][rcts] == 0:
             rxn_lst_wellskip.append([rcts, sp])
+            
     return rxn_lst_wellskip
