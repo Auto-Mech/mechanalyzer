@@ -775,7 +775,11 @@ def get_dof_info_fromspcdct(sp, spc_dct):
     else:
         # derive geometry and check if linear
         geom_sp = chi.geometry(spc_dct[sp]['inchi'])
-        ilin = int(geom.is_linear(geom_sp))
+        try:
+            ilin = int(geom.is_linear(geom_sp))
+        except AssertionError:
+            # failed for some reason .. set to 0. check HCO, fails there 
+            ilin = 0
         dof_info['rot dof'] = 3 - 1*ilin
         dof_info['vib dof'] = 3*Nat - 6 + 1*ilin
         
