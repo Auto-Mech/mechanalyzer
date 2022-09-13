@@ -1,6 +1,7 @@
 #!/usr/env python
 """ Modifies the species.csv file in ways requested by the user:
 
+    (0) adds inchis to smiles
     (1) adds required heat-of-formation basis species not present in csv file
     (2) adds stereochemistry to species in the file csv
 """
@@ -46,7 +47,7 @@ if not any([
         OPTS['hof_basis'], OPTS['stereo'],
         OPTS['instability'], OPTS['canonical'],
         OPTS['amchi']]):
-    print('Neither stereo, basis, nor instabiltiy job specified.')
+    print('Neither stereo, basis, nor instability job specified.')
     print('Add one of [-b, -s, -u] flags to command.')
     print('Exiting...')
     sys.exit()
