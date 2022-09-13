@@ -13,18 +13,24 @@ import mechanalyzer.parser.ckin_ as ckin_parser
 # INPUTS
 # Filenames
 THERMO_FILENAMES = [
-    'anl.therm',
-    'rmg.ckin',
+    '1dhrfa.ckin',
+    'update_therm_retry.ckin',
+    '1dhr.ckin',
+    # 'all_therm.ckin',
+    # 'update_therm_retry.ckin',
+    # 'update_hr.ckin',
 ]
 SPC_CSV_FILENAMES = [
-    'anl.csv',
-    'rmg.csv',
+    'species.csv',
+    'species.csv',
+    'species.csv',
 ]
 MECH_NAMES = [
-    'ANL',
-    'RMG',
+    'HR_FA',
+    'HR_F',
+    'HR',
 ]
-OUTPUT_FILENAME = 'anl_rmg_therm_g.pdf'
+OUTPUT_FILENAME = 'hr_test2.pdf'
 
 # Conditions
 TEMPS = numpy.linspace(300, 1500, 13)
