@@ -10,10 +10,10 @@ from ioformat import pathtools
 # INPUTS
 RXNS_OR_THERMO = 'rxns'  # 'rxns' or 'thermo'
 FILENAMES = [
-    'rmg_dummy.ckin',
+    'anl.ckin',
 ]
 SPC_FILENAMES = [
-    'rmg.csv',
+    'anl.csv',
 ]
 OUTPUT_FILENAME = 'spc_check.txt'
 CHK_STER = False
@@ -24,7 +24,7 @@ assert len(FILENAMES) == len(SPC_FILENAMES)
 assert RXNS_OR_THERMO in ('rxns', 'thermo')
 JOB_PATH = sys.argv[1]
 MECH_SPC_DCTS = spc_parser.load_mech_spc_dcts(SPC_FILENAMES, JOB_PATH, 
-                                              chk_ste= CHK_STER,
+                                              chk_ste=CHK_STER,
                                               chk_match=CHK_MATCH)
 if RXNS_OR_THERMO == 'rxns':
     RXN_PARAM_DCTS = ckin_parser.load_rxn_param_dcts(FILENAMES, JOB_PATH)

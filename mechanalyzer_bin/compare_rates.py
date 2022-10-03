@@ -9,30 +9,32 @@ import mechanalyzer.plotter.rates as plot_rates
 import mechanalyzer.plotter._util as util
 import mechanalyzer.parser.new_spc as spc_parser
 import mechanalyzer.parser.ckin_ as ckin_parser
+from ioformat import pathtools
 
 # INPUTS
 # Filenames
 MECH_FILES = [
-    'mechanism.dat',
-    #'healy_2010.ckin',
+    'anl.ckin',
+    'rmg.ckin',
 ]
 THERM_FILES = [
-    'therm.dat',
-    #'healy_2010.therm',
+    'anl.therm',
+    'rmg.ckin',
 ]
 CSV_FILES = [
-    'species_no_ste.csv',
-    #'healy_2010.csv',
+    'anl_new.csv',
+    'rmg_new.csv',
 ]
-output_filename = 'rates.pdf'
+out_fname = 'rates.pdf'
 mech_nicknames = [
     'ANL',
-    #'Healy 2010',
+    'RMG',
 ]
+out_txt_fname = 'ordering.txt'  # filename for the ordered text file
 
 # Conditions
-TEMPS_LST = [numpy.linspace(300, 2500, 23)]
-pressures = [1, 10]
+TEMPS_LST = [numpy.linspace(500, 2000, 16)]
+pressures = [1, 10, 100]
 
 # Options
 SORT_METHOD = 'ratios'  # either 'ratios' or None
@@ -67,4 +69,9 @@ figs = plot_rates.build_plots(
     algn_rxn_ktp_dct,
     mech_names=mech_nicknames,
     ratio_sort=bool(SORT_METHOD == 'ratios'))
-util.build_pdf(figs, filename=output_filename, path=JOB_PATH)
+util.build_pdf(figs, filename=out_fname, path=JOB_PATH)
+
+# Write the ordered text file
+FSTR = compare.write_ordered_str(algn_rxn_ktp_dct, dct_type='rxn')
+pathtools.write_file(FSTR, JOB_PATH, out_txt_fname)
+

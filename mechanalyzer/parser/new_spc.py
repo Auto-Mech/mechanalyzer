@@ -142,7 +142,7 @@ def parse_mech_spc_dct(file_str, quotechar="'",
     mech_spc_dct = {}
     errors = False
     for idx, line in enumerate(lines):
-        print('current line: ', line)
+        #print('current line: ', line)
         if idx == 0:
             headers = parse_first_line(line, quotechar=quotechar)
         else:

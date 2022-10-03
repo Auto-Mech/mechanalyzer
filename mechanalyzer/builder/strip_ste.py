@@ -213,8 +213,8 @@ def align_rxns(iso_sets_rxns, mech_spc_dct_strpd_ich,
     """
 
     # Get the rename instructions
-    rename_instr = compare.get_rename_instr_v2(mech_spc_dct_strpd_ich,
-                                               mech_spc_dct_strpd)
+    rename_instr = compare.get_rename_instr(mech_spc_dct_strpd_ich,
+                                            mech_spc_dct_strpd)
 
     # Loop over each iso_set and rename all the rxns
     algn_iso_sets_rxns = []
