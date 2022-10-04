@@ -9,28 +9,27 @@ import mechanalyzer.plotter.thermo as plot_thermo
 import mechanalyzer.plotter._util as util
 import mechanalyzer.parser.new_spc as spc_parser
 import mechanalyzer.parser.ckin_ as ckin_parser
+from ioformat import pathtools
 
 # INPUTS
 # Filenames
 THERMO_FILENAMES = [
-    '1dhrfa.ckin',
-    'update_therm_retry.ckin',
-    '1dhr.ckin',
-    # 'all_therm.ckin',
-    # 'update_therm_retry.ckin',
-    # 'update_hr.ckin',
+    'rmg.ckin',
+    'thermo_g_fa.ckin',
+    '1dhr_tmp.ckin',
 ]
 SPC_CSV_FILENAMES = [
-    'species.csv',
-    'species.csv',
-    'species.csv',
+    'rmg_new.csv',
+    'anl_new.csv',
+    'anl_new.csv',
 ]
 MECH_NAMES = [
-    'HR_FA',
-    'HR_F',
-    'HR',
+    'RMG',
+    'ANL_g_fa',
+    'ANL_1dhr',
 ]
 OUTPUT_FILENAME = 'hr_test2.pdf'
+OUT_TXT_FNAME = 'ordered.txt'  # filename for ordered text file
 
 # Conditions
 TEMPS = numpy.linspace(300, 1500, 13)
@@ -40,7 +39,7 @@ TEMPS = numpy.linspace(300, 1500, 13)
 SORT = True
 SORT_INSTR = 'g'  # either 'h', 'cp', 's', 'g', or None
 SORT_TEMP = None  # can be (1) None to sort by max difference or (2) a number
-REMOVE_LONERS = True
+REMOVE_LONERS = False
 WRITE_FILE = False  # this currently does nothing
 
 # RUN FUNCTIONS
@@ -72,3 +71,9 @@ FIGS = plot_thermo.build_plots(
     ALGN_SPC_THERM_DCT, spc_dct=COMB_SPC_DCT, mech_names=MECH_NAMES,
     sort=SORT, sort_instr=SORT_INSTR, sort_temp=SORT_TEMP)
 util.build_pdf(FIGS, filename=OUTPUT_FILENAME, path=JOB_PATH)
+
+# Write the ordered text file
+FSTR = compare.write_ordered_str(algn_rxn_ktp_dct, dct_type='therm')
+pathtools.write_file(FSTR, JOB_PATH, OUT_TXT_FNAME)
+# Saving this for later...writes a comparison of species
+#comp_str = compare.write_comparison(ALGN_SPC_THERM_DCT, dct_type='therm')

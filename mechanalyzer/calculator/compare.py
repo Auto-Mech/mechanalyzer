@@ -9,6 +9,7 @@ from phydat import phycon
 from chemkin_io.writer import _util as writer_util
 import ratefit
 from automol.chi import without_stereo
+from ioformat import pathtools
 
 RC_CAL = phycon.RC_CAL  # universal gas constant in cal/mol-K
 
@@ -88,13 +89,11 @@ def get_algn_spc_therm_dct(spc_therm_dcts, mech_spc_dcts, remove_loners=True,
     """
     assert len(spc_therm_dcts) == len(mech_spc_dcts), (
         f'Lengths of spc_therm_dcts ({len(spc_therm_dcts)}) ' +
-        f'and mech_spc_dcts ({len(mech_spc_dcts)}) should be the same.'
-        )
+        f'and mech_spc_dcts ({len(mech_spc_dcts)}) should be the same.')
 
     # Get the renamed spc_therm_dct
     renamed_spc_therm_dcts, rename_instr_lst = rename_dcts(
-        spc_therm_dcts, mech_spc_dcts, target_type='spc'
-    )
+        spc_therm_dcts, mech_spc_dcts, target_type='spc')
 
     # Get the algn_rxn_ktp_dct
     algn_spc_therm_dct = align_dcts(renamed_spc_therm_dcts)
@@ -247,91 +246,50 @@ def rename_dcts(target_dcts, mech_spc_dcts, target_type):
 
 
 def get_rename_instr(mech_spc_dct1, mech_spc_dct2, strip_ste=False):
-    """ Get instructions for renaming mech_spc_dct2 to be consistent with mech_spc_dct1
+    """ Get instructions for renaming mech_spc_dct2 to be consistent with
+        mech_spc_dct1
 
         :param mech_spc_dct1: the reference mech_spc_dct
         :type mech_spc_dct1: dct {spc1: ident_array1, spc2: ...}
         :param mech_spc_dct2: the mech_spc_dct to be renamed
         :type mech_spc_dct2: dct {spc1: ident_array1, spc2: ...}
-        :return rename_instr: instructions for renaming the species in mech_spc_dct2
-        :rtype: dct {spc_to_be_renamed1: new_spc_name1, spc_to_be_renamed2: ...}
+        :return rename_instr: instructions for renaming spcs in mech_spc_dct2
+        :rtype: dct {spc_to_be_renamed1: new_name1, ...}
     """
 
     rename_instr = {}
     rename_str = '-zz'
-
-    # Loop through each species in mech1
-    for spc_name1, spc_vals1 in mech_spc_dct1.items():
-        ich1 = spc_vals1['inchi']
-        mlt1 = spc_vals1['mult']
-        chg1 = spc_vals1['charge']
-        # Look for some stereo things
-        if strip_ste:  # strip stereo layer(s) if indicated
-            ich1 = without_stereo(ich1)
-
-        for spc_name2, spc_vals2 in mech_spc_dct2.items():
-            ich2 = spc_vals2['inchi']
-            mlt2 = spc_vals2['mult']
-            chg2 = spc_vals2['charge']
-
-            if strip_ste:  # strip stereo layer(s) if indicated
-                ich2 = without_stereo(ich2)
-
-            # If species are identical
-            if ich1 == ich2 and mlt1 == mlt2 and chg1 == chg2:
-                if spc_name1 != spc_name2:  # if spc names different, add to rename instructions
-                    rename_instr[spc_name2] = spc_name1
-
-            # If species are different but have same name
-            elif spc_name1 == spc_name2:
-                rename_instr[spc_name2] = spc_name2 + rename_str
-
-    return rename_instr
-
-
-def get_rename_instr_v2(mech_spc_dct1, mech_spc_dct2, strip_ste=False):
-    """ Get instructions for renaming mech_spc_dct2 to be consistent with mech_spc_dct1
-
-        :param mech_spc_dct1: the reference mech_spc_dct
-        :type mech_spc_dct1: dct {spc1: ident_array1, spc2: ...}
-        :param mech_spc_dct2: the mech_spc_dct to be renamed
-        :type mech_spc_dct2: dct {spc1: ident_array1, spc2: ...}
-        :return rename_instr: instructions for renaming the species in mech_spc_dct2
-        :rtype: dct {spc_to_be_renamed1: new_spc_name1, spc_to_be_renamed2: ...}
-    """
-
-    rename_instr = {}
-    rename_str = '-zz'
+    already_done = []
 
     # Loop through each species in mech1
     for spc1, spc_dct1 in mech_spc_dct1.items():
-        ich1 = spc_dct1['inchi']
-        mlt1 = spc_dct1['mult']
-        chg1 = spc_dct1['charge']
-        exc1 = spc_dct1['exc_flag']
-        fml1 = spc_dct1['fml']
-
+        ich1, mlt1, chg1, exc1, fml1 = _read_spc_dct(spc_dct1)
         # Strip stereo layer(s) if indicated
         if strip_ste:
             ich1 = without_stereo(ich1)
-
+        # Loop over each spc in mech_spc_dct2
         for spc2, spc_dct2 in mech_spc_dct2.items():
-            # If species are identical
+            # First, check if the species has already been done
+            if spc2 in already_done:
+                continue  # skip everything below and go to next spc2
+            # Check if species are identical
             spc_same = are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2, 
                                     strip_ste=strip_ste)
+            # If species are identical
             if spc_same:
                 if spc1 != spc2:  # if spc names different, add to rename_instr
                     rename_instr[spc2] = spc1
-
+                    already_done.append(spc2)
             # If species are different but have same name
             elif spc1 == spc2:
                 rename_instr[spc2] = spc2 + rename_str
+                # Note: don't add to already_done; this works for now
 
     return rename_instr
 
 
 def are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2, strip_ste=False):
-    """ Compares two species to see if they are the same
+    """ Compares two species dictionaries to see if they are the same
 
         Note: inputting spc1 in pieces for faster implementation in loop
     """
@@ -346,13 +304,9 @@ def are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2, strip_ste=False):
                 return False
         # If the for loop is completed without returning False, return True
         return True
-    
-    # Load spc2 information
-    ich2 = spc_dct2['inchi']
-    mlt2 = spc_dct2['mult']
-    chg2 = spc_dct2['charge']
-    exc2 = spc_dct2['exc_flag']
-    fml2 = spc_dct2['fml']
+
+    # Load information
+    ich2, mlt2, chg2, exc2, fml2 = _read_spc_dct(spc_dct2)
 
     # Check a few easy things
     if mlt1 != mlt2:
@@ -665,17 +619,18 @@ def assess_rxn_match(rxn1, rxn_ktp_dct2):
 
     def check_third_bod(third_bod1, third_bod2):
         """ Checks if two third bodies are the same. Accounts for the case
-            where one is None and the other is '(+M)'
+            where one is None and the other is '(+M)' or '+M'
         """
 
+        are_same = False
         if third_bod1 == third_bod2:
             are_same = True
-        elif third_bod1 is None and third_bod2 == '(+M)':
+        #elif third_bod1 is None and third_bod2 == '(+M)':
+        elif third_bod1 is None and third_bod2 in ('(+M)', '+M'):
             are_same = True
-        elif third_bod1 == '(+M)' and third_bod2 is None:
+        #elif third_bod1 == '(+M)' and third_bod2 is None:
+        elif third_bod1 in ('(+M)', '+M') and third_bod2 is None:
             are_same = True
-        else:
-            are_same = False
 
         return are_same
 
@@ -746,3 +701,55 @@ def _calculate_equilibrium_constant(spc_therm_dct, rcts, prds, temps):
         k_equils.append(numpy.exp(-rxn_gibbs / (RC_CAL * temp)))
 
     return k_equils
+
+
+def write_comparison(algn_dct, dct_type='rxn', buffer=4):
+
+    if dct_type == 'rxn':
+        max_len = writer_util.max_rxn_length(algn_dct)
+    else:  # 'therm'
+        max_len = writer_util.max_spc_length(algn_dct)
+        
+    fstr = ''
+    for key, mech_items in algn_dct.items():
+        if dct_type == 'rxn':
+            key = writer_util.format_rxn_name(key)
+        fstr += f'{key:<{max_len + buffer}}'
+        for mech_item in mech_items:
+            if mech_item is None:
+                entry = '---'
+            else:
+                entry = ' Y '
+            fstr += f'{entry:<{3 + buffer}}'
+        fstr += '\n'
+
+    return fstr
+                
+def _read_spc_dct(spc_dct):
+    """ Reads the relevant info for comparing species
+    """
+
+    ich = spc_dct['inchi']
+    mlt = spc_dct['mult']
+    chg = spc_dct['charge']
+    exc = spc_dct['exc_flag']
+    fml = spc_dct['fml']
+
+    return ich, mlt, chg, exc, fml
+    
+
+def write_ordered_str(algn_dct, dct_type='rxn'):
+
+    fstr = ''
+    if dct_type == 'rxn':
+        for rxn in algn_dct.keys():    
+            fstr += f'writer_util.format_rxn_name(rxn)\n'
+    elif dct_type == 'therm':
+        for spc in algn_dct.keys():
+            fstr += f'{spc}\n' 
+    else:
+        raise NotImplementedError(f'dct_type {dct_type} not valid!')
+
+    return fstr
+    
+
