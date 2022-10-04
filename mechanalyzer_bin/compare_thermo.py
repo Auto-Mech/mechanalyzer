@@ -13,29 +13,23 @@ from ioformat import pathtools
 
 # INPUTS
 # Filenames
-THERMO_FILENAMES = [
-    #'rmg.ckin',
-    #'thermo_g_fa.ckin',
-    #'1dhr_tmp.ckin',
-    'alturaifi.therm',
-    'glarborg.therm',
-]
-SPC_CSV_FILENAMES = [
-    #'rmg_new.csv',
-    #'anl_new.csv',
-    #'anl_new.csv',
-    'nh3_species.csv',
-    'nh3_species.csv',
-]
-MECH_NAMES = [
-    #'RMG',
-    #'ANL_g_fa',
-    #'ANL_1dhr',
-    'alturaifi',
-    'glarborg',
-]
 OUTPUT_FILENAME = 'hr_test2.pdf'
 OUT_TXT_FNAME = 'ordered.txt'  # filename for ordered text file
+THERMO_FILENAMES = [
+    'rmg.ckin',
+    'thermo_g_fa.ckin',
+    '1dhr_tmp.ckin',
+]
+SPC_CSV_FILENAMES = [
+    'rmg.csv',
+    'anl_no_ste.csv',
+    'anl_no_ste.csv',
+]
+MECH_NAMES = [
+    'RMG',
+    'ANL_fa',
+    'ANL_hr',
+]
 
 # Conditions
 TEMPS = numpy.linspace(300, 1500, 13)
@@ -77,8 +71,7 @@ COMB_SPC_DCT = compare.get_mult_comb_mech_spc_dct(SPC_DCTS)
 FIGS, SORT_ALGN_SPC_THERM_DCT = plot_thermo.build_plots(
     ALGN_SPC_THERM_DCT, spc_dct=COMB_SPC_DCT, mech_names=MECH_NAMES,
     sort=SORT, sort_instr=SORT_INSTR, sort_temp=SORT_TEMP)
-#util.build_pdf(FIGS, filename=OUTPUT_FILENAME, path=JOB_PATH)
-breakpoint()
+util.build_pdf(FIGS, filename=OUTPUT_FILENAME, path=JOB_PATH)
 # Write the ordered text file
 FSTR = compare.write_ordered_str(SORT_ALGN_SPC_THERM_DCT, dct_type='therm',
     comb_mech_spc_dct=COMB_SPC_DCT, print_missing=PRINT_MISSING)
