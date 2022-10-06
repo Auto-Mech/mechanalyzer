@@ -73,7 +73,7 @@ def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None, sort=True,
         fig = plot_single_spc(therm_arrays, diff_arrays, fig, axs, mech_names)
         figs.append(fig)
 
-    return figs
+    return figs, algn_spc_therm_dct
 
 
 def plot_single_spc(therm_arrays, diff_arrays, fig, axs, mech_names):
