@@ -14,19 +14,25 @@ from ioformat import pathtools
 # INPUTS
 # Filenames
 THERMO_FILENAMES = [
-    'rmg.ckin',
-    'thermo_g_fa.ckin',
-    '1dhr_tmp.ckin',
+    #'rmg.ckin',
+    #'thermo_g_fa.ckin',
+    #'1dhr_tmp.ckin',
+    'alturaifi.therm',
+    'glarborg.therm',
 ]
 SPC_CSV_FILENAMES = [
-    'rmg_new.csv',
-    'anl_new.csv',
-    'anl_new.csv',
+    #'rmg_new.csv',
+    #'anl_new.csv',
+    #'anl_new.csv',
+    'nh3_species.csv',
+    'nh3_species.csv',
 ]
 MECH_NAMES = [
-    'RMG',
-    'ANL_g_fa',
-    'ANL_1dhr',
+    #'RMG',
+    #'ANL_g_fa',
+    #'ANL_1dhr',
+    'alturaifi',
+    'glarborg',
 ]
 OUTPUT_FILENAME = 'hr_test2.pdf'
 OUT_TXT_FNAME = 'ordered.txt'  # filename for ordered text file
@@ -41,6 +47,7 @@ SORT_INSTR = 'g'  # either 'h', 'cp', 's', 'g', or None
 SORT_TEMP = None  # can be (1) None to sort by max difference or (2) a number
 REMOVE_LONERS = False
 WRITE_FILE = False  # this currently does nothing
+PRINT_MISSING = True  # print spcs that are in mech(s) but not in spc.csv
 
 # RUN FUNCTIONS
 # Fix temps to include the sort_temps if it doesn't already
@@ -67,13 +74,14 @@ ALGN_SPC_THERM_DCT = compare.get_algn_spc_therm_dct(
 COMB_SPC_DCT = compare.get_mult_comb_mech_spc_dct(SPC_DCTS)
 
 # Run the plotter
-FIGS = plot_thermo.build_plots(
+FIGS, SORT_ALGN_SPC_THERM_DCT = plot_thermo.build_plots(
     ALGN_SPC_THERM_DCT, spc_dct=COMB_SPC_DCT, mech_names=MECH_NAMES,
     sort=SORT, sort_instr=SORT_INSTR, sort_temp=SORT_TEMP)
-util.build_pdf(FIGS, filename=OUTPUT_FILENAME, path=JOB_PATH)
-
+#util.build_pdf(FIGS, filename=OUTPUT_FILENAME, path=JOB_PATH)
+breakpoint()
 # Write the ordered text file
-FSTR = compare.write_ordered_str(algn_rxn_ktp_dct, dct_type='therm')
+FSTR = compare.write_ordered_str(SORT_ALGN_SPC_THERM_DCT, dct_type='therm',
+    comb_mech_spc_dct=COMB_SPC_DCT, print_missing=PRINT_MISSING)
 pathtools.write_file(FSTR, JOB_PATH, OUT_TXT_FNAME)
 # Saving this for later...writes a comparison of species
 #comp_str = compare.write_comparison(ALGN_SPC_THERM_DCT, dct_type='therm')

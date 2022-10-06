@@ -10,6 +10,7 @@ from chemkin_io.writer import _util as writer_util
 import ratefit
 from automol.chi import without_stereo
 from ioformat import pathtools
+from mechanalyzer.parser import spc as spc_parser
 
 RC_CAL = phycon.RC_CAL  # universal gas constant in cal/mol-K
 
@@ -738,15 +739,36 @@ def _read_spc_dct(spc_dct):
     return ich, mlt, chg, exc, fml
     
 
-def write_ordered_str(algn_dct, dct_type='rxn'):
+def write_ordered_str(algn_dct, dct_type='rxn', comb_mech_spc_dct=None,
+                      print_missing=False):
+    """ Writes the results of a comparison to a text file, in order
+    """
+    def _ordered_mech_spc_dct(algn_therm_dct, comb_mech_spc_dct, print_missing):
+        """ Creates a mech_spc_dct in the same order as the aligned thermo
+        """  
+        ordered_mech_spc_dct = {}
+        for spc in algn_therm_dct.keys():
+            if comb_mech_spc_dct.get(spc) is not None:
+                ordered_mech_spc_dct[spc] = comb_mech_spc_dct[spc]
+            # If spc not in the combined dct and if print_missing is True
+            elif print_missing:  # if spc not in the combined dct and i
+                print(f'{spc} has no info in the mech_spc_dct; skipping...')
+            
+        return ordered_mech_spc_dct
 
     fstr = ''
     if dct_type == 'rxn':
         for rxn in algn_dct.keys():    
             fstr += f'writer_util.format_rxn_name(rxn)\n'
     elif dct_type == 'therm':
-        for spc in algn_dct.keys():
-            fstr += f'{spc}\n' 
+        if comb_mech_spc_dct is None:  # if no mech_spc_dct, simply write spcs
+            for spc in algn_dct.keys():
+                fstr += f'{spc}\n' 
+        else:  # if mech_spc_dct given, write a spc.csv
+            ordered_mech_spc_dct = _ordered_mech_spc_dct(
+                algn_dct, comb_mech_spc_dct, print_missing=print_missing)
+            headers=('smiles', 'inchi', 'mult', 'charge', 'exc_flag')
+            fstr = spc_parser.csv_string(ordered_mech_spc_dct, headers)
     else:
         raise NotImplementedError(f'dct_type {dct_type} not valid!')
 
