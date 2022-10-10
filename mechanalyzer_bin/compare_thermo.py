@@ -19,6 +19,7 @@ THERMO_FILENAMES = [
     'rmg.ckin',
     'thermo_g_fa.ckin',
     '1dhr_tmp.ckin',
+    #extra.ckin',
 ]
 SPC_CSV_FILENAMES = [
     'rmg.csv',
