@@ -12,6 +12,7 @@ build/
 develop-eggs/
 dist/
 downloads/
+mechanalyzer_bin/compare_thermo.py
 eggs/
 .eggs/
 lib/
