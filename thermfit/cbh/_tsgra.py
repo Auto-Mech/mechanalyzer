@@ -60,14 +60,16 @@ def ts_graph(gra, site1, site2=None):
             sites_lst.append(site2)
             brk_bnd = frozenset({site2[1], site2[2]})
             bnd_ord = bnds[brk_bnd]
-            bnds[brk_bnd] = (bnd_ord + 0.9, None)
+            #bnds[brk_bnd] = (bnd_ord + 0.9, None)
+            bnds[brk_bnd] = bnd_ord + 0.9
         else:
             # second site is a forming pi bond
             sites.extend(site2)
             sites_lst.append(site2)
             frm_bnd = frozenset({site2[0], site2[1]})
             bnd_ord = bnds[frm_bnd]
-            bnds[frm_bnd] = (bnd_ord + 0.1, None)
+            #bnds[frm_bnd] = (bnd_ord + 0.1, None)
+            bnds[frm_bnd] = bnd_ord + 0.1
 
     # switch resonances so dbl bnd isn't in rction site
     if len(unsat_atms) > 2:
@@ -79,17 +81,17 @@ def ts_graph(gra, site1, site2=None):
                             if (unsat_c in unsat_atms and unsat_c != unsat_a
                                     and unsat_c not in sites):
                                 unsat_ab = frozenset({unsat_a, unsat_b})
-                                order_ab, tmp_ab = bnds[unsat_ab]
+                                order_ab = bnds[unsat_ab]
                                 if order_ab == 2:
                                     unsat_bc = frozenset({unsat_b, unsat_c})
-                                    order_bc, tmp_bc = bnds[unsat_bc]
-                                    bnds[unsat_ab] = (order_ab - 1, tmp_ab)
-                                    bnds[unsat_bc] = (order_bc + 1, tmp_bc)
+                                    order_bc = bnds[unsat_bc]
+                                    bnds[unsat_ab] = order_ab - 1
+                                    bnds[unsat_bc] = order_bc + 1
                                 else:
                                     unsat_bc = frozenset({unsat_b, unsat_c})
-                                    order_bc, tmp_bc = bnds[unsat_bc]
-                                    bnds[unsat_ab] = (order_ab, tmp_ab)
-                                    bnds[unsat_bc] = (order_bc + 1, tmp_bc)
+                                    order_bc = bnds[unsat_bc]
+                                    bnds[unsat_ab] = order_ab
+                                    bnds[unsat_bc] = order_bc + 1
     # fix the hydrogen valence of radical atms
     for rad_atm in rad_atms:
         atm_vals[rad_atm] -= 1
