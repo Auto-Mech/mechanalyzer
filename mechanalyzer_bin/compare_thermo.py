@@ -14,6 +14,7 @@ from ioformat import pathtools
 # INPUTS
 # Filenames
 # Git merge complained yet again about filename changes 
+
 OUTPUT_FILENAME = 'rmg_hr_hrf_10_25.pdf'
 OUT_TXT_FNAME = 'ordered.txt'  # filename for ordered text file
 THERMO_FILENAMES = [
