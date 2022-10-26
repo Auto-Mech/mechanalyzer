@@ -4,6 +4,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import cm
 import numpy
+import math
 
 
 LINES = ['-', '--', '-.', ':']  # for plot formatting
@@ -104,16 +105,15 @@ def plot_single_spc(therm_arrays, diff_arrays, fig, axs, mech_names):
         _color = colors[mech_idx]
         _line = LINES[mech_idx % 4]
         if therm_array is not None:
+            temps = therm_array[0]
             # Plot the four thermo values on the even indices plots
             for idx in range(4):
                 if idx in (1, 2):  # if s or cp, no divide by 1000
-                    axs[(idx * 2)].plot(
-                        therm_array[0], therm_array[idx + 1], label=_label,
-                        color=_color, linestyle=_line)
+                    therm_ydata = therm_array[idx + 1]
                 else:  # otherwise, divide by 1000
-                    axs[(idx * 2)].plot(
-                        therm_array[0], therm_array[idx + 1] / 1000,
-                        label=_label, color=_color, linestyle=_line)
+                    therm_ydata = therm_array[idx + 1] / 1000
+                axs[(idx * 2)].plot(temps, therm_ydata, label=_label,
+                                    color=_color, linestyle=_line)
 
             # Plot the differences if they exist
             if diff_arrays[mech_idx] is not None:
@@ -122,13 +122,16 @@ def plot_single_spc(therm_arrays, diff_arrays, fig, axs, mech_names):
                 # Plot the four diff values on the odd indices plots
                 for idx in range(4):
                     if idx in (1, 2):  # if s or cp, no divide by 1000
-                        axs[(idx * 2) + 1].plot(
-                            therm_array[0], diff_array[idx + 1], label=_label,
-                            color=_color, linestyle=_line)
+                        diff_ydata = diff_array[idx + 1]
                     else:  # otherwise, divide by 1000
-                        axs[(idx * 2) + 1].plot(
-                            therm_array[0], diff_array[idx + 1] / 1000,
-                            label=_label, color=_color, linestyle=_line)
+                        diff_ydata = diff_array[idx + 1] / 1000
+                    axs[(idx * 2) + 1].plot(temps, diff_ydata, label=_label, 
+                                            color=_color, linestyle=_line)
+                    # Set the limits to prevent weird scaling
+                    if max(diff_ydata) - min(diff_ydata) < 1:  # if range < 1
+                        avg_val = (max(diff_ydata) + min(diff_ydata)) / 2
+                        axs[(idx * 2) + 1].set_ylim((
+                            avg_val - 1, avg_val + 1))
 
     # Do some formatting
     for idx in range(4):
