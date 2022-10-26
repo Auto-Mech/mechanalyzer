@@ -10,10 +10,10 @@ from ioformat import pathtools
 # INPUTS
 RXNS_OR_THERMO = 'rxns'  # 'rxns' or 'thermo'
 FILENAMES = [
-    'anl.ckin',
+    'oxygen_free.ckin',
 ]
 SPC_FILENAMES = [
-    'anl.csv',
+    'oxygen_free.csv',
 ]
 OUTPUT_FILENAME = 'spc_check.txt'
 CHK_STER = False

@@ -13,23 +13,22 @@ from ioformat import pathtools
 
 # INPUTS
 # Filenames
-OUTPUT_FILENAME = 'hr_test2.pdf'
+OUTPUT_FILENAME = 'rmg_hr_hrf_10_25.pdf'
 OUT_TXT_FNAME = 'ordered.txt'  # filename for ordered text file
 THERMO_FILENAMES = [
     'rmg.ckin',
-    'thermo_g_fa.ckin',
-    '1dhr_tmp.ckin',
-    #extra.ckin',
+    '1dhr_10_25_22.ckin',
+    '1dhrf_10_25_22.ckin',
 ]
 SPC_CSV_FILENAMES = [
-    'rmg.csv',
-    'anl_no_ste.csv',
-    'anl_no_ste.csv',
+    'rmg_new.csv',
+    'anl_new.csv',
+    'anl_new.csv',
 ]
 MECH_NAMES = [
     'RMG',
-    'ANL_fa',
     'ANL_hr',
+    'ANL_hrf',
 ]
 
 # Conditions
@@ -73,6 +72,7 @@ FIGS, SORT_ALGN_SPC_THERM_DCT = plot_thermo.build_plots(
     ALGN_SPC_THERM_DCT, spc_dct=COMB_SPC_DCT, mech_names=MECH_NAMES,
     sort=SORT, sort_instr=SORT_INSTR, sort_temp=SORT_TEMP)
 util.build_pdf(FIGS, filename=OUTPUT_FILENAME, path=JOB_PATH)
+
 # Write the ordered text file
 FSTR = compare.write_ordered_str(SORT_ALGN_SPC_THERM_DCT, dct_type='therm',
     comb_mech_spc_dct=COMB_SPC_DCT, print_missing=PRINT_MISSING)
