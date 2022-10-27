@@ -41,9 +41,10 @@ TRIP_DCT = {
     'CH2CHN':   'InChI=1S/C2H3N/c1-2-3/h2H,1H2',
 }
 
+CMTS = '!'  # character used to define comments
 
-def load_mech_spc_dcts(filenames, path, quotechar="'",
-                       chk_ste=False, chk_match=False, verbose=True):
+def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=False, 
+                       chk_match=False, verbose=True):
     """ Obtains multiple mech_spc_dcts given a list of spc.csv filenames
 
         :param filenames: filenames of the spc.csv files to be read
@@ -89,7 +90,7 @@ def load_mech_spc_dct(filename, path, quotechar="'",
         :rtype: dct {spc1: spc_dct1, spc2: ...}
     """
 
-    file_str = pathtools.read_file(path, filename, remove_comments='!')
+    file_str = pathtools.read_file(path, filename)
     mech_spc_dct = parse_mech_spc_dct(
         file_str, quotechar=quotechar, chk_ste=chk_ste, chk_match=chk_match,
         verbose=verbose)
@@ -97,8 +98,8 @@ def load_mech_spc_dct(filename, path, quotechar="'",
     return mech_spc_dct
 
 
-def parse_mech_spc_dct(file_str, quotechar="'",
-                       chk_ste=False, chk_match=False, verbose=True, canon_ent=False):
+def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False, 
+                       chk_match=False, verbose=True, canon_ent=False):
     """ Obtains a single mech_spc_dct given a string parsed from a spc.csv file
 
         :param file_str: the string that was read directly from the .csv file
@@ -116,6 +117,9 @@ def parse_mech_spc_dct(file_str, quotechar="'",
         :return mech_spc_dct: identifying information on species in a mech
         :rtype: dct {spc1: spc_dct1, spc2: ...}
     """
+
+    # Remove comment lines
+    file_str = pathtools.remove_comment_lines(file_str, CMTS)
 
     # Check for incorrect quotechar usage
     if quotechar == '"':
@@ -209,8 +213,7 @@ def make_spc_dct(cols, headers):
     return spc, spc_dct
 
 
-def fill_spc_dct(
-        spc_dct, spc, chk_ste=True, chk_match=True, canon_ent=True):
+def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True, canon_ent=True):
     """ Fills in missing values in a spc_dct
 
         :param spc_dct: identifying information for a single species
