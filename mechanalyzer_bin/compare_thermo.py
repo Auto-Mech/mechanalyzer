@@ -16,6 +16,8 @@ from ioformat import pathtools
 # Git merge complained yet again about filename changes 
 
 OUTPUT_FILENAME = 'rmg_hr_hrf_10_25.pdf'
+#OUTPUT_FILENAME = 'hr_hrf_rmg.pdf'
+#OUT_TXT_FNAME = 'hr_ordered.txt'  # filename for ordered text file
 OUT_TXT_FNAME = 'ordered.txt'  # filename for ordered text file
 THERMO_FILENAMES = [
     'rmg.ckin',
