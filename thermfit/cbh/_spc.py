@@ -145,7 +145,7 @@ def cbhzed(ich, balance=True):
 
     # Graphical info about molecule
     gra = automol.chi.graph(ich)
-    rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
+    unsat_dct = automol.graph.atom_unsaturations(automol.graph.kekule(gra), automol.graph.atom_keys(gra))
     atm_vals = automol.graph.atom_element_valences(gra)
     atms = automol.graph.atoms(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
@@ -159,8 +159,7 @@ def cbhzed(ich, balance=True):
                 util.branch_point(adj_atms[atm]) *
                 util.terminal_moiety(adj_atms[atm])
             )
-        if atm in rad_atms:
-            atm_vals[atm] -= 1
+        atm_vals[atm] -= unsat_dct[atm]
         atm_dic = {0: (atms[atm][0], int(atm_vals[atm]), None)}
         gra = (atm_dic, {})
         frag = automol.graph.chi(gra)
@@ -189,7 +188,7 @@ def cbhone(ich, balance=True):
     gra = automol.chi.graph(ich)
     atms = automol.graph.atoms(gra)
     bnd_ords = automol.graph.kekule_bond_orders(gra)
-    rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
+    unsat_dct = automol.graph.atom_unsaturations(automol.graph.kekule(gra), automol.graph.atom_keys(gra))
     atm_vals = automol.graph.atom_element_valences(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
 
@@ -200,10 +199,8 @@ def cbhone(ich, balance=True):
             if atm > adj:
                 vali = atm_vals[atm]
                 valj = atm_vals[adj]
-                if atm in rad_atms:
-                    vali -= 1
-                if adj in rad_atms:
-                    valj -= 1
+                vali -= unsat_dct[atm]
+                valj -= unsat_dct[adj]
                 key = frozenset({atm, adj})
                 bnd_ord = bnd_ords[key]
                 vali -= bnd_ord
@@ -248,7 +245,7 @@ def cbhtwo(ich, balance=True):
     gra = automol.chi.graph(ich)
     atms = automol.graph.atoms(gra)
     bnd_ords = automol.graph.kekule_bond_orders(gra)
-    rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
+    unsat_dct = automol.graph.atom_unsaturations(automol.graph.kekule(gra), automol.graph.atom_keys(gra))
     atm_vals = automol.graph.atom_element_valences(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
 
@@ -256,8 +253,7 @@ def cbhtwo(ich, balance=True):
     frags = {}
     for atm in atms:
         vali = atm_vals[atm]
-        if atm in rad_atms:
-            vali -= 1
+        vali -= unsat_dct[atm]
         # First loop over all atoms of this frag to get saturation of atomi
         for adj in list(adj_atms[atm]):
             key = frozenset({atm, adj})
@@ -276,8 +272,7 @@ def cbhtwo(ich, balance=True):
         for adj in list(adj_atms[atm]):
             j += 1
             valj = atm_vals[adj]
-            if adj in rad_atms:
-                valj -= 1
+            valj -= unsat_dct[adj]
             key = frozenset({atm, adj})
             bnd_ord = bnd_ords[key]
             valj -= bnd_ord

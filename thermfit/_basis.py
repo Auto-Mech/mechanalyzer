@@ -76,17 +76,20 @@ def _prepare_basis(ref_scheme, spc_dct, zrxn, print_log,
         else:
             spc_basis, coeff_basis = thermfit.cbh.species_basis(
                 spc_ich, ref_scheme)
-
         # Add stereochemistry to the basis
         # basis either single InChI, or ((InChI,), (InChI,))
         ste_basis = ()
         for bas in spc_basis:
             if isinstance(bas, str):
-                ste_basis += (automol.chi.add_stereo(bas),)
+                print(automol.inchi.smiles(bas))
+                ste_basis += (automol.chi.canonical_enantiomer(
+                    automol.chi.expand_stereo(bas)[0]),)
             else:
                 ste_basis += (
-                    (tuple(automol.chi.add_stereo(b) for b in bas[0]),
-                     tuple(automol.chi.add_stereo(b) for b in bas[1])),
+                    (tuple(automol.chi.canonical_enantiomer(
+                        automol.chi.expand_stereo(b)[0]) for b in bas[0]),
+                     tuple(automol.chi.canonical_enantiomer(
+                        automol.chi.expand_stereo(b)[0]) for b in bas[1])),
                 )
 
         # need to figure out print for TS basis
