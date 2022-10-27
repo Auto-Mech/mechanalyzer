@@ -86,6 +86,8 @@ if OPTS['canonical']:
 if OPTS['hof_basis']:
     mech_spc_dct = mechanalyzer.parser.new_spc.add_canonical_enantiomer(
         mech_spc_dct, dummy=True)
+    # mech_spc_dct = mechanalyzer.parser.spc.add_heat_of_formation_basis(
+    #    mech_spc_dct, ref_schemes=('cbh0', 'cbh1'),
     mech_spc_dct = mechanalyzer.parser.spc.add_heat_of_formation_basis(
         mech_spc_dct, ref_schemes=('cbh0', 'cbh1', 'cbh2'),
         nprocs=OPTS['nprocs'])
