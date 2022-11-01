@@ -42,12 +42,25 @@ def xor(lst1, lst2):
 
 def ts_graph(gra, site1, site2=None):
     rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
-    unsat_atms_dct = automol.graph.atom_unsaturations(gra)
-    unsat_atms = [atm for (atm, sat) in unsat_atms_dct.items() if sat > 0]
+    unsat_atms_dct = automol.graph.atom_unsaturations(automol.graph.kekule(gra))
     atm_vals = automol.graph.atom_element_valences(gra)
-    rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
     atms = automol.graph.atoms(gra)
+    orig_bnds = automol.graph.bond_orders(gra)
     bnds = automol.graph.kekule_bond_orders(gra)
+    for bnd, order in orig_bnds.items():
+        if bnd in bnds:
+            if orig_bnds[bnd] != bnds[bnd]:
+                if abs(orig_bnds[bnd] - bnds[bnd]) < 0.99:
+                    bnds[bnd] = orig_bnds[bnd]
+            if any([atm in site1 for atm in bnd]):
+                if bnds[bnd] > orig_bnds[bnd]:
+                    bnds[bnd] = orig_bnds[bnd]
+                    for atm in bnd:
+                        if atm not in site1:
+                            unsat_atms_dct[atm] += 1
+
+    unsat_atms = [atm for (atm, sat) in unsat_atms_dct.items() if sat > 0]
+    print('unsat atms', unsat_atms_dct)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
     sites_lst = [site1]
     sites = site1
@@ -93,8 +106,8 @@ def ts_graph(gra, site1, site2=None):
                                     bnds[unsat_ab] = order_ab
                                     bnds[unsat_bc] = order_bc + 1
     # fix the hydrogen valence of radical atms
-    for rad_atm in rad_atms:
-        atm_vals[rad_atm] -= 1
+    for atm in unsat_atms_dct:
+        atm_vals[atm] -= unsat_atms_dct[atm]
 
     for site in sites_lst:
         abs_atm = site[0]
@@ -147,7 +160,6 @@ def remove_hyd_from_adj_atms2(atms, adj_atms_dct, extended_site):
         new_adj_atms = ()
         for adj_atm in adj_atms_dct[atm]:
             if atms[adj_atm][0] != 'H' and adj_atm not in extended_site:
-                print(adj_atm, atms[adj_atm][0], extended_site)
                 new_adj_atms += (adj_atm,)
 
         new_adj_atms_dct[atm] = new_adj_atms
