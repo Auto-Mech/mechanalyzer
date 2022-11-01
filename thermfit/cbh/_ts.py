@@ -112,7 +112,6 @@ def cbh_basis(zrxn, scheme):
         if not brk_key1:
             gra = tsutil.remove_frm_bnd(gra, brk_key1, frm_key1)
             gra, brk_key1 = tsutil.add_appropriate_pi_bonds(gra, frm_key1)
-
     # The first set of forming and breaking bonds makes the first reaction site
     if frm_key1 and brk_key1 and rxnclass != ReactionClass.Typ.ELIMINATION:
         site = [
@@ -121,6 +120,8 @@ def cbh_basis(zrxn, scheme):
             tsutil.xor(brk_key1, frm_key1)]
     #  eliminations are one large reaction site that we split into
     # site1 and site2 for convieninece
+    print('rxncalss', rxnclass)
+    print('radrad', radrad)
     if rxnclass == ReactionClass.Typ.ELIMINATION:
         try:
             site = [
@@ -157,6 +158,7 @@ def cbh_basis(zrxn, scheme):
         rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
         adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
         atmc, atmd = frm_key1
+        print('rad atms', rad_atms)
         if atmc not in rad_atms:
             atmd, atmc = atmc, atmd
         for atma in brk_key1:
@@ -185,7 +187,9 @@ def cbh_basis(zrxn, scheme):
                 atmc, atmd = frm_key1
                 if atmc not in unsat_atms:
                     atmd, atmc = atmc, atmd
+                print('made it here1', unsat_atms, atmc, atmd)
                 for atmb in adj_atms[atmc]:
+                    print('made it here2', atmb, atmd, unsat_atms)
                     if atmb in unsat_atms and atmb != atmd:
                         brk_key2 = frozenset({atmc, atmb})
                         site2 = [atmd, atmc, atmb]
@@ -314,6 +318,9 @@ def cbhone_radradabs(
     """
 
     frags = {}
+    print('gra here', gra)
+    print('bnd ords', bnd_ords)
+    print(site1, site2)
     for bnd in bnd_ords:
         atma, atmb = bnd
         extended_site = False
@@ -587,6 +594,8 @@ def cbhone_habs(
     """
 
     frags = {}
+    print('gra here', gra)
+    print('bnd ords', bnd_ords)
     for bnd in bnd_ords:
         atma, atmb = bnd
         grai = (
