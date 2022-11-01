@@ -15,18 +15,20 @@ from ioformat import pathtools
 # Filenames
 # Git merge complained yet again about filename changes 
 
-OUTPUT_FILENAME = 'rmg_hr_hrf_10_25.pdf'
-#OUTPUT_FILENAME = 'hr_hrf_rmg.pdf'
+OUTPUT_FILENAME = 'rmg_hr_hrf_hrfa_10_29_lnq.pdf'
+#OUTPUT_FILENAME = 'hr_hrf_hrfa_10_29_g.pdf'
 #OUT_TXT_FNAME = 'hr_ordered.txt'  # filename for ordered text file
-OUT_TXT_FNAME = 'ordered.txt'  # filename for ordered text file
+OUT_TXT_FNAME = 'ordered_rmg_lnq.txt'  # filename for ordered text file
 
 THERMO_FILENAMES = [
     'rmg.ckin',
-    '1dhr_10_25_22.ckin',
-    '1dhrf_10_25_22.ckin',
+    '1dhr_10_27_22.ckin',
+    '1dhrf_10_27_22.ckin',
+    '1dhrfa_10_29_22.ckin',
 ]
 SPC_CSV_FILENAMES = [
     'rmg_new.csv',
+    'anl_new.csv',
     'anl_new.csv',
     'anl_new.csv',
 ]
@@ -34,6 +36,7 @@ MECH_NAMES = [
     'RMG',
     'ANL_hr',
     'ANL_hrf',
+    'ANL_hrfa',
 ]
 
 # Conditions
@@ -42,7 +45,7 @@ TEMPS = numpy.linspace(300, 1500, 13)
 # Options
 # SORT = False
 SORT = True
-SORT_INSTR = 'g'  # either 'h', 'cp', 's', 'g', or None
+SORT_INSTR = 'lnq'  # either 'h', 'cp', 's', 'g', 'lnq', or None
 SORT_TEMP = None  # can be (1) None to sort by max difference or (2) a number
 REMOVE_LONERS = False
 WRITE_FILE = False  # this currently does nothing
