@@ -8,7 +8,7 @@ import math
 
 
 LINES = ['-', '--', '-.', ':']  # for plot formatting
-SORT_DCT = {'h': 1, 'cp': 2, 's': 3, 'g': 4}
+SORT_DCT = {'h': 1, 'cp': 2, 's': 3, 'g': 4, 'lnq': 5}
 
 
 def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None, sort=True,
@@ -26,7 +26,7 @@ def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None, sort=True,
         :type mech_names: list [mech_name1, mech_name2, ...]
         :param sort: whether or not to sort the plots by difference
         :type sort: Bool
-        :param sort_instr: instructions for sorting; 'h', 'cp', 's', or 'g'
+        :param sort_instr: instructions for sorting; 'h', 'cp', 's', 'g', or 'lnq'
         :type sort_instr: None or str
         :param sort_temp:
         :type sort_temp:
@@ -81,9 +81,9 @@ def plot_single_spc(therm_arrays, diff_arrays, fig, axs, mech_names):
     """ Plot thermo values of a single species from all mechanisms, as well as
         the differences relative to a reference mechanism
 
-        :param therm_arrays: thermo arrays (T, h, cp, s, g) for each mech
+        :param therm_arrays: thermo arrays (T, h, cp, s, g, lnq) for each mech
         :type therm_arrays: list [therm_array_mech1, therm_array_mech2, ...]
-        :param diff_arrays: difference arrays (T, h, cp, s, g) for each mech
+        :param diff_arrays: difference arrays (T, h, cp, s, g, lnq) for each mech
         :type diff_arrays: list [diff_array_mech1, diff_array_mech2, ...]
         :param fig: pre-allocated figure object
         :type fig: MatPlotLib figure object
@@ -163,7 +163,7 @@ def sort_by_max_diff(algn_spc_diff_dct, algn_spc_therm_dct, sort_instr='h',
         :param algn_spc_therm_dct: aligned dct with thermo for each mech
         :type algn_spc_therm_dct: dct {spc1: [therm_array_mech1,
             therm_array_mech2, ...], spc2: ...}
-        :param sort_instr: criteria by which to sort; 'h', 'cp', 's', or 'g'
+        :param sort_instr: criteria by which to sort; 'h', 'cp', 's', 'g' or 'lnq'
         :type sort_instr: str
         :param sort_temp:
         :type sort_temp:
@@ -176,7 +176,7 @@ def sort_by_max_diff(algn_spc_diff_dct, algn_spc_therm_dct, sort_instr='h',
     # Get the idx of the sort criteria
     sort_idx = SORT_DCT.get(sort_instr)
     assert sort_idx is not None, (
-        f"sort_instr should be 'h', 'cp', 's', or 'g', but is {sort_instr}")
+        f"sort_instr should be 'h', 'cp', 's', 'g' or 'lnq', but is {sort_instr}")
 
     # If a sort_temp was input, get the idx of the sort_temp
     sort_temp_idx = None  # default is None
@@ -279,7 +279,9 @@ def get_algn_spc_diff_dct(algn_spc_therm_dct):
                         s_t = quantity - ref_therm_array[idx]
                     elif idx == 4:
                         g_t = quantity - ref_therm_array[idx]
-                diff_array = (temps, h_t, cp_t, s_t, g_t)
+                    elif idx == 5:
+                        lnq_t = quantity - ref_therm_array[idx]
+                diff_array = (temps, h_t, cp_t, s_t, g_t, lnq_t)
             diff_arrays.append(diff_array)
         algn_spc_diff_dct[spc] = diff_arrays
 

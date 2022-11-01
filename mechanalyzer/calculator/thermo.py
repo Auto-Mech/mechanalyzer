@@ -10,8 +10,8 @@ RC = phycon.RC_CAL  # gas constant in cal/(mol.K)
 
 def create_spc_therm_dct(spc_nasa7_dct, temps, rval=RC):
     """ Create a spc_therm_dct. If left with default input rval=phycon.RC_cal,
-        thermo quantities will have units of cal/mol for h(T) and g(T) and
-        units of cal/mol-K for cp(T) and s(T).
+        thermo quantities will have units of cal/mol for h(T) and g(T),
+        units of cal/mol-K for cp(T) and s(T), and ln(cal/mol-K) for lnq(T).
 
         :param spc_nasa7_dct: NASA-7 polynomial information for each species
         :type spc_nasa7_dct: dct {spc1: nasa7_dct1, spc2: ...}
@@ -19,20 +19,21 @@ def create_spc_therm_dct(spc_nasa7_dct, temps, rval=RC):
         :type temps: numpy.ndarray
         :param rval: universal gas constant (units decided by the user)
         :type rval: float
-        :return spc_therm_dct: arrays of T, h, cp, s, and g for each species
+        :return spc_therm_dct: arrays of T, h, cp, s, g and lnq for each species
         :rtype: dct {spc1: therm_array1, spc2: ...}
     """
 
     spc_therm_dct = {}
     for spc, nasa7_params in spc_nasa7_dct.items():
-        h_t, cp_t, s_t, g_t, = [], [], [], []
+        h_t, cp_t, s_t, g_t, lnq_t, = [], [], [], [], []
         for temp in temps:
             h_t.append(enthalpy(nasa7_params, temp, rval=rval))
             cp_t.append(heat_capacity(nasa7_params, temp, rval=rval))
             s_t.append(entropy(nasa7_params, temp, rval=rval))
             g_t.append(gibbs(nasa7_params, temp, rval=rval))
+            lnq_t.append(lnpf(nasa7_params, temp, rval=rval))
 
-            if not all((h_t[-1], cp_t[-1], s_t[-1], g_t[-1])):
+            if not all((h_t[-1], cp_t[-1], s_t[-1], g_t[-1], lnq_t[-1])):
                 print(f'Failed to calculate thermo at {temp} K for {spc} due '
                       'to an invalid temp.')
 
@@ -42,8 +43,9 @@ def create_spc_therm_dct(spc_nasa7_dct, temps, rval=RC):
         cp_t = numpy.array(cp_t, dtype=float)
         s_t = numpy.array(s_t, dtype=float)
         g_t = numpy.array(g_t, dtype=float)
+        lnq_t = numpy.array(lnq_t, dtype=float)
 
-        spc_therm_dct[spc] = (temps, h_t, cp_t, s_t, g_t)
+        spc_therm_dct[spc] = (temps, h_t, cp_t, s_t, g_t, lnq_t)
 
     return spc_therm_dct
 
@@ -56,7 +58,7 @@ def spc_therm_dct_df(spc_therm_dct):
     for spc, vals in spc_therm_dct.items():
         matrix_data = numpy.array([vals[1], vals[2], vals[3], vals[4]]).T
         spc_therm_df[spc] = pandas.DataFrame(
-            matrix_data, index=vals[0], columns=['H', 'Cp', 'S', 'G'])
+            matrix_data, index=vals[0], columns=['H', 'Cp', 'S', 'G', 'lnQ'])
         spc_therm_df[spc].sort_index()
         
     return spc_therm_df
@@ -194,6 +196,31 @@ def gibbs(nasa7_params, temp, rval=RC):
         g_t = None
 
     return g_t
+
+
+def lnpf(nasa7_params, temp, rval=RC):
+    """ Calculate the Gibbs free energy of a species using the
+        coefficients of its NASA-7 polynomial.
+
+        :param nasa7_params: values describing a NASA-7 polynomial
+        :type nasa7_params: list
+        :param temp: temperature at which to do calculation (K)
+        :type temp: float
+        :param rval: universal gas constant (units decided by the user)
+        :type rval: float
+        :return lnq_t: value for the log of the partition function (dimensionless)
+        :rtype: float
+    """
+
+    h_t = enthalpy(nasa7_params, temp, rval=rval)
+    s_t = entropy(nasa7_params, temp, rval=rval)
+    if h_t is not None and s_t is not None:
+        g_t = h_t - (s_t * temp)
+        lnq_t = -g_t / (rval * temp)
+    else:
+        lnq_t = None
+
+    return lnq_t
 
 
 def coeffs_for_specific_temp(nasa7_params, temp):
