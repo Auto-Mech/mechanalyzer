@@ -498,26 +498,26 @@ def reverse_rxn_ktp_dcts(renamed_rxn_ktp_dcts, renamed_spc_therm_dcts, temps, re
     reversed_rxn_ktp_dcts = copy.deepcopy(renamed_rxn_ktp_dcts)  # deepcopy so no external changes
     for mech_idx in range(num_mechs-1):
         rxn_ktp_dct1 = renamed_rxn_ktp_dcts[mech_idx]
-        for idx2 in range(mech_idx+1, num_mechs):
-            rxn_ktp_dct2 = renamed_rxn_ktp_dcts[idx2]
+        for mech_idx2 in range(mech_idx+1, num_mechs):
+            rxn_ktp_dct2 = renamed_rxn_ktp_dcts[mech_idx2]
 
             # If reversing rates, get thermo; otherwise, just get a blank list
             if rev_rates:
-                spc_therm_dct1 = renamed_spc_therm_dcts[mech_idx]
+                spc_therm_dct2 = renamed_spc_therm_dcts[mech_idx2]
             else:
-                spc_therm_dct1 = []
+                spc_therm_dct2 = []
 
             # Either reverse rxns (if rev_rates=True) or just flip the products and reactants to
             # be in the same order
             reversed_rxn_ktp_dct = reverse_rxn_ktp_dct(
-                rxn_ktp_dct1, rxn_ktp_dct2, spc_therm_dct1, temps, rev_rates=rev_rates
+                rxn_ktp_dct1, rxn_ktp_dct2, spc_therm_dct2, temps, rev_rates=rev_rates
             )
-            reversed_rxn_ktp_dcts[idx2] = reversed_rxn_ktp_dct
+            reversed_rxn_ktp_dcts[mech_idx2] = reversed_rxn_ktp_dct
 
     return reversed_rxn_ktp_dcts
 
 
-def reverse_rxn_ktp_dct(rxn_ktp_dct1, rxn_ktp_dct2, spc_therm_dct1, temps, rev_rates=True):
+def reverse_rxn_ktp_dct(rxn_ktp_dct1, rxn_ktp_dct2, spc_therm_dct2, temps, rev_rates=True):
     """ Takes two rxn_ktp_dcts whose species have already been renamed to be identical and reverses
         any reactions *in the second dct* that need to be reversed
 
@@ -525,8 +525,8 @@ def reverse_rxn_ktp_dct(rxn_ktp_dct1, rxn_ktp_dct2, spc_therm_dct1, temps, rev_r
         :type rxn_ktp_dct1: dict {rxn1: ktp_dct1, rxn2: ...}
         :param rxn_ktp_dct2: rxn_ktp_dct for mech2
         :type rxn_ktp_dct2: dict {rxn1: ktp_dct1, rxn2: ...}
-        :param spc_therm_dct1: spc_therm_dct for mech1
-        :type spc_therm_dct1: dict {spc1: thermo_array1, spc2: ...}
+        :param spc_therm_dct2: spc_therm_dct for mech2
+        :type spc_therm_dct2: dict {spc1: thermo_array1, spc2: ...}
         :param temps: temperatures at which to do calculations (Kelvin)
         :type temps: list [float]
         :param rev_rates: whether or not rates should be reversed
@@ -541,7 +541,7 @@ def reverse_rxn_ktp_dct(rxn_ktp_dct1, rxn_ktp_dct2, spc_therm_dct1, temps, rev_r
             if rev_rates:
                 if rev_rate:
                     ktp_dct2 = rxn_ktp_dct2[rxn2]
-                    rev_ktp_dct2 = reverse_ktp_dct(ktp_dct2, spc_therm_dct1, rxn2, temps)
+                    rev_ktp_dct2 = reverse_ktp_dct(ktp_dct2, spc_therm_dct2, rxn2, temps)
                     rev_rxn_ktp_dct2.pop(rxn2)
                     rev_rxn_ktp_dct2[rxn1] = rev_ktp_dct2
                 # If a match was found that does not need to be reversed but has rcts and prds
@@ -692,7 +692,10 @@ def _calculate_equilibrium_constant(spc_therm_dct, rcts, prds, temps):
     for temp_idx, temp in enumerate(temps):
         rct_gibbs = 0.0
         for rct in rcts:
-            rct_gibbs += spc_therm_dct[rct][4][temp_idx]  # [4] accesses Gibbs
+            try:
+                rct_gibbs += spc_therm_dct[rct][4][temp_idx]  # [4] accesses Gibbs
+            except:
+                breakpoint()
 
         prd_gibbs = 0.0
         for prd in prds:

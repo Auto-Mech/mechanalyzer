@@ -14,18 +14,22 @@ from ioformat import pathtools
 # INPUTS
 # Filenames
 MECH_FILES = [
-    'anl.ckin',
-    'rmg.ckin',
+    # 'rates_noabs_11_8_22.ckin',
+    # 'allrates_11_24_20.ckin',
+    'rates_shortb.ckin',
+    'rmg_short.ckin',
 ]
 THERM_FILES = [
-    'anl.therm',
+    # '1dhr_10_27_22.ckin',
+    '1dhr_10_27_22.ckin',
     'rmg.ckin',
 ]
 CSV_FILES = [
+    # 'anl_new.csv',
     'anl_new.csv',
     'rmg_new.csv',
 ]
-out_fname = 'rates.pdf'
+out_fname = 'ratesb.pdf'
 mech_nicknames = [
     'ANL',
     'RMG',
@@ -33,7 +37,7 @@ mech_nicknames = [
 out_txt_fname = 'ordering.txt'  # filename for the ordered text file
 
 # Conditions
-TEMPS_LST = [numpy.linspace(500, 2000, 16)]
+TEMPS_LST = [numpy.linspace(500, 1500, 11)]
 pressures = [1, 10, 100]
 
 # Options
