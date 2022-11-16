@@ -119,7 +119,7 @@ def input_info_from_file(cwd, species_file, mech_file, sort_file):
         remove_comments='!', remove_whitespace=True)
     inp_mech_str = ioformat.pathtools.read_file(
         cwd, mech_file,
-        remove_comments='#', remove_whitespace=True)
+        remove_comments='!', remove_whitespace=True)
     sort_str = ioformat.pathtools.read_file(
         cwd, sort_file,
         remove_comments='#', remove_whitespace=True)
