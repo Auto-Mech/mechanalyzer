@@ -84,6 +84,63 @@ def expand_mech_stereo(inp_mech_rxn_dct, inp_mech_spc_dct, nprocs='auto',
     return all_ste_rxns
 
 
+def expand_mech_stereo_debug(inp_mech_rxn_dct, inp_mech_spc_dct, enant=True):
+    """ Build list of stereochemistry to reactions
+
+        :param enant: Include all enantiomers? Otherwise, includes only
+            canonical enantiomer species and reactions.
+        :type enant: bool
+
+        Currently, we assume that the species in them mech_spc_dct have
+        stereochemistry already added to them.
+    """
+
+    # Dictionaries to map name to inchi
+    name_ich_dct = mechanalyzer.parser.spc.name_inchi_dct(inp_mech_spc_dct)
+
+    # Generate all stereo reactons from the initial set
+    rxns = tuple(inp_mech_rxn_dct.keys())
+    pes_noste_rxns_dct = _rxns_noste_pes_dct(rxns, name_ich_dct)
+    all_ste_rxns = []
+    failed_rxns = []
+
+    # Loop over the PES (stoich similar)
+    forms = list(pes_noste_rxns_dct.keys())
+    for formula in forms:
+        noste_rxns_dct = pes_noste_rxns_dct[formula]
+        print('PES: {} has {:g} reactions'.format(
+            formula, len(noste_rxns_dct.keys())))
+        pes_gra, ccs_dct = _pes_gra(noste_rxns_dct)
+        # Loop over ccs (connected channels)
+        for _, rxns in ccs_dct.items():
+            noste_rxns = [
+                key for key, val in noste_rxns_dct.items() if val in rxns]
+            for rxn in noste_rxns:
+                print(f'\nExpanding Stereo for Reaction: '
+                      f'{format_rxn_name(rxn)}\n')
+
+                # Reformat reaction to use InChI instead of mechanism name
+                # Split thrdbdy off, not needed for stereo code, add back later
+                rxn_ich = _rxn_name_to_ich(rxn, name_ich_dct)
+                _rxn_ich = (rxn_ich[0], rxn_ich[1])
+                thrdbdy = rxn_ich[2]
+
+                # Build list of all stereochemically allowed versions of
+                # reaction
+                try:
+                    ste_rxns_lst, log2 = _ste_rxn_lsts(_rxn_ich, enant=enant)
+                    print(log2)
+                    # Appropriately format the reactions with third body
+                    ste_rxns_lst = _add_third(ste_rxns_lst, thrdbdy)
+                    all_ste_rxns.extend(ste_rxns_lst)
+                except Exception as e:
+                    failed_rxns.append(rxn)
+                    print(f'Reaction {format_rxn_name(rxn)} failed\n'
+                          f'Error: {e}\n')
+
+    return all_ste_rxns, failed_rxns
+
+
 def valid_enantiomerically(ste_mech_spc_dct):
     """ are there NOT enantiomeric species in this reaction list
     """

@@ -3,6 +3,7 @@
 """
 
 from mechanalyzer.builder._stereo import expand_mech_stereo
+from mechanalyzer.builder._stereo import expand_mech_stereo_debug
 from mechanalyzer.builder._stereo import remove_stereochemistry
 from mechanalyzer.builder._stereo import diastereomer_abstractions
 from mechanalyzer.builder._stereo import valid_enantiomerically
@@ -33,6 +34,7 @@ from mechanalyzer.builder import rxnclass
 
 __all__ = [
     'expand_mech_stereo',
+    'expand_mech_stereo_debug',
     'remove_stereochemistry',
     'diastereomer_abstractions',
     'valid_enantiomerically',

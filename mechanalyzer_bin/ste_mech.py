@@ -19,7 +19,8 @@ def main(
         inp_spc_str, inp_mech_str, sort_str,
         check_mechanism=False,
         enant=False,
-        enant_label=True):
+        enant_label=True,
+        debug=True):
     """ carry out all the mechanism things you wanna do
     """
     # Build the initial dictionaries
@@ -47,8 +48,22 @@ def main(
     # Expand the reactions in the mechanism to include stereochemical variants
     print('\n---- Expanding the list of mechanism reactions to include all'
           ' valid, stereoselective permutations ---\n')
-    full_rxn_lst = mechanalyzer.builder.expand_mech_stereo(
-        rxn_param_dct, mech_spc_dct, nprocs='auto', enant=enant)
+    if not debug:
+        full_rxn_lst = mechanalyzer.builder.expand_mech_stereo(
+            rxn_param_dct, mech_spc_dct, nprocs='auto', enant=enant)
+    else:
+        print("Running in debug mode...")
+        full_rxn_lst, failed = mechanalyzer.builder.expand_mech_stereo_debug(
+            rxn_param_dct, mech_spc_dct, enant=enant)
+        print("SUCCEEDED:")
+        for rxn in full_rxn_lst:
+            print(chemkin_io.writer._util.format_rxn_name(rxn))
+        print()
+        print("FAILED:")
+        for rxn in failed:
+            print(chemkin_io.writer._util.format_rxn_name(rxn))
+        print()
+
     print('turning reaction list into mechanism dictionary')
     ste_mech_spc_dct, ste_rxn_dct = dictionaries_from_rxn_lst(
         full_rxn_lst, enant_label=enant_label)
