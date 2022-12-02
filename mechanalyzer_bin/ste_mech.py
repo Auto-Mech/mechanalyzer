@@ -20,7 +20,7 @@ def main(
         check_mechanism=False,
         enant=False,
         enant_label=True,
-        debug=True):
+        debug=False):
     """ carry out all the mechanism things you wanna do
     """
     # Build the initial dictionaries
@@ -319,7 +319,9 @@ if __name__ == '__main__':
     file_dct, _ = mechanalyzer.parser.build_input_file(bld_str)
     # Read input species and mechanism files into dictionary
     mech_info = input_from_location_dictionary(oscwd, file_dct)
-    main(oscwd, file_dct['out_spc'], file_dct['out_mech'], *mech_info)
+    debug = file_dct['debug'] if 'debug' in file_dct else False
+    main(oscwd, file_dct['out_spc'], file_dct['out_mech'], *mech_info,
+         debug=debug)
     # reduction(oscwd, file_dct)
     # Compute script run time and print to screen
     tf = time.time()
