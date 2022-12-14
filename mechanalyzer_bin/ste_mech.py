@@ -55,6 +55,7 @@ def main(
         print("Running in debug mode...")
         full_rxn_lst, failed = mechanalyzer.builder.expand_mech_stereo_debug(
             rxn_param_dct, mech_spc_dct, enant=enant)
+        name_ich_dct = mechanalyzer.parser.spc.name_inchi_dct(mech_spc_dct)
         print("SUCCEEDED:")
         for rxn in full_rxn_lst:
             print(chemkin_io.writer._util.format_rxn_name(rxn))
@@ -62,6 +63,7 @@ def main(
         print("FAILED:")
         for rxn in failed:
             print(chemkin_io.writer._util.format_rxn_name(rxn))
+            print(mechanalyzer.builder._rxn_name_to_ich(rxn, name_ich_dct))
         print()
 
     print('turning reaction list into mechanism dictionary')

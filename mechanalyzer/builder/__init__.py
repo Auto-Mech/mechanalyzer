@@ -7,6 +7,7 @@ from mechanalyzer.builder._stereo import expand_mech_stereo_debug
 from mechanalyzer.builder._stereo import remove_stereochemistry
 from mechanalyzer.builder._stereo import diastereomer_abstractions
 from mechanalyzer.builder._stereo import valid_enantiomerically
+from mechanalyzer.builder._stereo import _rxn_name_to_ich
 from mechanalyzer.builder._update import update_spc_dct_from_reactions
 from mechanalyzer.builder._update import update_rxn_dct
 from mechanalyzer.builder._update import remove_spc_not_in_reactions
@@ -38,6 +39,7 @@ __all__ = [
     'remove_stereochemistry',
     'diastereomer_abstractions',
     'valid_enantiomerically',
+    '_rxn_name_to_ich',
     'update_spc_dct_from_reactions',
     'update_rxn_dct',
     'remove_spc_not_in_reactions',
