@@ -394,12 +394,11 @@ def stereo_name_suffix(ich, enant_label=True):
 
     # Write name strings that describe the E/Z stereochemistry
     if blyr is not None:
-        # Determine if it is E or Z
-        if '+' in blyr and '-' in blyr:
-            _blyr = 'E'
-        else:
-            _blyr = 'Z'
-        ste_str += _blyr
+        for char in blyr:
+            if char == '-':
+                ste_str += 'E'
+            elif char == '+':
+                ste_str += 'Z'
 
     # Write name strings that describe the R/S stereochemistry
     if tlyr is not None:
