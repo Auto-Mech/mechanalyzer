@@ -116,7 +116,12 @@ def write_mechanism(
         rxn_param_dct=param_dct_sort,
         rxn_cmts_dct=rxn_cmts_dct)
 
+    print("Writing files...")
+    print(f"Writing {out_spc + suffix}")
+    print(f"Contents:\n{csv_str}")
     ioformat.pathtools.write_file(csv_str, out_loc, out_spc + suffix)
+    print(f"Writing {out_mech + suffix}")
+    print(f"Contents:\n{mech_str}")
     ioformat.pathtools.write_file(mech_str, out_loc, out_mech + suffix)
 
 
