@@ -4,7 +4,6 @@
 import copy
 import ioformat
 import automol.chi
-import automol.geom
 import automol.graph
 from automol.graph import FunctionalGroup
 import automol.formula
@@ -219,11 +218,10 @@ def functional_group_name(ich, name='', rename_rule_dct=None, enant_label=True):
                        for fgrp_name, fgrp_lst in rename_rule_dct.items()}
 
     # Get the ich, geom, and gra and other info used for getting name
-    geo = automol.chi.geometry(ich)
     gra = automol.chi.graph(ich)
 
     # Get the number of atoms and functional groups
-    c_cnt = automol.geom.atom_count(geo, 'C', match=True)
+    c_cnt = automol.graph.atom_count_by_type(gra, 'C')
     fgrp_cnt_dct = automol.graph.functional_group_count_dct(gra)
 
     # If certain conditions met, determine a new name
