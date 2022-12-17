@@ -252,10 +252,16 @@ def functional_group_name(ich, name='', rename_rule_dct=None,
         if hvy_atm_cnt == 1:
             re_name = f'{fml_lbl_full}'
         else:
-            re_name = f'{fml_lbl_short}{fgrp_lbl}-{conn_lbl}{ste_lbl}'
+            re_name = f'{fml_lbl_full}{fgrp_lbl}-{conn_lbl}{ste_lbl}'
+
+            if len(re_name) > 16:
+                re_name = f'{fml_lbl_full}{conn_lbl}{ste_lbl}'
 
             if len(re_name) > 16:
                 re_name = f'{fml_lbl_short}{conn_lbl}{ste_lbl}'
+
+            if len(re_name) > 16:
+                print("WARNING! Name longer than 16 characters: {re_name}")
 
     # Put in name exception remapping
     re_name = NAME_EXCEPTION_DCT.get(re_name, re_name)

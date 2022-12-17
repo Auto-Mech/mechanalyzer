@@ -118,10 +118,8 @@ def write_mechanism(
 
     print("Writing files...")
     print(f"Writing {out_spc + suffix}")
-    print(f"Contents:\n{csv_str}")
     ioformat.pathtools.write_file(csv_str, out_loc, out_spc + suffix)
     print(f"Writing {out_mech + suffix}")
-    print(f"Contents:\n{mech_str}")
     ioformat.pathtools.write_file(mech_str, out_loc, out_mech + suffix)
 
 
