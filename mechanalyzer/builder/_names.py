@@ -222,15 +222,12 @@ def functional_group_name(ich, name='', rename_rule_dct=None,
     gra = automol.chi.graph(ich)
 
     # Get the number of atoms and functional groups
-    c_cnt = automol.graph.heavy_atom_count(gra)
+    hvy_atm_cnt = automol.graph.heavy_atom_count(gra)
     fgrp_cnt_dct = automol.graph.functional_group_count_dct(gra)
 
-    # If certain conditions met, determine a new name
-    if (
-        'cbh' not in name and
-        c_cnt > 2 and
-        fgrp_cnt_dct
-    ):
+    if name:
+        re_name = name
+    else:
         # OLD SCHEME
         # # Get the labels
         # conn_lbl = _conn_string(ich)
@@ -249,20 +246,12 @@ def functional_group_name(ich, name='', rename_rule_dct=None,
         ste_lbl = stereo_name_suffix(ich, enant_label=enant_label)
         fgrp_lbl = _fgrp_name_string(fgrp_cnt_dct, rename_rule_dct)
         # Build the names string
-        re_name = f'C{c_cnt}'
-        re_name += f'{fgrp_lbl}'
-        re_name += '-'
-        re_name += f'{conn_lbl}'
-        re_name += f'{ste_lbl}'
-    else:
-        # Use input name or use formula
-        if name:
-            re_name = name
-        else:
-            re_name = automol.chi.formula_string(ich)
-            if c_cnt > 1:
-                conn_lbl = _conn_string(ich)
-                re_name += f'-{conn_lbl}'
+        re_name = automol.chi.formula_string(ich)
+        if hvy_atm_cnt > 1:
+            re_name += f'{fgrp_lbl}'
+            re_name += '-'
+            re_name += f'{conn_lbl}'
+            re_name += f'{ste_lbl}'
 
     # Put in name exception remapping
     re_name = NAME_EXCEPTION_DCT.get(re_name, re_name)
