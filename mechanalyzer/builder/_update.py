@@ -5,7 +5,6 @@
     (going to bimol prods?)
 """
 
-import sys
 import itertools
 import automol
 from autoreact.params import RxnParams
@@ -48,12 +47,7 @@ def update_spc_dct(spc_ichs, spc_dct, enant_label=True):
             # Generate a functional group name
             name = functional_group_name(ich, name='',
                                          enant_label=enant_label)
-
-            if name in spc_dct:
-                print("WARNING: GENERATED NAME ALREADY IN DCT!!!")
-                print(f" - generated: {name} {ich}")
-                print(f" - in dct   : {name} {spc_dct[name]['inchi']}")
-                sys.exit()
+            print(f"InChI {ich} is giving name {name}")
 
             # Generate the data dct
             rgt_dct = thermfit.create_spec(ich)
@@ -63,6 +57,11 @@ def update_spc_dct(spc_ichs, spc_dct, enant_label=True):
             print(f'Adding species {name} = {smi} = {ich}')
 
             spc_dct.update({name: rgt_dct})
+
+            if name in spc_dct:
+                print("WARNING: GENERATED NAME ALREADY IN DCT!!!")
+                print(f" - generated: {name} {ich}")
+                print(f" - in dct   : {name} {spc_dct[name]['inchi']}")
 
     return spc_dct
 

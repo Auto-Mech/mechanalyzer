@@ -5,17 +5,13 @@ Parses a spc.csv file containing species information to obtain a mech_spc_dct
 import csv
 import copy
 from ioformat import pathtools
-from automol.smiles import chi as smi_to_ich
-from automol.chi import add_stereo
+import automol
 from automol.chi import inchi_to_amchi
 from automol.chi import smiles as ich_to_smi
 from automol.chi import canonical_enantiomer
 from automol.chi import formula as ich_to_fml
 from automol.chi import low_spin_multiplicity as _low_spin_mult
-from automol.chi import is_complete
-from automol.chi import add_stereo
 from automol.formula import from_string as str_to_fml
-import rdkit.Chem as _rd_chem
 
 ALLOWED_COL_NAMES = (
     'name',
@@ -43,7 +39,8 @@ TRIP_DCT = {
 
 CMTS = '!'  # character used to define comments
 
-def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=False, 
+
+def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=False,
                        chk_match=False, verbose=True):
     """ Obtains multiple mech_spc_dcts given a list of spc.csv filenames
 
@@ -98,7 +95,7 @@ def load_mech_spc_dct(filename, path, quotechar="'",
     return mech_spc_dct
 
 
-def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False, 
+def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False,
                        chk_match=False, verbose=True, canon_ent=False):
     """ Obtains a single mech_spc_dct given a string parsed from a spc.csv file
 
@@ -146,7 +143,7 @@ def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False,
     mech_spc_dct = {}
     errors = False
     for idx, line in enumerate(lines):
-        # print('current line: ', line) 
+        # print('current line: ', line)
         if idx == 0:
             headers = parse_first_line(line, quotechar=quotechar)
         else:
@@ -154,7 +151,7 @@ def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False,
             if cols is not None:
                 spc, spc_dct = make_spc_dct(cols, headers)
                 # Check that the species name was not already defined
-                assert spc not in mech_spc_dct.keys(), (
+                assert spc not in mech_spc_dct, (
                     f'The species name {spc} appears in the csv file more than'
                     f' once. The second time is on line {idx + 1}, {line}.')
                 # Fill in the spc_dct and then add it to the mech_spc_dct
@@ -237,7 +234,7 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True, canon_ent=True):
     elif full_spc_dct['inchi'] == '':
         smi = full_spc_dct['smiles']
         error = check_smi(smi, spc)
-        full_spc_dct['inchi'] = smi_to_ich(smi)
+        full_spc_dct['inchi'] = automol.smiles.chi(smi)
     elif full_spc_dct['smiles'] == '':
         ich = full_spc_dct['inchi']
         error = check_ich(ich, spc, chk_ste=chk_ste)
@@ -325,8 +322,8 @@ def parse_first_line(first_line, quotechar="'"):
     assert 'name' in headers, (
         "The species name, 'name', must be included in the csv file headers.")
     assert 'inchi' in headers or 'smiles' in headers, (
-        "At least one of the following chemical identifiers must be included in"
-        " the csv file headers: 'inchi' or 'smiles'.")
+        "At least one of the following chemical identifiers must be included"
+        " in the csv file headers: 'inchi' or 'smiles'.")
 
     return headers
 
@@ -334,7 +331,8 @@ def parse_first_line(first_line, quotechar="'"):
 def parse_line(line, idx, headers, quotechar="'"):
     """ Parses a line in the spc.csv file (other than the first line)
 
-        :param line: a string with the contents of a single line in the csv file
+        :param line: a string with the contents of a single line in the csv
+            file
         :type line: str
         :param idx: the index of the line
         :type idx: int
@@ -371,18 +369,14 @@ def check_ich(ich, spc, chk_ste=True):
     """
 
     error = False
-    if 'AMChI' not in ich:
-        mol = _rd_chem.MolFromInchi(ich)
-        if mol is None:
-            print(f"The spc '{spc}' has an invalid InChI, '{ich}'")
-            error = True
-    else:
-        print(f"Assuming AMChI string '{ich}' for '{spc}' is valid")
+    gra = automol.chi.graph(ich)
+    if gra is None:
+        print(f"The spc '{spc}' has an invalid InChI, '{ich}'")
+        error = True
 
     # If indicated, check for stereochemical completeness of inchi
     if chk_ste:
-        mol2 = is_complete(ich)
-        if mol2 is None:
+        if not automol.chi.is_complete(ich):
             print(f"The spc '{spc}' has a stereo-invalid InChI, '{ich}'")
             error = True
 
@@ -401,8 +395,8 @@ def check_smi(smi, spc):
     """
 
     error = False
-    mol = _rd_chem.MolFromSmiles(smi)
-    if mol is None:
+    gra = automol.smiles.graph(smi)
+    if gra is None:
         print(f"The spc '{spc}' has an invalid SMILES string, '{smi}'")
         error = True
 
@@ -432,7 +426,7 @@ def check_smi_and_ich(smi, ich, spc, chk_ste=True):
     # Note: only do if both initial tests passed and if not checking stereo
     error3 = False
     if not any([error1, error2]) and not chk_ste:
-        recalc_ich = smi_to_ich(smi)
+        recalc_ich = automol.smiles.chi(smi)
         if ich != recalc_ich:
             print(f"The spc '{spc}' has non-matching SMILES & InChI strings")
             error3 = True

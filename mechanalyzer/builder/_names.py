@@ -152,7 +152,8 @@ def functional_group_name_dct(mech_spc_dct, rename_rule_dct=None):
     return fgrp_map_dct
 
 
-def functional_group_name(ich, name='', rename_rule_dct=None, enant_label=True):
+def functional_group_name(ich, name='', rename_rule_dct=None,
+                          enant_label=True):
     """ Assign the functional group name
 
         :param enant_label: Include the enantiomer label?
@@ -221,7 +222,7 @@ def functional_group_name(ich, name='', rename_rule_dct=None, enant_label=True):
     gra = automol.chi.graph(ich)
 
     # Get the number of atoms and functional groups
-    c_cnt = automol.graph.atom_count_by_type(gra, 'C')
+    c_cnt = automol.graph.heavy_atom_count(gra)
     fgrp_cnt_dct = automol.graph.functional_group_count_dct(gra)
 
     # If certain conditions met, determine a new name
@@ -252,8 +253,7 @@ def functional_group_name(ich, name='', rename_rule_dct=None, enant_label=True):
         re_name += f'{fgrp_lbl}'
         re_name += '-'
         re_name += f'{conn_lbl}'
-        if ste_lbl:
-            re_name += f'{ste_lbl}'
+        re_name += f'{ste_lbl}'
     else:
         # Use input name or use formula
         if name:
