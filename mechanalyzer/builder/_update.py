@@ -56,12 +56,12 @@ def update_spc_dct(spc_ichs, spc_dct, enant_label=True):
             smi = automol.chi.smiles(ich)
             print(f'Adding species {name} = {smi} = {ich}')
 
-            spc_dct.update({name: rgt_dct})
-
             if name in spc_dct:
                 print("WARNING: GENERATED NAME ALREADY IN DCT!!!")
                 print(f" - generated: {name} {ich}")
                 print(f" - in dct   : {name} {spc_dct[name]['inchi']}")
+
+            spc_dct.update({name: rgt_dct})
 
     return spc_dct
 
