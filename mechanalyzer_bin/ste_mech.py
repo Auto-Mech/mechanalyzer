@@ -325,8 +325,9 @@ if __name__ == '__main__':
     # Read input species and mechanism files into dictionary
     mech_info = input_from_location_dictionary(oscwd, file_dct)
     debug = file_dct['debug'] if 'debug' in file_dct else False
+    enant = file_dct['enant'] if 'enant' in file_dct else False
     main(oscwd, file_dct['out_spc'], file_dct['out_mech'], *mech_info,
-         debug=debug)
+         debug=debug, enant=enant)
     # reduction(oscwd, file_dct)
     # Compute script run time and print to screen
     tf = time.time()
