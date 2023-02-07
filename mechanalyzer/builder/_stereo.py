@@ -104,6 +104,8 @@ def expand_mech_stereo_debug(inp_mech_rxn_dct, inp_mech_spc_dct, enant=True):
     all_ste_rxns = []
     failed_rxns = []
 
+    spc_orig_name_dct = {}
+
     # Loop over the PES (stoich similar)
     forms = list(pes_noste_rxns_dct.keys())
     for formula in forms:
@@ -121,6 +123,7 @@ def expand_mech_stereo_debug(inp_mech_rxn_dct, inp_mech_spc_dct, enant=True):
 
                 # Reformat reaction to use InChI instead of mechanism name
                 # Split thrdbdy off, not needed for stereo code, add back later
+                rgts = rxn[0] + rxn[1]
                 rxn_ich = _rxn_name_to_ich(rxn, name_ich_dct)
                 _rxn_ich = (rxn_ich[0], rxn_ich[1])
                 thrdbdy = rxn_ich[2]
@@ -129,6 +132,9 @@ def expand_mech_stereo_debug(inp_mech_rxn_dct, inp_mech_spc_dct, enant=True):
                 # reaction
                 try:
                     ste_rxns_lst, log2 = _ste_rxn_lsts(_rxn_ich, enant=enant)
+                    rgt_ichs_lst = [r+p for r, p in ste_rxns_lst]
+                    for rgt_ichs in rgt_ichs_lst:
+                        spc_orig_name_dct.update(dict(zip(rgt_ichs, rgts)))
                     print(log2)
                     # Appropriately format the reactions with third body
                     ste_rxns_lst = _add_third(ste_rxns_lst, thrdbdy)
@@ -138,7 +144,7 @@ def expand_mech_stereo_debug(inp_mech_rxn_dct, inp_mech_spc_dct, enant=True):
                     print(f'Reaction {format_rxn_name(rxn)} failed\n'
                           f'Error: {e}\n')
 
-    return all_ste_rxns, failed_rxns
+    return all_ste_rxns, spc_orig_name_dct, failed_rxns
 
 
 def valid_enantiomerically(ste_mech_spc_dct):

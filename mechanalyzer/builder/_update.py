@@ -12,10 +12,12 @@ import thermfit
 from mechanalyzer.builder._names import rxn_ich_to_name
 from mechanalyzer.builder._names import ich_name_dct
 from mechanalyzer.builder._names import functional_group_name
+from mechanalyzer.builder._names import stereo_name_suffix
 
 
 # Handles Species Object Updates
-def update_spc_dct_from_reactions(rxns, spc_dct, enant_label=True):
+def update_spc_dct_from_reactions(rxns, spc_dct, rename=False,
+                                  enant_label=True, spc_orig_name_dct=None):
     """ Update a species with species from a set of reactions
 
         :param enant_label: Include the enantiomer label?
@@ -23,17 +25,21 @@ def update_spc_dct_from_reactions(rxns, spc_dct, enant_label=True):
     """
 
     spc_lst = _spc_from_reactions(rxns)
-    spc_dct = update_spc_dct(spc_lst, spc_dct, enant_label=enant_label)
+    spc_dct = update_spc_dct(spc_lst, spc_dct, rename=rename,
+                             enant_label=enant_label,
+                             spc_orig_name_dct=spc_orig_name_dct)
 
     return spc_dct
 
 
-def update_spc_dct(spc_ichs, spc_dct, enant_label=True):
+def update_spc_dct(spc_ichs, spc_dct, rename=False, enant_label=True,
+                   spc_orig_name_dct=None):
     """ Update the species dictionary with a list of species
 
         :param enant_label: Include the enantiomer label?
         :type enant_label: bool
     """
+    spc_orig_name_dct = {} if spc_orig_name_dct is None else spc_orig_name_dct
 
     print('\nAdding new unique species to mechanism by',
           'adding to mechanism spc_dct...\n')
@@ -45,8 +51,13 @@ def update_spc_dct(spc_ichs, spc_dct, enant_label=True):
     for ich in spc_ichs:
         if ich not in _ich_name_dct:
             # Generate a functional group name
-            name = functional_group_name(ich, name='',
-                                         enant_label=enant_label)
+            if not rename and spc_orig_name_dct:
+                orig_name = spc_orig_name_dct[ich]
+                ste_lbl = stereo_name_suffix(ich, enant_label=enant_label)
+                name = f'{orig_name}-{ste_lbl}' if ste_lbl else orig_name
+            else:
+                name = functional_group_name(ich, name='',
+                                             enant_label=enant_label)
             print(f"InChI {ich} is giving name {name}")
 
             # Generate the data dct
