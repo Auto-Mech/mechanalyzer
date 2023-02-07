@@ -19,6 +19,7 @@ def main(
         inp_spc_str, inp_mech_str, sort_str,
         check_mechanism=False,
         enant=False,
+        rename=False,
         enant_label=True,
         debug=False):
     """ carry out all the mechanism things you wanna do
@@ -53,8 +54,9 @@ def main(
             rxn_param_dct, mech_spc_dct, nprocs='auto', enant=enant)
     else:
         print("Running in debug mode...")
-        full_rxn_lst, failed = mechanalyzer.builder.expand_mech_stereo_debug(
-            rxn_param_dct, mech_spc_dct, enant=enant)
+        full_rxn_lst, spc_orig_name_dct, failed = (
+                mechanalyzer.builder.expand_mech_stereo_debug(
+                    rxn_param_dct, mech_spc_dct, enant=enant))
         name_ich_dct = mechanalyzer.parser.spc.name_inchi_dct(mech_spc_dct)
         print("SUCCEEDED:")
         for rxn in full_rxn_lst:
@@ -68,7 +70,8 @@ def main(
 
     print('turning reaction list into mechanism dictionary')
     ste_mech_spc_dct, ste_rxn_dct = dictionaries_from_rxn_lst(
-        full_rxn_lst, enant_label=enant_label)
+        full_rxn_lst, rename=rename, enant_label=enant_label,
+        spc_orig_name_dct=spc_orig_name_dct)
     print('Writing expanded stereomechanism')
     write_mechanism(
         ste_mech_spc_dct, ste_rxn_dct, out_loc, out_spc, out_mech,
@@ -146,12 +149,14 @@ def input_info_from_file(cwd, species_file, mech_file, sort_file):
     return inp_spc_str, inp_mech_str, sort_str
 
 
-def dictionaries_from_rxn_lst(sccs_rxn_lst, enant_label=True):
+def dictionaries_from_rxn_lst(sccs_rxn_lst, rename=False, enant_label=True,
+                              spc_orig_name_dct=None):
     """ transform the reaction list to the dictionaries the writer likes
     """
     ste_mech_spc_dct, ste_rxn_dct = {}, {}
     ste_mech_spc_dct = mechanalyzer.builder.update_spc_dct_from_reactions(
-        sccs_rxn_lst, ste_mech_spc_dct, enant_label=enant_label)
+        sccs_rxn_lst, ste_mech_spc_dct, rename=rename, enant_label=enant_label,
+        spc_orig_name_dct=spc_orig_name_dct)
     ste_rxn_dct = mechanalyzer.builder.update_rxn_dct(
         sccs_rxn_lst, ste_rxn_dct, ste_mech_spc_dct)
     ste_mech_spc_dct = mechanalyzer.builder.remove_spc_not_in_reactions(
@@ -324,10 +329,13 @@ if __name__ == '__main__':
     file_dct, _ = mechanalyzer.parser.build_input_file(bld_str)
     # Read input species and mechanism files into dictionary
     mech_info = input_from_location_dictionary(oscwd, file_dct)
-    debug = file_dct['debug'] if 'debug' in file_dct else False
-    enant = file_dct['enant'] if 'enant' in file_dct else False
+    DEBUG = file_dct['debug'] if 'debug' in file_dct else False
+    ENANT = file_dct['enant'] if 'enant' in file_dct else False
+    RENAME = file_dct['rename'] if 'rename' in file_dct else False
+    ENANT_LABEL = (file_dct['enant_label'] if 'enant_label' in file_dct
+                   else True)
     main(oscwd, file_dct['out_spc'], file_dct['out_mech'], *mech_info,
-         debug=debug, enant=enant)
+         debug=DEBUG, enant=ENANT, rename=RENAME, enant_label=ENANT_LABEL)
     # reduction(oscwd, file_dct)
     # Compute script run time and print to screen
     tf = time.time()

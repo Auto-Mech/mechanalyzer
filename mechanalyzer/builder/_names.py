@@ -383,40 +383,25 @@ def stereo_name_suffix(ich, enant_label=True):
     ste_str = ''
 
     # Read the stereo chemistry from the InChI string
-    ste_slyrs = automol.chi.stereo_sublayers(ich)
+    bnd_ste_par_dct = automol.chi.bond_stereo_parities(ich)
+    atm_ste_par_dct = automol.chi.atom_stereo_parities(ich)
 
-    tlyr = ste_slyrs.get('t')
-    blyr = ste_slyrs.get('b')
-    mlyr = ste_slyrs.get('m')
+    if bnd_ste_par_dct:
+        ste_str += ''.join('E' if p else 'Z'
+                           for _, p in sorted(bnd_ste_par_dct.items()))
 
-    # Write name strings that describe the E/Z stereochemistry
-    if blyr is not None:
-        bnds = blyr.split(',')
-        for bnd in bnds:
-            if bnd.endswith('+'):
-                ste_str += 'E'
+    if len(atm_ste_par_dct) > 1:
+        ste_str += ''.join('B' if p else 'A'
+                           for _, p in sorted(atm_ste_par_dct.items()))
+
+    if automol.chi.is_chiral(ich):
+        if not enant_label:
+            ste_str += '*'
+        else:
+            if automol.chi.is_inverted_enantiomer(ich):
+                ste_str += '1'
             else:
-                assert bnd.endswith('-')
-                ste_str += 'Z'
-
-    # Write name strings that describe the R/S stereochemistry
-    if tlyr is not None:
-        # (1) Replace: +=A -=B
-        # _tlyr = tlyr.replace('+', 'A').replace('-', 'B')
-        # _tlyr = _tlyr.replace(',', '')
-        # ste_str += _tlyr
-        # (2) Replace +=A -=B, remove the numbers
-        # Loop over characters of tetrahedral layer adding A/B from +/-
-        for char in tlyr:
-            if char == '-':
-                ste_str += 'A'
-            elif char == '+':
-                ste_str += 'B'
-
-        # Write additional label to describe enantiomer if needed
-        if enant_label and 'm' in ste_slyrs:
-            # ste_str += '_' + mlyr
-            ste_str += mlyr
+                ste_str += '0'
 
     return ste_str
 
