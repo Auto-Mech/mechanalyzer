@@ -246,8 +246,8 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True, canon_ent=True):
         else:
             error = check_ich(full_spc_dct['inchi'], spc, chk_ste=chk_ste)
             if not error:  # if the inchi passed, check the smiles
-                error = check_smi(full_spc_dct['smiles'], spc)
-
+                #error = check_smi(full_spc_dct['smiles'], spc)
+                error = False
     """
     ich_to_amch = inchi_to_amchi(full_spc_dct['inchi'])
     if ich_to_amch != full_spc_dct['inchi']:

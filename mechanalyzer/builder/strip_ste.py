@@ -417,6 +417,7 @@ def strip_mech_spc_dct(mech_spc_dct, canon_ent=False):
     mech_spc_dct_strpd = {}
     mech_spc_dct_no_ste = {}
     for spc, spc_dct in mech_spc_dct.items():
+<<<<<<< HEAD
         if canon_ent:
             orig_ich = copy.copy(spc_dct['canon_enant_ich'])
         else:
@@ -427,14 +428,23 @@ def strip_mech_spc_dct(mech_spc_dct, canon_ent=False):
             #strpd_ich = inchi.without_stereo(orig_ich)
         #except:
             #print('spc: ', spc)
+=======
+        orig_ich = copy.copy(spc_dct['inchi'])
+        strpd_ich = chi.without_stereo(orig_ich)
+>>>>>>> some chi functions
         # If the species is stereo-free, save in the no_ste dct
         if orig_ich == strpd_ich:
             mech_spc_dct_no_ste[spc] = spc_dct
         # If the species had stereo, save stereo-stripped info in strpd dct
         else:
             # Get the smiles and inchikey without stereo
+<<<<<<< HEAD
             #strpd_smi = inchi.smiles(strpd_ich)
             #strpd_ichkey = inchi.inchi_key(strpd_ich)
+=======
+            strpd_smi = chi.smiles(strpd_ich)
+            strpd_ichkey = chi.inchi_key(strpd_ich)
+>>>>>>> some chi functions
             # Store the stereo-stripped information
             #spc_dct['smiles'] = strpd_smi
             #spc_dct['inchikey'] = strpd_ichkey

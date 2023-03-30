@@ -120,8 +120,6 @@ def cbh_basis(zrxn, scheme):
             tsutil.xor(brk_key1, frm_key1)]
     #  eliminations are one large reaction site that we split into
     # site1 and site2 for convieninece
-    print('rxncalss', rxnclass)
-    print('radrad', radrad)
     if rxnclass == ReactionClass.Typ.ELIMINATION:
         try:
             site = [
@@ -158,7 +156,6 @@ def cbh_basis(zrxn, scheme):
         rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
         adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
         atmc, atmd = frm_key1
-        print('rad atms', rad_atms)
         if atmc not in rad_atms:
             atmd, atmc = atmc, atmd
         for atma in brk_key1:
@@ -184,16 +181,19 @@ def cbh_basis(zrxn, scheme):
             if automol.graph.chi(rgra) == 'InChI=1S/O2/c1-2':
                 radrad = True
                 adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
-                atmc, atmd = frm_key1
-                if atmc not in unsat_atms:
-                    atmd, atmc = atmc, atmd
-                print('made it here1', unsat_atms, atmc, atmd)
-                for atmb in adj_atms[atmc]:
-                    print('made it here2', atmb, atmd, unsat_atms)
-                    if atmb in unsat_atms and atmb != atmd:
-                        brk_key2 = frozenset({atmc, atmb})
-                        site2 = [atmd, atmc, atmb]
-                        atms, bnd_ords, atm_vals, adj_atms, unsat_atms = tsutil.ts_graph(gra, site, site2)
+                print('unsats', unsat_atms, bnd_ords)
+                allunsat_atms = [unsat_atms.extend(list(key)) for key, val in bnd_ords.items() if abs(val%1-.1) < .001]
+                print('allunsats', unsat_atms)
+                for atmc in frm_key1:
+                    atmd = [atm for atm in frm_key1 if atm != atmc][0]
+                    if site2 is not None:
+                        break
+                    for atmb in adj_atms[atmc]:
+                        if atmb in unsat_atms and atmb != atmd:
+                            brk_key2 = frozenset({atmc, atmb})
+                            site2 = [atmd, atmc, atmb]
+                            print(site2)
+                            atms, bnd_ords, atm_vals, adj_atms, unsat_atms = tsutil.ts_graph(gra, site, site2)
 
     # if rxnclass == ReactionClass.Typ.HYDROGEN_ABSTRACTION and radrad:
     if radrad:

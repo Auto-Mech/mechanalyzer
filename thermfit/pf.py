@@ -483,3 +483,50 @@ def combine_pfs_additively(ln_pf_arrays_lst):
     final_ln_pf_arrays_with_temps = (temps, *final_ln_pf_arrays)
 
     return final_ln_pf_arrays_with_temps
+
+
+def stereo_pf_combination(ln_pf_arrays_lst, hf_lst):
+    """combine pfs
+    """
+    pf_arrays_lst = []
+    for ln_pf_array in ln_pf_arrays_lst:
+        temps, lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple = ln_pf_array
+        pf_arrays_lst.append(
+            from_ln_partition_function(
+                lnq_tuple, dlnqdt_tuple, d2lnqdt2_tuple))
+    total_pf_arrays = ([], [], [])
+    print('Stereo Weighting')
+    print('Weights:\n', 'Temperature (K)', 'Conformer Weight')
+    for idx, temp in enumerate(temps):
+        weight_lst = stereo_weights(pf_arrays_lst, hf_lst, temps, idx)
+        print(temp, '    ', '    '.join([f'{w:.3f}' for w in weight_lst]))
+        pf_arrays_i = additive_pf_combination_at_temp(
+            pf_arrays_lst, weight_lst, idx)
+        total_pf_arrays[0].append(pf_arrays_i[0])
+        total_pf_arrays[1].append(pf_arrays_i[1])
+        total_pf_arrays[2].append(pf_arrays_i[2])
+    final_ln_pf_arrays = to_ln_partition_function(*total_pf_arrays)
+    final_ln_pf_arrays_with_temps = (temps, *final_ln_pf_arrays)
+
+    return final_ln_pf_arrays_with_temps
+
+
+def stereo_weights(pf_arrays_lst, hf_lst, temps, idx):
+    """ Calculate the weight of each stereoisomer given a list
+        of partition functions and 0 K heats
+        of formations for thtose conformers and a temperature
+    """
+    pfs_t_lst = []
+    temp = temps[idx]
+    hf_lst = [hf_i * phycon.EH2KJ * 1000 for hf_i in hf_lst]
+    knt = phycon.KB * phycon.NAVO * temp
+    for pf_array in pf_arrays_lst:
+        pfs_t_lst.append(pf_array[0][idx])
+
+    weight_lst = []
+    h_zero = min(hf_lst)
+    for q_val_i, h_val_i in zip(pfs_t_lst, hf_lst):
+        exponent = numpy.exp((h_zero - h_val_i) / knt)
+        weight_lst.append(exponent)
+
+    return weight_lst

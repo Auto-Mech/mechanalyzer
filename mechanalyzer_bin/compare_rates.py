@@ -14,30 +14,26 @@ from ioformat import pathtools
 # INPUTS
 # Filenames
 MECH_FILES = [
-    # 'rates_noabs_11_8_22.ckin',
-    # 'allrates_11_24_20.ckin',
-    'rates_shortb.ckin',
-    'rmg_short.ckin',
+    'nuig1.1.ckin',
+    'amech.ckin',
 ]
 THERM_FILES = [
-    # '1dhr_10_27_22.ckin',
-    '1dhr_10_27_22.ckin',
-    'rmg.ckin',
+    'nuig1.1.therm',
+    'amech.therm',
 ]
 CSV_FILES = [
-    # 'anl_new.csv',
-    'anl_new.csv',
-    'rmg_new.csv',
+    'nuig1.1.csv',
+    'species.csv',
 ]
 out_fname = 'ratesb.pdf'
 mech_nicknames = [
-    'ANL',
-    'RMG',
+    'NUIG',
+    'full_WE',
 ]
 out_txt_fname = 'ordering.txt'  # filename for the ordered text file
 
 # Conditions
-TEMPS_LST = [numpy.linspace(500, 1500, 11)]
+TEMPS_LST = [numpy.linspace(500, 1000, 16)]
 pressures = [1, 10, 100]
 
 # Options
