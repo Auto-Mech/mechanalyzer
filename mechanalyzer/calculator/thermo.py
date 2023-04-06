@@ -52,11 +52,11 @@ def create_spc_therm_dct(spc_nasa7_dct, temps, rval=RC):
 
 def spc_therm_dct_df(spc_therm_dct):
     """ converts therm dct into a dictionary of dataframes
-        {spc: [index=[temps]][columns=[H, CP, S, G]]}
+        {spc: [index=[temps]][columns=[H, CP, S, G, lnQ]]}
     """
     spc_therm_df = {}
     for spc, vals in spc_therm_dct.items():
-        matrix_data = numpy.array([vals[1], vals[2], vals[3], vals[4]], dtype = float).T
+        matrix_data = numpy.array([vals[1], vals[2], vals[3], vals[4], vals[5]], dtype = float).T
         spc_therm_df[spc] = pandas.DataFrame(
             matrix_data, index=numpy.array(vals[0], dtype=float), columns=['H', 'Cp', 'S', 'G', 'lnQ'])
         spc_therm_df[spc].sort_index()
