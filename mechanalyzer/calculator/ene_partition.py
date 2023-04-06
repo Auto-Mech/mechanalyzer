@@ -527,7 +527,7 @@ class PEDModels:
 
                 # remove comments to print P(E1)|T,P
                 """
-                if pressure == 1 and temp in [1500, 2000] and self.mdl == 'equip_phi':
+                if pressure in [0.1, 1] and temp in [500, 1500, 2000]:
                     prob_ene1_df = ped_df_prod[pressure][temp].reset_index()
                     header_label = np.array(prob_ene1_df.columns, dtype=str)
                     header_label[0] = 'E [kcal/mol]'

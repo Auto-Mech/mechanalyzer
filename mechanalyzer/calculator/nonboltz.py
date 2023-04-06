@@ -81,6 +81,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
         ene_bw_dct[label] = energy_dct[reacs] - energy_dct[prods]
         print(
             'Processing reaction {} with DH of {:.2f} kcal/mol'.format(label, -ene_bw_dct[label]))
+
         if ene_bw_dct[label] < 0 and len(frag_reacs) > 1:
             print(
                 'Warning: endothermic reaction {} with DH of {:.2f} kcal/mol: \
@@ -90,6 +91,7 @@ def prompt_dissociation_ktp_dct(ped_inp_str, ped_out_str,
             print('Endothermic reaction {} with DH of {:.2f} kcal/mol excluded from loop'.format(
                 label, -ene_bw_dct[label]))
             continue
+
         #################################################################################################
 
         # DERIVE PED OF THE HOT FRAGMENT
@@ -289,6 +291,9 @@ def get_max_reactivity(hot_sp, hot_sp_df, therm_df, T0, Tref):
     for rxn in hot_sp_df.index:
         rcts = hot_sp_df['rct_names_lst'][rxn]
         prds = hot_sp_df['prd_names_lst'][rxn]
+        if (hot_sp in prds and len(rcts) != 2) or (hot_sp in rcts and len(prds) != 2):
+            # consider only unimol chnls to bimol species
+            continue
         dh_rxn = thermo.extract_deltaX_therm(therm_df, rcts, prds, 'H')/1000
         label = rxn[0]
         # get rate at Tref
@@ -322,7 +327,7 @@ def get_max_reactivity(hot_sp, hot_sp_df, therm_df, T0, Tref):
         if dh_rxn[T0] < dhmin:
             dh_min_hot = copy.deepcopy(dh_rxn)
             dhmin = copy.deepcopy(dh_rxn[T0])
-            
+
     return k_max_hot, dh_min_hot, rxn_label
 
 def estimate_hot_hk(dh_pi, Tref, cp_hot, kmax_hot, dhmin_hot):
@@ -330,9 +335,8 @@ def estimate_hot_hk(dh_pi, Tref, cp_hot, kmax_hot, dhmin_hot):
         units cal, mol, K
         NB dh_pi is the dh transferred to the hot species
     """
+
     # approximate with close Tref if absent
-    if Tref not in dh_pi.keys():
-        print(dh_pi)
     if dh_pi[Tref] < 0:
         T_star, k_star = kt_star(-dh_pi[Tref], cp_hot, Tref, kmax_hot)
     else:
@@ -340,7 +344,6 @@ def estimate_hot_hk(dh_pi, Tref, cp_hot, kmax_hot, dhmin_hot):
         k_star = kmax_hot[Tref]
 
     dh_tot = (dh_pi + dhmin_hot)/1000
-    
     return T_star, k_star, dh_tot
 
 def kt_star(DH0, Cp, T0, k_series):
@@ -353,16 +356,17 @@ def kt_star(DH0, Cp, T0, k_series):
         return DH0 - int_fct
     
     try:
-        f_cp = interp1d(Cp.index, Cp.values, kind='cubic')
-        f_k = interp1d(k_series.index, k_series.values, kind='cubic')
-    except TypeError:
+        f_cp = interp1d(numpy.array(Cp.index, dtype=float), numpy.array(Cp.values, dtype=float), kind='cubic')
+        f_k = interp1d(numpy.array(k_series.index, dtype=float), numpy.array(k_series.values, dtype=float), kind='cubic')
+    except TypeError as e:
+        print('error in interpolation for Cp: {}'.format(e))
         return T0, k_series[T0]
 
     try:
         T_star = fsolve(tozero, T0+100, args=(DH0, f_cp, T0))
     except ValueError:
         print(
-            '*Warning: fsolve failed, out of range - using fixed Cp at {:.0f} K'.format(T0))
+            '*Warning: fsolve failed to compute T*, out of range - using fixed Cp at {:.0f} K'.format(T0))
         T_star = T0+DH0/Cp[T0]
     try:
         k_star = f_k(T_star)
@@ -370,7 +374,7 @@ def kt_star(DH0, Cp, T0, k_series):
         k_series = k_series.sort_index()
         k_star = k_series.iloc[-1]
         print(
-            '*Warning: out of range - determine k at max T of {} K'.format(k_series.index[-1]))
+            '*Warning: k* out of range at T of {} K - determine k at max T of {} K'.format(T_star, k_series.index[-1]))
 
     return T_star, k_star
 

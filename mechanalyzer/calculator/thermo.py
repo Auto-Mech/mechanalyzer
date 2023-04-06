@@ -56,9 +56,9 @@ def spc_therm_dct_df(spc_therm_dct):
     """
     spc_therm_df = {}
     for spc, vals in spc_therm_dct.items():
-        matrix_data = numpy.array([vals[1], vals[2], vals[3], vals[4]]).T
+        matrix_data = numpy.array([vals[1], vals[2], vals[3], vals[4]], dtype = float).T
         spc_therm_df[spc] = pandas.DataFrame(
-            matrix_data, index=vals[0], columns=['H', 'Cp', 'S', 'G', 'lnQ'])
+            matrix_data, index=numpy.array(vals[0], dtype=float), columns=['H', 'Cp', 'S', 'G', 'lnQ'])
         spc_therm_df[spc].sort_index()
         
     return spc_therm_df

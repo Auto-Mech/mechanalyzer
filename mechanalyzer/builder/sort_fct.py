@@ -515,11 +515,12 @@ class SortMech:
         for rxn in subpes_df.index:
             if 'RAD_GEN' in subpes_df['submech_prompt'][rxn]:
                 rad = subpes_df['submech_prompt'][rxn].split('_')[2]
-                rad_list.append(rad)
-                if rad in subpes_df['prd_names_lst_ord'][rxn]:
+                if rad in subpes_df['prd_names_lst_ord'][rxn] and len(subpes_df['prd_names_lst_ord'][rxn]) < 3:
                     rad_bimol.append(subpes_df['prd_names_lst_ord'][rxn])
-                elif rad in subpes_df['rct_names_lst_ord'][rxn]:
+                    rad_list.append(rad)
+                elif rad in subpes_df['rct_names_lst_ord'][rxn] and len(subpes_df['rct_names_lst_ord'][rxn]) < 3:
                     rad_bimol.append(subpes_df['rct_names_lst_ord'][rxn])
+                    rad_list.append(rad)
                     
         rad_list = list(set(rad_list)) # reduce lists, might have found > 1 radical
         rad_bimol = list(set(rad_bimol))
