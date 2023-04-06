@@ -230,10 +230,10 @@ def bf_tp_df_todct(bf_tp_df, bf_threshold, savefile=False, rxn='', model=''):
             bf_df_sp_i = bf_df_sp_i.reset_index()
             bf_df_sp_i = bf_df_sp_i.rename(columns = {'index': 0})
             header_label = np.array(sorted(bf_df_sp_i.columns[1:]), dtype=str)
-            header_label = np.insert(header_label, 0, 'T [K]')
+            header_label = np.insert(header_label, 0, 'T[K]')
             labels = '\t\t'.join(header_label)
             np.savetxt(f'bf_{model}_{rxn}_{spc}.txt', bf_df_sp_i[sorted(bf_df_sp_i.columns)].values,
-                       delimiter='\t', header=labels, fmt='%1.2e')
+                       delimiter='\t', header=labels, fmt='%1.2e', comments='')
 
     return bf_tp_dct_out
 
@@ -250,6 +250,7 @@ def merge_bf_rates(bf_tp_dct, ktp_dct):
         :return new_ktp_dct: rates for each species multiplied by bf: bf_i*k
         :rtype: dct {species: {P: (T, k)}}
     """
+
     # drop "high" from ktp_dct
     if 'high' in ktp_dct.keys():
         ktp_dct.pop('high')
