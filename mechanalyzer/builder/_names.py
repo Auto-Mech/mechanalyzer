@@ -121,7 +121,8 @@ NAME_EXCEPTION_DCT = {
 }
 
 
-def functional_group_name_dct(mech_spc_dct, rename_rule_dct=None):
+def functional_group_name_dct(mech_spc_dct, rename_rule_dct=None,
+                              force_rename=False):
     """ Build a dictionary to map the names of a mechanism according
         to its functional groups and number of carbon atoms.
 
@@ -148,12 +149,13 @@ def functional_group_name_dct(mech_spc_dct, rename_rule_dct=None):
     fgrp_map_dct = {}
     for name, dct in mech_spc_dct.items():
         fgrp_map_dct[name] = functional_group_name(
-            dct['inchi'], name=name, rename_rule_dct=rename_rule_dct)
+            dct['inchi'], name=name, rename_rule_dct=rename_rule_dct,
+            force_rename=force_rename)
     return fgrp_map_dct
 
 
 def functional_group_name(ich, name='', rename_rule_dct=None,
-                          enant_label=True):
+                          enant_label=True, force_rename=False):
     """ Assign the functional group name
 
         :param enant_label: Include the enantiomer label?
@@ -226,7 +228,7 @@ def functional_group_name(ich, name='', rename_rule_dct=None,
     hvy_atm_cnt = automol.graph.heavy_atom_count(gra)
     fgrp_cnt_dct = automol.graph.functional_group_count_dct(gra)
 
-    if name:
+    if name and not force_rename:
         re_name = name
     else:
         # OLD SCHEME
@@ -349,6 +351,7 @@ def rxn_ich_to_name(rxn, spc_dct):
     """
 
     _ich_name_dct = ich_name_dct(spc_dct)
+    print('_ich_name_dct:\n', _ich_name_dct)
     return (
         tuple(_ich_name_dct[rgt] for rgt in rxn[0]),
         tuple(_ich_name_dct[rgt] for rgt in rxn[1]),

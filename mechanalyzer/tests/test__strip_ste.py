@@ -50,8 +50,8 @@ def test_renaming():
 
     re_mech_spc_dct, _ = strip_ste.regenerate_names(mech_spc_dct_strpd_ich, {})
     assert set(list(re_mech_spc_dct.keys())) == set(
-        ['C4CETH-RvEsWv', 'C4ALK-808sWv']), ('Something has changed about the'
-        ' name from inchi generator!')
+        ['C4H8OCETH-RvEsWv', 'C4H8ALK-808sWv']), ('Something has changed about the'
+        f' name from inchi generator! {re_mech_spc_dct.keys()}')
 
 
 def test_main():
@@ -65,17 +65,17 @@ def test_main():
     # Reaction 1
     ref_vals1 = [5e12, 0, 0]
     vals1 = re_rxn_param_dct_comb[
-        (('C4ALK-808sWv', 'HO2'), ('C4CETH-RvEsWv', 'OH'), (None,))].arr
+        (('C4H8ALK-808sWv', 'HO2'), ('C4H8OCETH-RvEsWv', 'OH'), (None,))].arr
     assert numpy.allclose(ref_vals1, vals1)
     # Reaction 2
     ref_vals2 = [3e12, 0, 0]
     vals2 = re_rxn_param_dct_comb[
-        (('C4ALK-808sWv', 'HO2'), ('H', 'OH'), (None,))].arr
+        (('C4H8ALK-808sWv', 'HO2'), ('H', 'OH'), (None,))].arr
     assert numpy.allclose(ref_vals2, vals2)
     # Reaction 3
     ref_vals3 = [3.5e12, 0, 0]
     vals3 = re_rxn_param_dct_comb[
-        (('H', 'HO2'), ('C4CETH-RvEsWv', 'OH'), (None,))].arr
+        (('H', 'HO2'), ('C4H8OCETH-RvEsWv', 'OH'), (None,))].arr
     assert numpy.allclose(ref_vals3, vals3)
     # Reaction 4
     ref_vals4 = [1e12, 0, 0]

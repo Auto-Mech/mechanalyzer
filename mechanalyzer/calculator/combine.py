@@ -50,16 +50,21 @@ def comb_mechs(rxn_param_dct1, rxn_param_dct2, spc_nasa7_dct1, spc_nasa7_dct2,
 
     return comb_rxn_param_dct, comb_spc_nasa7_dct, comb_mech_spc_dct
 
-# In progress...
-#def comb_mult_dcts(dcts, rename_instrs, target_types='rxn', ste_dcts=None):
-#
-#    ncombs = len(dcts) - 1  # n-1 combinations to do
-#    comb_dct = copy.deepcopy(dcts[0])
-#    for idx in range(len(dcts) - 1)):  # n-1 combinations to do
-#        
-#        comb_dct = comb_
 
+def comb_mult_mechs(rxn_param_dcts, spc_nasa7_dcts, mech_spc_dcts):
 
+    tot_rxn_param_dct = copy.deepcopy(rxn_param_dcts[0])
+    tot_spc_nasa7_dct = copy.deepcopy(spc_nasa7_dcts[0])
+    tot_mech_spc_dct = copy.deepcopy(mech_spc_dcts[0])
+    ncombs = len(dcts) - 1  # n-1 combinations to do
+    for idx in range(ncombs):
+        tot_rxn_param_dct, tot_spc_nasa7_dct, tot_mech_spc_dct = comb_mechs(
+            tot_rxn_param_dct, rxn_param_dcts[idx+1], 
+            tot_spc_nasa7_dct, spc_nasa7_dcts[idx+1], 
+            tot_mech_spc_dct, mech_spc_dcts[idx+1])
+
+    return tot_rxn_param_dct, tot_spc_nasa7_dct, tot_mech_spc_dct
+    
 
 def comb_dcts(dct1, dct2, rename_instr, target_type='rxn', ste_dct=None):
     """ Combines two dictionaries; can be rxn_param_dcts, spc_nasa7_dcts, or

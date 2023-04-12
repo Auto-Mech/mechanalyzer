@@ -41,7 +41,7 @@ CMTS = '!'  # character used to define comments
 
 
 def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=False,
-                       chk_match=False, verbose=True):
+                       chk_match=False, verbose=True, canon_ent=False):
     """ Obtains multiple mech_spc_dcts given a list of spc.csv filenames
 
         :param filenames: filenames of the spc.csv files to be read
@@ -63,14 +63,14 @@ def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=False,
         print(f'Loading mech_spc_dct for the file {filename}...')
         mech_spc_dct = load_mech_spc_dct(
             filename, path, quotechar=quotechar, chk_ste=chk_ste,
-            chk_match=chk_match, verbose=verbose)
+            chk_match=chk_match, verbose=verbose, canon_ent=canon_ent)
         mech_spc_dcts.append(mech_spc_dct)
 
     return mech_spc_dcts
 
 
-def load_mech_spc_dct(filename, path, quotechar="'",
-                      chk_ste=False, chk_match=False, verbose=True):
+def load_mech_spc_dct(filename, path, quotechar="'", chk_ste=False, 
+                      chk_match=False, verbose=True, canon_ent=False):
     """ Obtains a single mech_spc_dct given a spc.csv filename
 
         :param filename: filename of the spc.csv file to be read
@@ -90,7 +90,7 @@ def load_mech_spc_dct(filename, path, quotechar="'",
     file_str = pathtools.read_file(path, filename)
     mech_spc_dct = parse_mech_spc_dct(
         file_str, quotechar=quotechar, chk_ste=chk_ste, chk_match=chk_match,
-        verbose=verbose)
+        verbose=verbose, canon_ent=canon_ent)
 
     return mech_spc_dct
 
@@ -143,7 +143,6 @@ def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False,
     mech_spc_dct = {}
     errors = False
     for idx, line in enumerate(lines):
-        # print('current line: ', line)
         if idx == 0:
             headers = parse_first_line(line, quotechar=quotechar)
         else:
@@ -323,7 +322,7 @@ def parse_first_line(first_line, quotechar="'"):
         "The species name, 'name', must be included in the csv file headers.")
     assert 'inchi' in headers or 'smiles' in headers, (
         "At least one of the following chemical identifiers must be included"
-        " in the csv file headers: 'inchi' or 'smiles'.")
+        f" in the csv file headers: 'inchi' or 'smiles'. Headers: {headers}")
 
     return headers
 

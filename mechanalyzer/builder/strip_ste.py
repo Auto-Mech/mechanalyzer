@@ -9,6 +9,7 @@ from mechanalyzer.calculator.rates import check_p_t
 from mechanalyzer.builder import _names as names
 from ratefit.fit import _fit as fit
 from automol import inchi
+from automol import chi
 
 
 def main(rxn_param_dct, mech_spc_dct, temps_lst, pressures):
@@ -131,7 +132,8 @@ def regenerate_names(mech_spc_dct_strpd_ich, rxn_param_dct_strpd_ich):
         :rtype: dict
     """
 
-    map_dct = names.functional_group_name_dct(mech_spc_dct_strpd_ich)
+    map_dct = names.functional_group_name_dct(mech_spc_dct_strpd_ich,
+                                              force_rename=True)
     re_mech_spc_dct, re_rxn_param_dct = names.remap_mechanism_names(
         mech_spc_dct_strpd_ich, rxn_param_dct_strpd_ich, map_dct)
 
@@ -345,7 +347,7 @@ def make_mech_spc_dct_ich(iso_sets, mech_spc_dct_strpd):
     return mech_spc_dct_strpd_ich
 
 
-def find_iso_sets(mech_spc_dct_strpd):
+def find_iso_sets(mech_spc_dct_strpd, canon_ent=False):
     """ Finds all sets of isomers in a stripped mech_spc_dct that are now the
         exact same species (since stereo has been stripped)
 
@@ -360,7 +362,10 @@ def find_iso_sets(mech_spc_dct_strpd):
     spcs = tuple(mech_spc_dct_strpd.keys())
     ichs = ()
     for spc_dct in mech_spc_dct_strpd.values():
-        ichs += (spc_dct['inchi'],)
+        if canon_ent:
+            ichs += (spc_dct['canon_enant_ich'],)
+        else:
+            ichs += (spc_dct['inchi'],)
 
     # Get stereo sets, which are sets of species that are the same if one
     # ignores stereo (usually will be singles or doubles)
@@ -394,7 +399,7 @@ def find_iso_sets(mech_spc_dct_strpd):
     return iso_sets
 
 
-def strip_mech_spc_dct(mech_spc_dct):
+def strip_mech_spc_dct(mech_spc_dct, canon_ent=False):
     """ Removes stereochemistry from all species in a mech_spc_dct. Returns
         a new mech_spc_dct with all the stereo-specific species, but now
         stripped of the stereo. Also returns a separate mech_spc_dct of
@@ -412,19 +417,27 @@ def strip_mech_spc_dct(mech_spc_dct):
     mech_spc_dct_strpd = {}
     mech_spc_dct_no_ste = {}
     for spc, spc_dct in mech_spc_dct.items():
-        orig_ich = copy.copy(spc_dct['inchi'])
-        strpd_ich = inchi.without_stereo(orig_ich)
+        if canon_ent:
+            orig_ich = copy.copy(spc_dct['canon_enant_ich'])
+        else:
+            orig_ich = copy.copy(spc_dct['inchi'])
+        print('orig_ich: ', orig_ich)
+        strpd_ich = chi.without_stereo(orig_ich)
+        #try:
+            #strpd_ich = inchi.without_stereo(orig_ich)
+        #except:
+            #print('spc: ', spc)
         # If the species is stereo-free, save in the no_ste dct
         if orig_ich == strpd_ich:
             mech_spc_dct_no_ste[spc] = spc_dct
         # If the species had stereo, save stereo-stripped info in strpd dct
         else:
             # Get the smiles and inchikey without stereo
-            strpd_smi = inchi.smiles(strpd_ich)
-            strpd_ichkey = inchi.inchi_key(strpd_ich)
+            #strpd_smi = inchi.smiles(strpd_ich)
+            #strpd_ichkey = inchi.inchi_key(strpd_ich)
             # Store the stereo-stripped information
-            spc_dct['smiles'] = strpd_smi
-            spc_dct['inchikey'] = strpd_ichkey
+            #spc_dct['smiles'] = strpd_smi
+            #spc_dct['inchikey'] = strpd_ichkey
             spc_dct['inchi'] = strpd_ich
             mech_spc_dct_strpd[spc] = spc_dct
 
