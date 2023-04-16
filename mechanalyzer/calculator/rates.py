@@ -27,6 +27,7 @@ def eval_rxn_param_dct(rxn_param_dct, temps_lst, pressures, tref=1.0):
     """
 
     temps_lst = check_p_t(temps_lst, pressures)  # enforce formatting rules
+
     rxn_ktp_dct = {}
     for rxn, params in rxn_param_dct.items():
         ktp_dct = eval_params(params, temps_lst, pressures, tref=tref)
@@ -48,6 +49,8 @@ def eval_params(params, temps_lst, pressures, tref=1.0):
         :return ktp_dct: k(T,Ps) at all temps and pressures
         :rtype: dict {pressure: (temps, kts)}
     """
+
+    temps_lst = check_p_t(temps_lst, pressures)  # enforce formatting rules
 
     # Get the list of existing forms
     forms = params.get_existing_forms()
@@ -596,8 +599,6 @@ def check_p_t(temps_lst, pressures):
         :param pressures: pressures used to get k(T,P)s (atm)
         :type pressure: list
     """
-
-    assert isinstance
 
     # Accepted types for temps_lst and pressures
     good = (list, tuple)

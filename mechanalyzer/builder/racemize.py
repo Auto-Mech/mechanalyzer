@@ -6,11 +6,13 @@ from mechanalyzer.builder import _names as names
 from ratefit.fit import _fit as fit
 from automol import inchi
 from automol import chi
+from autoreact.params import RxnParams
 
 
-def lump(rxns_by_idx):
+def lump(rac_rxn_param_dct, temps_lst, pressures):
 
-    for rxn_by_idx, [rxns, params_lst] in rxns_by_idx.items():
+    lump_rxn_param_dct = {}
+    for rac_rxn, [rxns, params_lst] in rac_rxn_param_dct.items():
         lump_dct = {}
         for idx, rxn in enumerate(rxns):  # rxns in terms of spc names
             rcts, prds, _ = rxn
@@ -20,59 +22,111 @@ def lump(rxns_by_idx):
                 lump_dct[sort_rcts].append(params)
             else:
                 lump_dct[sort_rcts] = [params]
-         
-        for lumped_rxn 
-        print('lump_dct: ', lump_dct)                
-       
-    
 
-def get_rxns_by_idx(rac_sets, rxn_param_dct):
+        # Get the list of ktp_dcts
+        ktp_dct_lst = []
+        for params_lst in lump_dct.values():
+            for params in params_lst:
+                ktp_dct = rates.eval_params(params, temps_lst, pressures)
+                ktp_dct_lst.append(ktp_dct)
 
-    def get_spc_idxs(rcts_or_prds, rac_sets):
-        spc_idxs = []
+        # Add all the ktp_dcts together, then divide by averaging factor
+        comb_ktp_dct = _sum_ktp_list(ktp_dct_lst)
+        comb_ktp_dct = rates.mult_by_factor(comb_ktp_dct, 1 / len(lump_dct))
+
+        # Refit the final ktp_dct
+        try:
+            comb_params, _ = fit.fit_ktp_dct(comb_ktp_dct, 'plog')
+        except:
+            comb_params = RxnParams(arr_dct={'arr_tuples': ((1e-5, 0, 0),)})
+        lump_rxn_param_dct[rac_rxn] = comb_params  # store
+
+    return lump_rxn_param_dct
+
+
+def get_rac_rxn_param_dct(rac_sets, rac_names, rxn_param_dct):
+    """ Note: this does not return a regular rxn_param_dct
+
+        Has the form {rxn: [[rxn1, rxn2, ...], [params1, params2, ...]], ...}
+        Keys are the racemized rxn names, while the values are the multiple
+        reactions refering to the stereo-specific reactions
+        couched under each racemized reaction name
+    """
+
+    def get_spc_names(rcts_or_prds, rac_sets, rac_names):
+        spc_names = []
+        error = False
         for rct_or_prd in rcts_or_prds:
             for rac_idx, rac_set in enumerate(rac_sets):
                 if rct_or_prd in rac_set:
-                    spc_idxs.append(rac_idx)
+                    rac_name = rac_names[rac_idx]
+                    spc_names.append(rac_name)
                     break
-        spc_idxs = sorted(spc_idxs)
-        spc_idxs = tuple(spc_idxs)
-    
-        return spc_idxs
-    
-    rxns_by_idx = {}
+                # If on last rac_set and didn't break, the spc is missing
+                if rac_idx == len(rac_sets) - 1:
+                    print(f'Warning: species {rct_or_prd} not in rac_sets!')
+                    error = True
+        spc_names = sorted(spc_names)
+        spc_names = tuple(spc_names)
+
+        return spc_names, error
+
+    rac_rxn_param_dct = {}
     for rxn, params in rxn_param_dct.items():
         rcts, prds, thrd_bod = rxn
-        rct_idxs = get_spc_idxs(rcts, rac_sets)
-        prd_idxs = get_spc_idxs(prds, rac_sets)
-        rxn_by_idx = (rct_idxs, prd_idxs, thrd_bod)
-        if rxn_by_idx in rxns_by_idx:
-            rxns_by_idx[rxn_by_idx][0].append(rxn)
-            rxns_by_idx[rxn_by_idx][1].append(params)
+        rct_names, rct_err = get_spc_names(rcts, rac_sets, rac_names)
+        prd_names, prd_err = get_spc_names(prds, rac_sets, rac_names)
+        # If any species missing from rac_sets, don't add current rxn
+        if rct_err or prd_err:
+            continue  # skip to next rxn
+        rac_rxn_name = (rct_names, prd_names, thrd_bod)
+        # Either append current vals or make new entry with them
+        if rac_rxn_name in rac_rxn_param_dct:
+            rac_rxn_param_dct[rac_rxn_name][0].append(rxn)
+            rac_rxn_param_dct[rac_rxn_name][1].append(params)
         else:
-            rxns_by_idx[rxn_by_idx] = [[rxn], [params]]
+            rac_rxn_param_dct[rac_rxn_name] = [[rxn], [params]]
 
-    return rxns_by_idx
-            
-   
+    return rac_rxn_param_dct
+
+
 def get_rac_sets(iso_sets, mech_spc_dct):
 
     rac_sets = []
+    rac_names = []
+    rac_mech_spc_dct = {}
     for iso_set in iso_sets:
         rac_dct = {}
         for iso in iso_set:
-            orig_ich = mech_spc_dct[iso]['canon_enant_ich']
+            spc_dct = mech_spc_dct[iso]
+            orig_ich = spc_dct['canon_enant_ich']
             rac_ich = chi.racemic(orig_ich)
-            #if rac_ich == orig_ich and num_chiral_sites >= 1:  # need numchiral
-            #    print('unchanged by racemization: ', iso)
             if rac_ich in rac_dct:
                 rac_dct[rac_ich].append(iso)
-            else:
+            else:  # if on the first time through
+                # RENAMING OPTION 1: Keep things the same
+                rac_name = iso
+
+                # Leave this alone
                 rac_dct[rac_ich] = [iso]
+                new_spc_dct = copy.deepcopy(spc_dct)
+                new_spc_dct['inchi'] = rac_ich
+                rac_mech_spc_dct[rac_name] = new_spc_dct
+                rac_names.append(rac_name)
+        # Append to lists
         for rac_set in rac_dct.values():
+           # RENAMING OPT. 2: Use _names (gives diff. names from Sarah's mech)
+           # if len(rac_set) > 1:  # if an enantiomer
+           #     # Use rac_ich (stored from last iso) to get rac_name
+           #     rac_name = names.functional_group_name(rac_ich)
+           # else:
+           #     rac_name = iso
+           # rac_names.append(rac_name)
+
+            # Leave this alone
             rac_sets.append(rac_set)
 
-    return rac_sets
+    return rac_sets, rac_names, rac_mech_spc_dct
 
 
 def find_iso_sets(mech_spc_dct_strpd, canon_ent=False):
@@ -140,3 +194,62 @@ def _are_spc_dcts_same(spc_dct1, spc_dct2):
     same = compare.are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2)
 
     return same
+
+
+def _sum_ktp_list(ktp_dct_lst):
+    """ Sums all ktp_dcts in a list
+
+        :param ktp_dct_list: list of ktp_dcts
+        :type ktp_dct_list: list
+        :return summed_ktp_dct: summed ktp_dct
+        :rtype: dict
+    """
+
+    for idx, ktp_dct in enumerate(ktp_dct_lst):
+        if idx == 0:
+            summed_ktp_dct = copy.deepcopy(ktp_dct)
+        else:
+            summed_ktp_dct = rates.add_ktp_dcts(summed_ktp_dct, ktp_dct)
+
+    return summed_ktp_dct
+
+
+def check_bal_rxns(rxn_param_dct, mech_spc_dct):
+    """ Checks that all rxns are chemically balanced
+    """
+    def _atom_counts(spcs, mech_spc_dct):
+        """ Get atom counts for either rcts or prds 
+        """
+        atom_counts = {}
+        for spc in spcs:
+            spc_dct = mech_spc_dct[spc]
+            fml = spc_dct['fml']
+            for atom, count in fml.items():
+                if atom in atom_counts:
+                    atom_counts[atom] += count
+                else:
+                    atom_counts[atom] = count
+        return atom_counts
+
+    warn_msgs = []
+    for rxn in rxn_param_dct:
+        warn_msg = []
+        rcts, prds, _ = rxn
+        rct_atom_counts = _atom_counts(rcts, mech_spc_dct)
+        prd_atom_counts = _atom_counts(prds, mech_spc_dct)
+        if set(rct_atom_counts.keys()) != set(prd_atom_counts.keys()):
+            warn_msg.append('Mismatching atom identities in rcts and prds '
+                            f'for rxn {rxn}. Rcts: {rct_atom_counts.keys()} '
+                            f'Prds: {prd_atom_counts.keys()}')
+        else:
+            for rct_atom, rct_count in rct_atom_counts.items():
+                prd_count = prd_atom_counts[rct_atom]
+                if rct_count != prd_count:
+                    warn_msg.append(f'Different counts for {rct_atom}! '
+                                    f'Rcts: {rct_count}, Prds: {prd_count}')
+        if warn_msg != []:
+            warn_msgs.append(warn_msg)
+
+    assert warn_msgs == [], ('Unbalanced reactions exist! See below:\n'
+                             f'{warn_msgs}')
+    

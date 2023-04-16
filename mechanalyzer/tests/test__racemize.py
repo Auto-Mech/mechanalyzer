@@ -20,9 +20,14 @@ from automol import amchi
 DAT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
 TMP_OUT = tempfile.mkdtemp()
 
+PRESSURES = [0.03, 0.1, 0.3, 1, 3, 10, 30, 100]
+TEMPS = [numpy.arange(360, 1500, 60)]
+
 # Filenames
 SPC_CSV = 'species.csv'
-CKIN = 'amech.ckin'
+#CKIN = 'amech.ckin'
+#CKIN = 'amech_short.ckin'
+CKIN = 'amech_140423.ckin'
 THERM = 'amech.therm'
 
 # Load things
@@ -30,64 +35,23 @@ MECH_SPC_DCT = spc_parser.load_mech_spc_dct(SPC_CSV, DAT_PATH, canon_ent=True)
 RXN_PARAM_DCT = ckin_parser.load_rxn_param_dct(CKIN, DAT_PATH)
 SPC_NASA7_DCT = ckin_parser.load_spc_nasa7_dct(THERM, DAT_PATH)
 
-spc = 'C4CEHY-2m1jatAB0'
-spc_dct = MECH_SPC_DCT[spc]
-inchi = spc_dct['canon_enant_ich']
-racem = amchi.racemic(inchi)
+# Get isomer sets, racemic_sets, and racemic rxn_param_dct
+iso_sets = racemize.find_iso_sets(MECH_SPC_DCT)
+rac_sets, rac_names, rac_mech_spc_dct = racemize.get_rac_sets(
+    iso_sets, MECH_SPC_DCT)
+rac_rxn_param_dct = racemize.get_rac_rxn_param_dct(
+    rac_sets, rac_names, RXN_PARAM_DCT)
 
-spcs = ['C4CEHY-Y2VjatAB0', 'C4CEHY-Y2VjatAB1', 'C4CEHY-Y2VjatAA0',
-        'C4CEHY-Y2VjatAA1']
-for spc in spcs:
-    spc_dct = MECH_SPC_DCT[spc]
-    inchi = spc_dct['canon_enant_ich']
-    racem = amchi.racemic(inchi)
-    print('inchi: ', inchi)
-    print('racem: ', racem)
-
-for spc in MECH_SPC_DCT:
-    if spc[-1] in ('E', 'Z'):
-        print('E or Z spc: ', spc)
-
-CANON_ENT = False
-#mech_spc_dct_strpd, mech_spc_dct_no_ste = strip_ste.strip_mech_spc_dct(
-#    MECH_SPC_DCT, canon_ent=CANON_ENT)
-
-iso_sets = racemize.find_iso_sets(MECH_SPC_DCT, canon_ent=CANON_ENT)
-print('iso_sets')
-[print(iso_set) for iso_set in iso_sets]
-
-rac_sets = racemize.get_rac_sets(iso_sets, MECH_SPC_DCT)
-
-rxns_by_idx = racemize.get_rxns_by_idx(rac_sets, RXN_PARAM_DCT)
-
-for rxn_by_idx, params_lst in rxns_by_idx.items():
-    if len(params_lst) > 1:
-        print('rxn_by_idx: ', rxn_by_idx)
-
-print(rxns_by_idx[((41,),(79,),(None,))])
-print(rxns_by_idx[((79,),(41,),(None,))])
-
-print('more than one ste species')
-for rxn in rxns_by_idx:
-    rcts, prds, _ = rxn
-    num_ste = 0  # number of chiral 
-    for rct in rcts:
-        if len(rac_sets[rct]) > 1:
-            num_ste += 1
-    for prd in prds:
-        if len(rac_sets[prd]) > 1:
-            num_ste += 1
-    if num_ste > 1:
-        print(rxn)
-
-racemize.lump(rxns_by_idx)
-
+# Run the check for unbalanced reactions
+racemize.check_bal_rxns(rac_rxn_param_dct, rac_mech_spc_dct)
 breakpoint()
 
-# Write the mechanism to a Chemkin file
-#mech_str = mechanism.write_chemkin_file(
-#    rxn_param_dct=new_rxn_param_dct,
-#    mech_spc_dct=new_mech_spc_dct,
-#    spc_nasa7_dct=new_spc_nasa7_dct)
-#pathtools.write_file(mech_str, DAT_PATH, 'merge_ste.out')
+# Get the lumped rxn parameter dictionary
+lump_rxn_param_dct = racemize.lump(rac_rxn_param_dct, TEMPS, PRESSURES)
+
+# Write to file
+mech_str = mechanism.write_chemkin_file(
+    mech_spc_dct=rac_mech_spc_dct, rxn_param_dct=lump_rxn_param_dct)
+pathtools.write_file(mech_str, DAT_PATH, 'racemize.out')
+#csv_str = 
 
