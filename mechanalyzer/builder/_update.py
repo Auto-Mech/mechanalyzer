@@ -48,6 +48,7 @@ def update_spc_dct(spc_ichs, spc_dct, rename=False, enant_label=True,
 
     # Add species dict to mech dct if it is not already in mechanism
     # Build a lst of species that have been added to the mechanism
+    i = 0
     for ich in spc_ichs:
         if ich not in _ich_name_dct:
             # Generate a functional group name

@@ -663,38 +663,49 @@ def _cross_conn(conns_a, conns_b, a_idx, b_idx):
         for j, b_node in enumerate(b_nodes):
             b_node = b_node[0].split('+')
             if len(a_node) > len(b_node):
-                if b_node[0] in a_node:
+                if b_node[0] in a_node:# or b_node[0].replace('A0', 'A1') in a_node or b_node[0].replace('B0', 'B1') in a_node:
                     conn_lst += (
                         (lab_a_nodes[i][0], lab_b_nodes[j][0]),)
             elif len(b_node) > len(a_node):
-                if a_node[0] in b_node:
+                if a_node[0] in b_node:# or a_node[0].replace('A0', 'A1') in b_node or a_node[0].replace('B0', 'B1') in b_node:
+                    conn_lst += (
+                        (lab_a_nodes[i][0], lab_b_nodes[j][0]),)
+            elif len(a_node) == 1 and len(b_node) == 1:
+                # if a_node[0] not in b_node and (a_node[0].replace('A0', 'A1') in b_node or a_node[0].replace('B0', 'B1') in b_node):
+                #     conn_lst += (
+                #         (lab_a_nodes[i][0], lab_b_nodes[j][0]),)
+                #elif a_node == b_node:
+                if a_node == b_node:
                     conn_lst += (
                         (lab_a_nodes[i][0], lab_b_nodes[j][0]),)
     return conn_lst
 
 
-def show_pes(G_lst, g_conn_lst, idx_lst, save=False):
+def show_pes(G_lst, g_conn_lst, idx_lst, save=False, connect_enants=True):
     """ show/save graph of mechanism
     """
     cross_ccs_conns = ()
     #chosen = ((0, 0), (1, 1), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0))
     chosen = ((0, 0), (1, 1), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 1), (8, 0), (9, 0), (10, 0), (11, 0), (12, 0), (13, 0), (14, 0), (15, 0), (16, 0), (17, 0), (18, 0), (19, 0), (20, 0), (21, 0), (22, 0), (23, 0), (24, 0))
-
+    print('idx list', idx_lst)
     for idx_a, (ia, ja) in enumerate(idx_lst):
         for idx_b, (ib, jb) in enumerate(idx_lst):
-            if ia > ib:
+            #if ia > ib:
+            if True:
                 # if ia in [9, 10, 11, 12, 13, 14]:
-                if ia in [2, 3, 4]:
-                    continue
+                #if ia in [2, 3, 4]:
+                #    continue
                 # if ib in [9, 10, 11, 12, 13, 14]:
-                if ib in [2, 3, 4]:
-                    continue
+                #if ib in [2, 3, 4]:
+                #    continue
                 conns_a = g_conn_lst[idx_a]
                 conns_b = g_conn_lst[idx_b]
                 cross_conns = _cross_conn(
                     conns_a, conns_b, (ia, ja), (ib, jb))
                 cross_ccs_conns += cross_conns
     full_G = nx.Graph()
+    # for interactive html
+    # new_G = Network(height="750px", width="100%", select_menu=True, cdn_resources='remote')
     for G in G_lst:
         full_G.update(G)
 
@@ -702,10 +713,16 @@ def show_pes(G_lst, g_conn_lst, idx_lst, save=False):
         full_G.add_edges_from(_edge_lst(conn))
         print('added cross connection', conn)
     colors = [
-        'tab:red', 'tab:blue', 'tab:orange', 'tab:pink',
-        'tab:green', 'tab:purple', 'tab:cyan', 'tab:olive',
-        'tab:gray', 'tab:brown', 'white', 
-        'black', 'black', 'black', 'black', 'black', 'black',
+        #'tab:red', 'tab:blue', 'tab:orange', 'tab:pink',
+        #'tab:green', 'tab:purple', 'tab:cyan', 'tab:olive',
+        #'tab:gray', 'tab:brown', 'tomato', 'lightgreen',
+        #'red', 'blue', 'orange', 'pink',
+        #'green', 'slateblue', 'lightseagreen', 'mediumvioletred',
+        #'dodgedblue', 'purple', 'tomato', 'lightgreen',
+        'red', 'lightseagreen', 'lime', 'chartreuse',
+        'green', 'crimson', 'dodgerblue', 'seagreen',
+        'darkseagreen', 'mediumvioletred', 'steelblue', 'lightgreen',
+        'slateblue', 'black', 'black', 'black', 'black', 'black',
         'black', 'black', 'black', 'black', 'black', 'black',
         'black', 'black', 'black', 'black', 'black', 'black',
         'black', 'black', 'black', 'black', 'black', 'black',
@@ -713,9 +730,12 @@ def show_pes(G_lst, g_conn_lst, idx_lst, save=False):
         'black', 'black', 'black', 'black', 'black', 'black'
         ]
     edge_colors = [
-        'tab:red', 'tab:blue', 'tab:orange', 'tab:pink',
-        'tab:green', 'tab:purple', 'tab:cyan', 'tab:olive',
-        'tab:gray', 'tab:brown', 
+        #'tab:red', 'tab:blue', 'tab:orange', 'tab:pink',
+        #'tab:green', 'tab:purple', 'tab:cyan', 'tab:olive',
+        #'tab:gray', 'tab:brown', 'tomato', 'lightgreen', 
+        'red', 'blue', 'orange', 'pink',
+        'green', 'purple', 'cyan', 'olive',
+        'gray', 'brown', 'tomato', 'lightgreen', 
         'black', 'black', 'black', 'black', 'black', 'black',
         'black', 'black', 'black', 'black', 'black', 'black',
         'black', 'black', 'black', 'black', 'black', 'black',
@@ -770,13 +790,33 @@ def show_pes(G_lst, g_conn_lst, idx_lst, save=False):
         nx.draw_networkx_edges(
             full_G, pos, edgelist=_prod_edges(G.edges), width=1.0, alpha=alpha,
             edge_color=colors[i])
-
+        # interactive html
+        # options = {
+        #     "edgecolors": edge_colors[j], "node_size": 600, "alpha": alpha,
+        #     "linewidths": 3}
+        # well_node_lst = _well_nodes(G.nodes)
+        # new_G.add_nodes(
+        #     well_node_lst,
+        #     color=[colors[i]]*len(well_node_lst))
+        # prod_node_lst = _prod_nodes(G.nodes)
+        # new_G.add_nodes(
+        #     prod_node_lst,
+        #     shape=['square'] *len(prod_node_lst),
+        #     color=[colors[i]]*len(prod_node_lst))
+        # well_edge_lst = _well_edges(G.edges)
+        # new_G.add_edges(
+        #     well_edge_lst)
+        #     #color=[colors[i]]*len(well_edge_lst))
+        # prod_edge_lst = _prod_edges(G.edges)
+        # new_G.add_edges(
+        #     prod_edge_lst)
+        #     #color=[colors[i]]*len(prod_edge_lst))
     chosen_edges = ()
     other_edges = ()
     for cross_conn in cross_ccs_conns:
         ia, ja = cross_conn[0].split('!')[0].split('_')
         ib, jb = cross_conn[1].split('!')[0].split('_')
-        #if (int(ia), int(ja),) in chosen and (int(ib), int(jb),) in chosen:
+        # if (int(ia), int(ja),) in chosen and (int(ib), int(jb),) in chosen:
         if True:
             chosen_edges += (cross_conn,)
         else:
@@ -788,17 +828,26 @@ def show_pes(G_lst, g_conn_lst, idx_lst, save=False):
         full_G, pos, edgelist=other_edges,
         width=1.0, alpha=.05, edge_color='black')
     # nx.draw_networkx_labels(full_G, pos, font_size=8, font_color="black")
-    #nx.draw_networkx_labels(
-    #    full_G, pos, font_size=8,
-    #    labels=_label_dct(full_G.nodes), font_color="black")
-    #nx.draw_networkx_labels(
-    #    full_G, pos, font_size=28,
-    #    labels=_cluster_label_dct(full_G.nodes), font_color="black")
+    # nx.draw_networkx_labels(
+    #     full_G, pos, font_size=8,
+    #     labels=_label_dct(full_G.nodes), font_color="black")
+    # nx.draw_networkx_labels(
+    #     full_G, pos, font_size=28,
+    #     labels=_cluster_label_dct(full_G.nodes), font_color="black")
+
+    # interactive html
+    # new_G.add_edges(
+    #     chosen_edges)
+    # new_G.add_edges(
+    #     other_edges)
 
     if save:
         pass
     else:
         plt.show()
+        # interactive html
+        # new_G.show_buttons()
+        # new_G.show('nx.html')
 
 
 def pes_graph2(conn_lst, ene_dct=None, label_dct=None,

@@ -15,8 +15,7 @@ from automol.chi import recalculate
 
 # What columns are allowed in the CSV file
 ALLOWED_HEADERS = (
-    'name', 'smiles', 'inchi', 'inchikey', 'mult', 'charge', 'sens', 'fml',
-    'exc_flag',
+    'name', 'smiles', 'inchi', 'inchikey', 'mult', 'charge', 'sens', 'fml', 'canon_enant_ich', 'exc_flag'
 )
 DEFAULT_HEADERS = (
     'smiles', 'inchi', 'inchikey', 'mult', 'charge', 'sens', 'fml'

@@ -44,9 +44,12 @@ def ts_graph(gra, site1, site2=None):
     rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
     unsat_atms_dct = automol.graph.atom_unsaturations(automol.graph.kekule(gra))
     atm_vals = automol.graph.atom_element_valences(gra)
+    print('gra herea', gra)
     atms = automol.graph.atoms(gra)
     orig_bnds = automol.graph.bond_orders(gra)
+    print('orig', orig_bnds)
     bnds = automol.graph.kekule_bond_orders(gra)
+    print('kekbnds', bnds)
     for bnd, order in orig_bnds.items():
         if bnd in bnds:
             if orig_bnds[bnd] != bnds[bnd]:

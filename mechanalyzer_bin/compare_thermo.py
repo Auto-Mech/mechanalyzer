@@ -15,28 +15,20 @@ from ioformat import pathtools
 # Filenames
 # Git merge complained yet again about filename changes 
 
-OUTPUT_FILENAME = 'rmg_hr_hrf_hrfa_10_29_lnq.pdf'
-#OUTPUT_FILENAME = 'hr_hrf_hrfa_10_29_g.pdf'
-#OUT_TXT_FNAME = 'hr_ordered.txt'  # filename for ordered text file
-OUT_TXT_FNAME = 'ordered_rmg_lnq.txt'  # filename for ordered text file
+OUTPUT_FILENAME = 'thermo.pdf'
+#OUTPUT_FILENAME = 'hr_hrf_rmg.pdf'
 
 THERMO_FILENAMES = [
-    'rmg.ckin',
-    '1dhr_10_27_22.ckin',
-    '1dhrf_10_27_22.ckin',
-    '1dhrfa_10_29_22.ckin',
+    'amech.therm',
+    'nuig1.1.therm',
 ]
 SPC_CSV_FILENAMES = [
-    'rmg_new.csv',
-    'anl_new.csv',
-    'anl_new.csv',
-    'anl_new.csv',
+    'species.csv',
+    'nuig1.1.csv',
 ]
 MECH_NAMES = [
-    'RMG',
-    'ANL_hr',
-    'ANL_hrf',
-    'ANL_hrfa',
+    'AMECH',
+    'NUIG',
 ]
 
 # Conditions
