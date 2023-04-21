@@ -74,7 +74,7 @@ def connect_rxn_df(rxn_lst):
     # derive list of species
     all_species = []
     [all_species.extend(rxn) for rxn in rxn_lst]
-    all_species = list(set(all_species))
+    all_species = sorted(list(set(all_species)))
     
     connect_df = pd.DataFrame(0, index=all_species, columns=all_species)
     
@@ -92,6 +92,8 @@ def add_wellskip(rxn_df, sp):
     rxn_lst_wellskip = []
     all_species = list(rxn_df.columns)
     all_species.remove(sp)
+    # remove termolecular originating from lumped deco products
+    all_species = [sp for sp in all_species if len(sp) <= 2]
     for rcts in all_species:
         if rxn_df[sp][rcts] == 0:
             rxn_lst_wellskip.append([rcts, sp])
