@@ -514,6 +514,7 @@ class SortMech:
             mech_df = copy.deepcopy(mech_df_new)
 
         # filter spc_list: unique elements
+        spc_list = sorted(list(set(spc_list)))
         if filtertype == 'submech_del':
             musthaves = ['HE', 'AR', 'N2']
             [spc_list.append(m) for m in musthaves if m not in spc_list] # also consider 'must haves' that might not appear in reactions
@@ -610,7 +611,7 @@ class SortMech:
             # columns=['pes_dct', 'pes_chnl_tuple', 'pes_chnl'],
             dtype=object)
 
-        for pesn, peslist in self.mech_df.groupby('pes'):
+        for _, peslist in self.mech_df.groupby('pes'):
             idx_start = 0
             # Set the names lists for the rxns and species needed below
             peslist = peslist.sort_values(by=['rxn_names'])
@@ -931,7 +932,7 @@ class SortMech:
                             [ped_i, hot_sp, dh[T0]*phi, self.dh_min_hot[hot_sp][T0], dh_tot[T0], self.k_max_hot[hot_sp][self.Tref], k_star, T_star, keep], dtype=object)
                         self.rxns_dh = numpy.vstack((self.rxns_dh, array_info))
                         
-                    if check_ped_i == 1:
+                    if check_ped_i >= 1:
                         newped.append(ped_i)
                     
                 if exceptions == len(newped) and len(newped) > 0:
