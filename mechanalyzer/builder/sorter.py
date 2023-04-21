@@ -13,7 +13,7 @@ DFG = {
     'keepfiltered': 0,
     'DH': 0,
     'H5H3ratio': 0,
-    'kratio': 100,
+    'kratio': 1e50, #depends too much on temperature to make it a default that makes sense
     'kabs': 1e50
 }
 
@@ -41,6 +41,16 @@ def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, dc
     # if prompt groups detected: retrieve grps info
     if 'submech_prompt' in sort_lst and spc_therm_dct and dct_flt_grps:
         DFG.update(dct_flt_grps)
+        # check that Tref is contained in spc_therm_dct, otherwise raise exception
+        # assume T is the same for any species
+        T_thermdct = list(spc_therm_dct.values())[0][0]
+
+        if DFG['Tref'] not in T_thermdct:
+            raise ValueError('Tref {} K for calculations not among T of therm_dct {} \
+                plese update ref value in dct_flt_grps[Tref] or add Tref to therm dct'.format(DFG['Tref'], T_thermdct))
+        elif len(T_thermdct) < 4:
+            raise ValueError('therm dictionary should contain at least 3 temperatures for interpolation purposes')
+        
         srt_mch.filter_groups_prompt(
             spc_therm_dct, DFG)
         pes_groups = srt_mch.grps
