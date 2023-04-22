@@ -391,11 +391,6 @@ class SortMech:
             raise KeyError(
                 'Error: Reactions not sorted according ',
                 f'to all criteria: missing {err}, exiting') from err
-
-        print('after sorting')
-        for pessubpes, it in self.mech_df.groupby(['pes', 'subpes']):
-            if pessubpes == (44, 1):
-                print(it)
                 
         # 2. assign class headers
         labels = pd.Series(labels_all, index=criteria_all)
@@ -565,13 +560,7 @@ class SortMech:
                         mech_df_new = pd.concat([mech_df_new, added_rxns_df], axis=0)
 
             mech_df = copy.deepcopy(mech_df_new)
-            
-        for pessubpes, it in self.mech_df.groupby(['pes', 'subpes']):
-            if pessubpes == (44, 1):
-                print(it)
-        for pessubpes, it in mech_df.groupby(['pes', 'subpes']):
-            if pessubpes == (44, 1):
-                print('here',it)                
+              
         # filter spc_list: unique elements
         spc_list = sorted(list(set(spc_list)))
         if filtertype == 'submech_del':
