@@ -19,32 +19,40 @@ TMP_OUT = tempfile.mkdtemp()
 
 # Filenames
 CALC_SPC_CSV = 'merge_ste.csv'
-NOSTE_SPC_CSV = 'nuig_no_ste.csv'
 CALC_CKIN = 'merge_ste.ckin'
+CALC_THERM = 'merge_ste.therm'
+NOSTE_SPC_CSV = 'nuig_no_ste.csv'
 NOSTE_CKIN = 'nuig_no_ste.ckin'
 NOSTE_THERM = 'nuig_no_ste.therm'
 
 # Load things
 CALC_MECH_SPC_DCT = spc_parser.load_mech_spc_dct(
     CALC_SPC_CSV, DAT_PATH, chk_ste=False, chk_match=False)
+CALC_RXN_PARAM_DCT = ckin_parser.load_rxn_param_dct(CALC_CKIN, DAT_PATH)
+CALC_SPC_NASA7_DCT = ckin_parser.load_spc_nasa7_dct(CALC_THERM, DAT_PATH)
 NOSTE_MECH_SPC_DCT = spc_parser.load_mech_spc_dct(
     NOSTE_SPC_CSV, DAT_PATH, chk_ste=False, chk_match=False)
-CALC_RXN_PARAM_DCT = ckin_parser.load_rxn_param_dct(CALC_CKIN, DAT_PATH)
 NOSTE_RXN_PARAM_DCT = ckin_parser.load_rxn_param_dct(NOSTE_CKIN, DAT_PATH)
 NOSTE_SPC_NASA7_DCT = ckin_parser.load_spc_nasa7_dct(NOSTE_THERM, DAT_PATH)
 
 # Expand the dict
-new_rxn_param_dct = merge_ste.expand_all_rxns(
+new_rxn_param_dct, only_ste_rxn_param_dct = merge_ste.expand_all_rxns(
     CALC_MECH_SPC_DCT, NOSTE_MECH_SPC_DCT, NOSTE_RXN_PARAM_DCT)
 
 # Rename the spcs in the mech_spc_dct and the thermo
 new_mech_spc_dct, new_spc_nasa7_dct = merge_ste.rename_spc(
-    CALC_MECH_SPC_DCT, NOSTE_MECH_SPC_DCT, NOSTE_SPC_NASA7_DCT)
+    CALC_MECH_SPC_DCT, NOSTE_MECH_SPC_DCT, CALC_SPC_NASA7_DCT, 
+    NOSTE_SPC_NASA7_DCT)
 
 # Write the mechanism to a Chemkin file
 mech_str = mechanism.write_chemkin_file(
     rxn_param_dct=new_rxn_param_dct,
     mech_spc_dct=new_mech_spc_dct,
     spc_nasa7_dct=new_spc_nasa7_dct)
+only_ste_mech_str = mechanism.write_chemkin_file(
+    rxn_param_dct=only_ste_rxn_param_dct,
+    mech_spc_dct=new_mech_spc_dct,
+    spc_nasa7_dct=new_spc_nasa7_dct)
 pathtools.write_file(mech_str, DAT_PATH, 'merge_ste.out')
+pathtools.write_file(only_ste_mech_str, DAT_PATH, 'merge_ste_only_ste.out')
 

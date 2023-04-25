@@ -16,7 +16,7 @@ def expand_all_rxns(mech_spc_dct_ste, mech_spc_dct_noste,
                     rxn_param_dct_noste):
 
     # Get the chirality of the species in the stereo mechanism
-    _, singly_chiral, _ = classify_chiral(mech_spc_dct_ste)
+    _, sing_chiral, mult_chiral = classify_chiral(mech_spc_dct_ste)
 
     # Strip the stereo mechanism of its stereo and get the name maps
     mech_spc_dct_strpd = strip_mech_spc_dct(mech_spc_dct_ste) 
@@ -24,17 +24,51 @@ def expand_all_rxns(mech_spc_dct_ste, mech_spc_dct_noste,
 
     # Expand each rxn
     new_rxn_param_dct = {}
+    only_ste_rxn_param_dct = {}
+    num_ste_rxns = 0
+    num_added_rxns_chiral = 0
+    num_added_rxns = 0
     for rxn, params in rxn_param_dct_noste.items():
-        new_rxns, new_params = expand_one_rxn(rxn, params, name_maps, 
-                                              singly_chiral)
+        new_rxns, new_params, has_stereo, has_mult_chiral = expand_one_rxn(
+            rxn, params, name_maps, sing_chiral, mult_chiral)
         # Populate with new rate parameters
         for new_rxn in new_rxns:
             new_rxn_param_dct[new_rxn] = new_params
+        # If has_stereo, populate only stereo with new rate parameters
+        if has_stereo:
+            num_ste_rxns += 1
+            for new_rxn in new_rxns:
+                only_ste_rxn_param_dct[new_rxn] = new_params
+        if has_mult_chiral: 
+            #print(f'rxn w/multiple chiral! old: {rxn}, new: {new_rxns}')
+            num_added_rxns_chiral += len(new_rxns)
+        num_added_rxns += len(new_rxns) - 1
 
-    return new_rxn_param_dct
+    print(f'# of ste-containing rxns in orig., no-ste mech: {num_ste_rxns}')
+    print('num_added_rxns_chiral: ', num_added_rxns_chiral)
+    print('num_added_rxns: ', num_added_rxns)
+    print('len of no_ste mech: ', len(rxn_param_dct_noste))
+    print('len of new mech: ', len(new_rxn_param_dct))
+    
+    dup_rxns = 0
+    for rxn, params in rxn_param_dct_noste.items():   
+        if params.arr is not None:
+            if len(params.arr) > 1:
+                dup_rxns += 1
+    print('dup_rxns in no_ste: ', dup_rxns)
+
+    dup_rxns = 0
+    for rxn, params in new_rxn_param_dct.items():   
+        if params.arr is not None:
+            if len(params.arr) > 1:
+                dup_rxns += 1
+    print('dup_rxns in new: ', dup_rxns)
+
+    return new_rxn_param_dct, only_ste_rxn_param_dct
 
 
-def rename_spc(mech_spc_dct_ste, mech_spc_dct_noste, spc_nasa7_dct_noste):
+def rename_spc(mech_spc_dct_ste, mech_spc_dct_noste, spc_nasa7_dct_ste,
+               spc_nasa7_dct_noste):
     """ Take the no-stereo mechanism and replace any names with the stereo
         mech versions (both in the mech_spc_dct and the spc_nasa7_dct)
     """
@@ -50,8 +84,9 @@ def rename_spc(mech_spc_dct_ste, mech_spc_dct_noste, spc_nasa7_dct_noste):
         nasa7 = spc_nasa7_dct_noste[spc]
         if spc in name_maps:  # if in the renaming instructions
             for new_name in name_maps[spc]:
-                new_mech_spc_dct[new_name] = spc_dct
-                new_spc_nasa7_dct[new_name] = nasa7
+                spc_dct_ste = mech_spc_dct_ste[new_name]
+                new_mech_spc_dct[new_name] = spc_dct_ste
+                new_spc_nasa7_dct[new_name] = nasa7  # use non-ste thermo!
         else:  # just use the original spc name
             new_mech_spc_dct[spc] = spc_dct
             new_spc_nasa7_dct[spc] = nasa7
@@ -59,36 +94,49 @@ def rename_spc(mech_spc_dct_ste, mech_spc_dct_noste, spc_nasa7_dct_noste):
     return new_mech_spc_dct, new_spc_nasa7_dct
 
 
-def expand_one_rxn(rxn, params, name_maps, singly_chiral):
+def expand_one_rxn(rxn, params, name_maps, sing_chiral, mult_chiral):
     """ 
     """
 
-    def _new_rcts_or_prds(rcts_or_prds, name_maps, singly_chiral):
+    def _new_rcts_or_prds(rcts_or_prds, name_maps, sing_chiral, mult_chiral):
         """ Creates new rcts and prds, where each species is now a list that 
             has multiple entries if stereo is present
         """
         new_rcts_or_prds = []
+        has_mult_chiral = False
         for rct_or_prd in rcts_or_prds:
-            if rct_or_prd in name_maps and rct_or_prd not in singly_chiral:
+            if rct_or_prd in name_maps and rct_or_prd not in sing_chiral:
                 new_rcts_or_prds.append(name_maps[rct_or_prd])
             else:
                 new_rcts_or_prds.append([rct_or_prd])
+            # Check if spc in mult_chiral; just for debugging purposes
+            for new_rct_or_prd in new_rcts_or_prds:
+                for iso in new_rct_or_prd:
+                    if iso in mult_chiral: 
+                        has_mult_chiral = True
 
-        return new_rcts_or_prds
+        return new_rcts_or_prds, has_mult_chiral
 
     # Get the renamed rcts and prds
-    rcts, prds, _ = rxn
-    new_rcts = _new_rcts_or_prds(rcts, name_maps, singly_chiral)
-    new_prds = _new_rcts_or_prds(prds, name_maps, singly_chiral)
+    rcts, prds, tbody = rxn
+    new_rcts, has_mult_chiral_rcts = _new_rcts_or_prds(
+        rcts, name_maps, sing_chiral, mult_chiral)
+    new_prds, has_mult_chiral_prds = _new_rcts_or_prds(
+        prds, name_maps, sing_chiral, mult_chiral)
 
     # Get the reaction parts array
     shape = []
+    has_stereo = False
     for rct in new_rcts:
         shape.append(len(rct))
+        if len(rct) > 1:
+            has_stereo = True
     factor = 1  # factor by which rates are divided
     for prd in new_prds:
         shape.append(len(prd))
         factor /= len(prd)  # depends on # of stereoisomers in prods
+        if len(prd) > 1:
+            has_stereo = True
     rxn_parts = np.ndarray(tuple(shape), dtype='object')
 
     # Now, get all possible reactions by permuting
@@ -105,13 +153,18 @@ def expand_one_rxn(rxn, params, name_maps, singly_chiral):
             curr_prd = prd[idxs[prd_idx + rct_idx + 1]]
             curr_prds.append(curr_prd)
         # Store
-        new_rxn = (tuple(curr_rcts), tuple(curr_prds), (None,))
+        new_rxn = (tuple(curr_rcts), tuple(curr_prds), tbody)
         new_rxn_names.append(new_rxn)
 
     # Scale rate constants by the factor
     new_params = params_module.multiply_factor(params, factor)
 
-    return new_rxn_names, new_params
+    # If either rcts or prds had mult_chiral, set to True
+    has_mult_chiral = False
+    if has_mult_chiral_rcts or has_mult_chiral_prds:
+        has_mult_chiral = True
+
+    return new_rxn_names, new_params, has_stereo, has_mult_chiral
 
 
 def strip_mech_spc_dct(mech_spc_dct):
@@ -127,13 +180,13 @@ def strip_mech_spc_dct(mech_spc_dct):
     """ 
 
     mech_spc_dct_strpd = {}
-    for spc, spc_dct in mech_spc_dct.items():
-        orig_ich = copy.copy(spc_dct['inchi'])  # not sure why copying...
+    for spc, spc_dct in copy.deepcopy(mech_spc_dct).items():
+        orig_ich = spc_dct['inchi']
         # Remove stereo from the inchi (if present)
-        strpd_ich = inchi.without_stereo(orig_ich)
+        strpd_ich = chi.without_stereo(orig_ich)
         # Get the smiles and inchikey without stereo
-        strpd_smi = inchi.smiles(strpd_ich)
-        strpd_ichkey = inchi.inchi_key(strpd_ich)
+        strpd_smi = chi.smiles(strpd_ich)
+        strpd_ichkey = chi.inchi_key(strpd_ich)
         # Store the stereo-stripped information
         spc_dct['smiles'] = strpd_smi
         spc_dct['inchikey'] = strpd_ichkey
@@ -196,16 +249,16 @@ def classify_chiral(mech_spc_dct):
         return count
 
     no_chiral = []
-    singly_chiral = []
+    sing_chiral = []
     mult_chiral = []
     for spc, spc_dct in mech_spc_dct.items():
         count = _chiral_count(spc_dct['inchi'])
         if count == 0:
             no_chiral.append(spc)
         elif count == 1:
-            singly_chiral.append(spc)
+            sing_chiral.append(spc)
         else:
             mult_chiral.append(spc)
 
-    return no_chiral, singly_chiral, mult_chiral
+    return no_chiral, sing_chiral, mult_chiral
         

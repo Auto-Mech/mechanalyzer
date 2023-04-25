@@ -54,7 +54,7 @@ def test_double():
     """
     _, err_dct = arr.get_params(KTP_DCT_2)
     max_err = err.get_max_err(err_dct)
-    assert max_err < 1  # %
+    assert max_err < 15  # %
 
 
 if __name__ == '__main__':

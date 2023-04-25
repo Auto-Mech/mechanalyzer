@@ -3,6 +3,7 @@
 
 import numpy
 from scipy.optimize import leastsq
+from scipy.optimize import least_squares
 from autoreact.params import RxnParams
 from phydat import phycon
 from ratefit.fit import err
@@ -166,7 +167,8 @@ def double_arr(temps, kts, sing_params, tref=1.0, dbltol=15, dbl_iter=1):
         :rtype: int
     """
 
-    def fit_doub_arr(temps, kts, sing_params, a_change, n_change, tref=1.0):
+    def fit_doub_arr(temps, kts, sing_params, a_change, n_change, tref=1.0,
+                     allow_neg=False):
         """ Performs one double Arrhenius fit by generating initial guesses
             using changes to the single Arrhenius fit
 
@@ -179,9 +181,7 @@ def double_arr(temps, kts, sing_params, tref=1.0, dbltol=15, dbl_iter=1):
             (all other inputs same as parent function)
         """
 
-        # Unpack the single Arrhenius params
-        # get first (& only) entry
-        sing_a, sing_n, sing_ea = sing_params.arr[0]
+        sing_a, sing_n, sing_ea = sing_params.arr[0]  # get first (only) entry
 
         # Get a new tref for the double fit: the logarithmic midpoint temp
         doub_tref = numpy.sqrt(max(temps) / min(temps)) * min(temps)
@@ -191,19 +191,25 @@ def double_arr(temps, kts, sing_params, tref=1.0, dbltol=15, dbl_iter=1):
         init_guess = [(sing_a * a_change), (sing_n + n_change), sing_ea,
                       (sing_a * (1 - a_change)), (sing_n - n_change), sing_ea]
 
+        # Set bounds
+        if allow_neg:  # no bounds
+            bounds = ([-numpy.inf, -numpy.inf, -numpy.inf, -numpy.inf, 
+                       -numpy.inf, -numpy.inf], [numpy.inf, numpy.inf,
+                       numpy.inf, numpy.inf, numpy.inf, numpy.inf]) 
+        else:  # constrain A factors to be positive
+            bounds = ([0, -numpy.inf, -numpy.inf, 0, 
+                       -numpy.inf, -numpy.inf], [numpy.inf, numpy.inf,
+                       numpy.inf, numpy.inf, numpy.inf, numpy.inf]) 
+
         # Perform a least-squares fit
-        # print('init_guess test', init_guess)
-        # print('kts', kts)
-        # print('tref', doub_tref)
-        plsq = leastsq(_resid_func, init_guess,
-                       args=(temps, kts, doub_tref),
-                       ftol=1.0E-8, xtol=1.0E-8, maxfev=100000)
+        plsq = least_squares(_resid_func, init_guess, bounds=bounds,
+                             args=(temps, kts, doub_tref),
+                             ftol=1.0E-8, xtol=1.0E-8, max_nfev=100000)
 
         # Retrieve the fit params and convert A back to the input tref
-        raw_params = list(plsq[0])  # a list of length 6
+        raw_params = list(plsq.x)  # list of length 6
         raw_params[0] = raw_params[0] * (tref / doub_tref) ** raw_params[1]
         raw_params[3] = raw_params[3] * (tref / doub_tref) ** raw_params[4]
-        # print('raw_params test', raw_params)
 
         # Instantiate RxnParams
         arr_dct = {'arr_tuples': [raw_params[:3], raw_params[3:]]}
