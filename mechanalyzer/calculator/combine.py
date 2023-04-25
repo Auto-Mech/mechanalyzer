@@ -94,10 +94,8 @@ def comb_dcts(dct1, dct2, rename_instr, target_type='rxn', ste_dct=None):
 
     # Add renamed and cleaned up dct2 to the combined dct
     comb_dct = copy.deepcopy(dct1)  # combined dct is initially just dct1
-    #print('comb_dct before adding dct2:\n', comb_dct)
     for key, value in renamed_dct2.items():
         comb_dct[key] = value
-    #print('comb_dct after adding dct2:\n', comb_dct)
 
     return comb_dct
 

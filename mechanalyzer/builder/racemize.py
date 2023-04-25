@@ -9,39 +9,93 @@ from automol import chi
 from autoreact.params import RxnParams
 
 
-def lump(rac_rxn_param_dct, temps_lst, pressures):
+def main(rxn_param_dct, spc_nasa7_dct, mech_spc_dct, temp_lst, pressures,
+         dummy=False):
+
+    # Get isomer sets, racemic_sets, and racemic rxn_param_dct
+    iso_sets = find_iso_sets(mech_spc_dct)
+    rac_sets, rac_names, rac_mech_spc_dct = get_rac_sets(
+        iso_sets, mech_spc_dct)
+    rac_rxn_param_dct = get_rac_rxn_param_dct(
+        rac_sets, rac_names, rxn_param_dct)
+
+    # Get the lumped rxn parameter dictionary
+    lump_rxn_param_dct = lump(rac_rxn_param_dct, temp_lst, pressures,
+                              dummy=dummy)
+
+    # Get the thermo dct with only racemized species names
+    rac_spc_nasa7_dct = get_rac_spc_nasa7_dct(rac_names, spc_nasa7_dct)
+
+    return lump_rxn_param_dct, rac_spc_nasa7_dct, rac_mech_spc_dct
+
+
+def lump(rac_rxn_param_dct, temps_lst, pressures, dummy=False):
 
     lump_rxn_param_dct = {}
     for rac_rxn, [rxns, params_lst] in rac_rxn_param_dct.items():
-        lump_dct = {}
-        for idx, rxn in enumerate(rxns):  # rxns in terms of spc names
-            rcts, prds, _ = rxn
-            params = params_lst[idx]
-            sort_rcts = tuple(sorted(rcts))  # alphabetize
-            if sort_rcts in lump_dct:
-                lump_dct[sort_rcts].append(params)
-            else:
-                lump_dct[sort_rcts] = [params]
-
-        # Get the list of ktp_dcts
-        ktp_dct_lst = []
-        for params_lst in lump_dct.values():
-            for params in params_lst:
-                ktp_dct = rates.eval_params(params, temps_lst, pressures)
-                ktp_dct_lst.append(ktp_dct)
-
-        # Add all the ktp_dcts together, then divide by averaging factor
-        comb_ktp_dct = _sum_ktp_list(ktp_dct_lst)
-        comb_ktp_dct = rates.mult_by_factor(comb_ktp_dct, 1 / len(lump_dct))
-
-        # Refit the final ktp_dct
-        try:
-            comb_params, _ = fit.fit_ktp_dct(comb_ktp_dct, 'plog')
-        except:
-            comb_params = RxnParams(arr_dct={'arr_tuples': ((1e-5, 0, 0),)})
-        lump_rxn_param_dct[rac_rxn] = comb_params  # store
+        if dummy:
+            comb_params = RxnParams(arr_dct={'arr_tuples': ((1, 0, 0),)})
+        else:
+            lump_dct = {}
+            for idx, rxn in enumerate(rxns):  # rxns in terms of spc names
+                rcts, prds, _ = rxn
+                params = params_lst[idx]
+                sort_rcts = tuple(sorted(rcts))  # alphabetize
+                if sort_rcts in lump_dct:
+                    lump_dct[sort_rcts].append(params)
+                else:
+                    lump_dct[sort_rcts] = [params]
+    
+            # Get the list of ktp_dcts
+            ktp_dct_lst = []
+            for params_lst in lump_dct.values():
+                for params in params_lst:
+                    ktp_dct = rates.eval_params(params, temps_lst, pressures)
+                    ktp_dct_lst.append(ktp_dct)
+    
+            # Add all the ktp_dcts together, then divide by averaging factor
+            comb_ktp_dct = _sum_ktp_list(ktp_dct_lst)
+            comb_ktp_dct = rates.mult_by_factor(comb_ktp_dct, 1 / len(lump_dct))
+    
+            # Refit the final ktp_dct
+            try:
+                comb_params, _ = fit.fit_ktp_dct(comb_ktp_dct, 'plog')
+            except:
+                comb_params = RxnParams(arr_dct={'arr_tuples': ((1e-5, 0, 0),)})
+        # Store rates
+        lump_rxn_param_dct[rac_rxn] = comb_params
 
     return lump_rxn_param_dct
+
+
+def get_rac_spc_nasa7_dct(rac_names, spc_nasa7_dct):
+    """ Takes a full, redundant NASA-7 thermo dict and simplifies to only the
+        racemic species names
+    """
+    def swap_enant_name(spc):
+        new_spc = spc
+        if spc[-1] == '0':
+            new_spc = spc[:-1] + '1'
+        elif spc[-1] == '1':
+            new_spc = spc[:-1] + '0'
+
+        return new_spc
+
+    print('Starting thermo selection')
+    rac_spc_nasa7_dct = {}
+    for rac_name in rac_names:
+        if spc_nasa7_dct.get(rac_name) is not None:  # if spc in orig. thermo
+            rac_spc_nasa7_dct[rac_name] = spc_nasa7_dct[rac_name]
+        else:  # if spc not in original thermo, check for enantiomer
+            other_rac = swap_enant_name(rac_name) 
+            if spc_nasa7_dct.get(other_rac) is not None:
+                # Note: store under the original racemic name
+                rac_spc_nasa7_dct[rac_name] = spc_nasa7_dct[other_rac]
+            else:
+                print(f'neither {rac_name} nor its enant, {other_rac}, '
+                      'in thermo')
+
+    return rac_spc_nasa7_dct
 
 
 def get_rac_rxn_param_dct(rac_sets, rac_names, rxn_param_dct):
