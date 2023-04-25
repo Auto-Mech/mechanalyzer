@@ -41,7 +41,7 @@ CMTS = '!'  # character used to define comments
 
 
 def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=False,
-                       chk_match=False, verbose=True, canon_ent=False):
+                       chk_match=False, verbose=True, canon_ent=True):
     """ Obtains multiple mech_spc_dcts given a list of spc.csv filenames
 
         :param filenames: filenames of the spc.csv files to be read
@@ -70,7 +70,7 @@ def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=False,
 
 
 def load_mech_spc_dct(filename, path, quotechar="'", chk_ste=False, 
-                      chk_match=False, verbose=True, canon_ent=False):
+                      chk_match=False, verbose=True, canon_ent=True):
     """ Obtains a single mech_spc_dct given a spc.csv filename
 
         :param filename: filename of the spc.csv file to be read
@@ -96,7 +96,7 @@ def load_mech_spc_dct(filename, path, quotechar="'", chk_ste=False,
 
 
 def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False,
-                       chk_match=False, verbose=True, canon_ent=False):
+                       chk_match=False, verbose=True, canon_ent=True):
     """ Obtains a single mech_spc_dct given a string parsed from a spc.csv file
 
         :param file_str: the string that was read directly from the .csv file
