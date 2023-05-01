@@ -145,6 +145,11 @@ def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False,
     for idx, line in enumerate(lines):
         if idx == 0:
             headers = parse_first_line(line, quotechar=quotechar)
+            if canon_ent and 'canon_enant_ich' not in headers:
+                print("Warning: user selected the 'canon_ent' option, but the"
+                      " field 'canon_enant_ich' is not in the CSV file.\n"
+                      "The canonical enantiomer will have to be calculated "
+                      "for every species, which might be slow.")
         else:
             cols = parse_line(line, idx, headers, quotechar=quotechar)
             if cols is not None:
@@ -261,9 +266,6 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True, canon_ent=True):
         if 'canon_enant_ich' not in full_spc_dct:
             full_spc_dct['canon_enant_ich'] = canonical_enantiomer(
                 full_spc_dct['inchi'])
-            print(
-                'canonical enantiomer for',
-                full_spc_dct['inchi'], full_spc_dct['canon_enant_ich'])
     else:
         full_spc_dct['canon_enant_ich'] = full_spc_dct['inchi']
     # Add charge and exc_flag if missing; assume 0 for both
