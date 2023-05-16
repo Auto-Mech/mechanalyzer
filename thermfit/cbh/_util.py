@@ -161,7 +161,7 @@ def balance_frags_ts(gra, frags):
         found = False
         for frag in frags:
             if 'exp_gra' in frags[frag]:
-                if automol.graph.full_isomorphism(frags[frag]['exp_gra'], spc):
+                if automol.graph.isomorphism(frags[frag]['exp_gra'], spc):
                     idx = frag
                     found = True
                     break

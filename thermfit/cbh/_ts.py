@@ -366,7 +366,7 @@ def cbhone_radradabs(
                     key = 'exp_gra'
                     for onename in newfrags:
                         if 'exp_gra' in newfrags[onename]:
-                            if automol.graph.full_isomorphism(
+                            if automol.graph.isomorphism(
                                    newfrags[onename][key],
                                    zedfrags_dct[key]):
                                 newname = onename
@@ -556,7 +556,7 @@ def cbhone_elim(
                     key = 'exp_gra'
                     for onename in newfrags:
                         if 'exp_gra' in newfrags[onename]:
-                            if automol.graph.full_isomorphism(
+                            if automol.graph.isomorphism(
                                     newfrags[onename][key],
                                     zedfrags_dct[key]):
                                 newname = onename
@@ -645,7 +645,7 @@ def cbhone_habs(
                     key = 'exp_gra'
                     for onename in newfrags:
                         if 'exp_gra' in newfrags[onename]:
-                            if automol.graph.full_isomorphism(
+                            if automol.graph.isomorphism(
                                newfrags[onename][key],
                                zedfrags_dct[key]):
                                 newname = onename
@@ -678,7 +678,7 @@ def _add_frag_to_frags(key, coeff, grai, frags):
     for name, frags_dct in frags.items():
         if key in frags_dct:
             if key == 'exp_gra':
-                if automol.graph.full_isomorphism(
+                if automol.graph.isomorphism(
                        frags_dct[key], grai):
                     newname = name
                     repeat = True
