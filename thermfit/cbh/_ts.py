@@ -55,8 +55,7 @@ def basic_ts_basis(zrxn, spc_scheme):
     """
 
     # Just use reactants
-    # rxn_ichs = automol.reac.reaction_inchis(zrxn)
-    rxn_ichs = automol.reac.reaction_inchis(zrxn, stereo=False)
+    rxn_ichs = automol.reac.chi(zrxn, stereo=False)
     rct_ichs, _ = rxn_ichs
 
     basis, coeff_lst = [], []
