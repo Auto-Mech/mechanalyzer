@@ -845,7 +845,7 @@ def _ste_rxn_lsts(rxn_ich, enant=True):
 
     """
     # Build reaction objects
-    rxn_obj_sets = automol.reac.util.rxn_objs_from_inchi(
+    rxn_obj_sets = automol.reac.with_structures_from_chi(
         rxn_ich[0], rxn_ich[1])
     try:
         rxn_obj = rxn_obj_sets[0][0]  # expand just with rxn object
@@ -957,7 +957,7 @@ def _ccs_is_abstraction(sccs_rxn_dct):
     if all(len(rxn_lst) == 1 for rxn_lst in sccs_rxn_dct.values()):
         for sccs_rxn_lst in sccs_rxn_dct.values():
             # print('SCCS rxn lst TEST', sccs_rxn_lst)
-            rxn_obj = automol.reac.rxn_objs_from_inchi(
+            rxn_obj = automol.reac.with_structures_from_chi(
                 sccs_rxn_lst[0][0], sccs_rxn_lst[0][1])
             # print('rxn obj test', bool(rxn_obj))
             if rxn_obj is not None:

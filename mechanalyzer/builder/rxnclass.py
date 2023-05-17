@@ -282,7 +282,7 @@ def classify_graph(spc_dct, rct_names, prd_names):
 
         if automol.formula.reac.is_valid_reaction(rct_fmls, prd_fmls):
             try:
-                rxn_objs = automol.reac.rxn_objs_from_inchi(
+                rxn_objs = automol.reac.with_structures_from_chi(
                     rct_ichs, prd_ichs)
                 rxn_classes = tuple(obj[0].class_ for obj in rxn_objs)
             except AssertionError:
