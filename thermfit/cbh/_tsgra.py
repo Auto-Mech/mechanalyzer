@@ -42,8 +42,8 @@ def xor(lst1, lst2):
 
 def ts_graph(gra, site1, site2=None):
     rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
-    unsat_atms_dct = automol.graph.atom_unsaturations(automol.graph.kekule(gra))
-    atm_vals = automol.graph.atom_element_valences(gra)
+    unsat_atms_dct = automol.graph.atom_unpaired_electrons(automol.graph.kekule(gra))
+    atm_vals = automol.graph.atomic_valences(gra)
     print('gra herea', gra)
     atms = automol.graph.atoms(gra)
     orig_bnds = automol.graph.bond_orders(gra)
@@ -351,7 +351,7 @@ def add_appropriate_pi_bonds(gra, frm_key):
     """
 
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
-    unsat_atms_dct = automol.graph.atom_unsaturations(gra)
+    unsat_atms_dct = automol.graph.atom_unpaired_electrons(gra)
     atms, bnd_ords = gra
     brk_key = frozenset({})
     unsat_atms = []
