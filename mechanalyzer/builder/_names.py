@@ -225,7 +225,7 @@ def functional_group_name(ich, name='', rename_rule_dct=None,
     fml = automol.graph.formula(gra)
 
     # Get the number of atoms and functional groups
-    hvy_atm_cnt = automol.graph.heavy_atom_count(gra)
+    hvy_atm_cnt = automol.graph.atom_count(gra, heavy_only=True)
     fgrp_cnt_dct = automol.graph.functional_group_count_dct(gra)
 
     if name and not force_rename:
