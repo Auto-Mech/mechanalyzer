@@ -87,7 +87,7 @@ def load_mech_spc_dct(filename, path, quotechar="'", chk_ste=False,
         :rtype: dct {spc1: spc_dct1, spc2: ...}
     """
 
-    file_str = pathtools.read_file(path, filename)
+    file_str = pathtools.read_file(path, filename, print_debug=True)
     mech_spc_dct = parse_mech_spc_dct(
         file_str, quotechar=quotechar, chk_ste=chk_ste, chk_match=chk_match,
         verbose=verbose, canon_ent=canon_ent)
