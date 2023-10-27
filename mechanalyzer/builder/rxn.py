@@ -147,7 +147,7 @@ def _determine_reactants(spc_dct, rct1_set, rct2_set, rtyp):
         return spc_ichs, spc_names
 
     rct1_ichs, rct1_names = _gen_set(spc_dct, rct1_set)
-    if automol.par.isbimol(rtyp):
+    if automol.ReactionClass.is_bimolecular(rtyp):
         rct2_ichs, rct2_names = _gen_set(spc_dct, rct2_set)
         rxn_ichs = tuple(itertools.product(rct1_ichs, rct2_ichs))
         rxn_names = tuple(itertools.product(rct1_names, rct2_names))
@@ -177,7 +177,7 @@ def _radicals(ich_lst, name_lst):
     """
     rad_ichs, rad_names = (), ()
     for ich, name in zip(ich_lst, name_lst):
-        if automol.graph.radical_species(automol.chi.graph(ich)):
+        if automol.graph.is_radical_species(automol.chi.graph(ich)):
             rad_ichs += (ich,)
             rad_names += (name,)
 
@@ -189,7 +189,7 @@ def _rct_gras(rct_ichs):
     """
 
     rct_geos = list(map(automol.chi.geometry, rct_ichs))
-    rct_gras = tuple(map(automol.geom.connectivity_graph, rct_geos))
+    rct_gras = tuple(map(automol.geom.graph_without_stereo, rct_geos))
     rct_gras, _ = automol.graph.standard_keys_for_sequence(rct_gras)
 
     return rct_gras
@@ -215,7 +215,7 @@ def _prd_ichs(rct_gras, rxn_class_typ, check=True):
             rxns_ = automol.reac.find(rct_gras_, prd_gras_)
             try:
                 assert rct_gras_ == rct_gras
-                assert any(r.class_ == rxn_class_typ for r in rxns_)
+                assert any(automol.reac.class_(r) == rxn_class_typ for r in rxns_)
             except AssertionError:
                 print('WARNING: issue with reaction')
 

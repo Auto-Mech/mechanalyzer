@@ -280,11 +280,11 @@ def classify_graph(spc_dct, rct_names, prd_names):
         rct_ichs = tuple(spc_dct[spc]['inchi'] for spc in rct_names)
         prd_ichs = tuple(spc_dct[spc]['inchi'] for spc in prd_names)
 
-        if automol.formula.reac.is_valid_reaction(rct_fmls, prd_fmls):
+        if automol.form.reac.is_valid_reaction(rct_fmls, prd_fmls):
             try:
-                rxn_objs = automol.reac.with_structures_from_chi(
+                rxn_objs = automol.reac.from_chis(
                     rct_ichs, prd_ichs)
-                rxn_classes = tuple(obj[0].class_ for obj in rxn_objs)
+                rxn_classes = tuple(automol.reac.class_(obj) for obj in rxn_objs)
             except AssertionError:
                 rxn_classes = ('AssertionError', )
             except TypeError:

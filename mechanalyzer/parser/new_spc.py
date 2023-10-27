@@ -11,7 +11,7 @@ from automol.chi import smiles as ich_to_smi
 from automol.chi import canonical_enantiomer
 from automol.chi import formula as ich_to_fml
 from automol.chi import low_spin_multiplicity as _low_spin_mult
-from automol.formula import from_string as str_to_fml
+from automol.form import from_string as str_to_fml
 
 ALLOWED_COL_NAMES = (
     'name',

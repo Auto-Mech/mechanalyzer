@@ -219,8 +219,8 @@ products keys:
 - [13, 14]
 """
 
-HABS_ZRXN = automol.reac.from_string(HABS_ZRXN_STR)
-BS_ZRXN = automol.reac.from_string(BS_ZRXN_STR)
+HABS_ZRXN = automol.reac.from_old_string(HABS_ZRXN_STR)
+BS_ZRXN = automol.reac.from_old_string(BS_ZRXN_STR)
 
 # Set scheme variables
 BASIC_SCHEME = 'basic'
