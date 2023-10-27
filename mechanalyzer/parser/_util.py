@@ -6,7 +6,7 @@ Useful functions for mechanalyzer.parser
 
 import copy
 import automol
-from automol.formula._formula import element_count as n_el
+from automol.form._form import element_count as n_el
 
 
 def order_rct_bystoich(rct_names_lst, spc_dct=None):
@@ -27,7 +27,7 @@ def order_rct_bystoich(rct_names_lst, spc_dct=None):
             rct_names = val
             rct_ichs = list(map(ich_dct.__getitem__, rct_names))
             fml_rct = list(map(automol.chi.formula, rct_ichs))
-            atoms_rct = list(map(automol.formula.atom_count, fml_rct))
+            atoms_rct = list(map(automol.form.atom_count, fml_rct))
             if len(rct_names) == 2:
                 if atoms_rct[1] > atoms_rct[0]:
                     # swap places of reactants 1 and 2
@@ -151,7 +151,7 @@ def get_fml(rxn_ichs):
     formula_dct = ''
     for rct_ich in rxn_ichs:
         formula_i_dct = automol.chi.formula(rct_ich)
-        formula_dct = automol.formula.join(formula_dct, formula_i_dct)
-    formula_str = automol.formula.string2(formula_dct)
+        formula_dct = automol.form.join(formula_dct, formula_i_dct)
+    formula_str = automol.form.string2(formula_dct)
 
     return formula_dct, formula_str

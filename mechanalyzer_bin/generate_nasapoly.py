@@ -145,7 +145,7 @@ def _run_autorun(name, fml, hform0, pf_str, run_dir):
 
     print(f'    - Running ThermP+PAC99 at {run_dir}')
 
-    fml_str = automol.formula.string(fml)
+    fml_str = automol.form.string(fml)
 
     thermp_script_str = autorun.SCRIPT_DCT['thermp']
     pac99_script_str = autorun.SCRIPT_DCT['pac99'].format(fml_str)

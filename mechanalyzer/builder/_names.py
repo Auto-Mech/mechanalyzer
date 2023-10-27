@@ -6,7 +6,7 @@ import ioformat
 import automol.chi
 import automol.graph
 from automol.graph import FunctionalGroup
-import automol.formula
+import automol.form
 
 
 # Name remaping function
@@ -245,8 +245,8 @@ def functional_group_name(ich, name='', rename_rule_dct=None,
         # re_name += f'-{fgrp_lbl}'
 
         # NEW SCHEME
-        fml_lbl_full = automol.formula.string(fml, hyd=True)
-        fml_lbl_short = automol.formula.string(fml, hyd=False)
+        fml_lbl_full = automol.form.string(fml, hyd=True)
+        fml_lbl_short = automol.form.string(fml, hyd=False)
         conn_lbl = _conn_string(ich)
         ste_lbl = stereo_name_suffix(ich, enant_label=enant_label)
         fgrp_lbl = _fgrp_name_string(fgrp_cnt_dct, rename_rule_dct)
@@ -321,7 +321,7 @@ def formula_name(ich, fml_cnt_dct, spc_dct):
         formula appears in some mechanism.
     """
 
-    fml_str = automol.chi.formula_string(ich)
+    fml_str = automol.chi.formula_layer(ich)
 
     if fml_str in fml_cnt_dct:
 
