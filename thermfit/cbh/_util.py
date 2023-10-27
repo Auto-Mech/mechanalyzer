@@ -87,14 +87,13 @@ def balance(ich, frags):
                 stoichs[atm] += _stoich[atm] * frags[frag]
             else:
                 stoichs[atm] = _stoich[atm] * frags[frag]
-    balance_ = {}
     _stoich = automol.chi.formula(ich)
     for atom in _stoich:
         if atom in stoichs:
-            balance_[atom] = _stoich[atom] - stoichs[atom]
+            stoichs[atom] += -_stoich[atom]
         else:
-            balance_[atom] = _stoich[atom]
-    balance_ = {x: y for x, y in balance_.items() if y != 0}
+            stoichs[atom] = -_stoich[atom]
+    balance_ = {x: -y for x, y in stoichs.items() if y != 0}
     return balance_
 
 

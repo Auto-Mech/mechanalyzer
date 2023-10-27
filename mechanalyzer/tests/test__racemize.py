@@ -24,11 +24,11 @@ PRESSURES = [0.03, 0.1, 0.3, 1, 3, 10, 30, 100]
 TEMPS = [numpy.arange(360, 1500, 60)]
 
 # Filenames
-SPC_CSV = 'species.csv'
+SPC_CSV = '230810.csv'
 #CKIN = 'amech.ckin'
-CKIN = 'amech_short.ckin'
+CKIN = '230810.ckin'
 #CKIN = 'amech_140423.ckin'
-THERM = 'amech.therm'
+THERM = '230810.therm'
 
 # Load things
 MECH_SPC_DCT = spc_parser.load_mech_spc_dct(SPC_CSV, DAT_PATH, canon_ent=True)

@@ -80,6 +80,7 @@ def rename_spc(mech_spc_dct_ste, mech_spc_dct_noste, spc_nasa7_dct_ste,
     # Loop over each species and rename as needed
     new_mech_spc_dct = {}
     new_spc_nasa7_dct = {}
+    breakpoint()
     for spc, spc_dct in mech_spc_dct_noste.items():
         nasa7 = spc_nasa7_dct_noste[spc]
         if spc in name_maps:  # if in the renaming instructions
@@ -182,8 +183,8 @@ def strip_mech_spc_dct(mech_spc_dct):
     mech_spc_dct_strpd = {}
     for spc, spc_dct in copy.deepcopy(mech_spc_dct).items():
         orig_ich = spc_dct['inchi']
-        # Remove stereo from the inchi (if present)
-        strpd_ich = chi.without_stereo(orig_ich)
+        # Remove stereo from the inchi (if present)  (false keeps it as AmChI)
+        strpd_ich = chi.without_stereo(orig_ich, reassess_amchi=False)
         # Get the smiles and inchikey without stereo
         strpd_smi = chi.smiles(strpd_ich)
         strpd_ichkey = chi.inchi_key(strpd_ich)
