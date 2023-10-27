@@ -761,9 +761,9 @@ def _noste_rxn(rxn_ichs):
     for ich in ichs2:
         noste_ichs2 += (automol.chi.standard_form(ich, stereo=False),)
         form2 += (automol.chi.formula(ich),)
-    form1 = (automol.formula.join_sequence(form1) if len(form1) > 1
+    form1 = (automol.form.join_sequence(form1) if len(form1) > 1
              else form1[0])
-    form2 = (automol.formula.join_sequence(form2) if len(form2) > 1
+    form2 = (automol.form.join_sequence(form2) if len(form2) > 1
              else form2[0])
     noste_rxn = (automol.chi.sorted_(noste_ichs1),
                  automol.chi.sorted_(noste_ichs2))
@@ -777,10 +777,10 @@ def _rxns_noste_pes_dct(rxns, name_ich_dct):
     for rxn in rxns:
         ichs1, ichs2, _ = _rxn_name_to_ich(rxn, name_ich_dct)
         noste_rxn, form1, form2 = _noste_rxn((ichs1, ichs2,))
-        if not automol.formula.string(form1) in noste_dct:
-            noste_dct[automol.formula.string(form1)] = {rxn: noste_rxn}
+        if not automol.form.string(form1) in noste_dct:
+            noste_dct[automol.form.string(form1)] = {rxn: noste_rxn}
         else:
-            noste_dct[automol.formula.string(form1)][rxn] = noste_rxn
+            noste_dct[automol.form.string(form1)][rxn] = noste_rxn
     return noste_dct
 
 
@@ -845,26 +845,20 @@ def _ste_rxn_lsts(rxn_ich, enant=True):
 
     """
     # Build reaction objects
-    rxn_obj_sets = automol.reac.with_structures_from_chi(
+    rxn_obj_sets = automol.reac.from_chis(
         rxn_ich[0], rxn_ich[1])
     try:
-        rxn_obj = rxn_obj_sets[0][0]  # expand just with rxn object
+        rxn_obj = rxn_obj_sets[0]  # expand just with rxn object
     except TypeError:
         print('No ID', rxn_ich, rxn_obj_sets)
 
     # Build a list of stereo reactions
     ste_rxn_ichs = ()
     for ste_rxn in automol.reac.expand_stereo(rxn_obj, enant=enant):
-        rct_gras = automol.reac.reactant_graphs(ste_rxn)
-        prd_gras = automol.reac.product_graphs(ste_rxn)
         attempt = 1
         while attempt < 4:
             try:
-                rct_ichs, prd_ichs = (), ()
-                for gra in rct_gras:
-                    rct_ichs += (automol.graph.chi(gra, stereo=True),)
-                for gra in prd_gras:
-                    prd_ichs += (automol.graph.chi(gra, stereo=True),)
+                rct_ichs, prd_ichs = automol.reac.chis(rxn_obj, stereo=True)
                 rct_ichs = automol.chi.sorted_(rct_ichs)
                 prd_ichs = automol.chi.sorted_(prd_ichs)
                 ste_rxn_ichs += ((rct_ichs, prd_ichs),)
@@ -876,7 +870,7 @@ def _ste_rxn_lsts(rxn_ich, enant=True):
                 print('Fail to get stereo in 3 attempts', rxn_ich)
 
     # Set log message
-    log = f' - Reaction identified as {rxn_obj.class_}.\n'
+    log = f' - Reaction identified as {automol.reac.class_(rxn_obj)}.\n'
 
     return ste_rxn_ichs, log
 
@@ -957,11 +951,11 @@ def _ccs_is_abstraction(sccs_rxn_dct):
     if all(len(rxn_lst) == 1 for rxn_lst in sccs_rxn_dct.values()):
         for sccs_rxn_lst in sccs_rxn_dct.values():
             # print('SCCS rxn lst TEST', sccs_rxn_lst)
-            rxn_obj = automol.reac.with_structures_from_chi(
+            rxn_objs = automol.reac.from_chis(
                 sccs_rxn_lst[0][0], sccs_rxn_lst[0][1])
             # print('rxn obj test', bool(rxn_obj))
-            if rxn_obj is not None:
-                if rxn_obj[0][0].class_ == 'hydrogen abstraction':
+            if rxn_objs:
+                if automol.reac.class_(rxn_objs[0]) == 'hydrogen abstraction':
                     is_abstraction = True
                     break
 
