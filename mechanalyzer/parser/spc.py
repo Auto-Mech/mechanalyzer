@@ -136,7 +136,7 @@ def spc_dct_from_smiles(smiles_lst, stereo=False):
             ich = automol.chi.add_stereo(ich)
 
         # Generate Name
-        fml = automol.chi.formula_string(ich)
+        fml = automol.chi.formula_layer(ich)
         name, fml_count_dct = assign_unique_name(
             fml, fml_count_dct, spc_dct)
 
