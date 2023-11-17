@@ -34,11 +34,12 @@ def calc_hform_0k(spc_h0, basis_h0,
     for i, ich in enumerate(basis_ichs):
 
         # Read reference enthalpies for basis molecule
-        ref_h0 = reference_enthalpy(ich, ref_set, 0)
-        ref_h0 = ref_h0 if ref_h0 is not None else 0.0  # break loop?
+        ref_h0 = reference_enthalpy(ich, ref_set, 0, rxn=rxn)
 
         # Add basis and reference energies to overall va
-        print('dHzero test', dhzero, ich, basis_coeffs[i], ref_h0, basis_h0[i])
+        print(
+            'Basis H contribution',
+            ich, basis_coeffs[i], ref_h0, basis_h0[i])
         dhzero += basis_coeffs[i] * (ref_h0 - basis_h0[i])
 
         # print('Contribution from:', automol.chi.smiles(ich))
@@ -69,12 +70,9 @@ def reference_enthalpy(ich_lookup, ref_set, temp, rxn=False):
     """
 
     # Set path and name to thermo database file
-    rxn = True
-    if isinstance(ich_lookup, str):
-        rxn = False
     thermodb_file = _thermo_database(temp, rxn=rxn)
     if rxn:
-        ich_lookup = '+'.join(ich_lookup[0]) + '=' + '+'.join(ich_lookup[1])
+        ich_lookup = format_reaction_inchi(ich_lookup)
         ref_set = 'ANL0'
 
     # Find the energy value for the given species and enery type

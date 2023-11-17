@@ -93,7 +93,7 @@ def balance(ich, frags):
             stoichs[atom] += -_stoich[atom]
         else:
             stoichs[atom] = -_stoich[atom]
-    balance_ = {x: -y for x, y in stoichs.items() if y != 0}
+    balance_ = {x: round(-y, 5) for x, y in stoichs.items() if y != 0}
     return balance_
 
 
@@ -211,3 +211,48 @@ def print_lhs_rhs(ich, frags):
         lhsprint += f' +  {side:.1f} {automol.chi.smiles(frag)} '
 
     return f'{lhsprint} --> {rhsprint}'
+
+
+
+def cleave_group_and_saturate(gra, bnd_ords, atmi, atmj):
+    """
+    Fragments the bnd between atmi-atmj and adds hydrogens
+    to atmi for each bond order that was removed. Returns
+    the graph that atmi is in
+    INPUT:
+    gra -- graph
+    atmi -- atm we are saturating
+    atmj -- atm we are cleaving
+    OUTPUT
+    gra -- new graph
+    """
+    #def _update_atom_stereo(gra, atm_idx):
+    #    atm_stereo_pars = automol.graph.atom_stereo_parities(gra)
+    #    if atm_stereo_pars[atm_idx] is not None: 
+    #        new_atm_stereo_pars = automol.graph.calculate_priorities_and_assign_parities(gra)
+    #        if new_atm_stereo_pars[atm_idx] is None:
+    #            atm_stereo_pars[atm_idx] = None
+    #            gra = automol.graph.set_atom_stereo_parities(gra, atm_stereo_pars)
+    #    return gra 
+    # Graphical info about molecule
+    if frozenset({atmi, atmj}) in automol.graph.bonds(gra):
+        order = bnd_ords[frozenset({atmi, atmj})]
+        for _ in range(order):
+            gra = automol.graph.add_bonded_atom(gra, 'H', atmi)
+        # gra = _update_atom_stereo(gra, atmi)
+        # gra = _update_atom_stereo(gra, atmj)
+        gra = automol.graph.remove_bonds(gra, (frozenset({atmi, atmj}),))
+        gras = automol.graph.connected_components(gra)
+        new_gra = None
+        for gra_k in gras:
+            atmsk = automol.graph.atom_keys(gra_k)
+            if atmi in atmsk:
+                new_gra = gra_k
+        atm_stereo_pars = automol.graph.atom_stereo_parities(new_gra)
+        _, new_atm_stereo_gra = automol.graph.calculate_priorities_and_assign_parities(new_gra)
+        new_atm_stereo_pars = automol.graph.atom_stereo_parities(new_atm_stereo_gra)
+        if atm_stereo_pars != new_atm_stereo_pars:
+            new_gra = automol.graph.set_atom_stereo_parities(new_gra, new_atm_stereo_pars)
+    else:
+        new_gra = gra
+    return new_gra
