@@ -145,32 +145,43 @@ def cbhzed(ich, balance=True):
 
     # Graphical info about molecule
     gra = automol.chi.graph(ich)
-    unsat_dct = automol.graph.atom_unsaturations(automol.graph.kekule(gra), automol.graph.atom_keys(gra))
-    atm_vals = automol.graph.atom_element_valences(gra)
     atms = automol.graph.atoms(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
 
+    kek_bnd_ords = automol.graph.kekules_bond_orders(gra)
+    norm_kek = 1 / len(kek_bnd_ords)
+
     # Determine CBHzed fragments
     frags = {}
-    for atm in atm_vals:
-        coeff = 1
-        if not balance:
-            coeff = (
-                util.branch_point(adj_atms[atm]) *
-                util.terminal_moiety(adj_atms[atm])
-            )
-        atm_vals[atm] -= unsat_dct[atm]
-        atm_dic = {0: (atms[atm][0], int(atm_vals[atm]), None)}
-        gra = (atm_dic, {})
-        frag = automol.graph.chi(gra)
-        util.add2dic(frags, frag, coeff)
-
+    for bnd_ords in kek_bnd_ords:
+        for atm in atms:
+            grai = (
+                atms.copy(),
+                {key: (val, None) for (key, val) in bnd_ords.copy().items()},)
+            if (atms[atm][0] == 'H' and len(atms) > 1):
+                continue
+            coeff = 1.0
+            if not balance:
+                coeff = (
+                    util.branch_point(adj_atms[atm]) *
+                    util.terminal_moiety(adj_atms[atm])
+                )
+            extended_site = [atm]
+            for site_atm in extended_site:
+                for atm_x in adj_atms[site_atm]:
+                    if atm_x not in extended_site and atms[atm_x][0] != 'H':
+                        grai = util.cleave_group_and_saturate(
+                            grai, bnd_ords, site_atm, atm_x)
+            frag = automol.graph.chi(grai)
+            util.add2dic(frags, frag, val=coeff*norm_kek)
+    frags = {k: round(v, 6) for k, v in frags.items() if v}
     if balance:
         balance_ = util.balance(ich, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
         if balance_:
             frags = util.balance_frags(ich, frags)
-
+    frags = {
+        k: round(v, 6) for k, v in frags.items() if abs(round(v, 6)) != 0.0}
     return frags
 
 
@@ -187,31 +198,32 @@ def cbhone(ich, balance=True):
     # Graphical info about molecule
     gra = automol.chi.graph(ich)
     atms = automol.graph.atoms(gra)
-    bnd_ords = automol.graph.kekule_bond_orders(gra)
-    unsat_dct = automol.graph.atom_unsaturations(automol.graph.kekule(gra), automol.graph.atom_keys(gra))
-    atm_vals = automol.graph.atom_element_valences(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
+
+    kek_bnd_ords = automol.graph.kekules_bond_orders(gra)
+    norm_kek = 1 / len(kek_bnd_ords)
 
     # Determine CBHone fragments
     frags = {}
-    for atm in atm_vals:
-        for adj in list(adj_atms[atm]):
-            if atm > adj:
-                vali = atm_vals[atm]
-                valj = atm_vals[adj]
-                vali -= unsat_dct[atm]
-                valj -= unsat_dct[adj]
-                key = frozenset({atm, adj})
-                bnd_ord = bnd_ords[key]
-                vali -= bnd_ord
-                valj -= bnd_ord
-                atm_dic = {0: (atms[atm][0], int(vali), None),
-                           1: (atms[adj][0], int(valj), None)}
-                bnd_dic = {frozenset({0, 1}): (1, None)}
-                gra = (atm_dic, bnd_dic)
-                frag = automol.graph.chi(gra)
-                util.add2dic(frags, frag)
-    frags = {k: v for k, v in frags.items() if v}
+    for bnd_ords in kek_bnd_ords:
+        for bnd in bnd_ords:
+            atma, atmb = bnd
+            grai = (
+                atms.copy(),
+                {key: (val, None) for (key, val) in bnd_ords.copy().items()},)
+            if (atms[atma][0] == 'H' or atms[atmb][0] == 'H'):
+                continue
+            coeff = 1.0
+            extended_site = [atma, atmb]
+            for site_atm in extended_site:
+                for atm_x in adj_atms[site_atm]:
+                    if atm_x not in extended_site and atms[atm_x][0] != 'H':
+                        grai = util.cleave_group_and_saturate(
+                            grai, bnd_ords, site_atm, atm_x)
+            grai = automol.graph.explicit(grai)
+            frag = automol.graph.chi(grai)
+            util.add2dic(frags, frag, val=coeff*norm_kek)
+    frags = {k: round(v, 6) for k, v in frags.items() if v}
     if not frags:
         frags = cbhzed(ich)
     # Balance
@@ -224,10 +236,13 @@ def cbhone(ich, balance=True):
             for frag in zedfrags:
                 util.add2dic(newfrags, frag, -zedfrags[frag])
             frags = {k: v for k, v in newfrags.items() if v}
-        balance_ = util.balance(ich, frags)
-        balance_ = {k: v for k, v in balance_.items() if v}
-        if balance_:
-            frags = util.balance_frags(ich, frags)
+            balance_ = util.balance(ich, frags)
+            balance_ = {k: v for k, v in balance_.items() if v}
+            assert all([v == 0 for v in balance_.values()]), \
+                "CBH0 fails to balance CBH1 -- " + ",".join([f'{k}:{v}' for k, v in balance_.items()]) 
+
+    frags = {
+        k: round(v, 6) for k, v in frags.items() if abs(round(v, 6)) != 0.0}
     return frags
 
 
@@ -244,47 +259,39 @@ def cbhtwo(ich, balance=True):
     # Graphical info about molecule
     gra = automol.chi.graph(ich)
     atms = automol.graph.atoms(gra)
-    bnd_ords = automol.graph.kekule_bond_orders(gra)
-    unsat_dct = automol.graph.atom_unsaturations(automol.graph.kekule(gra), automol.graph.atom_keys(gra))
-    atm_vals = automol.graph.atom_element_valences(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
+
+    kek_bnd_ords = automol.graph.kekules_bond_orders(gra)
+    norm_kek = 1 / len(kek_bnd_ords)
 
     # Determine CBHtwo fragments
     frags = {}
-    for atm in atms:
-        vali = atm_vals[atm]
-        vali -= unsat_dct[atm]
-        # First loop over all atoms of this frag to get saturation of atomi
-        for adj in list(adj_atms[atm]):
-            key = frozenset({atm, adj})
-            bnd_ord = bnd_ords[key]
-            vali -= bnd_ord
-        atm_dic = {0: (atms[atm][0], int(vali), None)}
-        bnd_dic = {}
-        # Then start adding bonds to the bnddic and atomdic
-        j = 0
-        coeff = 1
-        if not balance:
-            coeff = (
-                util.branch_point(adj_atms[atm]) *
-                util.terminal_moiety(adj_atms[atm])
-            )
-        for adj in list(adj_atms[atm]):
-            j += 1
-            valj = atm_vals[adj]
-            valj -= unsat_dct[adj]
-            key = frozenset({atm, adj})
-            bnd_ord = bnd_ords[key]
-            valj -= bnd_ord
-            atm_dic[j] = (atms[adj][0], int(valj), None)
-            bnd_dic[frozenset({0, j})] = (1, None)
-        gra = (atm_dic, bnd_dic)
-        frag = automol.graph.chi(gra)
-        util.add2dic(frags, frag, coeff)
+    for bnd_ords in kek_bnd_ords:
+        for atm in atms:
+            grai = (
+                atms.copy(),
+                {key: (val, None) for (key, val) in bnd_ords.copy().items()},)
+            if (atms[atm][0] == 'H'):
+                continue
+            coeff = 1.0
+            if not balance:
+                coeff = (
+                    util.branch_point(adj_atms[atm]) *
+                    util.terminal_moiety(adj_atms[atm])
+                )
+            extended_site = [atm] + list(adj_atms[atm])
+            for site_atm in extended_site:
+                for atm_x in adj_atms[site_atm]:
+                    if atm_x not in extended_site and atms[atm_x][0] != 'H':
+                        grai = util.cleave_group_and_saturate(
+                            grai, bnd_ords, site_atm, atm_x)
+            frag = automol.graph.chi(grai)
+            util.add2dic(frags, frag, val=coeff*norm_kek)
 
-    frags = {k: v for k, v in frags.items() if v}
+    frags = {k: round(v, 6) for k, v in frags.items() if v}
     if not frags:
-        frags = cbhone(frags)
+        frags = cbhone(ich)
+
     # Balance
     if balance:
         balance_ = util.balance(ich, frags)
@@ -294,20 +301,13 @@ def cbhtwo(ich, balance=True):
             onefrags = cbhone(ich, balance=False)
             for frag in onefrags:
                 util.add2dic(newfrags, frag, -onefrags[frag])
-            frags = {k: v for k, v in newfrags.items() if v}
+            frags = {k: round(v, 6) for k, v in newfrags.items() if v}
             balance_ = util.balance(ich, frags)
             balance_ = {k: v for k, v in balance_.items() if v}
-            if balance_:
-                newfrags = frags.copy()
-                zedfrags = cbhzed(ich, balance=False)
-                for frag in zedfrags:
-                    util.add2dic(newfrags, frag, zedfrags[frag])
-                frags = {k: v for k, v in newfrags.items() if v}
-                balance_ = util.balance(ich, frags)
-                balance_ = {k: v for k, v in balance_.items() if v}
-                if balance_:
-                    frags = util.balance_frags(ich, frags)
-
+            assert all([v == 0 for v in balance_.values()]), \
+                "CBH1 fails to balance CBH2 -- " + ",".join([f'{k}:{v}' for k, v in balance_.items()]) 
+    frags = {
+        k: round(v, 6) for k, v in frags.items() if abs(round(v, 6)) != 0.0}
     return frags
 
 
@@ -328,42 +328,31 @@ def cbhthree(ich, balance=True):
     gra = automol.chi.graph(ich)
     atms = automol.graph.atoms(gra)
     bnd_ords = automol.graph.kekule_bond_orders(gra)
-    rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
-    atm_vals = automol.graph.atom_element_valences(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
 
     # Determine CBHfour fragments
     frags = {}
 
-    for bnd in list(bnd_ords):
-        atm_dic = {}
-        bnd_dic = {}
-        bnd_dic[frozenset({0, 1})] = (bnd_ords[bnd], None)
-        for i, atm in enumerate(list(bnd)):
-            vali = atm_vals[atm]
-            if atm in rad_atms:
-                vali -= 1
-            for adj in list(adj_atms[atm]):
-                key = frozenset({atm, adj})
-                bnd_ord = bnd_ords[key]
-                vali -= bnd_ord
-            atm_dic[i] = (atms[atm][0], int(vali), None)
-            for j, adj in enumerate(list(adj_atms[atm]), start=1):
-                if adj not in list(bnd):
-                    valj = atm_vals[adj]
-                    if adj in rad_atms:
-                        valj -= 1
-                    key = frozenset({atm, adj})
-                    bnd_ord = bnd_ords[key]
-                    valj -= bnd_ord
-                    atm_dic[i*4+j+1] = (atms[adj][0], int(valj), None)
-                    bnd_dic[frozenset({i, i*4+j+1})] = (bnd_ord, None)
-        gra = (atm_dic, bnd_dic)
-        frag = automol.graph.chi(gra)
-        util.add2dic(frags, frag)
-
+    for bnd in bnd_ords:
+        atma, atmb = bnd
+        grai = (
+            atms.copy(),
+            {key: (val, None) for (key, val) in bnd_ords.copy().items()},)
+        if (atms[atma][0] == 'H' or atms[atmb][0] == 'H'):
+            continue
+        coeff = 1.0
+        extended_site = [atma, atmb] + list(adj_atms[atma]) + list(adj_atms[atmb])
+        for site_atm in extended_site:
+            for atm_x in adj_atms[site_atm]:
+                if atm_x not in extended_site and atms[atm_x][0] != 'H':
+                    grai = util.cleave_group_and_saturate(
+                        grai, bnd_ords, site_atm, atm_x)
+        grai = automol.graph.explicit(grai)
+        frag = automol.graph.chi(grai)
+        util.add2dic(frags, frag, val=coeff)
+    frags = {k: v for k, v in frags.items() if v}
     if not frags:
-        frags = cbhtwo(frags)
+        frags = cbhtwo(ich)
 
     if balance:
         balance_ = util.balance(ich, frags)
@@ -374,29 +363,6 @@ def cbhthree(ich, balance=True):
             for frag in twofrags:
                 util.add2dic(newfrags, frag, -twofrags[frag])
             frags = {k: v for k, v in newfrags.items() if v}
-            # balance_ = util.balancec(ich, frags)
-            # balance_ = {k: v for k, v in balance_.items() if v}
-            # if balance_:
-            #    newfrags = frags.copy()
-            #    newerfrags = {}
-            #    onefrags = cbhone(ich, balance=False)
-            #    for frag in onefrags:
-            #         util.add2dic(newfrags, frag, - onefrags[frag])
-            #    frags = {k: v for k, v in newfrags.items() if v}
-            #    balance_ = util.balancec(ich, frags)
-            #    balance_ = {k: v for k, v in balance_.items() if v}
-            #    if balance_:
-            #        newfrags = frags.copy()
-            #        zedfrags = cbhzed(ich, balance=False)
-            #        for frag in zedfrags:
-            #            util.add2dic(newfrags, frag, zedfrags[frag])
-            #        frags = {k: v for k, v in newfrags.items() if v}
-            #        balance_ = util.balancec(ich, frags)
-            #        balance_ = {k: v for k, v in balance_.items() if v}
-            #        if balance_:
-            #            frags = util.balancec_frags(ich, frags)
-    # balance = util.balancec(ich, frags)
-    # balance_ = {k: v for k, v in balance_.items() if v}
     return frags
 
 # def cbhfour(ich):

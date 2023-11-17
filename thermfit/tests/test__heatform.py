@@ -68,9 +68,8 @@ def test__ref_enthalpy():
     # Transition State
     ref_hf0k = -0.0033071800404707342
 
-    db_rxn_ich = thermfit.heatform.format_reaction_inchi(TS_CH4_OH_ICHS)
     hf0k = thermfit.heatform.reference_enthalpy(
-        db_rxn_ich, REF_SET1, TEMP1, rxn=True)
+        TS_CH4_OH_ICHS, REF_SET1, TEMP1, rxn=True)
     assert numpy.isclose(ref_hf0k, hf0k)
 
     # Missing Species
