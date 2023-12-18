@@ -355,7 +355,7 @@ def rxn_ich_to_name(rxn, spc_dct):
     return (
         tuple(_ich_name_dct[rgt] for rgt in rxn[0]),
         tuple(_ich_name_dct[rgt] for rgt in rxn[1]),
-        rxn[2]
+        tuple(rxn[2])
     )
 
 

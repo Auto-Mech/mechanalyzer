@@ -56,7 +56,9 @@ def update_spc_dct(spc_ichs, spc_dct, rename=False, enant_label=True,
                 orig_name = spc_orig_name_dct[ich]
                 ste_lbl = stereo_name_suffix(ich, enant_label=enant_label)
                 name = f'{orig_name}-{ste_lbl}' if ste_lbl else orig_name
+                print('original name')
             else:
+                print('new name')
                 name = functional_group_name(ich, name='',
                                              enant_label=enant_label)
             print(f"InChI {ich} is giving name {name}")
@@ -227,6 +229,5 @@ def _make_reaction_permutations(rxn):
 
     # Re-add the third body
     third_body = rxn[2]
-    all_rxns = tuple((*rxn, third_body) for rxn in all_rxns)
-
+    all_rxns = tuple([(*rxn, third_body) for rxn in all_rxns])
     return all_rxns

@@ -15,20 +15,44 @@ from ioformat import pathtools
 # Filenames
 # Git merge complained yet again about filename changes 
 
-OUTPUT_FILENAME = 'thermo.pdf'
+OUTPUT_FILENAME = 'nuig_m2-m5.pdf'
+#OUTPUT_FILENAME = 'gold.pdf'
 #OUTPUT_FILENAME = 'hr_hrf_rmg.pdf'
 
 THERMO_FILENAMES = [
-    'amech.therm',
-    'nuig1.1.therm',
+    #'NUIGMech1.2.THERM',
+    #'frank.therm',
+    'NUIGMech1.2.THERM',
+    #'to_us.ckin',
+    'm2.ckin',
+    'm3.ckin',
+    'm4.ckin',
+    'm5_all.ckin',
 ]
 SPC_CSV_FILENAMES = [
-    'species.csv',
-    'nuig1.1.csv',
+    #'canon_NUIG_species.csv',
+    #'frank_species.csv',
+    'canon_NUIG_species.csv',
+    #'yao_spc.csv',
+    'canon_2.csv',
+    'canon_2.csv',
+    'canon_2.csv',
+    'canon_2.csv',
+    #'canon_3.csv',
+    #'canon_3.csv',
+    #'canon_3.csv',
+    #'canon_species.csv',
+    #'canon_species.csv',
 ]
 MECH_NAMES = [
-    'AMECH',
-    'NUIG',
+    #'NUIG',
+    #'Goldsmith',
+    'NUIGMech1.2',
+    #'Yao',
+    'M2',
+    'M3',
+    'M4',
+    'M5',
 ]
 
 # Conditions
@@ -39,9 +63,10 @@ TEMPS = numpy.linspace(300, 1500, 13)
 SORT = True
 SORT_INSTR = 'lnq'  # either 'h', 'cp', 's', 'g', 'lnq', or None
 SORT_TEMP = None  # can be (1) None to sort by max difference or (2) a number
-REMOVE_LONERS = False
+REMOVE_LONERS = True
 WRITE_FILE = False  # this currently does nothing
 PRINT_MISSING = True  # print spcs that are in mech(s) but not in spc.csv
+OUT_FILENAME = 'comparetool.out'  #
 
 # RUN FUNCTIONS
 # Fix temps to include the sort_temps if it doesn't already
@@ -76,6 +101,6 @@ util.build_pdf(FIGS, filename=OUTPUT_FILENAME, path=JOB_PATH)
 # Write the ordered text file
 FSTR = compare.write_ordered_str(SORT_ALGN_SPC_THERM_DCT, dct_type='therm',
     comb_mech_spc_dct=COMB_SPC_DCT, print_missing=PRINT_MISSING)
-pathtools.write_file(FSTR, JOB_PATH, OUT_TXT_FNAME)
+pathtools.write_file(FSTR, JOB_PATH, OUT_FILENAME)
 # Saving this for later...writes a comparison of species
 #comp_str = compare.write_comparison(ALGN_SPC_THERM_DCT, dct_type='therm')

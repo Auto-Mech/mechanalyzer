@@ -51,7 +51,14 @@ def build_plots(algn_spc_therm_dct, spc_dct=None, mech_names=None, sort=True,
 
     # Get the algn_spc_diff_dct
     algn_spc_diff_dct = get_algn_spc_diff_dct(algn_spc_therm_dct)
-
+    for spc in algn_spc_diff_dct:
+        if algn_spc_diff_dct[spc][1] is None:
+            continue
+        temps, h_t, cp_t, s_t, g_t, lnq_t = algn_spc_diff_dct[spc][1]
+        #sarahs prints
+        #for (temp, g) in zip(temps, g_t):
+        #    if temp > 650 and temp < 750:
+        #        print(spc, temp, g)
     # If indicated, sort the thermo and diff dcts by the differences
     if sort:
         algn_spc_diff_dct, algn_spc_therm_dct = sort_by_max_diff(
