@@ -246,7 +246,7 @@ def rename_dcts(target_dcts, mech_spc_dcts, target_type):
     return renamed_target_dcts, rename_instr_lst
 
 
-def get_rename_instr(mech_spc_dct1, mech_spc_dct2, strip_ste=False):
+def get_rename_instr(mech_spc_dct1, mech_spc_dct2, strip_ste=True):
     """ Get instructions for renaming mech_spc_dct2 to be consistent with
         mech_spc_dct1
 
