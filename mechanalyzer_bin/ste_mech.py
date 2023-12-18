@@ -52,6 +52,7 @@ def main(
     if not debug:
         full_rxn_lst = mechanalyzer.builder.expand_mech_stereo(
             rxn_param_dct, mech_spc_dct, nprocs='auto', enant=enant)
+        spc_orig_name_dct = {}
     else:
         print("Running in debug mode...")
         full_rxn_lst, spc_orig_name_dct, failed = (
