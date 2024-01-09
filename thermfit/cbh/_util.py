@@ -239,6 +239,7 @@ def cleave_group_and_saturate(gra, bnd_ords, atmi, atmj):
         order = bnd_ords[frozenset({atmi, atmj})]
         for _ in range(order):
             gra = automol.graph.add_bonded_atom(gra, 'H', atmi)
+            gra = automol.graph.add_bonded_atom(gra, 'H', atmj)
         # gra = _update_atom_stereo(gra, atmi)
         # gra = _update_atom_stereo(gra, atmj)
         gra = automol.graph.remove_bonds(gra, (frozenset({atmi, atmj}),))

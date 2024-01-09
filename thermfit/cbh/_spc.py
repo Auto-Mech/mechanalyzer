@@ -280,11 +280,13 @@ def cbhtwo(ich, balance=True):
                     util.terminal_moiety(adj_atms[atm])
                 )
             extended_site = [atm] + list(adj_atms[atm])
-            for site_atm in extended_site:
+            #for site_atm in extended_site:
+            for site_atm in list(adj_atms[atm]):
                 for atm_x in adj_atms[site_atm]:
-                    if atm_x not in extended_site and atms[atm_x][0] != 'H':
+                    if atm_x != atm and atms[atm_x][0] != 'H':
                         grai = util.cleave_group_and_saturate(
                             grai, bnd_ords, site_atm, atm_x)
+            
             frag = automol.graph.chi(grai)
             util.add2dic(frags, frag, val=coeff*norm_kek)
 
@@ -293,6 +295,7 @@ def cbhtwo(ich, balance=True):
         frags = cbhone(ich)
 
     # Balance
+    print('prebalance', frags)
     if balance:
         balance_ = util.balance(ich, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
@@ -350,6 +353,7 @@ def cbhthree(ich, balance=True):
         grai = automol.graph.explicit(grai)
         frag = automol.graph.chi(grai)
         util.add2dic(frags, frag, val=coeff)
+    print('cbh3 frags', frags)
     frags = {k: v for k, v in frags.items() if v}
     if not frags:
         frags = cbhtwo(ich)
