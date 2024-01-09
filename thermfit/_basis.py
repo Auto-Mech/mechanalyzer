@@ -81,7 +81,7 @@ def _prepare_basis(ref_scheme, spc_dct, zrxn, print_log,
         ste_basis = ()
         for bas in spc_basis:
             if isinstance(bas, str):
-                print(automol.inchi.smiles(bas))
+                print(automol.chi.smiles(bas))
                 ste_basis += (automol.chi.canonical_enantiomer(
                     automol.chi.expand_stereo(bas)[0]),)
             else:
