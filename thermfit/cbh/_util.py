@@ -93,7 +93,7 @@ def balance(ich, frags):
             stoichs[atom] += -_stoich[atom]
         else:
             stoichs[atom] = -_stoich[atom]
-    balance_ = {x: round(-y, 5) for x, y in stoichs.items() if y != 0}
+    balance_ = {x: round(-y, 3) for x, y in stoichs.items() if y != 0}
     return balance_
 
 
