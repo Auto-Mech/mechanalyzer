@@ -537,11 +537,10 @@ class SortMech:
                     elif (len(rcts) == 1 and rcts[0] == sp and len(prds) > 2):
                         mech_df['submech_prompt'][rxn] = 'RAD_DECO_LUMPED_{}'.format(
                             sp)
-                        
+                       
             elif chk == 0 and filtertype != 'submech_prompt':  # reaction filtered out
                 # don't filter for submech_prompt - you'll need it later to check for wellskipping channels
-                mech_df = mech_df.drop(index=[rxn])  
-                
+                mech_df = mech_df.drop(index=[rxn])         
         if filtertype == 'submech_prompt':
             mech_df_new = pd.DataFrame(columns = mech_df.columns, dtype=object)
             # submech_prompt: if RAD_GEN/RAD_DECO in list, keep the rxns
@@ -560,7 +559,7 @@ class SortMech:
                         mech_df_new = pd.concat([mech_df_new, added_rxns_df], axis=0)
 
             mech_df = copy.deepcopy(mech_df_new)
-              
+    
         # filter spc_list: unique elements
         spc_list = sorted(list(set(spc_list)))
         if filtertype == 'submech_del':
@@ -854,7 +853,6 @@ class SortMech:
             check_filtered = 0
             active_hotsp = []
             # lists, potentially more than 1
-
             for n, ped in enumerate(grp['peds']):
                 exceptions = 0
                 newped = []
@@ -866,7 +864,6 @@ class SortMech:
                     prds = ped_i.split('=')[1].split('+')
                     
                     hot_spcs = sorted(list(set(self.species_list) & set(prds)))
-                    
                     # get dofs for each species if absent
                     for prd in prds:
                         if 'dof_info' not in self.spc_dct[prd].keys():
@@ -882,7 +879,6 @@ class SortMech:
 
                         phi = ene_partition.phi_equip_fromdof(
                             self.spc_dct[hot_sp]['dof_info'], self.spc_dct[nonhot]['dof_info'])
-
                         try:
                             dh = thermo.extract_deltaX_therm(
                                 self.therm_df, rcts, prds, 'H')/1000
@@ -904,7 +900,10 @@ class SortMech:
                             # save hotsp anyway since you don't know what's going to happen
                             active_hotsp.append(hot_sp)
                             continue
+<<<<<<< HEAD
 
+=======
+>>>>>>> prompt reactions considered also if only unimol channels available
                         if dh_tot[T0] < self.DHmax or dh_tot[T0]/self.dh_min_hot[hot_sp][T0]*int(self.dh_min_hot[hot_sp][T0] > 0) < self.H5H3ratio \
                             or (k_star/self.k_max_hot[hot_sp][self.Tref] > self.kratio) \
                                 or (k_star > self.kabs and dh[T0] < 0):
@@ -935,6 +934,7 @@ class SortMech:
                     check = 1  # keep things you were unable to compute stuff for that ped
                     print(
                         'Warning: unable to derive thermo / rates for set of peds: {}'.format(newped))
+                    print('these peds will be kept')
 
                 if newped:
                     grp_new['idxs'].append(grp['idxs'][n])
@@ -1073,11 +1073,11 @@ class SortMech:
             if add_check[hot_sp] == 1:
                 # # UPDATE SELF.MECH_DF AND SPECIES TO ADD NEW PESs
                 # update mechanism: include all elements in the subpes of interest
-                print(hot_sp, hot_mech_df[hot_sp])
+                # print(hot_sp, hot_mech_df[hot_sp])
                 new_hot_mech_df = hot_mech_df[hot_sp][(hot_mech_df[hot_sp]['pes'] == pesN[hot_sp]) & (hot_mech_df[hot_sp]['subpes'] == subpesN[hot_sp])]
                 self.mech_df = pd.concat(
                     [self.mech_df, new_hot_mech_df], axis=0)
-                print(new_hot_mech_df)
+                # print(new_hot_mech_df)
                 # update species avoiding duplicate entries
                 new_spc = [sp for sp in hot_spc_dct[hot_sp].keys() if sp not in self.spc_dct.keys()]
                 self.spc_dct.update(dict(zip(new_spc, list(map(hot_spc_dct[hot_sp].get, new_spc)))))
