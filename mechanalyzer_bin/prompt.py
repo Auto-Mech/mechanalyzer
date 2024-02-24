@@ -14,7 +14,7 @@ import ratefit
 
 
 FLDs = ['ME2', 'ME3end'] # folder names - ped, hoten, makes no difference
-MODEL = 'equip_phi'
+MODEL = 'equip_phi' # model to be used
 # Parse the command line into an options dictionary
 DESC = ('Generate Rate Constants including Prompt Dissociation Effects\n'
         'To Run: python prompt.py')
@@ -25,8 +25,6 @@ PAR.add_argument('-omicro', '--outputmicro', default='ke.out',
                  help='MESS microcanonical output name (ke.out)')
 PAR.add_argument('-l', '--log', default='mess.log',
                  help='MESS energy log name (mess.log)')
-PAR.add_argument('-m', '--model', default='equip_simple',
-                 help='Statistical energy distribution model (equip_simple)')
 PAR.add_argument('-b', '--bf-threshold', default=0.01,
                  help='Minimum branching fraction to include in Prompt (0.1)')
 PAR.add_argument('-f', '--fit_method', default='plog',
