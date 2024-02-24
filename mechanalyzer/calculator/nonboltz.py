@@ -288,45 +288,53 @@ def get_max_reactivity(hot_sp, hot_sp_df, therm_df, T0, Tref):
 
     dhmin = 1e8  # put unphysical value for sure higher than all
     kmax = -1e-6
+    allunimol = all([len(rcts) == 1 and len(prds) ==1 for rcts in hot_sp_df['rct_names_lst'].values 
+                     for prds in hot_sp_df['prd_names_lst'].values])
+
     for rxn in hot_sp_df.index:
         rcts = hot_sp_df['rct_names_lst'][rxn]
         prds = hot_sp_df['prd_names_lst'][rxn]
-        if (hot_sp in prds and len(rcts) != 2) or (hot_sp in rcts and len(prds) != 2):
+        # used to filter out too fast isomerization channels, but causes failure when only unimol channels are present
+        if not allunimol and ((hot_sp in prds and (len(rcts) != 2 or len(prds) != 1)) 
+            or (hot_sp in rcts and (len(prds) != 2 or len(rcts) != 1))):
             # consider only unimol chnls to bimol species
             continue
-        dh_rxn = thermo.extract_deltaX_therm(therm_df, rcts, prds, 'H')/1000
+        
         label = rxn[0]
-        # get rate at Tref
-        try:
-            k_series = pd.Series(
-                hot_sp_df['param_vals'][rxn][0][1.][1], index=hot_sp_df['param_vals'][rxn][0][1.][0])
-            k = k_series[Tref]
-        except IndexError:
-            print('*Warning: {} K not found - k not extracted'.format(Tref))
-            k = numpy.NaN
-
+        
+        # analyze DH
+        dh_rxn = thermo.extract_deltaX_therm(therm_df, rcts, prds, 'H')/1000
         if hot_sp in prds:  # revert sign
             dh_rxn = -dh_rxn
             label = '{}={}'.format(rxn[0].split('=')[-1], rxn[0].split('=')[0])
-            try:
-                dg_rxn = thermo.extract_deltaX_therm(
-                    therm_df, rcts, prds, 'G')
-                k_series = k_series*(101325/8.314/k_series.index/numpy.power(10, 6)) * \
-                    numpy.exp(dg_rxn/1.987/k_series.index)
-                k = k_series[Tref]
-            except IndexError:
-                print(
-                    '*Warning: {} K not found - dg not extracted'.format(Tref))
-                k = numpy.NaN
+            
+        if dh_rxn[T0] < dhmin:
+            dh_min_hot = copy.deepcopy(dh_rxn)
+            dhmin = copy.deepcopy(dh_rxn[T0])
+        
+        # analyze k
+        k_series = pd.Series(
+            hot_sp_df['param_vals'][rxn][0][1.][1], index=hot_sp_df['param_vals'][rxn][0][1.][0])
+        if Tref not in k_series.index:
+            print('*Warning: {} K not found - k not extracted'.format(Tref))
+            k = numpy.NaN
+            continue
+        else:
+            k = k_series[Tref]
+
+        if hot_sp in prds:  # get bw rate constant
+            dg_rxn = thermo.extract_deltaX_therm(
+                therm_df, rcts, prds, 'G')
+            # get common T values of dg and k
+            Tcomm = numpy.array(sorted(list(set(dg_rxn.index).intersection(dg_rxn.index))), dtype=float)
+            k_series = k_series[Tcomm]*(101325/8.314/Tcomm/numpy.power(10, 6)) * \
+                numpy.exp(dg_rxn[Tcomm]/1.987/Tcomm)
+            k = k_series[Tref]
         
         if k > kmax:
             k_max_hot = copy.deepcopy(k_series)
             kmax = copy.deepcopy(k)
             rxn_label = copy.deepcopy(label)
-
-        if dh_rxn[T0] < dhmin:
-            dh_min_hot = copy.deepcopy(dh_rxn)
-            dhmin = copy.deepcopy(dh_rxn[T0])
 
     return k_max_hot, dh_min_hot, rxn_label
 

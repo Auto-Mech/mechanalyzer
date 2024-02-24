@@ -465,8 +465,8 @@ class SortMech:
                         mech_df['submech_prompt'][rxn] = 'PROMPT_LUMPED_{}'.format(
                             sp)
                     # rxn is unimol deco/formation of the radical
-                    elif ((len(rcts) == 1 and rcts[0] == sp and len(prds) == 2) or
-                          (len(prds) == 1 and prds[0] == sp and len(rcts) == 2)):
+                    elif ((len(rcts) == 1 and rcts[0] == sp and len(prds) <= 2) or
+                          (len(prds) == 1 and prds[0] == sp and len(rcts) <= 2)):
                         mech_df['submech_prompt'][rxn] = 'RAD_DECO_{}'.format(
                             sp)
                     elif (len(rcts) == 1 and rcts[0] == sp and len(prds) > 2):
@@ -850,7 +850,7 @@ class SortMech:
                             active_hotsp.append(hot_sp)
                             continue
 
-                        if dh_tot[T0] < self.DHmax or dh_tot[T0]/self.dh_min_hot[hot_sp][T0] < self.H5H3ratio \
+                        if dh_tot[T0] < self.DHmax or dh_tot[T0]/self.dh_min_hot[hot_sp][T0]*int(self.dh_min_hot[hot_sp][T0] > 0) < self.H5H3ratio \
                             or (k_star/self.k_max_hot[hot_sp][self.Tref] > self.kratio) \
                                 or (k_star > self.kabs and dh[T0] < 0):
                             check += 1
@@ -953,7 +953,7 @@ class SortMech:
             # and go on with that.
 
             if len(prds) != 2:
-                continue
+                break
 
             phis = dict.fromkeys(prds)
             T_stars = dict.fromkeys(prds)
