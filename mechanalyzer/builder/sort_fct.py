@@ -192,6 +192,7 @@ def conn_chn_df(mech_df): # moved outside of the class - taken for granted: clas
         for key, value in connchnls.items():
             rxns = peslist.iloc[value].sort_values(
                 by=['rxn_names'], ascending=False).index
+
             conn_chn_df['subpes'][rxns] = key+1
             # reorder by rxn name before assigning the channel index
 
@@ -270,7 +271,7 @@ class SortMech:
         # add subpes and chnl once and for all
         self.mech_df = pd.concat(
             [self.mech_df, conn_chn_df(self.mech_df)], axis=1)  # add subpes
-                
+
         self.spc_dct = spc_dct  # set for later use
         # empty list for initialization (otherwise pylint warning)
         self.species_subset_df = ()
@@ -540,7 +541,8 @@ class SortMech:
                        
             elif chk == 0 and filtertype != 'submech_prompt':  # reaction filtered out
                 # don't filter for submech_prompt - you'll need it later to check for wellskipping channels
-                mech_df = mech_df.drop(index=[rxn])         
+                mech_df = mech_df.drop(index=[rxn]) 
+                        
         if filtertype == 'submech_prompt':
             mech_df_new = pd.DataFrame(columns = mech_df.columns, dtype=object)
             # submech_prompt: if RAD_GEN/RAD_DECO in list, keep the rxns
@@ -900,10 +902,10 @@ class SortMech:
                             # save hotsp anyway since you don't know what's going to happen
                             active_hotsp.append(hot_sp)
                             continue
-<<<<<<< HEAD
+                        
+                        # print(dh_tot[T0], dh_tot[T0]/self.dh_min_hot[hot_sp][T0]*int(self.dh_min_hot[hot_sp][T0]), k_star/self.k_max_hot[hot_sp][self.Tref], k_star, dh[T0], self.dh_min_hot[hot_sp][T0])
+                        # print(dh_tot[T0] < self.DHmax, dh_tot[T0]/self.dh_min_hot[hot_sp][T0]*int(self.dh_min_hot[hot_sp][T0] > 0) < self.H5H3ratio, k_star/self.k_max_hot[hot_sp][self.Tref] > self.kratio, k_star > self.kabs, dh[T0] < 0)
 
-=======
->>>>>>> prompt reactions considered also if only unimol channels available
                         if dh_tot[T0] < self.DHmax or dh_tot[T0]/self.dh_min_hot[hot_sp][T0]*int(self.dh_min_hot[hot_sp][T0] > 0) < self.H5H3ratio \
                             or (k_star/self.k_max_hot[hot_sp][self.Tref] > self.kratio) \
                                 or (k_star > self.kabs and dh[T0] < 0):

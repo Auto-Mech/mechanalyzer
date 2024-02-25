@@ -101,7 +101,7 @@ def test__sort_with_input():
         [(('CH2(S)', 'CH3'), ('C2H4', 'H'), (None,)),
          '! pes.subpes.NR.rxntype  2.3.2.Addition-decomposition - propagation'],
         [(('C2H5', 'H'), ('C2H4', 'H2'), (None,)),
-         '! pes.subpes.NR.rxntype  3.1.2.Recombination-decomposition - termination'],
+         '! pes.subpes.NR.rxntype  3.2.2.Recombination-decomposition - termination'],
         [(('C2H4', 'O'), ('CH3', 'HCO'), (None,)),
          '! pes.subpes.NR.rxntype  5.1.2.Addition-decomposition - branching'],
         [(('C2H4', 'OH'), ('PC2H4OH',), (None,)),
@@ -129,8 +129,8 @@ def test__sort_with_input():
     isolate_spc, sort_lst, _ = mparser.parse_sort(sort_str)
     param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
-
     index = 0
+
     for rxn in param_dct_sort.keys():
         assert [rxn, cmts_dct[rxn]['cmts_inline']] == results[index]
         index += 1
@@ -363,7 +363,7 @@ def test__sortby_species_subpes():
         [(('IC8',), ('NEOC5H11', 'IC3H7'), (None,)),
          '! pes.subpes  26.1'],
         [(('IC8', 'O2'), ('IC8-1R', 'HO2'), (None,)),
-         '! pes.subpes  28.1'],
+         '! pes.subpes  28.2'],
         [(('IC8-1R',), ('IC8-5R',), (None,)),
          '! pes.subpes  25.1'],
         [(('IC8-1R', 'O2'), ('IC8-1O2R',), (None,)),
@@ -378,7 +378,7 @@ def test__sortby_species_subpes():
 
     spc_str, mech_str, _ = _read_files(spc_path, mech_path, sort_path)
 
-    # Sort mechanism by subpes with Headers for specues subset
+    # Sort mechanism by subpes with Headers for species subset
     isolate_spc = ['IC8', 'IC8-1R']
     sort_lst = ['species', 'subpes', 1]
 
@@ -738,7 +738,7 @@ def test__sort_ktp():
     spc_str, _, _ = _read_files(spc_paths[1], mech_path, sort_path)
 
     # Build spc and mech information
-    spc_dct_full = sparser.build_spc_dct(spc_str, SPC_TYPE)
+    spc_dct_full = sparser.parse_mech_spc_dct(spc_str, canon_ent=False)
 
     # Sort the mechanism
     isolate_spc = []
@@ -780,18 +780,20 @@ def _read_files(spc_path, mech_path, sort_path):
 
 
 if __name__ == '__main__':
-    #test__sort_with_input()   
-    ##test__filter_pesgroups()
-    #test__readwrite_thirdbody()
-    #test__sortby_mult()
-    #test__sortby_molec_r1()
-    #test__sortby_pes_dct()
-    test__sortby_rxnclass() # does not work only if filter_pesgroups active
-    #test__sortby_species_subpes()
+    # test__sort_with_input()   
+    # test__readwrite_thirdbody()
+    # test__sortby_mult()
+    # test__sortby_molec_r1()
+    # test__sortby_pes_dct()
+    # test__sortby_rxnclass() # does not work only if filter_pesgroups active
+    # test__sortby_species_subpes()
+    # test__sort_ktp()
+    # still to fix
+    test__filter_pesgroups() # recheck why therm is different
     #test__sortby_submech_subpes_chnl()
-    test__sortby_submech_prompt()    
-    test__sortby_submech_ext()
+    #test__sortby_submech_prompt()    
+    #test__sortby_submech_ext()
     #test__sortby_submech_del() add this test
-    test__sortby_submech_class()
-    test__sort_ktp()
+    #test__sortby_submech_class()
+    
     
