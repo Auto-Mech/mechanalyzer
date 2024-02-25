@@ -28,13 +28,13 @@ def sorted_pes_dct(spc_str, mech_str, isolate_spc, sort_lst):
     return srt_mch.return_pes_dct()
 
 
-def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, dct_flt_grps={}):
+def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, dct_flt_grps={}, stereo_optns=False):
     """ Function that conducts the sorting process for all of the above tests
     """
 
     # Build mech information
     srt_mch, rxn_param_dct = _sort_objs(
-        spc_str, mech_str, sort_lst, isolate_spc)
+        spc_str, mech_str, sort_lst, isolate_spc, stereo_optns=stereo_optns)
 
     pes_groups = None
     rxns_filter = None
@@ -65,15 +65,15 @@ def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, dc
     return rxn_param_dct_sort, spc_dct_ord, cmts_dct, pes_groups, rxns_filter
 
 
-def _sort_objs(spc_str, mech_str, sort_lst, isolate_spc):
+def _sort_objs(spc_str, mech_str, sort_lst, isolate_spc, stereo_optns=False):
     """ Build the sort-mech object
     """
 
     # Build mech information
     # spc_dct = sparser.build_spc_dct(spc_str, SPC_TYPE)
-
     spc_dct = new_sparser.parse_mech_spc_dct(
-        spc_str, chk_ste=False, chk_match=False, verbose=False)
+        spc_str, chk_ste=stereo_optns, chk_match=stereo_optns, verbose=stereo_optns, canon_ent=stereo_optns)
+
     rxn_param_dct = mparser.parse_mechanism(
         mech_str, MECH_TYPE)
 
