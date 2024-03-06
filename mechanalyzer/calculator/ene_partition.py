@@ -751,17 +751,17 @@ def get_dof_info(block):
 
     return dof_info
 
-def get_dof_info_fromspcdct(sp, spc_dct):
+def get_dof_info_fromspcdct(spc_dct_entry):
     """ Gets the N of degrees of freedom and MW of each species
         :sp: species name
         :type sp: str
-        :param spc_dct: species dictionary
+        :param spc_dct_entry: species dictionary entry (single species)
         :return dof_info: dictionary with vibrat/rot degrees of freedom
             and molecular weight
         :rtype: dct(['n_atoms', 'vib dof', 'rot dof', 'mw'])
     """
     dof_info = {}
-    fml = spc_dct[sp]['fml']
+    fml = spc_dct_entry['fml']
     Nat = formula.atom_count(fml)
     dof_info['n_atoms'] = Nat
     dof_info['mw'] = sum(np.array([formula.element_count(fml, at) *
@@ -774,22 +774,22 @@ def get_dof_info_fromspcdct(sp, spc_dct):
         dof_info['rot dof'] = 2
     else:
         # derive geometry and check if linear
-        geom_sp = chi.geometry(spc_dct[sp]['inchi'])
+        geom_sp = chi.geometry(spc_dct_entry['inchi'])
         try:
             ilin = int(geom.is_linear(geom_sp))
         except AssertionError:
             # failed for some reason .. set to 0. check HCO, fails there 
+            print('check linearity of geometry failed for {}'.format(spc_dct_entry))
             ilin = 0
         dof_info['rot dof'] = 3 - 1*ilin
         dof_info['vib dof'] = 3*Nat - 6 + 1*ilin
         
     return dof_info
 
-def phi_equip_fromdct(sp1, sp2, spc_dct):
-    """ quick approximate function to estimate energy partition of sp1
+def phi_equip_fromdof(dof1, dof2):
+    """ quick approximate function to estimate energy partition of sp1 with dof1
+        dofs derived from function above
     """
-    dof1 = get_dof_info_fromspcdct(sp1, spc_dct)
-    dof2 = get_dof_info_fromspcdct(sp2, spc_dct)
     phi = (dof1['vib dof']+dof1['rot dof']/2) / \
         (dof1['vib dof']+dof2['vib dof']+(3+dof1['rot dof']+dof2['rot dof'])/2)
 

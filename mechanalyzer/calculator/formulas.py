@@ -56,6 +56,15 @@ def extract_species_sub(n_at, fml_df):
 
     return species_set
 
+def extract_species_core(n_at, fml_df):
+    """ extract any fml with less C/N/S/Cl atoms than indicated. exclude N containing species
+    """
+    species_set = list(fml_df[(fml_df['nC'] <= n_at[0] ) & (
+        fml_df['nN'] <= n_at[3]) & (fml_df['nS'] <= n_at[4]) & (
+        fml_df['nCl'] <= n_at[5])].index)
+    
+    return species_set
+
 def extract_species_above(n_at, fml_df):
     """ extract any fml above the indicated limits
     """

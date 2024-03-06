@@ -42,7 +42,9 @@ def parse_sort(sort_str):
     # Read and format information from the isolate_submech block
     spc_block = ioformat.ptt.end_block(sort_str, 'isolate_submech')
 
-    if not str.isspace(spc_block):
+    if not spc_block: # this should be checked because spc_block might be None - section not mandatory
+        spc_lst = []
+    elif not str.isspace(spc_block):
         spc_lst = list(ioformat.ptt.values_from_block(
             spc_block, val_ptt=app.one_or_more(app.CKINSAFE_CHAR)))
     else:

@@ -13,8 +13,9 @@ DFG = {
     'keepfiltered': 0,
     'DH': 0,
     'H5H3ratio': 0,
-    'kratio': 100,
-    'kabs': 1e50
+    'kratio': 1e50, #depends too much on temperature to make it a default that makes sense
+    'kabs': 1e50,
+    'lookforpromptchains': 1 
 }
 
 # Functions to take the mechanism strings (may want to further simplify)
@@ -28,19 +29,29 @@ def sorted_pes_dct(spc_str, mech_str, isolate_spc, sort_lst):
     return srt_mch.return_pes_dct()
 
 
-def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, dct_flt_grps={}):
+def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, dct_flt_grps={}, stereo_optns=False):
     """ Function that conducts the sorting process for all of the above tests
     """
 
     # Build mech information
     srt_mch, rxn_param_dct = _sort_objs(
-        spc_str, mech_str, sort_lst, isolate_spc)
+        spc_str, mech_str, sort_lst, isolate_spc, stereo_optns=stereo_optns)
 
     pes_groups = None
     rxns_filter = None
     # if prompt groups detected: retrieve grps info
     if 'submech_prompt' in sort_lst and spc_therm_dct and dct_flt_grps:
         DFG.update(dct_flt_grps)
+        # check that Tref is contained in spc_therm_dct, otherwise raise exception
+        # assume T is the same for any species
+        T_thermdct = list(spc_therm_dct.values())[0][0]
+
+        if DFG['Tref'] not in T_thermdct:
+            raise ValueError('Tref {} K for calculations not among T of therm_dct {} \
+                plese update ref value in dct_flt_grps[Tref] or add Tref to therm dct'.format(DFG['Tref'], T_thermdct))
+        elif len(T_thermdct) < 4:
+            raise ValueError('therm dictionary should contain at least 3 temperatures for interpolation purposes')
+        
         srt_mch.filter_groups_prompt(
             spc_therm_dct, DFG)
         pes_groups = srt_mch.grps
@@ -55,15 +66,15 @@ def sorted_mech(spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=None, dc
     return rxn_param_dct_sort, spc_dct_ord, cmts_dct, pes_groups, rxns_filter
 
 
-def _sort_objs(spc_str, mech_str, sort_lst, isolate_spc):
+def _sort_objs(spc_str, mech_str, sort_lst, isolate_spc, stereo_optns=False):
     """ Build the sort-mech object
     """
 
     # Build mech information
     # spc_dct = sparser.build_spc_dct(spc_str, SPC_TYPE)
-
     spc_dct = new_sparser.parse_mech_spc_dct(
-        spc_str, chk_ste=False, chk_match=False, verbose=False)
+        spc_str, chk_ste=stereo_optns, chk_match=stereo_optns, verbose=stereo_optns, canon_ent=stereo_optns)
+
     rxn_param_dct = mparser.parse_mechanism(
         mech_str, MECH_TYPE)
 

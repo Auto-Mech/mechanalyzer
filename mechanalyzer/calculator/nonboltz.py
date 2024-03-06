@@ -292,6 +292,7 @@ def get_max_reactivity(hot_sp, hot_sp_df, therm_df, T0, Tref):
                      for prds in hot_sp_df['prd_names_lst'].values])
 
     for rxn in hot_sp_df.index:
+        print(rxn)
         rcts = hot_sp_df['rct_names_lst'][rxn]
         prds = hot_sp_df['prd_names_lst'][rxn]
         # used to filter out too fast isomerization channels, but causes failure when only unimol channels are present
@@ -330,7 +331,7 @@ def get_max_reactivity(hot_sp, hot_sp_df, therm_df, T0, Tref):
             k_series = k_series[Tcomm]*(101325/8.314/Tcomm/numpy.power(10, 6)) * \
                 numpy.exp(dg_rxn[Tcomm]/1.987/Tcomm)
             k = k_series[Tref]
-        
+
         if k > kmax:
             k_max_hot = copy.deepcopy(k_series)
             kmax = copy.deepcopy(k)
@@ -343,7 +344,6 @@ def estimate_hot_hk(dh_pi, Tref, cp_hot, kmax_hot, dhmin_hot):
         units cal, mol, K
         NB dh_pi is the dh transferred to the hot species
     """
-
     # approximate with close Tref if absent
     if dh_pi[Tref] < 0:
         T_star, k_star = kt_star(-dh_pi[Tref], cp_hot, Tref, kmax_hot)
@@ -368,10 +368,16 @@ def kt_star(DH0, Cp, T0, k_series):
         f_k = interp1d(numpy.array(k_series.index, dtype=float), numpy.array(k_series.values, dtype=float), kind='cubic')
     except TypeError as e:
         print('error in interpolation for Cp: {}'.format(e))
+        print('Setting T* as T0 : {} K'.format(T0))
         return T0, k_series[T0]
-
+    except ValueError as e:
+        print('Interpolation failed - Cp vector must have at least four values. T vals are {}'.format(list(Cp.index)))
+        print('Setting T* as T0 : {} K'.format(T0))
+        print(e)
+        return T0, k_series[T0]
+    
     try:
-        T_star = fsolve(tozero, T0+100, args=(DH0, f_cp, T0))
+        T_star = fsolve(tozero, T0+100, args=(DH0, f_cp, T0))[0]
     except ValueError:
         print(
             '*Warning: fsolve failed to compute T*, out of range - using fixed Cp at {:.0f} K'.format(T0))
