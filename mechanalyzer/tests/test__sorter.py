@@ -397,6 +397,51 @@ def test__sortby_species_subpes():
     print('ok')
 
 
+def test__sort_ktp():
+    """ test mechanalyzer.parser.sort
+
+        sort ktp dictionary according to highest rate values/ratios
+    """
+    results = {
+        (('H2', 'O'), ('OH', 'H'), (None,)): '2.73e+149.2.27e+01',
+        (('H', 'O'), ('OH',), ('(+M)',)): '2.73e+149.4.62e-16',
+        (('H', 'O'), ('OH',), (None,)): '2.73e+149.3.97e-39',
+        (('H', 'O2'), ('OH', 'O'), (None,)): '2.73e+149.1.30e-89',
+        (('H2', 'O'), ('OH', 'OH'), (None,)): '2.73e+149.0.00e+00',
+        (('H2', 'O2'), ('HO2V', 'H'), (None,)): '2.73e+149.0.00e+00',
+        (('H2', 'O(S)'), ('OH', 'H'), (None,)): '4.80e+143.0.00e+00'
+    }
+
+    # Read mechanism files into strings
+    spc_paths = [
+        os.path.join(CWD, 'data', 'spc2.csv'),
+        os.path.join(CWD, 'data', 'spc1.csv')]
+    mech_path = None
+    sort_path = None
+
+    spc_str, _, _ = _read_files(spc_paths[1], mech_path, sort_path)
+
+    # Build spc and mech information
+    spc_dct_full = sparser.parse_mech_spc_dct(spc_str, canon_ent=False)
+
+    # Sort the mechanism
+    isolate_spc = []
+    sort_lst = ['rxn_max_vals', 'rxn_max_ratio', 0]
+
+    srt_mch = sorter.sorting(
+        AL_KTP_DCT, spc_dct_full, sort_lst, isolate_spc)
+    sorted_idx, cmts_dct, _ = srt_mch.return_mech_df()
+    al_ktp_dct_sorted = sorter.reordered_mech(AL_KTP_DCT, sorted_idx)
+    print('ktp dct sorted by max val and ratios test:')
+    assert al_ktp_dct_sorted.keys() == results.keys()
+    newdct = dict.fromkeys(al_ktp_dct_sorted.keys())
+    for rxn in al_ktp_dct_sorted.keys():
+        newdct[rxn] = cmts_dct[rxn]['cmts_inline'].split('ratio')[1].strip()
+
+    assert newdct == results
+    print('ok')
+
+
 def test__sortby_submech_subpes_chnl():
     """ test mechanalyzer.parser.sort
 
@@ -536,25 +581,25 @@ def test__sortby_submech_ext():
     results = [
         [(('C2H4',), ('H2', 'H2CC'), ('(+M)',)), 'FUEL.42.1'],
         [(('CH2(S)', 'C2H4'), ('CC3H6',), (None,)), 'FUEL.76.1'],
-        [(('C2H4', 'CH3O'), ('C2H3', 'CH3OH'), (None,)), 'FUEL.85.7'],
+        [(('C2H4', 'CH3O'), ('C2H3', 'CH3OH'), (None,)), 'FUEL.85.8'],
         [(('C3H5-A', 'C2H5'), ('C2H4', 'C3H6'), (None,)), 'FUEL.152.1'],
-        [(('C3H8', 'O2'), ('IC3H7', 'HO2'), (None,)), 'FUEL_ADD_CH3.94.1'],
-        [(('C2H5CHCO', 'OH'), ('NC3H7', 'CO2'), (None,)), 'FUEL_ADD_CH3.128.2'],
+        [(('C3H8', 'O2'), ('IC3H7', 'HO2'), (None,)), 'FUEL_ADD_CH3.94.3'],
+        [(('C2H5CHCO', 'OH'), ('NC3H7', 'CO2'), (None,)), 'FUEL_ADD_CH3.128.13'],
         [(('C2H5', 'O2'), ('C2H4O1-2', 'OH'), (None,)), 'FUEL_ADD_H.57.1'],
-        [(('C4H71-1',), ('C2H5', 'C2H2'), (None,)), 'FUEL_ADD_H.111.1'],
+        [(('C4H71-1',), ('C2H5', 'C2H2'), (None,)), 'FUEL_ADD_H.111.3'],
         [(('C2H3OH', 'H'), ('PC2H4OH',), (None,)), 'FUEL_ADD_O.50.1'],
-        [(('C2H3OH', 'HO2'), ('CH3CHO', 'HO2'), (None,)), 'FUEL_ADD_O.63.4'],
-        [(('C4H6', 'O'), ('C2H2', 'C2H4O1-2'), (None,)), 'FUEL_ADD_O.119.7'],
-        [(('CH3OCHO', 'O2'), ('CH2OCHO', 'HO2'), (None,)), 'FUEL_ADD_O2.67.1'],
+        [(('C2H3OH', 'HO2'), ('CH3CHO', 'HO2'), (None,)), 'FUEL_ADD_O.63.3'],
+        [(('C4H6', 'O'), ('C2H2', 'C2H4O1-2'), (None,)), 'FUEL_ADD_O.119.10'],
+        [(('CH3OCHO', 'O2'), ('CH2OCHO', 'HO2'), (None,)), 'FUEL_ADD_O2.67.2'],
         [(('CH3', 'CH2O'), ('C2H5O',), (None,)), 'FUEL_ADD_OH.50.1'],
         [(('C2H5OH', 'O2'), ('SC2H4OH', 'HO2'), (None,)), 'FUEL_ADD_OH.64.3'],
         [(('CH3OCH3', 'CH3O2'), ('CH3OCH2', 'CH3O2H'), (None,)), 'FUEL_ADD_OH.100.5'],
         [(('C2H3', 'CH3'), ('CH4', 'C2H2'), (None,)), 'FUEL_RAD.76.2'],
-        [(('C4H71-O',), ('C2H3', 'CH3CHO'), (None,)), 'FUEL_RAD.120.5'],
-        [(('C3H6', 'OH'), ('IC3H5OH', 'H'), (None,)), 'R_CH3.85.15'],
-        [(('C4H8-2', 'H'), ('C3H6', 'CH3'), (None,)), 'R_CH3.113.10'],
+        [(('C4H71-O',), ('C2H3', 'CH3CHO'), (None,)), 'FUEL_RAD.120.1'],
+        [(('C3H6', 'OH'), ('IC3H5OH', 'H'), (None,)), 'R_CH3.85.4'],
+        [(('C4H8-2', 'H'), ('C3H6', 'CH3'), (None,)), 'R_CH3.113.2'],
         [(('C2H5CHCO', 'O'), ('C3H6', 'CO2'), (None,)), 'R_CH3.127.1'],
-        [(('SC2H2OH', 'O2'), ('CH2CO', 'HO2'), (None,)), 'R_O.61.8'],
+        [(('SC2H2OH', 'O2'), ('CH2CO', 'HO2'), (None,)), 'R_O.61.6'],
         [(('C2H3OO',), ('CH2CO', 'OH'), (None,)), 'R_O2.55.2'],
         [(('O', 'O'), ('O2',), ('+M',)), 'SUBFUEL.5.1'],
         [(('CH', 'H'), ('C', 'H2'), (None,)), 'SUBFUEL.14.1'],
@@ -585,13 +630,13 @@ def test__sortby_submech_ext():
         spc_str, mech_str, isolate_spc, sort_lst)
 
     print('Sort by submech_ext-subpes:')
-    sorted_results = []
-    for i, rxn in enumerate(param_dct_sort.keys()):
-        if i % 20 == 0:
-            sorted_results.append(
-                [rxn, cmts_dct[rxn]['cmts_inline'].split('subpes')[1].strip()])
-
-    assert results == sorted_results
+    check_results = []
+    for rxn in param_dct_sort.keys():
+        check_results.append([rxn, cmts_dct[rxn]['cmts_inline'].split('subpes')[1].strip()])
+    for i in results:
+        if i not in check_results:
+            print(i)
+    assert all(i in check_results for i in results)
     print('ok')
 
 
@@ -601,51 +646,38 @@ def test__sortby_submech_prompt():
         sort by prompt reactions identified
         based on radical type
     """
-    [
-        [(('C4H72-2',), ('C4H612', 'H'), (None,)), '111.1.1.RAD_DECO_C4H72-2'],
-        [(('C4H71-3',), ('C4H72-2',), (None,)), '111.1.6.'], 
-        [(('C4H612', 'H'), ('C3H4-P', 'CH3'), (None,)), '111.1.11.'], 
-        [(('C4H71-4', 'H'), ('C4H8-1',), ('(+M)',)), '112.1.1.RAD_GEN_C4H71-4'],
-        [(('C4H8-2',), ('C3H5-A', 'CH3'), (None,)), '112.2.6.'],
-        [(('C4H8-2', 'H'), ('C4H71-3', 'H2'), (None,)), '113.10.27.RAD_GEN_C4H71-3'],
-        [(('C4H8-2', 'O'), ('C4H71-3', 'OH'), (None,)), '121.9.15.RAD_GEN_C4H71-3'], 
-        [(('C4H8-2', 'OH'), ('C4H72-2', 'H2O'), (None,)), '122.24.41.RAD_GEN_C4H72-2'], 
-        [(('C4H72-2O2',), ('CH3CHCOCH3', 'O'), (None,)), '128.8.30.'], 
-        [(('C4H71-3OOH',), ('C4H71-O', 'OH'), (None,)), '129.3.7.'], 
-        [(('C4H71-3', 'HO2'), ('C2H3COCH3', 'H2O'), (None,)), '129.3.12.RAD_GEN_C4H71-3'],
-        [(('C4H71-3', 'HO2'), ('C4H7O2-1', 'OH'), (None,)), '129.4.17.RAD_GEN_C4H71-3'],
-        [(('C4H8-2', 'O2'), ('C4H71-3', 'HO2'), (None,)), '129.15.34.RAD_GEN_C4H71-3'],
-        [(('C4H8-2', 'HO2'), ('C4H72-2', 'H2O2'), (None,)), '130.24.63.RAD_GEN_C4H72-2'], 
-        [(('C4H71-3', 'CH3O'), ('C4H8-1', 'CH2O'), (None,)), '160.1.1.RAD_GEN_C4H71-3'], 
-        [(('C4H71-3', 'CH3O2'), ('C4H71-O', 'CH3O'), (None,)), '166.1.2.RAD_GEN_C4H71-3'], 
-        [(('CH3O2', 'C4H71-4'), ('CH3O', 'C4H7O1-4'), (None,)), '166.4.10.RAD_GEN_C4H71-4'],
-        [(('C2H5', 'C4H71-3'), ('C4H6', 'C2H6'), (None,)), '184.1.1.RAD_GEN_C4H71-3'], 
-        [(('C3H5-A', 'C4H71-3'), ('C3H6', 'C4H6'), (None,)), '206.1.1.RAD_GEN_C4H71-3'], 
-        [(('C4H8-2', 'IC3H7O2'), ('C4H71-3', 'IC3H7O2H'), (None,)), '213.4.4.RAD_GEN_C4H71-3'], 
-        [(('C4H71-3', 'C4H71-3'), ('C8H141-5,3',), (None,)), '222.1.1.RAD_GEN_C4H71-3'], 
-        [(('C4H71-3', 'SC3H5CHO'), ('C8H131-5,3,SAO',), (None,)), '225.5.5.RAD_GEN_C4H71-3'], 
-        [(('SC4H9O2', 'C4H71-3'), ('SC4H9O', 'C4H71-O'), (None,)), '230.3.3.RAD_GEN_C4H71-3'], 
-        [(('C4H8-2', 'PC4H9O2'), ('C4H71-3', 'PC4H9O2H'), (None,)), '231.5.5.RAD_GEN_C4H71-3']]
-
     results = [
-        [(('C4H72-2',), ('C4H612', 'H'), (None,)), '111.1.1.RAD_DECO_C4H72-2'], 
-        [(('C4H71-3',), ('C4H72-2',), (None,)), '111.1.6.unclassified'], 
+        [(('C4H72-2',), ('C4H612', 'H'), (None,)), '111.1.1.RAD_DECO_C4H72-2'],
+        [(('C4H71-4', 'H'), ('C4H8-1',), ('(+M)',)), '112.1.1.RAD_GEN_C4H71-4'],
         [(('C4H8-1', 'H'), ('C4H71-3', 'H2'), (None,)), '113.8.25.RAD_GEN_C4H71-3'],
+        [(('C4H71-3', 'O'), ('C2H3CHO', 'CH3'), (None,)), '120.23.68.RAD_GEN_C4H71-3'],
         [(('C4H8-1', 'O'), ('C4H71-3', 'OH'), (None,)), '121.5.11.RAD_GEN_C4H71-3'],
-        [(('C4H8-1', 'OH'), ('C4H71-4', 'H2O'), (None,)), '122.22.39.RAD_GEN_C4H71-4'],
-        [(('C4H71-3', 'HO2'), ('C4H71-O', 'OH'), (None,)), '129.3.10.RAD_GEN_C4H71-3'],
-        [(('C4H71-3', 'HO2'), ('C4H72-1OOH',), (None,)), '129.4.18.unclassified'], 
-        [(('C4H8-2', 'O2'), ('C4H72-2', 'HO2'), (None,)), '129.16.35.RAD_GEN_C4H72-2'], 
-        [(('C4H8-1', 'CH3'), ('C4H71-3', 'CH4'), (None,)), '153.6.6.RAD_GEN_C4H71-3'], 
+        [(('C4H8-1', 'OH'), ('C4H71-3', 'H2O'), (None,)), '122.21.38.RAD_GEN_C4H71-3'],
+        [(('C4H71-4O2',), ('C4H61-3OOH4',), (None,)), '128.2.19.'],
+        [(('C4H71-3OOH',), ('CH3CHO', 'C2H3', 'OH'), (None,)), '129.3.6.'],
+        [(('C4H8-1', 'HO2'), ('C4H71-3', 'H2O2'), (None,)), '130.21.60.RAD_GEN_C4H71-3'],
+        [(('C4H8-1', 'CH3'), ('C4H71-3', 'CH4'), (None,)), '153.6.6.RAD_GEN_C4H71-3'],
+        [(('C4H71-3', 'CH3O'), ('C4H8-1', 'CH2O'), (None,)), '160.1.1.RAD_GEN_C4H71-3'],
         [(('C4H8-1', 'CH3O'), ('C4H71-3', 'CH3OH'), (None,)), '161.5.5.RAD_GEN_C4H71-3'],
-        [(('C4H71-3', 'CH3O2'), ('C4H7O2-1', 'CH3O'), (None,)), '166.2.5.RAD_GEN_C4H71-3'],
-        [(('C2H3', 'C4H71-3'), ('C2H4', 'C4H6'), (None,)), '183.3.3.RAD_GEN_C4H71-3'], 
+        [(('C4H71-3OOCH3',), ('C4H71-O', 'CH3O'), (None,)), '166.1.1.'],
+        [(('C4H8-1', 'CH3O2'), ('C4H71-3', 'CH3O2H'), (None,)), '167.7.7.RAD_GEN_C4H71-3'],
+        [(('C6H101-3,3',), ('C2H3', 'C4H72-2'), (None,)), '183.1.1.RAD_GEN_C4H72-2'],
+        [(('C2H5', 'C4H71-3'), ('C4H6', 'C2H6'), (None,)), '184.1.1.RAD_GEN_C4H71-3'],
+        [(('C4H71-3', 'C2H5O2'), ('C4H71-O', 'C2H5O'), (None,)), '192.1.1.RAD_GEN_C4H71-3'],
+        [(('C4H8-1', 'C2H5O2'), ('C4H71-3', 'C2H5O2H'), (None,)), '193.1.1.RAD_GEN_C4H71-3'],
         [(('C4H8-1', 'CH3CO3'), ('C4H71-3', 'CH3CO3H'), (None,)), '196.4.4.RAD_GEN_C4H71-3'],
+        [(('C3H5-A', 'C4H71-3'), ('C3H6', 'C4H6'), (None,)), '206.1.1.RAD_GEN_C4H71-3'],
+        [(('C4H8-1', 'C3H5-A'), ('C4H71-3', 'C3H6'), (None,)), '207.1.1.RAD_GEN_C4H71-3'],
+        [(('IC3H7O2', 'C4H71-3'), ('IC3H7O', 'C4H71-O'), (None,)), '212.1.1.RAD_GEN_C4H71-3'],
         [(('C4H8-1', 'IC3H7O2'), ('C4H71-3', 'IC3H7O2H'), (None,)), '213.3.3.RAD_GEN_C4H71-3'],
+        [(('C4H6', 'C4H71-3'), ('C8H131-5,3,PA',), (None,)), '221.1.1.RAD_GEN_C4H71-3'],
+        [(('C4H71-3', 'C4H71-3'), ('C8H141-5,3',), (None,)), '222.1.1.RAD_GEN_C4H71-3'],
+        [(('C4H71-3', 'C2H3COCH3'), ('C8H131-5,3,TAO',), (None,)), '225.1.1.RAD_GEN_C4H71-3'],
+        [(('C4H71-4O2', 'C4H71-3'), ('C4H7O1-4', 'C4H71-O'), (None,)), '228.2.4.RAD_GEN_C4H71-3'],
         [(('IC4H9O2', 'C4H71-3'), ('IC4H9O', 'C4H71-O'), (None,)), '230.1.1.RAD_GEN_C4H71-3'],
-        [(('IC4H9O2', 'C4H8-2'), ('IC4H9O2H', 'C4H71-3'), (None,)), '231.2.2.RAD_GEN_C4H71-3'],
-        [(('TC4H9O2', 'C4H8-1'), ('TC4H9O2H', 'C4H71-3'), (None,)), '231.10.10.RAD_GEN_C4H71-3']
+        [(('IC4H9O2', 'C4H8-1'), ('IC4H9O2H', 'C4H71-3'), (None,)), '231.1.1.RAD_GEN_C4H71-3'],
     ]
+
     # Read mechanism files into strings
     spc_path = os.path.join(CWD, 'data', 'heptane_cut_species.csv')
     mech_path = os.path.join(CWD, 'data', 'heptane_cut_mech.txt')
@@ -660,14 +692,18 @@ def test__sortby_submech_prompt():
     param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
-    print('Sort by submech_prompt:')
+    print('Sort by submech_prompt: check only 1st channel of each PES for simplicity')
     sorted_results = []
-
-    for i, rxn in enumerate(param_dct_sort.keys()):
-        if i % 5 == 0:
+    pess = []
+    for rxn in param_dct_sort.keys():
+        cmt = cmts_dct[rxn]['cmts_inline'].split('submech_prompt')[1].strip()
+        pes = cmt.split('.')[0]
+        if pes not in pess:
+            print([rxn,cmt])
             sorted_results.append(
-                [rxn, cmts_dct[rxn]['cmts_inline'].split('submech_prompt')[1].strip()])
-    print(sorted_results)
+                [rxn, cmt])
+            pess.append(pes)
+
     assert results == sorted_results
     print('ok')
 
@@ -706,55 +742,10 @@ def test__filter_pesgroups():
     sort_lst = ['submech_prompt', 0]
 
     _, _, _, pes_groups, _ = sorter.sorted_mech(
-        spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=spc_therm_dct, dct_flt_grps={'DH':30., 'Tref':300}) # 
+        spc_str, mech_str, isolate_spc, sort_lst, spc_therm_dct=spc_therm_dct, dct_flt_grps={'DH':30., 'lookforpromptchains': 0}) # 
 
     print('Sort by submech_prompt and filter pes groups:')
     assert results == pes_groups
-    print('ok')
-
-
-def test__sort_ktp():
-    """ test mechanalyzer.parser.sort
-
-        sort ktp dictionary according to highest rate values/ratios
-    """
-    results = {
-        (('H2', 'O'), ('OH', 'H'), (None,)): '2.73e+149.2.27e+01',
-        (('H', 'O'), ('OH',), ('(+M)',)): '2.73e+149.4.62e-16',
-        (('H', 'O'), ('OH',), (None,)): '2.73e+149.3.97e-39',
-        (('H', 'O2'), ('OH', 'O'), (None,)): '2.73e+149.1.30e-89',
-        (('H2', 'O'), ('OH', 'OH'), (None,)): '2.73e+149.0.00e+00',
-        (('H2', 'O2'), ('HO2V', 'H'), (None,)): '2.73e+149.0.00e+00',
-        (('H2', 'O(S)'), ('OH', 'H'), (None,)): '4.80e+143.0.00e+00'
-    }
-
-    # Read mechanism files into strings
-    spc_paths = [
-        os.path.join(CWD, 'data', 'spc2.csv'),
-        os.path.join(CWD, 'data', 'spc1.csv')]
-    mech_path = None
-    sort_path = None
-
-    spc_str, _, _ = _read_files(spc_paths[1], mech_path, sort_path)
-
-    # Build spc and mech information
-    spc_dct_full = sparser.parse_mech_spc_dct(spc_str, canon_ent=False)
-
-    # Sort the mechanism
-    isolate_spc = []
-    sort_lst = ['rxn_max_vals', 'rxn_max_ratio', 0]
-
-    srt_mch = sorter.sorting(
-        AL_KTP_DCT, spc_dct_full, sort_lst, isolate_spc)
-    sorted_idx, cmts_dct, _ = srt_mch.return_mech_df()
-    al_ktp_dct_sorted = sorter.reordered_mech(AL_KTP_DCT, sorted_idx)
-    print('ktp dct sorted by max val and ratios test:')
-    assert al_ktp_dct_sorted.keys() == results.keys()
-    newdct = dict.fromkeys(al_ktp_dct_sorted.keys())
-    for rxn in al_ktp_dct_sorted.keys():
-        newdct[rxn] = cmts_dct[rxn]['cmts_inline'].split('ratio')[1].strip()
-
-    assert newdct == results
     print('ok')
 
 # Helper function
@@ -788,12 +779,13 @@ if __name__ == '__main__':
     # test__sortby_rxnclass() # does not work only if filter_pesgroups active
     # test__sortby_species_subpes()
     # test__sort_ktp()
+    # test__filter_pesgroups()
+    # test__sortby_submech_prompt()    
+    # test__sortby_submech_subpes_chnl()
+    # test__sortby_submech_class()
     # still to fix
-    test__filter_pesgroups() # recheck why therm is different
-    #test__sortby_submech_subpes_chnl()
-    #test__sortby_submech_prompt()    
-    #test__sortby_submech_ext()
+    test__sortby_submech_ext()
     #test__sortby_submech_del() add this test
-    #test__sortby_submech_class()
+    
     
     

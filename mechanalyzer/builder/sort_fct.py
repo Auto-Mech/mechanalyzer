@@ -538,7 +538,9 @@ class SortMech:
                     elif (len(rcts) == 1 and rcts[0] == sp and len(prds) > 2):
                         mech_df['submech_prompt'][rxn] = 'RAD_DECO_LUMPED_{}'.format(
                             sp)
-                       
+                    if len(mech_df['submech_prompt'][rxn]) > 0:
+                        break
+
             elif chk == 0 and filtertype != 'submech_prompt':  # reaction filtered out
                 # don't filter for submech_prompt - you'll need it later to check for wellskipping channels
                 mech_df = mech_df.drop(index=[rxn]) 
@@ -692,7 +694,6 @@ class SortMech:
         def assign_group(spcs_subset):
             # prioritize when a species is in fuel group;
             # assign "core" only when all species are in the core mech
-            # DIVIDI PER REAGENTI E PRODOTTI
             
             if any(subset in FUELGROUP for subset in spcs_subset):
                 for fuelgroup in FUELGROUP:
@@ -821,6 +822,7 @@ class SortMech:
         self.kabs = DFG['kabs']
         self.Tref = DFG['Tref']
         self.keepfiltered = int(DFG['keepfiltered'])
+        self.lookforpromptchains = bool(DFG['lookforpromptchains'])
         # convert therm dct to dataframe
         self.therm_df = thermo.spc_therm_dct_df(therm_dct)
         # 1 find min endothermicity of deco reactions of hotspecies
@@ -902,7 +904,7 @@ class SortMech:
                             # save hotsp anyway since you don't know what's going to happen
                             active_hotsp.append(hot_sp)
                             continue
-                        
+
                         # print(dh_tot[T0], dh_tot[T0]/self.dh_min_hot[hot_sp][T0]*int(self.dh_min_hot[hot_sp][T0]), k_star/self.k_max_hot[hot_sp][self.Tref], k_star, dh[T0], self.dh_min_hot[hot_sp][T0])
                         # print(dh_tot[T0] < self.DHmax, dh_tot[T0]/self.dh_min_hot[hot_sp][T0]*int(self.dh_min_hot[hot_sp][T0] > 0) < self.H5H3ratio, k_star/self.k_max_hot[hot_sp][self.Tref] > self.kratio, k_star > self.kabs, dh[T0] < 0)
 
@@ -914,8 +916,9 @@ class SortMech:
                             active_hotsp.append(hot_sp)
                             # BUILD REACTION CHAINS STARTING FROM HERE
                             # look for chains
-                            self.rxn_chain_prompt2(
-                                T0, dh_tot, hot_sp, hot_sp_df_dct)
+                            if self.lookforpromptchains == True:
+                                self.rxn_chain_prompt2(
+                                    T0, dh_tot, hot_sp, hot_sp_df_dct)
                             check_ped_i += 1
                         else:
                             if self.keepfiltered != 0:
@@ -1011,12 +1014,9 @@ class SortMech:
             
             if len(prds) != 2:
                 break
-                
-            # initializations.. all these are a bit stupid
-            phis, T_stars, k_stars, dh_tots, add_check, hot_mech_df, hot_spc_dct, pesN, subpesN = [
-                dict.fromkeys(prds), dict.fromkeys(prds), dict.fromkeys(prds), dict.fromkeys(prds), 
-                dict.fromkeys(prds), dict.fromkeys(prds), dict.fromkeys(prds), dict.fromkeys(prds), 
-                dict.fromkeys(prds)]
+
+            phis, T_stars, k_stars, dh_tots, add_check, hot_mech_df, hot_spc_dct, pesN, subpesN = (
+                {prd: None for prd in prds} for _ in range(9))
             
             for prd in prds:
                 if 'dof_info' not in self.spc_dct[prd].keys():
@@ -1085,7 +1085,7 @@ class SortMech:
                 self.spc_dct.update(dict(zip(new_spc, list(map(hot_spc_dct[hot_sp].get, new_spc)))))
 
             # 2.2 IF COMPLIANT WITH CONDITIONS:
-            if dh_tot[T0] < self.DHmax or dh_tot[T0]/self.dh_min_hot[hot_sp][T0] < self.H5H3ratio \
+            if dh_tot[T0] < self.DHmax or dh_tot[T0]/self.dh_min_hot[hot_sp][T0]*int(self.dh_min_hot[hot_sp][T0] > 0) < self.H5H3ratio \
                 or (k_stars[hot_sp]/self.k_max_hot[hot_sp][self.Tref] > self.kratio) \
                     or (k_stars[hot_sp] > self.kabs and dh_start[T0] < 0):
                 keep = 'YES'

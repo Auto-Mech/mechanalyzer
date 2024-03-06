@@ -14,7 +14,8 @@ DFG = {
     'DH': 0,
     'H5H3ratio': 0,
     'kratio': 1e50, #depends too much on temperature to make it a default that makes sense
-    'kabs': 1e50
+    'kabs': 1e50,
+    'lookforpromptchains': 1 
 }
 
 # Functions to take the mechanism strings (may want to further simplify)
