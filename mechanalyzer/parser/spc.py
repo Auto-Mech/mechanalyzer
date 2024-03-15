@@ -136,7 +136,7 @@ def spc_dct_from_smiles(smiles_lst, stereo=False):
             ich = automol.chi.add_stereo(ich)
 
         # Generate Name
-        fml = automol.chi.formula_string(ich)
+        fml = automol.chi.formula_layer(ich)
         name, fml_count_dct = assign_unique_name(
             fml, fml_count_dct, spc_dct)
 
@@ -156,7 +156,7 @@ def reorder_by_atomcount(spc_dct):
     for key in spc_dct.keys():
         ich = spc_dct[key]['inchi']
         fml_dct = automol.chi.formula(ich)
-        natoms = automol.formula.atom_count(fml_dct)
+        natoms = automol.form.atom_count(fml_dct)
         natom_df[key] = natoms
     natom_df = natom_df.sort_values(ascending=True)
 

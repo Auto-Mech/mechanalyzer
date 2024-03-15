@@ -4,9 +4,9 @@
 import numpy
 import automol.chi
 import automol.graph
-import automol.formula
+import automol.form
 import automol.reac
-from automol.par import ReactionClass
+from automol import ReactionClass
 from thermfit.cbh import _tsgra as tsutil
 from thermfit.cbh import _util as util
 from thermfit.cbh._spc import species_basis
@@ -14,11 +14,11 @@ from thermfit.cbh._spc import species_basis
 
 # (Reaction Type, IsRadRad)
 CBH_TS_CLASSES = [
-    (ReactionClass.Typ.HYDROGEN_ABSTRACTION, False),
-    (ReactionClass.Typ.HYDROGEN_ABSTRACTION, True),
-    (ReactionClass.Typ.ADDITION, False),
-    (ReactionClass.Typ.ELIMINATION, False),
-    (ReactionClass.Typ.BETA_SCISSION, False)
+    (ReactionClass.HYDROGEN_ABSTRACTION, False),
+    (ReactionClass.HYDROGEN_ABSTRACTION, True),
+    (ReactionClass.ADDITION, False),
+    (ReactionClass.ELIMINATION, False),
+    (ReactionClass.BETA_SCISSION, False)
 ]
 
 
@@ -55,7 +55,7 @@ def basic_ts_basis(zrxn, spc_scheme):
     """
 
     # Just use reactants
-    rxn_ichs = automol.reac.chi(zrxn, stereo=True)
+    rxn_ichs = automol.reac.chis(zrxn, stereo=True)
     rct_ichs, _ = rxn_ichs
 
     basis, coeff_lst = [], []
@@ -88,38 +88,38 @@ def cbh_basis(zrxn, scheme):
 
     zrxn = automol.reac.without_dummy_atoms(zrxn)
 
-    rxnclass = automol.reac.reaction_class(zrxn)
+    rxnclass = automol.reac.class_(zrxn)
     radrad = automol.reac.is_radical_radical(zrxn)
 
-    frm_bnd_keys = automol.reac.forming_bond_keys(zrxn)
-    brk_bnd_keys = automol.reac.breaking_bond_keys(zrxn)
+    gra = automol.reac.ts_graph(zrxn)
+    frm_bnd_keys = automol.graph.ts.forming_bond_keys(gra)
+    brk_bnd_keys = automol.graph.ts.breaking_bond_keys(gra)
     frm_key1, frm_key2 = tsutil.split_bnd_keys(frm_bnd_keys)
     brk_key1, brk_key2 = tsutil.split_bnd_keys(brk_bnd_keys)
-    gra = zrxn.forward_ts_graph
     # Set up graph and reaction site information
     site = None
     site2 = None
     #  Elimination missing the forming double bond
-    if rxnclass == ReactionClass.Typ.ELIMINATION:
+    if rxnclass == ReactionClass.ELIMINATION:
         # brk_key, brk_key2 = _elimination_find_brk_bnds(gra, frm_key1)
         frm_key2 = tsutil.elimination_second_forming_bond(
             gra, brk_key1, brk_key2)
 
     #  Addition is missing the 2nd order bond in the graph
-    elif rxnclass == ReactionClass.Typ.ADDITION:
+    elif rxnclass == ReactionClass.ADDITION:
         gra, brk_key1 = tsutil.add_appropriate_pi_bonds(gra, frm_key1)
         if not brk_key1:
             gra = tsutil.remove_frm_bnd(gra, brk_key1, frm_key1)
             gra, brk_key1 = tsutil.add_appropriate_pi_bonds(gra, frm_key1)
     # The first set of forming and breaking bonds makes the first reaction site
-    if frm_key1 and brk_key1 and rxnclass != ReactionClass.Typ.ELIMINATION:
+    if frm_key1 and brk_key1 and rxnclass != ReactionClass.ELIMINATION:
         site = [
             tsutil.xor(frm_key1, brk_key1),
             tsutil.intersec(frm_key1, brk_key1),
             tsutil.xor(brk_key1, frm_key1)]
     #  eliminations are one large reaction site that we split into
     # site1 and site2 for convieninece
-    if rxnclass == ReactionClass.Typ.ELIMINATION:
+    if rxnclass == ReactionClass.ELIMINATION:
         try:
             site = [
                 tsutil.xor(frm_key1, brk_key1),
@@ -139,7 +139,7 @@ def cbh_basis(zrxn, scheme):
                 tsutil.intersec(frm_key2, brk_key2),
                 tsutil.xor(brk_key2, frm_key2)]
 
-    elif rxnclass == ReactionClass.Typ.BETA_SCISSION:
+    elif rxnclass == ReactionClass.BETA_SCISSION:
         rad_atm = list(automol.graph.radical_atom_keys(gra, sing_res=True))[0]
         adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
         site = [rad_atm, None, None]
@@ -151,7 +151,7 @@ def cbh_basis(zrxn, scheme):
 
     #  radical radical hydrogen abstraction needs a second site
     #  where the pi bond is formed
-    elif rxnclass == ReactionClass.Typ.HYDROGEN_ABSTRACTION and radrad:
+    elif rxnclass == ReactionClass.HYDROGEN_ABSTRACTION and radrad:
         rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
         adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
         atmc, atmd = frm_key1
@@ -164,10 +164,10 @@ def cbh_basis(zrxn, scheme):
                         frm_key2 = frozenset({atma, atmb})
                         site2 = [atmb, atma, atmd]
     fclasses = (
-        (ReactionClass.Typ.HYDROGEN_ABSTRACTION, False),
-        (ReactionClass.Typ.HYDROGEN_MIGRATION, False),
-        (ReactionClass.Typ.BETA_SCISSION, False),
-        (ReactionClass.Typ.ADDITION, False)
+        (ReactionClass.HYDROGEN_ABSTRACTION, False),
+        (ReactionClass.HYDROGEN_MIGRATION, False),
+        (ReactionClass.BETA_SCISSION, False),
+        (ReactionClass.ADDITION, False)
     )
     
     # Graphical info about molecule
@@ -209,7 +209,7 @@ def cbh_basis(zrxn, scheme):
         elif scheme == 'cbh1':
             frags = cbhone_habs(
                 gra, site, atms, bnd_ords, atm_vals, adj_atms)
-    elif rxnclass == ReactionClass.Typ.ELIMINATION:
+    elif rxnclass == ReactionClass.ELIMINATION:
         if scheme == 'cbh0':
             frags = cbhzed_elim(
                 gra, site, site2, atms, bnd_ords, atm_vals, adj_atms)

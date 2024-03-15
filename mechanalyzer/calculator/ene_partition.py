@@ -9,7 +9,7 @@ from scipy.signal import convolve
 from scipy.interpolate import interp1d
 from phydat import phycon
 from autoparse import find
-from automol import formula
+from automol import form
 from automol import geom
 from automol import chi
 from mechanalyzer import calculator
@@ -762,9 +762,9 @@ def get_dof_info_fromspcdct(spc_dct_entry):
     """
     dof_info = {}
     fml = spc_dct_entry['fml']
-    Nat = formula.atom_count(fml)
+    Nat = form.atom_count(fml)
     dof_info['n_atoms'] = Nat
-    dof_info['mw'] = sum(np.array([formula.element_count(fml, at) *
+    dof_info['mw'] = sum(np.array([form.element_count(fml, at) *
                        MW_dct_elements[at] for at in MW_dct_elements.keys()]))
     if Nat == 1:
         dof_info['vib dof'] = 0
