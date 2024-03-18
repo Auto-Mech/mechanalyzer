@@ -5,7 +5,7 @@
 import numpy
 import automol.chi
 import automol.graph
-import automol.formula
+import automol.form
 from thermfit.cbh import _util as util
 
 
@@ -99,16 +99,16 @@ def _coefficients(basis, spc_fml):
     basis_mat = numpy.zeros((nbasis, nbasis))
 
     # Get the basis formulae list
-    basis_fml_str = [automol.chi.formula_string(spc) for spc in basis]
+    basis_fml_str = [automol.chi.formula_layer(spc) for spc in basis]
     for spc in basis_fml_str:
-        basis_atom_dict = automol.formula.from_string(spc)
+        basis_atom_dict = automol.form.from_string(spc)
         for atom in basis_atom_dict:
             if atom not in spc_fml:
                 spc_fml[atom] = 0
 
     # Set the elements of the matrix
     for i, spc in enumerate(basis_fml_str):
-        basis_atom_dict = automol.formula.from_string(spc)
+        basis_atom_dict = automol.form.from_string(spc)
         basis_vals = []
         for key in spc_fml.keys():
             if key in basis_atom_dict:
@@ -388,7 +388,7 @@ def cbhthree(ich, balance=True):
 #    atms     = automol.graph.atoms(gra)
 #    bnd_ords = automol.graph.kekule_bond_orders(gra)
 #    rad_atms = list(automol.graph.radical_atom_keys(gra, sing_res=True))
-#    atm_vals = automol.graph.atom_element_valences(gra)
+#    atm_vals = automol.graph.atomic_valences(gra)
 #    adj_atms = automol.graph.atom_neighbor_keys(gra)
 #
 #    #Determine CBHfour fragments

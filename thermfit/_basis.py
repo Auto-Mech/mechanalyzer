@@ -63,7 +63,7 @@ def _prepare_basis(ref_scheme, spc_dct, zrxn, print_log,
 
         # Build the basis set and coefficients for spc/TS
         if zrxn is not None:
-            rcls = automol.reac.reaction_class(zrxn)
+            rcls = automol.reac.class_(zrxn)
             radrad = automol.reac.is_radical_radical(zrxn)
             if (rcls, radrad) in thermfit.cbh.CBH_TS_CLASSES:
                 scheme = ref_scheme
@@ -223,7 +223,7 @@ def create_spec(ich, charge=0,
                 hind_inc=30.):
     """ add a species to the species dictionary
     """
-    rad = automol.formula.electron_count(automol.chi.formula(ich)) % 2
+    rad = automol.form.electron_count(automol.chi.formula(ich)) % 2
     mult = 1 if not rad else 2
 
     return {

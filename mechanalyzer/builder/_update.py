@@ -138,18 +138,18 @@ def remove_improper_reactions(rxn_param_dct, mech_spc_dct,
         rcts_ich = tuple(mech_spc_dct[rct]['inchi'] for rct in rxn[0])
         prds_ich = tuple(mech_spc_dct[prd]['inchi'] for prd in rxn[1])
 
-        rxn_obj_sets = automol.reac.with_structures_from_chi(
+        rxn_objs = automol.reac.from_chis(
             rcts_ich, prds_ich, stereo=stereo)
-        if rxn_obj_sets is not None:
-            rxn_class = rxn_obj_sets[0][0].class_
+        if rxn_objs:
+            rxn_class = automol.reac.class_(rxn_objs[0])
             print(f' - Keep: IDd {rxn_class} for reaction {rxn[0]}->{rxn[1]}')
             ste_rxn_param_dct[rxn] = params
         else:
             # Check if the reverse reaction cannot be ID'd
             if reverse:
-                rxn_obj_sets = automol.reac.with_structures_from_chi(
+                rxn_objs = automol.reac.from_chis(
                     prds_ich, rcts_ich, stereo=stereo)
-                if rxn_obj_sets is not None:
+                if rxn_objs:
                     rev_rxn = (rxn[1], rxn[0], rxn[2])
                     ste_rxn_param_dct[rev_rxn] = params
                     print(
