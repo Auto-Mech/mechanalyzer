@@ -15,29 +15,41 @@ from ioformat import pathtools
 # Filenames
 # Git merge complained yet again about filename changes 
 
-OUTPUT_FILENAME = 'nuig_m2-m5.pdf'
+OUTPUT_FILENAME = 'ThInK.pdf'
 #OUTPUT_FILENAME = 'gold.pdf'
 #OUTPUT_FILENAME = 'hr_hrf_rmg.pdf'
 
 THERMO_FILENAMES = [
     #'NUIGMech1.2.THERM',
     #'frank.therm',
-    'NUIGMech1.2.THERM',
+    #'NUIGMech1.2.THERM',
     #'to_us.ckin',
-    'm2.ckin',
-    'm3.ckin',
-    'm4.ckin',
-    'm5_all.ckin',
+    'therm_v11d.dat',
+    # 'hg_3-135.ckin',
+    # 'hg.ckin',
+    # 'fund.ckin',
+    'sharm_3-135.ckin',
+    # 'sharm.ckin',
+    'vpt2_3-63.ckin',
+    # 'vpt2.ckin',
+    # 'vibrot.ckin',
+    # 'm4.ckin',
+    # 'm5_all.ckin',
 ]
 SPC_CSV_FILENAMES = [
     #'canon_NUIG_species.csv',
     #'frank_species.csv',
-    'canon_NUIG_species.csv',
+    # 'canon_NUIG_species.csv',
     #'yao_spc.csv',
-    'canon_2.csv',
-    'canon_2.csv',
-    'canon_2.csv',
-    'canon_2.csv',
+    'newtest_cbh.csv',
+    'newtest_cbh.csv',
+    'newtest_cbh.csv',
+    # 'newtest_cbh.csv',
+    # 'newtest_cbh.csv',
+    # 'newtest_cbh.csv',
+    # 'canon_2.csv',
+    # 'canon_2.csv',
+    # 'canon_2.csv',
     #'canon_3.csv',
     #'canon_3.csv',
     #'canon_3.csv',
@@ -47,16 +59,20 @@ SPC_CSV_FILENAMES = [
 MECH_NAMES = [
     #'NUIG',
     #'Goldsmith',
-    'NUIGMech1.2',
+    'ThInK',
     #'Yao',
-    'M2',
-    'M3',
-    'M4',
-    'M5',
+    # 'hg',
+    # 'fund',
+    'sharm',
+    'vpt2',
+    # 'vibrot',
+    # 'M3',
+    # 'M4',
+    # 'M5',
 ]
 
 # Conditions
-TEMPS = numpy.linspace(300, 1500, 13)
+TEMPS = numpy.linspace(300, 3000, 28)
 
 # Options
 # SORT = False
