@@ -249,11 +249,13 @@ def cleave_group_and_saturate(gra, bnd_ords, atmi, atmj):
             atmsk = automol.graph.atom_keys(gra_k)
             if atmi in atmsk:
                 new_gra = gra_k
-        atm_stereo_pars = automol.graph.atom_stereo_parities(new_gra)
-        _, new_atm_stereo_gra = automol.graph.calculate_priorities_and_assign_parities(new_gra)
-        new_atm_stereo_pars = automol.graph.atom_stereo_parities(new_atm_stereo_gra)
-        if atm_stereo_pars != new_atm_stereo_pars:
-            new_gra = automol.graph.set_atom_stereo_parities(new_gra, new_atm_stereo_pars)
+        # # AVC: I don't think the following code does anything...
+        # # (Commenting out for now, because it does nothing)
+        # atm_stereo_pars = automol.graph.atom_stereo_parities(new_gra)
+        # _, new_atm_stereo_gra, _, _ = automol.graph.calculate_stereo(new_gra)
+        # new_atm_stereo_pars = automol.graph.atom_stereo_parities(new_atm_stereo_gra)
+        # if atm_stereo_pars != new_atm_stereo_pars:
+        #     new_gra = automol.graph.set_atom_stereo_parities(new_gra, new_atm_stereo_pars)
     else:
         new_gra = gra
     return new_gra
