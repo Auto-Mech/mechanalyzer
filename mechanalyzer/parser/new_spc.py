@@ -141,7 +141,7 @@ def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False,
 
     # Build the mech_spc_dct line by line
     mech_spc_dct = {}
-    errors = False
+
     for idx, line in enumerate(lines):
         if idx == 0:
             headers = parse_first_line(line, quotechar=quotechar)
@@ -159,19 +159,16 @@ def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False,
                     f'The species name {spc} appears in the csv file more than'
                     f' once. The second time is on line {idx + 1}, {line}.')
                 # Fill in the spc_dct and then add it to the mech_spc_dct
-                spc_dct, error = fill_spc_dct(
+                spc_dct = fill_spc_dct(
                     spc_dct, spc, chk_ste=chk_ste,
                     chk_match=chk_match, canon_ent=canon_ent)
                 mech_spc_dct[spc] = spc_dct
-                if error:
-                    errors = True
+
             else:
                 print(f'Line {idx + 1} appears to be empty. Skipping...')
 
     # Find species with the same chemical identifiers but different names
     check_for_dups(mech_spc_dct, printwarnings=verbose)
-
-    assert not errors, ('Errors while parsing the .csv file! See printouts')
 
     return mech_spc_dct
 
@@ -228,46 +225,42 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True, canon_ent=True):
         :return full_spc_dct: beefed-up spc_dct
         :rtype: dct
     """
+    # print('Filling species dictionary with missing values (InChI/SMILES, AMChI, stereo if selected). \
+    #     Consider preprocessing with mechanalyzer_bin/expand_species.py first if not done')
 
     full_spc_dct = copy.deepcopy(spc_dct)
 
     # Add SMILES or InChI if missing
-    if full_spc_dct['inchi'] == '' and full_spc_dct['smiles'] == '':
-        print(f'For {spc}, both inchi and smiles are empty')
-        error = True
-    elif full_spc_dct['inchi'] == '':
+    assert full_spc_dct['inchi'] != '' or full_spc_dct['smiles'] != '', (
+        f'For {spc}, both inchi and smiles are empty')
+
+    if full_spc_dct['inchi'] == '':
         smi = full_spc_dct['smiles']
-        error = check_smi(smi, spc)
+        check_smi(smi, spc)
         full_spc_dct['inchi'] = automol.smiles.chi(smi)
+        
     elif full_spc_dct['smiles'] == '':
         ich = full_spc_dct['inchi']
-        error = check_ich(ich, spc, chk_ste=chk_ste)
+        check_ich(ich, spc, chk_ste=chk_ste)
         full_spc_dct['smiles'] = ich_to_smi(ich)
+        
     else:  # if smiles and inchi were both already included
         if chk_match:
-            error = check_smi_and_ich(
+            check_smi_and_ich(
                 full_spc_dct['smiles'], full_spc_dct['inchi'], spc,
                 chk_ste=chk_ste)
         else:
-            error = check_ich(full_spc_dct['inchi'], spc, chk_ste=chk_ste)
-            if not error:  # if the inchi passed, check the smiles
-                #error = check_smi(full_spc_dct['smiles'], spc)
-                error = False
+            check_ich(full_spc_dct['inchi'], spc, chk_ste=chk_ste)
                 
     # add AMChI
-    ich_to_amch = inchi_to_amchi(full_spc_dct['inchi'], convert=canon_ent)
-    if ich_to_amch != full_spc_dct['inchi']:
-        full_spc_dct['inchi'] = ich_to_amch
-        print(
-            'InChI: ', full_spc_dct['inchi'],
-            ' updated to AMChI: ', ich_to_amch)
+    full_spc_dct = mech_inchi_to_amchi({spc: full_spc_dct}, convert=canon_ent)[spc]
 
-    if canon_ent:
-        if 'canon_enant_ich' not in full_spc_dct:
-            full_spc_dct['canon_enant_ich'] = canonical_enantiomer(
-                full_spc_dct['inchi'])
+    if canon_ent and 'canon_enant_ich' not in full_spc_dct:
+        full_spc_dct = add_canonical_enantiomer(
+            {spc: full_spc_dct})[spc]
     else:
         full_spc_dct['canon_enant_ich'] = full_spc_dct['inchi']
+
     # Add charge and exc_flag if missing; assume 0 for both
     if 'charge' not in full_spc_dct or full_spc_dct['charge'] == '':
         full_spc_dct['charge'] = 0
@@ -294,7 +287,7 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True, canon_ent=True):
         fml = ich_to_fml(full_spc_dct['inchi'])
         full_spc_dct['fml'] = fml
 
-    return full_spc_dct, error
+    return full_spc_dct
 
 
 def parse_first_line(first_line, quotechar="'"):
@@ -381,7 +374,8 @@ def check_ich(ich, spc, chk_ste=True):
             print(f"The spc '{spc}' has a stereo-invalid InChI, '{ich}'")
             error = True
 
-    return error
+    assert not error, (
+        'Errors when checking InChI validity')
 
 
 def check_smi(smi, spc):
@@ -401,7 +395,9 @@ def check_smi(smi, spc):
         print(f"The spc '{spc}' has an invalid SMILES string, '{smi}'")
         error = True
 
-    return error
+    assert not error, (
+        'Errors in SMILES dictionary!')
+
 
 
 def check_smi_and_ich(smi, ich, spc, chk_ste=True):
@@ -434,7 +430,8 @@ def check_smi_and_ich(smi, ich, spc, chk_ste=True):
 
     error = any([error1, error2, error3])
 
-    return error
+    assert not error, (
+        'Errors in checking smiles VS InChIs')
 
 
 def check_for_dups(mech_spc_dct, printwarnings=True):
@@ -469,15 +466,12 @@ def check_for_dups(mech_spc_dct, printwarnings=True):
             if are_spcs_same(outer_dct, inner_dct) and printwarnings:
                 print(f'{outer_spc} and {inner_spc} are chemical twins!')
 
-
-def mech_inchi_to_amchi(mech_spc_dct):
+def mech_inchi_to_amchi(mech_spc_dct, convert = True):
     """ convert inchi to amchi where needed """
-
     for spc_dct in mech_spc_dct.values():
-        spc_dct['inchi'] = inchi_to_amchi(spc_dct['inchi'])
+        spc_dct['inchi'] = inchi_to_amchi(spc_dct['inchi'], convert=convert)
 
     return mech_spc_dct
-
 
 def add_canonical_enantiomer(mech_spc_dct, dummy=False):
     """ add canonical enantiomer to species dictionaries

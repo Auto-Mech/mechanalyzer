@@ -399,14 +399,3 @@ def add_hashkey(spc_dct):
         dct.update({'inchikey': ick})
 
     return spc_dct
-
-
-if __name__ == '__main__':
-    print('ich1')
-    ICH = 'InChI=1S/C4H8O/c1-3-4(2)5-3/h3-4H,1-2H3/t3-,4-/m0/s1'
-    NAME = stereo_name_suffix(ICH)
-    print(NAME)
-    print('\nich2')
-    ICH = 'InChI=1S/C4H7O2/c1-3(5)4(2)6/h5H,1-2H3/b4-3+'
-    NAME = stereo_name_suffix(ICH)
-    print(NAME)
