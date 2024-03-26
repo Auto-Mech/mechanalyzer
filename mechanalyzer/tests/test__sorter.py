@@ -226,14 +226,10 @@ def test__sortby_molec_r1():
     # Sort mechanism by R1-molecularity - No Headers Included
     isolate_spc = []
     sort_lst = ['r1', 'molecularity', 0]  # NO HEADERS INCLUDED
-    # ONLY BY MOLEC- CHECK HEADERS WITH INT NUMBER
-    sort_lst_2 = ['molecularity', 0]
 
     param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
         spc_str, mech_str, isolate_spc, sort_lst)
 
-    param_dct_sort_2, _, cmts_dct_2, _, _ = sorter.sorted_mech(
-        spc_str, mech_str, isolate_spc, sort_lst_2)
     # NO NEED TO CALL IT AFTERWARDS
 
     comments = []
@@ -326,7 +322,7 @@ def test__sortby_rxnclass():
         #  '  unclassified.Addition-decomposition - termination']
     ]
     # Read mechanism files into strings
-    spc_path = os.path.join(CWD, 'data', 'LLNL_species.csv')
+    spc_path = os.path.join(CWD, 'data', 'LLNL_species_expanded.csv')
     mech_path = os.path.join(CWD, 'data', 'LLNL_C2H4_mech_class.dat')
     sort_path = None
 
@@ -339,7 +335,7 @@ def test__sortby_rxnclass():
     print('Sort by rxn class broad+graph test:')
 
     param_dct_sort, _, cmts_dct, _, _ = sorter.sorted_mech(
-        spc_str, mech_str, isolate_spc, sort_lst)
+        spc_str, mech_str, isolate_spc, sort_lst, stereo_optns=True)
 
     sorted_results = []
     for rxn in param_dct_sort.keys():
@@ -633,10 +629,9 @@ def test__sortby_submech_ext():
     check_results = []
     for rxn in param_dct_sort.keys():
         check_results.append([rxn, cmts_dct[rxn]['cmts_inline'].split('subpes')[1].strip()])
-    for i in results:
-        if i not in check_results:
-            print(i)
+
     assert all(i in check_results for i in results)
+    
     print('ok')
 
 
@@ -782,7 +777,7 @@ if __name__ == '__main__':
     # test__filter_pesgroups()
     # test__sortby_submech_prompt()    
     # test__sortby_submech_subpes_chnl()
-    # test__sortby_submech_class()
+    test__sortby_submech_class()
     # still to fix
     test__sortby_submech_ext()
     #test__sortby_submech_del() add this test
