@@ -50,7 +50,7 @@ def species_subset_ext(fuel, spc_dct, stoich_limit=STOICH_DEFAULT):
     # extract desired species and assign labels
     species = formulas.extract_species_sub(stoich, fml_df_reduced) # extract all species with stoichiometry below the one you are interested in 
     series = pd.Series('SUBFUEL', index=species) # these reactions will be called "subfuel"
-    species_subset_df = species_subset_df.append(series)
+    species_subset_df = species_subset_df._append(series)
     species_list += species
 
     return species_list, species_subset_df
@@ -79,12 +79,12 @@ def species_subset_del(fuel, spc_dct, stoich_limit=STOICH_DEFAULT_DEL):
     fml_df_reduced = formulas.extract_fml_df(spc_dct_reduced)
     core_species = formulas.extract_species_core(stoich_fuel, fml_df_reduced)
     series = pd.Series('CORE', index=core_species)
-    species_subset_df = species_subset_df.append(series)
+    species_subset_df = species_subset_df._append(series)
     # list all non-fuel species and non-core species as "supfuel"
     supfuel_list = list(spc_dct_reduced.keys())
     supfuel_list = [sp for sp in supfuel_list if sp not in core_species]
     series = pd.Series('SUPFUEL', index=supfuel_list)
-    species_subset_df = species_subset_df.append(series)
+    species_subset_df = species_subset_df._append(series)
 
     return species_list, species_subset_df
 
@@ -121,7 +121,7 @@ def species_subset(fuel, spc_dct):
     for stoich_type, stoich in STOICH_DCT_ADD.items():
         species = formulas.extract_species(stoich+stoich_fuel, fml_df)
         series = pd.Series(stoich_type, index=species)
-        species_subset_df = species_subset_df.append(series)
+        species_subset_df = species_subset_df._append(series)
         species_list += species
 
     return species_list, species_subset_df

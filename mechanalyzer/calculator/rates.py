@@ -5,8 +5,10 @@ Calculate rates with various fitting functions
 import sys
 import copy
 import numpy
+import pandas
 from phydat import phycon
 from scipy.special import eval_chebyt
+from mechanalyzer.calculator import thermo
 
 RC = phycon.RC_CAL  # gas constant in cal/(mol.K)
 RC2 = phycon.RC_ATM  # gas constant in cm^3.atm/(mol.K)
@@ -509,13 +511,22 @@ def lind(highp_arr, lowp_arr, temps_lst, pressures, collid_factor=1.0,
 
 def merge_rxn_ktp_dcts(full_rxn_ktp_dct, rxn_ktp_dct):
     """ Merge a reaction ktp dictionary into an existing one.
-        If a reaction currently exists in both. Then we add the kts
+        If a reaction currently exists in both, then we add the kts
         together for the reactions.
-
+        If a reaction is a self-reaction A+B=A+B (and same bath gas):
+        the reaction is not added
     """
-    # Add the prompt dictionary to the full one
+    # Add dictionary to another ktp dictionary
     # We will add the rates together if rxn is prev. found
     for rxn, _ktp1 in rxn_ktp_dct.items():
+        # if reactants and products are the same: do not add
+        rcts = list(rxn[0])
+        prds = list(rxn[1])
+        rcts.sort(), prds.sort()
+        if rcts == prds:
+            print('self reaction {} skipped'.format(rxn))
+            continue
+        
         if rxn not in full_rxn_ktp_dct:
             # Simply place rates into the full dct
             full_rxn_ktp_dct[rxn] = _ktp1
@@ -694,6 +705,7 @@ def extend_dct_with_pressure(pressure_all, pressure_red, dct_toextend):
 
     return dct_toextend
 
+
 def p_to_m(pressure, temps, rval=RC2):
     """ Convert the pressure to the concentration of a gas, [M], assuming an
         ideal gas form where [M] ~ P/RT.
@@ -799,3 +811,43 @@ def mult_by_factor(ktp_dct, factor):
         new_ktp_dct[pressure] = (temps, kts * factor)
 
     return new_ktp_dct
+
+
+def get_bw_ktp_dct(ktp_dct_entry, rcts, prds, therm_df):
+    """get backward rate constants for entries in a ktp dct
+
+    Args:
+        ktp_dct_entry: usual ktp dct entry
+        rcts (tuple): reactants
+        prds (tuple): products
+        therm_df (dataframe): dataframe with thermochemistry
+    returns: ktp_dct_entry_bw
+    """
+    ktp_dct_entry_bw = {}
+    for P, vals in ktp_dct_entry.items():
+        Tvect, k = vals
+        kt_series = pandas.Series(k, index=Tvect)
+        dg_rxn = thermo.extract_deltaX_therm(therm_df, rcts, prds, 'G')
+        kt_series_bw = get_bw_rate(kt_series, rcts, prds, dg_rxn)
+        ktp_dct_entry_bw[P] = (Tvect, kt_series_bw.values)
+
+    return ktp_dct_entry_bw
+
+
+def get_bw_rate(kt_series, rcts, prds, dg_rxn):
+    """get backward rate constat
+
+    Args:
+        kt_series (pd series): k values. index is temperature
+        rcts (tuple): reactants
+        prds (tuple): products
+        dg_rxn (pd series): DG(T)
+    """
+    deltanu = len(prds) - len(rcts)
+    # 1e+5 Pa / 1e+6 to get cm3
+    kt_series *= numpy.power((1e+5/8.314/kt_series.index/numpy.power(10, 6)),-deltanu)
+    kt_series *= numpy.exp(dg_rxn[kt_series.index]/1.987/kt_series.index)
+    
+    return kt_series
+           
+    

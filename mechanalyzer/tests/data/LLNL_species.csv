@@ -1,7 +1,4 @@
 'name','smiles','inchi','mult','charge','sens'
-C4H64-2-1OH,'C=C[CH]CO','InChI=1S/C4H7O/c1-2-3-4-5/h2-3,5H,1,4H2',2,0,0
-C4H63-1-2OH,'C=C(O)[CH]C','InChI=1S/C4H7O/c1-3-4(2)5/h3,5H,2H2,1H3',2,0,0
-C4H63-1-1OH,'C[CH]C=CO','InChI=1S/C4H7O/c1-2-3-4-5/h2-5H,1H3',2,0,0
 'H','[H]','InChI=1S/H',2,0,0
 'H2','[H][H]','InChI=1S/H2/h1H',1,0,0
 'O','[O]','InChI=1S/O',3,0,0
