@@ -54,7 +54,8 @@ if not any([
 
 # Read input species file into a species dictionary
 SPC_STR = ioformat.pathtools.read_file(CWD, OPTS['input'])
-mech_spc_dct = mechanalyzer.parser.spc.build_spc_dct(SPC_STR, 'csv')
+mech_spc_dct = mechanalyzer.parser.new_spc.parse_mech_spc_dct(SPC_STR)
+# mech_spc_dct = mechanalyzer.parser.spc.build_spc_dct(SPC_STR, 'csv')
 
 # Add species relating to unstable because of nearby radicals
 if OPTS['instability']:
