@@ -62,6 +62,10 @@ mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
     rxn_param_dct=rxn_param_dct,
     rxn_cmts_dct=None)
 
+# Write the species and mechanism files
+ioformat.pathtools.write_file(csv_str, CWD, FILE_DCT['out_spc'])
+ioformat.pathtools.write_file(mech_str, CWD, FILE_DCT['out_mech'])
+
 # Use strings to generate ordered objects
 # param_dct_sort, _, mech_spc_dct, cmts_dct, _ = sorter.sorted_mech(
 #     csv_str, mech_str, isolate_spc, sort_lst)
@@ -78,10 +82,7 @@ mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
 #     spc_nasa7_dct=None,
 #     rxn_param_dct=param_dct_sort,
 #     rxn_cmts_dct=rxn_cmts_dct)
-
 # Write the species and mechanism files
-ioformat.pathtools.write_file(csv_str, CWD, FILE_DCT['out_spc'])
-ioformat.pathtools.write_file(mech_str, CWD, FILE_DCT['out_mech'])
 # ioformat.pathtools.write_file(sortd_csv_str, CWD, FILE_DCT['out_spc'])
 # ioformat.pathtools.write_file(sortd_mech_str, CWD, FILE_DCT['out_mech'])
 
