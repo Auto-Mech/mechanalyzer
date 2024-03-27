@@ -858,9 +858,7 @@ def _ste_rxn_lsts(rxn_ich, enant=True):
         attempt = 1
         while attempt < 4:
             try:
-                rct_ichs, prd_ichs = automol.reac.chis(rxn_obj, stereo=True)
-                rct_ichs = automol.chi.sorted_(rct_ichs)
-                prd_ichs = automol.chi.sorted_(prd_ichs)
+                rct_ichs, prd_ichs = automol.reac.chis(ste_rxn, stereo=True)
                 ste_rxn_ichs += ((rct_ichs, prd_ichs),)
                 break
             except:
