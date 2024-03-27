@@ -696,7 +696,7 @@ def _split_ste_ccs(ccs_rxn_gra):
 def _pes_gra(noste_rxn_dct):
     """ seperates a list of reactions into graphs
         pes_gra: graph of a reaction (key)
-            and a list (value) the reactions with theh same stoichiometry
+            and a list (value) of the reactions with the same stoichiometry
         ccs_gra: graph of reaction (key
             and list (value) of reactions that are connected through wells
     """
