@@ -289,7 +289,8 @@ def get_rename_instr(mech_spc_dct1, mech_spc_dct2, strip_ste=True):
     return rename_instr
 
 
-def are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2, strip_ste=False):
+def are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2, strip_ste=False, 
+                 canon_ent=False):
     """ Compares two species dictionaries to see if they are the same
 
         Note: inputting spc1 in pieces for faster implementation in loop
@@ -307,7 +308,8 @@ def are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2, strip_ste=False):
         return True
 
     # Load information
-    ich2, mlt2, chg2, exc2, fml2 = _read_spc_dct(spc_dct2)
+    ich2, mlt2, chg2, exc2, fml2 = _read_spc_dct(
+        spc_dct2, canon_ent=canon_ent)
 
     # Check a few easy things
     if mlt1 != mlt2:
@@ -729,11 +731,14 @@ def write_comparison(algn_dct, dct_type='rxn', buffer=4):
 
     return fstr
                 
-def _read_spc_dct(spc_dct):
+def _read_spc_dct(spc_dct, canon_ent=False):
     """ Reads the relevant info for comparing species
     """
 
-    ich = spc_dct['inchi']
+    if canon_ent:
+        ich = spc_dct['canon_enant_ich']
+    else:
+        ich = spc_dct['inchi']
     mlt = spc_dct['mult']
     chg = spc_dct['charge']
     exc = spc_dct['exc_flag']

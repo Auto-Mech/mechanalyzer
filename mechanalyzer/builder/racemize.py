@@ -19,9 +19,13 @@ def main(rxn_param_dct, spc_nasa7_dct, mech_spc_dct, temp_lst, pressures,
     rac_rxn_param_dct = get_rac_rxn_param_dct(
         rac_sets, rac_names, rxn_param_dct)
 
+    breakpoint()
+
     # Get the lumped rxn parameter dictionary
     lump_rxn_param_dct = lump(rac_rxn_param_dct, temp_lst, pressures,
                               dummy=dummy)
+
+    breakpoint()
 
     # Get the thermo dct with only racemized species names
     rac_spc_nasa7_dct = get_rac_spc_nasa7_dct(rac_names, spc_nasa7_dct)
@@ -183,25 +187,22 @@ def get_rac_sets(iso_sets, mech_spc_dct):
     return rac_sets, rac_names, rac_mech_spc_dct
 
 
-def find_iso_sets(mech_spc_dct_strpd, canon_ent=False):
-    """ Finds all sets of isomers in a stripped mech_spc_dct that are now the
-        exact same species (since stereo has been stripped)
+def find_iso_sets(mech_spc_dct, canon_ent=True):
+    """ Finds all sets of stereoisomers in a mech_spc_dct
 
-        :param mech_spc_dct_strpd: dct with only stereo specific spcs, but
-            with stereo stripped from the inchis
-        :type mech_spc_dct_strpd: dict
+        Requires that the mech_spc_dct include canonical enantiomers!
+
         :return iso_sets: list of all sets of stereoisomers
         :rtype: [[iso1, iso2, ...], [iso1, iso2, ...], ...]
     """
 
     # Get two things: (i) species and (ii) inchis
-    spcs = tuple(mech_spc_dct_strpd.keys())
+    spcs = tuple(mech_spc_dct.keys())
     ichs = ()
-    for spc_dct in mech_spc_dct_strpd.values():
-        if canon_ent:
-            ichs += (spc_dct['canon_enant_ich'],)
-        else:
-            ichs += (spc_dct['inchi'],)
+    for spc, spc_dct in mech_spc_dct.items():
+        assert spc_dct.get('canon_enant_ich') is not None, (
+            f'The species {spc} is missing a canon_ent_ich!')
+        ichs += (spc_dct['canon_enant_ich'],)
 
     # Get stereo sets, which are sets of species that are the same if one
     # ignores stereo (usually will be singles or doubles)
@@ -224,28 +225,32 @@ def find_iso_sets(mech_spc_dct_strpd, canon_ent=False):
     for iso_set in iso_sets:
         for iso_idx, iso in enumerate(iso_set):
             if iso_idx == 0:  # if on first iso, store ref_spc_dct
-                ref_spc_dct = mech_spc_dct_strpd[iso]
+                ref_spc_dct = mech_spc_dct[iso]
             else:  # if on later isos, check against reference
-                spc_dct = mech_spc_dct_strpd[iso]
-                same = _are_spc_dcts_same(ref_spc_dct, spc_dct)
+                spc_dct = mech_spc_dct[iso]
+                same = _are_spc_dcts_same(ref_spc_dct, spc_dct, 
+                                          canon_ent=canon_ent)
                 assert same, (f'In the set of stereoisomes {iso_set}, the '
-                               'species dcts are not the same (even after '
-                               'stripping stereo)')
+                               'species dcts are not the same')
 
     return iso_sets
 
 
-def _are_spc_dcts_same(spc_dct1, spc_dct2):
+def _are_spc_dcts_same(spc_dct1, spc_dct2, canon_ent=True):
     """ Checks if two spc dcts are the same
     """
 
-    ich1 = spc_dct1['inchi']
+    if canon_ent:
+        ich1 = spc_dct1['canon_enant_ich']
+    else:
+        ich1 = spc_dct1['inchi']
     mlt1 = spc_dct1['mult']
     chg1 = spc_dct1['charge']
     exc1 = spc_dct1['exc_flag']
     fml1 = spc_dct1['fml']
 
-    same = compare.are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2)
+    same = compare.are_spc_same(ich1, mlt1, chg1, exc1, fml1, spc_dct2, 
+                                canon_ent=canon_ent)
 
     return same
 
