@@ -8,7 +8,6 @@ from chemkin_io.writer._util import format_rxn_name
 def run_all_checks(rxn_param_dct, rxn_ktp_dct, k_thresholds,
                    rxn_num_threshold):
     """ Run all mechanism checks and output a string describing the results.
-        Optionally write a text file with the string.
 
         :param rxn_param_dct: rate constant parameters for a mechanism
         :type rxn_param_dct: dct
@@ -42,15 +41,16 @@ def run_all_checks(rxn_param_dct, rxn_ktp_dct, k_thresholds,
     total_str += write_negative_kts(negative_rxn_ktp_dct)
     total_str += separator()
 
+    # These two currently don't work due to new RxnParams class
     # Duplicate (more than 2) reactions
-    duplicate_rxns = get_duplicates(rxn_param_dct)
-    total_str += write_duplicates(duplicate_rxns)
-    total_str += separator()
+    #duplicate_rxns = get_duplicates(rxn_param_dct)
+    #total_str += write_duplicates(duplicate_rxns)
+    #total_str += separator()
 
     # Mismatching rate expressions
-    mismatched_rxns = get_mismatches(rxn_param_dct)
-    total_str += write_mismatches(mismatched_rxns)
-    total_str += separator()
+    #mismatched_rxns = get_mismatches(rxn_param_dct)
+    #total_str += write_mismatches(mismatched_rxns)
+    #total_str += separator()
 
     # Lone species
     lone_spcs = get_lone_spcs(rxn_param_dct, rxn_num_threshold)
@@ -224,24 +224,6 @@ def get_duplicates(rxn_param_dct):
     duplicate_rxns = {}
     for rxn, params in rxn_param_dct.items():
         
-        if len(params) > 2:
-            duplicate_rxns[rxn] = len(params)
-
-    return duplicate_rxns
-
-
-def get_duplicates_old(rxn_param_dct):
-    """ Get reactions that have more than 2 rate expressions
-
-        :param rxn_param_dct: rate constant parameters for a mechanism
-        :type rxn_param_dct: dct
-            {rxn1: (param_tuple1, param_tuple2, ...), rxn2: ...}
-        :return duplicate_rxns: duplicate reactions and number of expressions
-        :rtype: dct {rxn1: num_of_expressions1, rxn2: ...}
-    """
-
-    duplicate_rxns = {}
-    for rxn, params in rxn_param_dct.items():
         if len(params) > 2:
             duplicate_rxns[rxn] = len(params)
 

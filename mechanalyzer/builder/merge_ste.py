@@ -12,14 +12,14 @@ from mechanalyzer.calculator import compare
 from autoreact import params as params_module
 
 
-def expand_all_rxns(mech_spc_dct_ste, mech_spc_dct_noste, 
+def expand_all_rxns(mech_spc_dct_ste, mech_spc_dct_noste,
                     rxn_param_dct_noste):
 
     # Get the chirality of the species in the stereo mechanism
     _, sing_chiral, mult_chiral = classify_chiral(mech_spc_dct_ste)
 
     # Strip the stereo mechanism of its stereo and get the name maps
-    mech_spc_dct_strpd = strip_mech_spc_dct(mech_spc_dct_ste) 
+    mech_spc_dct_strpd = strip_mech_spc_dct(mech_spc_dct_ste)
     name_maps = get_name_maps(mech_spc_dct_strpd, mech_spc_dct_noste)
 
     # Expand each rxn
@@ -39,8 +39,7 @@ def expand_all_rxns(mech_spc_dct_ste, mech_spc_dct_noste,
             num_ste_rxns += 1
             for new_rxn in new_rxns:
                 only_ste_rxn_param_dct[new_rxn] = new_params
-        if has_mult_chiral: 
-            #print(f'rxn w/multiple chiral! old: {rxn}, new: {new_rxns}')
+        if has_mult_chiral:
             num_added_rxns_chiral += len(new_rxns)
         num_added_rxns += len(new_rxns) - 1
 
@@ -49,20 +48,6 @@ def expand_all_rxns(mech_spc_dct_ste, mech_spc_dct_noste,
     print('num_added_rxns: ', num_added_rxns)
     print('len of no_ste mech: ', len(rxn_param_dct_noste))
     print('len of new mech: ', len(new_rxn_param_dct))
-    
-    dup_rxns = 0
-    for rxn, params in rxn_param_dct_noste.items():   
-        if params.arr is not None:
-            if len(params.arr) > 1:
-                dup_rxns += 1
-    print('dup_rxns in no_ste: ', dup_rxns)
-
-    dup_rxns = 0
-    for rxn, params in new_rxn_param_dct.items():   
-        if params.arr is not None:
-            if len(params.arr) > 1:
-                dup_rxns += 1
-    print('dup_rxns in new: ', dup_rxns)
 
     return new_rxn_param_dct, only_ste_rxn_param_dct
 
@@ -72,15 +57,14 @@ def rename_spc(mech_spc_dct_ste, mech_spc_dct_noste, spc_nasa7_dct_ste,
     """ Take the no-stereo mechanism and replace any names with the stereo
         mech versions (both in the mech_spc_dct and the spc_nasa7_dct)
     """
-    
+
     # Strip the stereo mechanism of its stereo and get the name maps
-    mech_spc_dct_strpd = strip_mech_spc_dct(mech_spc_dct_ste) 
+    mech_spc_dct_strpd = strip_mech_spc_dct(mech_spc_dct_ste)
     name_maps = get_name_maps(mech_spc_dct_strpd, mech_spc_dct_noste)
 
     # Loop over each species and rename as needed
     new_mech_spc_dct = {}
     new_spc_nasa7_dct = {}
-    breakpoint()
     for spc, spc_dct in mech_spc_dct_noste.items():
         nasa7 = spc_nasa7_dct_noste[spc]
         if spc in name_maps:  # if in the renaming instructions
@@ -96,11 +80,11 @@ def rename_spc(mech_spc_dct_ste, mech_spc_dct_noste, spc_nasa7_dct_ste,
 
 
 def expand_one_rxn(rxn, params, name_maps, sing_chiral, mult_chiral):
-    """ 
+    """
     """
 
     def _new_rcts_or_prds(rcts_or_prds, name_maps, sing_chiral, mult_chiral):
-        """ Creates new rcts and prds, where each species is now a list that 
+        """ Creates new rcts and prds, where each species is now a list that
             has multiple entries if stereo is present
         """
         new_rcts_or_prds = []
@@ -113,7 +97,7 @@ def expand_one_rxn(rxn, params, name_maps, sing_chiral, mult_chiral):
             # Check if spc in mult_chiral; just for debugging purposes
             for new_rct_or_prd in new_rcts_or_prds:
                 for iso in new_rct_or_prd:
-                    if iso in mult_chiral: 
+                    if iso in mult_chiral:
                         has_mult_chiral = True
 
         return new_rcts_or_prds, has_mult_chiral
@@ -175,10 +159,10 @@ def strip_mech_spc_dct(mech_spc_dct):
 
         :param mech_spc_dct: input mech_spc_dct
         :type mech_spc_dct: dict
-        :return mech_spc_dct_strpd: dct with only stereo specific spcs, but 
+        :return mech_spc_dct_strpd: dct with only stereo specific spcs, but
             with stereo stripped from the inchis
         :rtype: dict
-    """ 
+    """
 
     mech_spc_dct_strpd = {}
     for spc, spc_dct in copy.deepcopy(mech_spc_dct).items():
@@ -199,13 +183,13 @@ def strip_mech_spc_dct(mech_spc_dct):
 
 def get_name_maps(mech_spc_dct_strpd, mech_spc_dct_noste):
     """ Gets rename instructions for taking a stereo-free mech and adding
-        stereo to it 
+        stereo to it
 
         :param mech_spc_dct_strpd: dct with only stereo specific spcs, but
             with stereo stripped from the inchis
         :type mech_spc_dct_strpd: dict
-        :return 
-    """ 
+        :return
+    """
 
     rename_str = '-zz'
 
@@ -213,7 +197,7 @@ def get_name_maps(mech_spc_dct_strpd, mech_spc_dct_noste):
     already_done = []
     for spc1, spc_dct1 in mech_spc_dct_noste.items():
         name_map = []
-        ich1, mlt1, chg1, exc1, fml1 = compare._read_spc_dct(spc_dct1) 
+        ich1, mlt1, chg1, exc1, fml1 = compare._read_spc_dct(spc_dct1)
         for spc2, spc_dct2 in mech_spc_dct_strpd.items():
             spc_same = compare.are_spc_same(
                 ich1, mlt1, chg1, exc1, fml1, spc_dct2)
@@ -239,14 +223,14 @@ def classify_chiral(mech_spc_dct):
     def _chiral_count(ich):
         """ Counts the number of chiral sites on a species
         """
-    
+
         bonds = len(amchi.bond_stereo_parities(ich))
         if bonds != 0:  # I think this should be true if it's E/Z
             count = 2
         else:  # no E/Z, so just count chiral sites
             atoms = len(amchi.atom_stereo_parities(ich))
             count = atoms
-    
+
         return count
 
     no_chiral = []
@@ -262,4 +246,15 @@ def classify_chiral(mech_spc_dct):
             mult_chiral.append(spc)
 
     return no_chiral, sing_chiral, mult_chiral
-        
+
+
+def remove_all_ts(mech_spc_dct):
+
+    no_ts_spcs = tuple([spc for spc in mech_spc_dct.keys()
+                        if 'rxndirn' not in mech_spc_dct[spc]])
+    no_ts_mech_spc_dct = {}
+    for spc in no_ts_spcs:
+        no_ts_mech_spc_dct[spc] = mech_spc_dct[spc]
+
+    return no_ts_mech_spc_dct
+
