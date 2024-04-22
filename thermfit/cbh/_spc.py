@@ -147,6 +147,7 @@ def cbhzed(ich, balance=True):
     gra = automol.chi.graph(ich)
     atms = automol.graph.atoms(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
+    term_atms = automol.graph.terminal_atom_keys(gra)
 
     kek_bnd_ords = automol.graph.kekules_bond_orders(gra)
     norm_kek = 1 / len(kek_bnd_ords)
@@ -164,7 +165,7 @@ def cbhzed(ich, balance=True):
             if not balance:
                 coeff = (
                     util.branch_point(adj_atms[atm]) *
-                    util.terminal_moiety(adj_atms[atm])
+                    (atm not in term_atms)
                 )
             extended_site = [atm]
             for site_atm in extended_site:
@@ -239,7 +240,7 @@ def cbhone(ich, balance=True):
             balance_ = util.balance(ich, frags)
             balance_ = {k: v for k, v in balance_.items() if v}
             assert all([v == 0 for v in balance_.values()]), \
-                "CBH0 fails to balance CBH1 -- " + ",".join([f'{k}:{v}' for k, v in balance_.items()]) 
+                f"CBH0 fails to balance CBH1 for {ich} -- " + ",".join([f'{k}:{v}' for k, v in balance_.items()])
 
     frags = {
         k: round(v, 6) for k, v in frags.items() if abs(round(v, 6)) != 0.0}
@@ -260,6 +261,7 @@ def cbhtwo(ich, balance=True):
     gra = automol.chi.graph(ich)
     atms = automol.graph.atoms(gra)
     adj_atms = automol.graph.atoms_neighbor_atom_keys(gra)
+    term_atms = automol.graph.terminal_atom_keys(gra)
 
     kek_bnd_ords = automol.graph.kekules_bond_orders(gra)
     norm_kek = 1 / len(kek_bnd_ords)
@@ -277,7 +279,7 @@ def cbhtwo(ich, balance=True):
             if not balance:
                 coeff = (
                     util.branch_point(adj_atms[atm]) *
-                    util.terminal_moiety(adj_atms[atm])
+                    (atm not in term_atms) 
                 )
             extended_site = [atm] + list(adj_atms[atm])
             #for site_atm in extended_site:
@@ -286,7 +288,7 @@ def cbhtwo(ich, balance=True):
                     if atm_x != atm and atms[atm_x][0] != 'H':
                         grai = util.cleave_group_and_saturate(
                             grai, bnd_ords, site_atm, atm_x)
-            
+
             frag = automol.graph.chi(grai)
             util.add2dic(frags, frag, val=coeff*norm_kek)
 
@@ -295,7 +297,6 @@ def cbhtwo(ich, balance=True):
         frags = cbhone(ich)
 
     # Balance
-    print('prebalance', frags)
     if balance:
         balance_ = util.balance(ich, frags)
         balance_ = {k: v for k, v in balance_.items() if v}
@@ -308,7 +309,7 @@ def cbhtwo(ich, balance=True):
             balance_ = util.balance(ich, frags)
             balance_ = {k: v for k, v in balance_.items() if v}
             assert all([v == 0 for v in balance_.values()]), \
-                "CBH1 fails to balance CBH2 -- " + ",".join([f'{k}:{v}' for k, v in balance_.items()]) 
+                "CBH1 fails to balance CBH2 -- " + ",".join([f'{k}:{v}' for k, v in balance_.items()])
     frags = {
         k: round(v, 6) for k, v in frags.items() if abs(round(v, 6)) != 0.0}
     return frags
@@ -353,7 +354,6 @@ def cbhthree(ich, balance=True):
         grai = automol.graph.explicit(grai)
         frag = automol.graph.chi(grai)
         util.add2dic(frags, frag, val=coeff)
-    print('cbh3 frags', frags)
     frags = {k: v for k, v in frags.items() if v}
     if not frags:
         frags = cbhtwo(ich)
