@@ -3,6 +3,7 @@
 
 import itertools
 import automol
+from autorun import execute_function_in_parallel
 from mechanalyzer.builder._update import update_spc_dct_from_reactions
 from mechanalyzer.builder._update import update_rxn_dct
 from mechanalyzer.builder._stereo import _add_third
@@ -13,18 +14,16 @@ from chemkin_io.writer._util import format_rxn_name
 
 
 # MAIN CALLABLE FUNCTIONS FOR GENERATING REACTION LISTS
-def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series, stereo=False):
+def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series, stereo=False, nprocs=1):
     """ Use the lst of reactions to build objects to describe mechanism
     """
 
     # Initialize new_spc (needed for sequential steps
     # new_spc_lst = None
-
     print('---------------------------------------------------------\n')
 
     # Loop over the reaction series consisting of reactants and reaction type
     for sidx, series in enumerate(rxn_series):
-
         rct1_set, rct2_set, allowed_prds, rxn_typs = series
 
         print(f'Generating Reactions for Series {sidx+1}')
@@ -40,10 +39,9 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series, stereo=False):
                 mech_spc_dct, allowed_prds)
 
             # Use SMILES to print info message for what reactions generating
-            print(f'\nTrying to find {rtyp} products for reactants')
             for ichs, names in zip(rct_ichs, rct_names):
                 _rct_smis = tuple(map(automol.chi.smiles, ichs))
-                print(f'{names} = {_rct_smis}')
+                print(f'{names}: {_rct_smis}')
             print('')
             if allowed_prd_ichs:
                 allow_str = ' '.join(allowed_prd_ichs)
@@ -51,8 +49,11 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series, stereo=False):
                 print('')
 
             # Generate Reactions
-            for ichs in rct_ichs:
-                ini_rxns += generate_reactions(ichs, allowed_prd_ichs, rtyp)
+            # for ichs in rct_ichs:
+            #    ini_rxns += generate_reactions(ichs, allowed_prd_ichs, rtyp)
+            ini_rxns += execute_function_in_parallel(
+                generate_reactions, rct_ichs, (allowed_prd_ichs, rtyp),
+                nprocs=nprocs)
 
         # Add stereo
         if stereo:
@@ -82,37 +83,39 @@ def build_mechanism(mech_spc_dct, mech_rxn_dct, rxn_series, stereo=False):
     return mech_spc_dct, mech_rxn_dct
 
 
-def generate_reactions(rct_ichs, allowed_prd_ichs, rtyp):
+def generate_reactions(allowed_prd_ichs, rtyp, rct_ich_lst, output_queue=None):
     """ For a given reactants
     """
 
-    _rct_smis = tuple(map(automol.chi.smiles, rct_ichs))
-    print(f'Generating Reactions for {_rct_smis}...')
+    for rct_ichs in rct_ich_lst:
+        _rct_smis = tuple(map(automol.chi.smiles, rct_ichs))
+        log = f'Generating Reactions for {_rct_smis}...'
 
-    # Generate the products with the desired reactant and reaction type
-    rct_gras = _rct_gras(rct_ichs)
-    prd_ichs = _prd_ichs(rct_gras, rtyp)
+        # Generate the products with the desired reactant and reaction type
+        rct_gras = _rct_gras(rct_ichs)
+        prd_ichs = _prd_ichs(rct_gras, rtyp)
 
-    # Build list of generated reactions including reactants and products
-    rxn_ichs = ()
-    for pidx, prds in enumerate(prd_ichs):
-        # Don't add if requested products not found
-        if allowed_prd_ichs:
-            if not all(prd in prds for prd in allowed_prd_ichs):
+        # Build list of generated reactions including reactants and products
+        rxn_ichs = ()
+        for pidx, prds in enumerate(prd_ichs):
+            # Don't add if requested products not found
+            if allowed_prd_ichs:
+                if not all(prd in prds for prd in allowed_prd_ichs):
+                    continue
+            # Don't add if self reaction was generated; weak check: ignores stereo
+            if set(rct_ichs) == set(prds):
                 continue
-        # Don't add if self reaction was generated; weak check: ignores stereo
-        if set(rct_ichs) == set(prds):
-            continue
-        # If continue not hit, save reaction to list and print to stdout
-        _prd_smis = tuple(map(automol.chi.smiles, prds))
-        print(f'Found Product(s) {pidx+1}: {_prd_smis}')
+            # If continue not hit, save reaction to list and print to stdout
+            _prd_smis = tuple(map(automol.chi.smiles, prds))
+            log += f'\nFound Product(s) {pidx+1}: {_prd_smis}'
 
-        rxn_ichs += ((rct_ichs, prds, (None,)),)
+            rxn_ichs += ((rct_ichs, prds, (None,)),)
 
-    if not prd_ichs:
-        print('NO Product(s) Found')
-
-    return rxn_ichs
+        if not prd_ichs:
+            log += '\nNO Product(s) Found'
+        print(log)
+        output_queue.put(rxn_ichs)
+        # return rxn_ichs
 
 
 # Functions to set lists for mech building step
