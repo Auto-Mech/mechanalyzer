@@ -206,12 +206,12 @@ def _prd_ichs(rct_gras, rxn_class_typ, check=True):
     # Check for validity if requested
     prd_ichs = ()
     for rxn in rxns:
-        prd_gras_ = automol.reac.product_graphs(rxn)
+        prd_gras_ = automol.reac.product_graphs(rxn, stereo=False)
         prd_ichs_ = tuple(map(automol.graph.chi, prd_gras_))
         prd_ichs += (prd_ichs_,)
 
         if check:
-            rct_gras_ = automol.reac.reactant_graphs(rxn)
+            rct_gras_ = automol.reac.reactant_graphs(rxn, stereo=False)
             rxns_ = automol.reac.find(rct_gras_, prd_gras_)
             try:
                 assert rct_gras_ == rct_gras
