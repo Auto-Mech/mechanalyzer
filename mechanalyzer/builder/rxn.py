@@ -188,8 +188,9 @@ def _rct_gras(rct_ichs):
     """ Get reactant graphs from smiles
     """
 
-    rct_geos = list(map(automol.chi.geometry, rct_ichs))
-    rct_gras = tuple(map(automol.geom.graph_without_stereo, rct_geos))
+    rct_gras = list(map(automol.amchi.graph, rct_ichs))
+    rct_gras = list(map(automol.graph.without_stereo, rct_gras))
+    rct_gras = list(map(automol.graph.explicit, rct_gras))
     rct_gras, _ = automol.graph.standard_keys_for_sequence(rct_gras)
 
     return rct_gras
