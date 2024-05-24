@@ -10,6 +10,9 @@ packages = [
     { include = "thermfit" },
 ]
 
+[tool.poetry.scripts]
+mechanalyzer = 'mechanalyzer.cli:main'
+
 [tool.poetry.dependencies]
 python = "^3.10"
 
