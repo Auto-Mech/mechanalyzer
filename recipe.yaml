@@ -1,0 +1,37 @@
+package:
+  name: mechanalyzer
+  version: "2024.6.4"
+
+about:
+  license: MIT
+  description: Tools construction, manipulation, visualization of chemical mechanisms
+  repository: https://github.com/Auto-Mech/mechanalyzer
+
+source:
+  path: .
+
+build:
+  noarch: python
+  script: pip install . -v --no-deps
+
+requirements:
+  host:
+    - pip
+    - python >=3.10
+    - poetry
+    - wheel
+  run:
+    - python >=3.10
+    - pip
+    - networkx
+    - numpy
+    - pylint
+    - pytest
+    - scipy
+    - mako
+    - click
+    - matplotlib
+    - python-igraph
+    - auto-mech::autochem
+    - auto-mech::autoio
+    - auto-mech::autofile
