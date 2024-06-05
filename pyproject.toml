@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mechanalyzer"
-version = "2024.5.23"
+version = "2024.6.5"
 description = ""
 authors = ["Andreas Copan <avcopan@gmail.com>"]
 readme = "README.md"
