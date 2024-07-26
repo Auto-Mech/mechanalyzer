@@ -32,7 +32,7 @@ def update_spc_dct_from_reactions(rxns, spc_dct, rename=False,
     return spc_dct
 
 
-def update_spc_dct(spc_ichs, spc_dct, rename=False, enant_label=True,
+def update_spc_dct(spc_infos, spc_dct, rename=False, enant_label=True,
                    spc_orig_name_dct=None):
     """ Update the species dictionary with a list of species
 
@@ -44,16 +44,24 @@ def update_spc_dct(spc_ichs, spc_dct, rename=False, enant_label=True,
     print('\nAdding new unique species to mechanism by',
           'adding to mechanism spc_dct...\n')
 
-    _ich_name_dct = ich_name_dct(spc_dct)
+    # determine if charges and multiplicities should be considered
+    # when making name dictionary
+    has_inf = False
+    if spc_infos:
+        if not isinstance(spc_ichs[0], str):
+            has_inf = True
+
+    _info_name_dct = ich_name_dct(spc_dct, incl_mult=has_inf, incl_chg=has_inf)
 
     # Add species dict to mech dct if it is not already in mechanism
     # Build a lst of species that have been added to the mechanism
     i = 0
-    for ich in spc_ichs:
-        if ich not in _ich_name_dct:
+    for info in spc_infos:
+        if info not in _info_name_dct:
             # Generate a functional group name
+            ich = info[0] if has_inf else info
             if not rename and spc_orig_name_dct:
-                orig_name = spc_orig_name_dct[ich]
+                orig_name = spc_orig_name_dct[info]
                 ste_lbl = stereo_name_suffix(ich, enant_label=enant_label)
                 name = f'{orig_name}-{ste_lbl}' if ste_lbl else orig_name
                 print('original name')
@@ -65,7 +73,9 @@ def update_spc_dct(spc_ichs, spc_dct, rename=False, enant_label=True,
 
             # Generate the data dct
             rgt_dct = thermfit.create_spec(ich)
-
+            if has_inf:
+                rgt_dct['charge'] = info[1]
+                rgt_dct['mult'] = info[2]
             # Add to the overall mechanism spc_dct and new species lst
             smi = automol.chi.smiles(ich)
             print(f'Adding species {name} = {smi} = {ich}')
@@ -74,6 +84,15 @@ def update_spc_dct(spc_ichs, spc_dct, rename=False, enant_label=True,
                 print("WARNING: GENERATED NAME ALREADY IN DCT!!!")
                 print(f" - generated: {name} {ich}")
                 print(f" - in dct   : {name} {spc_dct[name]['inchi']}")
+                if has_inf:
+                    if spc_dct[name]['mult'] != rgt_dct['mult']:
+                        print('But it has a diff mult, renaming...')
+                        mult_str = {1: 's', 2: 'd', 3: 't', 4: 'q'}
+                        name = mult_str[rgt_dct['mult']] + name
+                    if spc_dct[name]['charge'] != rgt_dct['charge']:
+                        print('But it has a diff mult, renaming...')
+                        chg_str = {-1: 'ani', 1: 'cat'}
+                        name = chg_str[rgt_dct['charge']] + name
 
             spc_dct.update({name: rgt_dct})
 
