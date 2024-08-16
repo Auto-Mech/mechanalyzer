@@ -31,12 +31,13 @@ PAR.add_argument('-o', '--outmech', default='outmech.dat',
                  help='output file name (outmech.dat)')
 PAR.add_argument('-c', '--outspc', default='outspc.csv',
                  help='output file name (outspc.csv)')
+PAR.add_argument('-g', '--outgroups', default='pes_groups.dat',
+                 help='output file name (pes_groups.dat)')
 OPTS = vars(PAR.parse_args())
 
 # Read the input files
 spc_str = pathtools.read_file(CWD, OPTS['spc'], remove_comments='!')
 mech_str = pathtools.read_file(CWD, OPTS['mech'], remove_comments='!')
-therm_str = pathtools.read_file(CWD, OPTS['therm'], remove_comments='!')
 sort_str = pathtools.read_file(CWD, OPTS['sort'], remove_comments='#')
 
 # Check if the input strings exist
@@ -45,7 +46,10 @@ if any(string is None for string in (spc_str, mech_str, sort_str)):
     sys.exit()
 
 # read thermo and filter pes groups
-spc_therm_dct = ckin_parser.parse_spc_therm_dct(therm_str, np.arange(300,2010,10))
+spc_therm_dct = None
+if os.path.exists(OPTS['therm']):
+    therm_str = pathtools.read_file(CWD, OPTS['therm'], remove_comments='!')
+    spc_therm_dct = ckin_parser.parse_spc_therm_dct(therm_str, np.arange(300,2010,10))
 
 # Build sorted mechanism files
 isolate_spc, sort_lst, prompt_filter_dct = mparser.parse_sort(sort_str)
@@ -67,7 +71,7 @@ pes_groups_str = chemkin_io.writer.pesgroups.write_pes_groups(pes_groups)
 sortd_mech_str = sortd_mech_str.replace('! pes', '# pes')
 pathtools.write_file(sortd_csv_str, CWD, OPTS['outspc'])
 pathtools.write_file(sortd_mech_str, CWD, OPTS['outmech'])
-pathtools.write_file(pes_groups_str, CWD, 'pes_groups.dat')
+pathtools.write_file(pes_groups_str, CWD, OPTS['outgroups'])
 try:
     np.savetxt(CWD+'/rxns_prompt_dh.out', rxns_filter[2:,:], delimiter='\t\t', header='\t'.join(rxns_filter[1,:]), fmt = list(rxns_filter[0,:]))
 except TypeError:
