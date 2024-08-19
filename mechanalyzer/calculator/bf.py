@@ -12,7 +12,7 @@ from mechanalyzer import calculator
 ######################## wrapper functions #########################################################
 
 
-def bf_tp_dct(modeltype, ped_df, hoten_df, bf_threshold, rxn='', savefile=False, fne=None):
+def bf_tp_dct(modeltype, ped_df, hoten_df, bf_threshold = 1e-3, rxn='', savefile=False, fne=None):
     """ Build a branching fractions dictionary as a
         function of temeprature and pressure
         containing the BFs of each product of the PES
@@ -40,7 +40,7 @@ def bf_tp_dct(modeltype, ped_df, hoten_df, bf_threshold, rxn='', savefile=False,
         bf_tp_df = bf_tp_df_full(ped_df, hoten_df)
 
     bf_tp_dct_species = bf_tp_df_todct(
-        bf_tp_df, bf_threshold, model=modeltype, rxn=rxn, savefile=savefile)
+        bf_tp_df, bf_threshold = bf_threshold, model=modeltype, rxn=rxn, savefile=savefile)
     _bf_tp_dct = bf_tp_dct_species
 
     return _bf_tp_dct
@@ -105,7 +105,7 @@ def rename_ktp_dct(ktp_dct, label, hotsp_dct):
 
 def bf_tp_df_full(ped_df, hotbf_df):
     """ Build a branching fractions dataframe as a
-        function of temprature and pressure containing the BFs of
+        function of temperature and pressure containing the BFs of
         each product of the PES
 
         :param ped_df: dataframe[P][T] with the
@@ -164,7 +164,7 @@ def bf_tp_df_full(ped_df, hotbf_df):
                           .format(temp, pressure))
                     bf_series = abs(bf_series)
                     #bf_series = abs(bf_series * np.array(bf_series > 0, dtype=int))
-                bf_tp_df[pressure][temp] = bf_series/np.sum(bf_series.values)
+                bf_tp_df.at[temp, pressure] = bf_series/np.sum(bf_series.values)
                 
         # if any nan: delete column
         if any(bf_tp_df.loc[temp].isnull()):
@@ -173,7 +173,7 @@ def bf_tp_df_full(ped_df, hotbf_df):
     return bf_tp_df
 
 
-def bf_tp_df_todct(bf_tp_df, bf_threshold, savefile=False, rxn='', model=''):
+def bf_tp_df_todct(bf_tp_df, bf_threshold = 1e-2, savefile=False, rxn='', model=''):
     """ Converts the dataframe of hot branching fractions to dictionary and
         excludes invalid BFs
 
@@ -214,7 +214,7 @@ def bf_tp_df_todct(bf_tp_df, bf_threshold, savefile=False, rxn='', model=''):
                     # avoid too small values and 1 to avoid discontinuities
                     temp_new.append(temp)
                     bf_temp.append(bfrac)
-                    bf_df_sp_i[pressure][temp] = bfrac
+                    bf_df_sp_i.at[temp, pressure] = bfrac
                 # check if values is high enough
                 if bfrac >= bf_threshold:
                     num_data_highenough += 1
@@ -237,20 +237,83 @@ def bf_tp_df_todct(bf_tp_df, bf_threshold, savefile=False, rxn='', model=''):
 
     return bf_tp_dct_out
 
+def bf_df_fromktpdct(ktp_dct, reac_str, temps, pressures):
+    """ finds reactions in ktp_dct with reactants of reac_str
+        and computes the corresponding product branching fractions
+        stores them in a bf dataframe
+
+    Args:
+        ktp_dct (dct): rates
+        reac_str (str): species whose product branching fractions have to be found
+        temps (str or numpy array): considered temperatures
+        pressures (str or numpy array): considered pressures
+    """
+
+    reac_tuple = tuple(reac_str.split('+'))
+    ktp_dct_ofreac = {}
+    
+    allspecies = []
+    for key, val in ktp_dct.items():
+
+        if key[0] == reac_tuple:
+            prod = '+'.join(key[1])
+            ktp_dct_ofreac[prod] = val # dct with product names as indexes
+            allspecies.append(prod)
+
+    # if allspecies is empty, print a warning
+    if len(allspecies) == 0:
+        print('*Warning: species {} not among reactants - branching fractions\
+            asked for but not derived'.format(reac_str))
+    # turn the list of ktp_dct into series and 
+    ktp_sum = dict.fromkeys(pressures)
+    for pressure in pressures:
+        ktot = pd.Series([0.]*len(temps), index = temps, dtype = float)
+        for prod, ktp in ktp_dct_ofreac.items():
+            tvect = ktp[pressure][0]
+            kvect = ktp[pressure][1]
+            ktseries = pd.Series(kvect, index = tvect)
+            for T in tvect:
+                if T not in temps:
+                    ktseries = ktseries.drop(T, axis=0)
+                    
+            ktp_dct_ofreac[prod][pressure] = ktseries
+            ktot.loc[temps] = ktot.loc[temps] + ktseries.loc[temps]
+            
+        ktp_sum[pressure] = ktot
+
+    # compute branching fractions
+    # for each T, P: compute BF
+    bf_tp_df = pd.DataFrame(index=temps, columns=pressures, dtype=object)
+
+    for pressure in pressures:
+        for temp in temps:
+            ktot_tp = ktp_sum[pressure][temp]
+            bf_series = pd.Series(0, index=allspecies, dtype=float)
+            for prod in allspecies:
+                bf_series[prod] = ktp_dct_ofreac[prod][pressure][temp]/ktot_tp
+
+            # warning for neg vals - absolute value
+            if any(bf_series.values < 0):
+                print('Warning: found negative BFs at {:1.0f} K and {:1.1e} atm'
+                        .format(temp, pressure))
+                bf_series = abs(bf_series)
+            bf_tp_df.at[temp, pressure] = bf_series/np.sum(bf_series.values)
+            #bf_tp_df[pressure][temp] = bf_series/np.sum(bf_series.values)
+
+    return bf_tp_df
 
 def merge_bf_rates(bf_tp_dct, ktp_dct):
     """ Read the branching fractions of the products and
         derive final rate constants
 
         :param bf_tp_dct: branching fractions at T,P for each product
-            for the selected hotspecies
+            for the selected (hot)species
         :type: dct{species: {pressure: (array(T), array(BF))}}}
         :param ktp_dct: set of rates for the "total" rate constant
         :type ktp_dct: dictionary {P: (T, k)}
         :return new_ktp_dct: rates for each species multiplied by bf: bf_i*k
         :rtype: dct {species: {P: (T, k)}}
     """
-
     # drop "high" from ktp_dct
     if 'high' in ktp_dct.keys():
         ktp_dct.pop('high')
@@ -279,7 +342,6 @@ def merge_bf_rates(bf_tp_dct, ktp_dct):
 
         pressure_all = list(set(pressure_all + pressure_ktp))
         bf_ktp_dct = dict.fromkeys(pressure_all)
-
         for pressure in pressure_all:
             temp_bf = bf_tp_dct_sp[pressure][0]
             temp_ktp = np.array(ktp_dct[pressure][0])
