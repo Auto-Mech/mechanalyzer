@@ -249,7 +249,7 @@ def calc_bf_ktp(full_prompt_rxn_ktp_dct, model, bf_thresh,
     """
     # JOIN PED AND HOTEN -> DERIVE PRODUCTS BF
     bf_tp_dct = calculator.bf.bf_tp_dct(
-        model, ped_df_frag1, hoten_dct_frag, bf_thresh,
+        model, ped_df_frag1, hoten_dct_frag, bf_threshold = bf_thresh,
         savefile=True, rxn=rxn, fne=fne_bf_frag1)
 
     # CALCULATE PROMPT DISSOCIATION RATES K*BF
@@ -274,10 +274,11 @@ def calc_dof_dct(ped_inp_str, ped_spc):
         _, prods = spc
 
         # Derive dofs involved
-        dof_dct[prods] = calculator.ene_partition.get_dof_info(
+        dof_dct[prods] = calculator.spinfo_frommess.get_info(
             spc_blocks_ped[prods])
         
     return dof_dct
+
 
 ###################### FUNCTIONS FOR THE SORTER #######################
 ################### these work with dataframes ########################
@@ -327,9 +328,7 @@ def get_max_reactivity(hot_sp, hot_sp_df, therm_df, T0, Tref):
             dg_rxn = thermo.extract_deltaX_therm(
                 therm_df, rcts, prds, 'G')
             # get common T values of dg and k
-            Tcomm = numpy.array(sorted(list(set(dg_rxn.index).intersection(dg_rxn.index))), dtype=float)
-            k_series = k_series[Tcomm]*(101325/8.314/Tcomm/numpy.power(10, 6)) * \
-                numpy.exp(dg_rxn[Tcomm]/1.987/Tcomm)
+            k_series = calculator.rates.get_bw_rate(k_series, rcts, prds, dg_rxn)
             k = k_series[Tref]
 
         if k > kmax:

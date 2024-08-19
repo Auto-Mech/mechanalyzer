@@ -19,9 +19,9 @@ def extract_fml_df(spc_dct):
         if 'ts' not in key and 'global' not in key:
             ich = spc_dct[key]['inchi']
             fml_dct = automol.chi.formula(ich)
-            fml_df['fml'][key] = automol.form.string2(fml_dct)
+            fml_df.loc[key, 'fml'] = automol.form.string2(fml_dct)
             for X in ['C', 'H', 'O', 'N', 'S', 'Cl']:
-                fml_df['n{}'.format(X)][key] = automol.form.element_count(fml_dct, X)
+                fml_df.at[key, 'n{}'.format(X)] = automol.form.element_count(fml_dct, X)
 
     return fml_df
 

@@ -81,6 +81,8 @@ def extract_deltaX_therm(therm_df, rcts, prds, var):
                     for prd in prds]
         dX_series[T] = sum(dX_prds) - sum(dX_rcts)
 
+    dX_series.sort_index()
+
     return dX_series
 
 def enthalpy(nasa7_params, temp, rval=RC):
