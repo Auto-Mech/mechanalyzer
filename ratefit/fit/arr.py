@@ -191,7 +191,7 @@ def double_arr(temps, kts, sing_params, tref=1.0, dbltol=15, dbl_iter=1):
         init_guess = [(sing_a * a_change), (sing_n + n_change), sing_ea,
                       (sing_a * (1 - a_change)), (sing_n - n_change), sing_ea]
 
-        # Set bounds
+        # Set bounds: np.inf works better than setting e.g., 1e+300, but slower
         if allow_neg:  # no bounds
             bounds = ([-numpy.inf, -numpy.inf, -numpy.inf, -numpy.inf, 
                        -numpy.inf, -numpy.inf], [numpy.inf, numpy.inf,
@@ -202,8 +202,10 @@ def double_arr(temps, kts, sing_params, tref=1.0, dbltol=15, dbl_iter=1):
                        numpy.inf, numpy.inf, numpy.inf, numpy.inf]) 
 
         # Perform a least-squares fit
+        # note: previous version scipy.optimize.leastsq (unbounded): used method='lm'
+        # same or better results obtained with x_scale='jac' for new cases tested
         plsq = least_squares(_resid_func, init_guess, bounds=bounds,
-                             args=(temps, kts, doub_tref),
+                             args=(temps, kts, doub_tref), x_scale = 'jac', #method = 'lm',
                              ftol=1.0E-8, xtol=1.0E-8, max_nfev=100000)
 
         # Retrieve the fit params and convert A back to the input tref
