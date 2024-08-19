@@ -350,8 +350,12 @@ def rxn_ich_to_name(rxn, spc_dct):
         described by mechanism names
     """
 
-    _ich_name_dct = ich_name_dct(spc_dct)
-    print('_ich_name_dct:\n', _ich_name_dct)
+    has_inf = False
+    if rxn:
+        if rxn[0]:
+            if not isinstance(rxn[0], str):
+                has_inf = True
+    _ich_name_dct = ich_name_dct(spc_dct, incl_mult=has_inf, incl_chg=has_inf)
     return (
         tuple(_ich_name_dct[rgt] for rgt in rxn[0]),
         tuple(_ich_name_dct[rgt] for rgt in rxn[1]),
@@ -369,10 +373,19 @@ def rxn_name_str(rxn, newline=False):
     return rstr
 
 
-def ich_name_dct(spc_dct):
+def ich_name_dct(spc_dct, incl_mult=False, incl_chg=False):
     """ get dct[ich] = name
     """
-    return {dct['inchi']: name for name, dct in spc_dct.items()}
+    def set_key(dct):
+        key = dct['inchi']
+        if incl_chg:
+            key = (key, dct['charge'],)
+            if incl_mult:
+                key += (dct['mult'],)
+        elif incl_mult:
+            key = (key, dct['mult'],)
+        return key
+    return {set_key(dct): name for name, dct in spc_dct.items()}
 
 
 def stereo_name_suffix(ich, enant_label=True):

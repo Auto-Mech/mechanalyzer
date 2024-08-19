@@ -32,7 +32,6 @@ INP_MECH_STR = ioformat.pathtools.read_file(
 SORT_STR = ioformat.pathtools.read_file(
     CWD, FILE_DCT['sort'],
     remove_comments='#', remove_whitespace=True)
-STEREO = FILE_DCT.get('stereo', False)
 
 # Check if the input strings exist
 if any(string is None for string in (INP_SPC_STR, INP_MECH_STR, SORT_STR)):
@@ -49,7 +48,8 @@ isolate_spc, sort_lst, _ = mechanalyzer.parser.mech.parse_sort(SORT_STR)
 mech_spc_dct, rxn_param_dct = mechanalyzer.builder.rxn.build_mechanism(
     mech_spc_dct, rxn_param_dct,
     rxn_series=RSERIES,
-    stereo=STEREO)
+    stereo=FILE_DCT.get('stereo', False),
+    nprocs=FILE_DCT.get('nprocs', 1))
 
 # Write the dictionaries to original strings
 csv_str = mechanalyzer.parser.spc.csv_string(

@@ -387,7 +387,7 @@ NCNHO,"InChI=1S/CHN2O/c2-1-3-4/h3H","[O]NC#N",2,,20.541,,20.541
 NCNO,"InChI=1S/CN2O/c2-1-3-4","O=NC#N",1,,,,
 NCNOH,"InChI=1S/CHN2O/c2-1-3-4/h4H","O[N]C#N",2,,21.541,,21.541
 Cl2,"InChI=1S/Cl2/c1-2","ClCl",1,0,0,0,0
-HCl,"InChI=1S/ClH/h1H","Cl",1,,-91.988,,-91.988
+HCl,"InChI=1S/ClH/h1H","Cl",1,,,,-21.9709
 C2,"InChI=1S/C2/c1-2","[C]#[C]",1,195.911242,195.515,,195.911
 C3H,"InChI=1S/C3H/c1-3-2/h1H","[CH+]=C=[C-]",2,,171.075,,171.075
 !species,inchi,smiles,mult,ANL1,ANL0,Ladder,Best
