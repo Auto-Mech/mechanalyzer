@@ -80,8 +80,8 @@ def connect_rxn_df(rxn_lst):
     
     # assign 1 when rxn is found
     for rxn in rxn_lst:
-        connect_df[rxn[0]][rxn[1]] = 1
-        connect_df[rxn[1]][rxn[0]] = 1
+        connect_df.at[rxn[1], rxn[0]] = 1
+        connect_df.at[rxn[0], rxn[1]] = 1
         
     return connect_df
     
