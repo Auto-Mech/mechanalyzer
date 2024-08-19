@@ -2,6 +2,8 @@
 
 # Note that install location assumes one is in a Conda environment
 
+# Chorus was here! Test Test!
+
 mkdir -p build
 cd build
 

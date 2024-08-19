@@ -83,7 +83,7 @@ SPC_IDENT_DCT1 = {
 }
 
 CORRECT_NEGATIVE_KTS_STR = (
-    '\nNEGATIVE RATE CONSTANTS\n\nH+O2=OH+O\nPressure: 1 atm\n' +
+    '\nNEGATIVE RATE CONSTANTS\n\nH + O2 = OH + O\nPressure: 1 atm\n' +
     '    Temperature (K)\n    500.0       1000.0      1500.0      \n' +
     '    Rate constant\n    -1.500E+00  -1.800E+00  -1.900E+00  \n\n\n'
 )
@@ -93,7 +93,7 @@ CORRECT_LARGE_KTS_STR = (
     'Bimolecular threshold: 1.0E+15 cm^3 mol^-1 s^-1\n' +
     'Termolecular threshold: 1.0E+22 cm^6 mol^-2 s^-1\n\n' +
     'Unimolecular rate constants that exceed 1.0E+11 s^-1\n\n' +
-    'OH=H+O\nPressure: 10 atm\n' +
+    'OH = H + O\nPressure: 10 atm\n' +
     '    Temperature (K)\n    500.0       1000.0      1500.0      \n' +
     '    Rate constant\n    1.000E+12   1.000E+12   1.000E+12   \n\n\n' +
     'No bimolecular reactions exceed 1.0E+15 cm^3 mol^-1 s^-1\n\n' +
@@ -103,20 +103,20 @@ CORRECT_LARGE_KTS_STR = (
 CORRECT_LONE_SPCS_STR = (
     '\nLONE SPECIES\n\n' +
     'These species appear in 2 or less reactions\n\n' +
-    'Species  Reactions\nO2       H+O2=OH+O, H2+O2=HO2+H\n' +
-    'O(S)     H2+O(S)=OH+O\nHO2      ' +
-    'H2+O2=HO2+H\n\n\n'
+    'Species  Reactions\nO2       H + O2 = OH + O, H2 + O2 = HO2 + H\n' +
+    'O(S)     H2 + O(S) = OH + O\nHO2      ' +
+    'H2 + O2 = HO2 + H\n\n\n'
 )
 CORRECT_SOURCE_SINK_STR1 = (
     '\nSOURCE AND SINK SPECIES\n\nThese species only appear as ' +
     'reactants:\nSpecies    Reactions' +
-    '\nH2         H2+O=OH+H, H2+O=OH+OH, H2+O(S)=OH+O, ' +
-    'H2+O2=HO2+H\nO(S)       H2+O(S)=OH+O\nO2         ' +
-    'H+O2=OH+O, H2+O2=HO2+H\n\n' +
+    '\nH2         H2 + O = OH + H, H2 + O = OH + OH, H2 + O(S) = OH + O, ' +
+    'H2 + O2 = HO2 + H\nO(S)       H2 + O(S) = OH + O\nO2         ' +
+    'H + O2 = OH + O, H2 + O2 = HO2 + H\n\n' +
     'These species only appear as products:' +
-    '\nSpecies   Reactions\nHO2       H2+O2=HO2+H' +
-    '\nOH        H2+O=OH+H, H+O2=OH+O, H2+O=OH+OH, H+O=OH, H+O(+M)=OH(+M), ' +
-    'H+O+O(S)=OH+O(S), H2+O(S)=OH+O\n\n\n'
+    '\nSpecies   Reactions\nHO2       H2 + O2 = HO2 + H' +
+    '\nOH        H2 + O = OH + H, H + O2 = OH + O, H2 + O = OH + OH, H + O = OH, H + O(+M) = OH(+M), ' +
+    'H + O+O(S) = OH+O(S), H2 + O(S) = OH + O\n\n\n'
 )
 CORRECT_SOURCE_SINK_STR2 = (
     '\nSOURCE AND SINK SPECIES\n\nThese species only appear as ' +
@@ -128,7 +128,7 @@ CORRECT_DUPLICATES_STR1 = (
     '\nDUPLICATE REACTIONS\n\nThese reactions have more than 2 ' +
     'rate expressions:\n' +
     '(Number of rate expressions given in parentheses)\n\n' +
-    'H2+O=OH+H     (3)\n\n\n'
+    'H2 + O = OH + H     (3)\n\n\n'
 )
 CORRECT_DUPLICATES_STR2 = (
     '\nDUPLICATE REACTIONS\n\nThese reactions have more than 2 ' +
@@ -138,7 +138,7 @@ CORRECT_DUPLICATES_STR2 = (
 )
 CORRECT_MISMATCHES_STR1 = (
     '\nMISMATCHED REACTIONS\n\nThe following reactions have ' +
-    'mismatched rate expressions\nH+O2=OH+O: Arrhenius, PLOG\n\n\n'
+    'mismatched rate expressions\nH + O2 = OH + O: Arrhenius, PLOG\n\n\n'
 )
 
 CORRECT_MISMATCHES_STR2 = (

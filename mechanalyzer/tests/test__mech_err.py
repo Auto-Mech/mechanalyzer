@@ -9,7 +9,7 @@ def test__mech_err():
     """
 
     try:
-        mparser.parse_mechanism('', 'bad-mech-type', {})
+        mparser.parse_mechanism('', 'bad-mech-type')
     except NotImplementedError:
         pass
 
