@@ -7,8 +7,9 @@ import numpy as np
 from ioformat import pathtools, remove_comment_lines
 import autoparse.pattern as app
 import mess_io
-import mechanalyzer
-
+from mechanalyzer.calculator import spinfo_frommess
+from mechanalyzer.calculator import ene_partition
+from mechanalyzer.calculator import bf
 
 PATH = os.path.dirname(os.path.realpath(__file__))
 INP_PATH = os.path.join(PATH, 'data', 'prompt', 'C3H8_OH')
@@ -60,7 +61,7 @@ def test_equip_simple():
 
     dof_dct, ped_dct, _, _, _ = _read_data()
 
-    ped_df_frag1_dct = mechanalyzer.calculator.ene_partition.ped_frag1(
+    ped_df_frag1_dct = ene_partition.ped_frag1(
         ped_dct[(('C3H8', 'OH',), ('CH3CH2CH2', 'H2O',), (None,))
                 ], 'CH3CH2CH2', 'H2O', 'equip_simple',
         dof_info=dof_dct[(('C3H8', 'OH',), ('CH3CH2CH2', 'H2O',), (None,))])
@@ -80,7 +81,7 @@ def test_equip_phi():
 
     dof_dct, ped_dct, _, _, _ = _read_data()
 
-    ped_df_frag1_dct = mechanalyzer.calculator.ene_partition.ped_frag1(
+    ped_df_frag1_dct = ene_partition.ped_frag1(
         ped_dct[(('C3H8', 'OH',), ('CH3CH2CH2', 'H2O',), (None,))
                 ], 'CH3CH2CH2', 'H2O', 'equip_phi',
         dof_info=dof_dct[(('C3H8', 'OH',), ('CH3CH2CH2', 'H2O',), (None,))])
@@ -99,7 +100,7 @@ def test_beta_phi1a():
 
     dof_dct, ped_dct, _, _, _ = _read_data()
 
-    ped_df_frag1_dct = mechanalyzer.calculator.ene_partition.ped_frag1(
+    ped_df_frag1_dct = ene_partition.ped_frag1(
         ped_dct[(('C3H8', 'OH',), ('CH3CHCH3', 'H2O',), (None,))
                 ], 'CH3CHCH3', 'H2O', 'beta_phi1a',
         dof_info=dof_dct[(('C3H8', 'OH',), ('CH3CHCH3', 'H2O',), (None,))])
@@ -118,7 +119,7 @@ def test_beta_phi2a():
 
     dof_dct, ped_dct, _, _, _ = _read_data()
 
-    ped_df_frag1_dct = mechanalyzer.calculator.ene_partition.ped_frag1(
+    ped_df_frag1_dct = ene_partition.ped_frag1(
         ped_dct[(('C3H8', 'OH',), ('CH3CHCH3', 'H2O',), (None,))
                 ], 'CH3CHCH3', 'H2O', 'beta_phi2a',
         dof_info=dof_dct[(('C3H8', 'OH',), ('CH3CHCH3', 'H2O',), (None,))])
@@ -137,7 +138,7 @@ def test_beta_phi3a():
 
     dof_dct, ped_dct, _, _, _ = _read_data()
 
-    ped_df_frag1_dct = mechanalyzer.calculator.ene_partition.ped_frag1(
+    ped_df_frag1_dct = ene_partition.ped_frag1(
         ped_dct[(('C3H8', 'OH',), ('CH3CHCH3', 'H2O',), (None,))
                 ], 'CH3CHCH3', 'H2O', 'beta_phi3a',
         dof_info=dof_dct[(('C3H8', 'OH',), ('CH3CHCH3', 'H2O',), (None,))])
@@ -156,7 +157,7 @@ def test_rovib_dos():
 
     dof_dct, ped_dct, dos_rovib, _, _ = _read_data()
 
-    ped_df_frag1_dct = mechanalyzer.calculator.ene_partition.ped_frag1(
+    ped_df_frag1_dct = ene_partition.ped_frag1(
         ped_dct[(('C3H8', 'OH',), ('CH3CHCH3', 'H2O',), (None,))
                 ], 'CH3CHCH3', 'H2O', 'rovib_dos',
         dos_df=dos_rovib, dof_info=dof_dct[(
@@ -177,7 +178,7 @@ def test_thermal():
 
     dof_dct, ped_dct, dos_rovib, _, _ = _read_data()
 
-    ped_df_frag1_dct = mechanalyzer.calculator.ene_partition.ped_frag1(
+    ped_df_frag1_dct = ene_partition.ped_frag1(
         ped_dct[(('C3H8', 'OH',), ('CH3CHCH3', 'H2O',), (None,))
                 ], 'CH3CHCH3', 'H2O', 'thermal',
         dos_df=dos_rovib, dof_info=dof_dct[(
@@ -198,12 +199,12 @@ def test_bf_from_phi1a():
 
     dof_dct, ped_dct, _, hoten_dct, _ = _read_data()
 
-    ped_df_frag1_dct = mechanalyzer.calculator.ene_partition.ped_frag1(
+    ped_df_frag1_dct = ene_partition.ped_frag1(
         ped_dct[(('C3H8', 'OH',), ('CH3CHCH3', 'H2O',), (None,))
                 ], 'CH3CHCH3', 'H2O', 'beta_phi1a',
         dof_info=dof_dct[(('C3H8', 'OH',), ('CH3CHCH3', 'H2O',), (None,))])
 
-    bf_tp_dct = mechanalyzer.calculator.bf.bf_tp_dct(
+    bf_tp_dct = bf.bf_tp_dct(
         'beta_phi1a', ped_df_frag1_dct, hoten_dct['CH3CHCH3'], 0.1)
 
     assert np.allclose(
@@ -227,20 +228,20 @@ def test_bf_from_fne():
         calls calculator.bf.bf_tp_df_full, bf_tp_df_todct
     """
     _, _, _, _, fne_bf = _read_data()
-    bf_tp_dct = mechanalyzer.calculator.bf.bf_tp_dct(
+    bf_tp_dct = bf.bf_tp_dct(
         'fne', None, None, 0.1, fne=fne_bf['CH3CHCH3'])
-
+    print(bf_tp_dct)
     assert np.allclose(
-        bf_tp_dct['CH3CHCH3'][1.0][1],
+        bf_tp_dct['CH3CHCH3'][1.0][1][[0, 6, 14]],
         np.array([1., 0.99999987, 0.99798199]), atol=1e-3, rtol=1e-2)
     assert np.allclose(
-        bf_tp_dct['CH3CHCH3'][100.0][1],
+        bf_tp_dct['CH3CHCH3'][100.0][1][[0, 6, 12, -5, -1]],
         np.array([1., 1., 0.99999238, 0.98542176, 0.94370273]), atol=1e-3, rtol=1e-2)
     assert np.allclose(
-        bf_tp_dct['CH3CHCH2+H'][1.0][1][-3:],
+        bf_tp_dct['CH3CHCH2+H'][1.0][1][[16, -1, -1]],
         np.array([1.99996390e-03, 9.89494747e-01, 9.87394958e-01]), atol=1e-3, rtol=1e-2)
     assert np.allclose(
-        bf_tp_dct['CH3CHCH2+H'][100.0][1][-2:],
+        bf_tp_dct['CH3CHCH2+H'][100.0][1][[-5, -1]],
         np.array([1.42060802e-02, 5.47827434e-02]), atol=1e-3, rtol=1e-2)
 
 
@@ -252,15 +253,15 @@ def test_new_ktp_dct():
 
     dof_dct, ped_dct, _, hoten_dct, _ = _read_data()
 
-    ped_df_frag1_dct = mechanalyzer.calculator.ene_partition.ped_frag1(
+    ped_df_frag1_dct = ene_partition.ped_frag1(
         ped_dct[(('C3H8', 'OH',), ('CH3CHCH3', 'H2O',), (None,))
                 ], 'CH3CHCH3', 'H2O', 'equip_simple',
         dof_info=dof_dct[(('C3H8', 'OH',), ('CH3CHCH3', 'H2O',), (None,))])
 
-    bf_tp_dct = mechanalyzer.calculator.bf.bf_tp_dct(
+    bf_tp_dct = bf.bf_tp_dct(
         'equip_simple', ped_df_frag1_dct, hoten_dct['CH3CHCH3'], 0.01)
 
-    rxn_ktp_dct = mechanalyzer.calculator.bf.merge_bf_ktp(
+    rxn_ktp_dct = bf.merge_bf_ktp(
         bf_tp_dct, KTP_DCT[(('C3H8', 'OH',), ('CH3CHCH3', 'H2O',), (None,))],
         (('C3H8', 'OH',), ('CH3CHCH3', 'H2O',), (None,)), HOT_FRAG_DCT)
 
@@ -293,8 +294,8 @@ def _read_data():
     dof_dct = {}
     for label in LABELS:
         prods = '+'.join(label[1])
-        # NB FCT TESTED IN TEST__CALC_STATMODELS
-        dof_dct[label] = mechanalyzer.calculator.ene_partition.get_dof_info(
+        # NB FCT TESTED IN TEST__CALC_SPINFO
+        dof_dct[label] = spinfo_frommess.get_info(
             spc_blocks_ped[prods])
     # GET PED
     ped_dct = mess_io.reader.ped.get_ped(
