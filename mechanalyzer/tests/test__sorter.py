@@ -741,18 +741,18 @@ def _read_files(spc_path, mech_path, sort_path):
 
 
 if __name__ == '__main__':
-    # test__sort_with_input()   
-    # test__readwrite_thirdbody()
-    # test__sortby_mult()
-    # test__sortby_molec_r1()
-    # test__sortby_pes_dct()
-    # test__sortby_rxnclass() # does not work only if filter_pesgroups active
-    # test__sortby_species_subpes()
-    # test__sort_ktp()
-    # test__filter_pesgroups()
+    test__sort_with_input()   
+    test__readwrite_thirdbody()
+    test__sortby_mult()
+    test__sortby_molec_r1()
+    test__sortby_pes_dct()
+    test__sortby_rxnclass() # does not work only if filter_pesgroups active
+    test__sortby_species_subpes()
+    test__sort_ktp()
+    test__filter_pesgroups()
     test__sortby_submech_prompt()    
-    # test__sortby_submech_subpes_chnl()
-    # test__sortby_submech_class()
+    test__sortby_submech_subpes_chnl()
+    test__sortby_submech_class()
 
     # still to fix
     # test__sortby_submech_ext()

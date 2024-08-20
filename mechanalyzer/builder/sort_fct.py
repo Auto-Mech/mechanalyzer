@@ -286,7 +286,7 @@ class SortMech:
         # add subpes and chnl once and for all
         self.mech_df = pd.concat(
             [self.mech_df, conn_chn_df(self.mech_df)], axis=1)  # add subpes
-        exit()
+
         self.spc_dct = spc_dct  # set for later use
         # empty list for initialization (otherwise pylint warning)
         self.species_subset_df = ()

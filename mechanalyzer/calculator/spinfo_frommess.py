@@ -28,7 +28,9 @@ def get_info(block, get_ts = True):
         :type ask_for_ts: bool
         :return dof_info: dataframe with vibrat/rot degrees of freedom
             and molecular weight
-        :rtype: dataframe(index=species, columns=['n_atoms', 'vib dof', 'rot dof', 'mw'])
+        :rtype: dataframe(index=species, columns=['n_atoms', 'vib dof', 'rot dof', 'mw',
+                                                'geometry', 'symmetry', 'freqs', 'hr'])
+        'hr' still to implement
     """
     dof_info = pd.DataFrame(index = np.arange(len(block) + 1*get_ts), columns=[
                             'name', 'n_atoms', 'vib dof', 'rot dof', 'mw',
@@ -46,17 +48,24 @@ def get_info(block, get_ts = True):
         name = info[where_name].strip().split()[1]
         dof_info.loc[i,'name'] = name
         
-        try:
+        if 'Frequencies' in block_i: # more than 1 atom
             where_geom = find.where_in('Geometry', info)[0]
             where_freq = find.where_in('Frequencies', info)[0]
             where_zeroen = find.where_in('ZeroEnergy', info)[0]
+            where_rotors = find.where_in('Electronic', info)[0]
+            where_symmtot = find.where_in('SymmetryFactor', info)[0]
+            where_elecen = find.where_in('Electronic', info)[0]
+
             num_atoms = int(info[where_geom].strip().split()[1])
             vib_dof = (
                 int(info[where_freq].strip().split()[1]) + len(where_hind)
             )
-
+            lines_of_relevantinfo = np.array([where_geom, where_zeroen, where_symmtot, where_elecen])
+            lines_of_relevantinfo = np.concatenate((lines_of_relevantinfo, where_hind))
             # save freqs
-            freqlines = info[where_freq+1:where_zeroen]
+            # finish reading freqs
+            end_freqlines = min(lines_of_relevantinfo[lines_of_relevantinfo > where_freq])
+            freqlines = info[where_freq+1:end_freqlines]
             freqs = [frline.strip().split() for frline in freqlines]
             freqsarr = []
             list(map(freqsarr.extend, freqs))
@@ -85,17 +94,16 @@ def get_info(block, get_ts = True):
             else:
                 rot_dof = 2
         # save symm
-            where_symmtot = find.where_in('SymmetryFactor', info)[0]
             dof_info.loc[i,'symmetry'] = float(info[where_symmtot].strip().split()[1])
             
-        except IndexError:
+        else: # 1 atom only
             # if 1 atom only: no 'Frequencies', set to 0
             vib_dof = 0
             rot_dof = 0
             num_atoms = 1
-            try:
+            if 'Name' in block_i:
                 where_geom = find.where_in('Name', info)[0]
-            except IndexError:
+            else:
                 where_geom = find.where_in('Mass[amu]', info)[0]
             atoms_array = np.array([info[where_geom].strip().split()[1]])
             
@@ -120,7 +128,11 @@ def get_info(block, get_ts = True):
     # ts info: assume first 2 blocks are 2 reactants of bimol reaction
     # and derive the DOFs of the TS
     if get_ts:
-        mwts = dof_info.loc[i, 'mw'] + dof_info.loc[i-1, 'mw']
+        # bimol rxns
+        if len(block) == 2:
+            mwts = dof_info.loc[i, 'mw'] + dof_info.loc[i-1, 'mw']
+        elif len(block) == 1:
+            mwts = dof_info.loc[i, 'mw'] 
         dof_info.loc[i+1,['name', 'n_atoms',
                            'vib dof', 'rot dof', 'mw']] = ['TS', atoms_ts, 
                                                            3*atoms_ts - 7, 3, mwts]
