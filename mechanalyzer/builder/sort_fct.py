@@ -21,7 +21,7 @@ from mechanalyzer.builder import connect_rxn_df
 from mechanalyzer.builder import add_wellskip
 from mechanalyzer.calculator import rates as calc_rates
 from mechanalyzer.calculator import thermo
-from mechanalyzer.calculator import ene_partition
+from mechanalyzer.calculator.ene_partition import phi_equip_fromdct
 from mechanalyzer.calculator import nonboltz
 from mechanalyzer.calculator import ktp_util
 from mechanalyzer.parser import pes
@@ -48,15 +48,25 @@ def mech_info(rxn_param_dct, spc_dct):
         :rtype: list
     """
 
-    def _check_names(rct_names, prd_names, all_spc_names):
+    def _check_names(rct_names, prd_names, thrdbdy_lst, all_spc_names):
         """ Assess if the reactant and product names provided in the
             rxn_param_dct exist in the spc_dct
         """
+        # extract third body names
+        # [('+M',), ('(+HE)',), ('(+M)',), (None,), (None,), ('(+M)',)]
+        thrdbdy_names = ()
+        for thrd in thrdbdy_lst:
+            for el in thrd:
+                if el is not None:
+                    thrdbd = el.split('+')[-1].strip().split(')')[0].strip()
+                    if thrdbd != 'M' and thrdbd not in thrdbdy_names:
+                        thrdbdy_names += (thrdbd, )
+
         all_mech_names = ()
         for _rct_names, _prd_names in zip(rct_names, prd_names):
             all_mech_names += _rct_names
             all_mech_names += _prd_names
-        all_mech_names = set(all_mech_names)
+        all_mech_names = set(all_mech_names + thrdbdy_names)
 
         missing_names = all_mech_names - all_spc_names
         if missing_names:
@@ -66,6 +76,8 @@ def mech_info(rxn_param_dct, spc_dct):
                 print('  ', name)
             print('Unable to finish parsing mechanism. Exiting...')
             sys.exit()
+        
+        return all_mech_names
 
     def _inf(rct_names, prd_names, ich_dct):
         """ Sort reactant and product name lists by formula to facilitate
@@ -96,15 +108,16 @@ def mech_info(rxn_param_dct, spc_dct):
     # Extract info from dictionary
     rcts, prds, thrdbdy = zip(*rxn_param_dct.keys())
     rct_names, prd_names, thrdbdy_lst = list(rcts), list(prds), list(thrdbdy)
-
     # Check if the rxn_param dct may be fully parsed
-    _check_names(rct_names, prd_names, set(spc_dct.keys()))
-
+    all_mech_names =_check_names(rct_names, prd_names, thrdbdy_lst, set(spc_dct.keys()))
+    # filter species dictionary to make processing lighter from now on
+    spc_dct ={k: spc_dct[k] for k in all_mech_names}
+    
     # formulas and reaction names (repplace with the mech info from ckin
     ich_dct = name_inchi_dct(spc_dct)
     formula_dct, formula_str, rxn_name = _inf(rct_names, prd_names, ich_dct)
 
-    return [formula_dct, formula_str,
+    return [spc_dct, formula_dct, formula_str,
             rct_names, prd_names, thrdbdy_lst,
             rxn_name, list(rxn_ktp_dct.values())]
 
@@ -181,28 +194,30 @@ def conn_chn_df(mech_df): # moved outside of the class - taken for granted: clas
     for _, peslist in mech_df.groupby('pes'):
         idx_start = 0
         # Set the names lists for the rxns and species needed below
+        # print(peslist)
         peslist = peslist.sort_values(by=['rxn_names'])
         pes_rct_names_lst = peslist['rct_names_lst'].values
         pes_prd_names_lst = peslist['prd_names_lst'].values
         pes_rxn_name_lst = peslist.index
         connchnls = pes.find_conn_chnls(
             pes_rct_names_lst, pes_prd_names_lst, pes_rxn_name_lst)
-
+        # print(connchnls)
         # Write subpes in conn_chn_df
         for key, value in connchnls.items():
             rxns = peslist.iloc[value].sort_values(
                 by=['rxn_names'], ascending=False).index
 
-            conn_chn_df['subpes'][rxns] = key+1
+            # conn_chn_df['subpes'][rxns] = key+1
+            conn_chn_df.loc[rxns, 'subpes'] = key+1
             # reorder by rxn name before assigning the channel index
 
             for chnl_idx, rxn in enumerate(rxns):
                 rxn_name = tuple(
                     (peslist['rct_names_lst'][rxn],
                         peslist['prd_names_lst'][rxn]))
-                pes_dct_df['chnl'][rxn] = chnl_idx+idx_start+1
+                pes_dct_df.at[rxn, 'chnl'] = chnl_idx+idx_start+1
 
-                pes_dct_df['pes_chnl_tuple'][rxn] = (
+                pes_dct_df.at[rxn, 'pes_chnl_tuple'] = (
                     chnl_idx+idx_start, rxn_name)
 
             idx_start += len(rxns)
@@ -227,7 +242,7 @@ class SortMech:
         """
 
         # Extract data from mech info
-        [formula_dct_lst, formulas, rct_names_lst,
+        [spc_dct, formula_dct_lst, formulas, rct_names_lst,
             prd_names_lst, thrdbdy_lst, rxn_name_lst, param_vals] = mech_info(rxn_param_dct, spc_dct)
 
         rxn_index = list(zip(rxn_name_lst, thrdbdy_lst))
@@ -264,14 +279,14 @@ class SortMech:
         pes_index = 1
         for _, pes_fml in self.mech_df.groupby('pes_fml'):
             rxns = pes_fml.index
-            df_pes['pes'][rxns] = pes_index
+            df_pes.loc[rxns,'pes'] = pes_index
             pes_index += 1
         # Concatenate the new portion of dataframe
         self.mech_df = pd.concat([self.mech_df, df_pes], axis=1)
         # add subpes and chnl once and for all
         self.mech_df = pd.concat(
             [self.mech_df, conn_chn_df(self.mech_df)], axis=1)  # add subpes
-
+        exit()
         self.spc_dct = spc_dct  # set for later use
         # empty list for initialization (otherwise pylint warning)
         self.species_subset_df = ()
@@ -324,7 +339,7 @@ class SortMech:
 
         elif 'submech_prompt' in hierarchy:
             # add pes, subpes, chnl:
-            hierarchy_new = ['pes', 'subpes', 'chnl']
+            hierarchy_new = ['fml', 'pes', 'subpes', 'chnl']
             [hierarchy_new.append(h)
                 for h in hierarchy if h not in hierarchy_new]
             hierarchy = copy.deepcopy(hierarchy_new)
@@ -518,27 +533,28 @@ class SortMech:
             elif chk >= 1 and filtertype == 'submech_prompt':
                 for sp in species_list:
                     if len(rcts) == 2 and any(rct == sp for rct in rcts) and len(prds) <= 2:
-                        mech_df['submech_prompt'][rxn] = 'RAD_GEN_{}'.format(
+                        mech_df.at[rxn, 'submech_prompt'] = 'RAD_GEN_{}'.format(
                             sp)
-                        mech_df['rxn_ped'][rxn] = '{}={}'.format(
+                        mech_df.at[rxn, 'rxn_ped'] = '{}={}'.format(
                             rxn[0].split('=')[-1], rxn[0].split('=')[0])
                     elif len(prds) == 2 and any(prd == sp for prd in prds):
-                        mech_df['submech_prompt'][rxn] = 'RAD_GEN_{}'.format(
+                        mech_df.at[rxn, 'submech_prompt'] = 'RAD_GEN_{}'.format(
                             sp)
-                        mech_df['rxn_ped'][rxn] = rxn[0]
+                        mech_df.at[rxn, 'rxn_ped'] = rxn[0]
 
                     elif len(prds) > 2 and any(prd == sp for prd in prds):
-                        mech_df['submech_prompt'][rxn] = 'PROMPT_LUMPED_{}'.format(
+                        mech_df.at[rxn, 'submech_prompt'] = 'PROMPT_LUMPED_{}'.format(
                             sp)
                     # rxn is unimol deco/formation of the radical
                     elif ((len(rcts) == 1 and rcts[0] == sp and len(prds) <= 2) or
                           (len(prds) == 1 and prds[0] == sp and len(rcts) <= 2)):
-                        mech_df['submech_prompt'][rxn] = 'RAD_DECO_{}'.format(
+                        mech_df.at[rxn, 'submech_prompt'] = 'RAD_DECO_{}'.format(
                             sp)
                     elif (len(rcts) == 1 and rcts[0] == sp and len(prds) > 2):
-                        mech_df['submech_prompt'][rxn] = 'RAD_DECO_LUMPED_{}'.format(
+                        mech_df.at[rxn, 'submech_prompt'] = 'RAD_DECO_LUMPED_{}'.format(
                             sp)
-                    if len(mech_df['submech_prompt'][rxn]) > 0:
+                   
+                    if len(mech_df.at[rxn, 'submech_prompt']) > 0:
                         break
 
             elif chk == 0 and filtertype != 'submech_prompt':  # reaction filtered out
@@ -635,12 +651,12 @@ class SortMech:
         for idx, rxn in enumerate(new_wellskipping_idxs):
             rad = sorted(list(set(rad_list).intersection(new_wskip_rxns[idx][1])))[0]
 
-            wellskipp_rxns_df['submech_prompt'][rxn] = 'RAD_GEN_{}'.format(rad)
-            wellskipp_rxns_df['rxn_ped'][rxn] = rxn[0]
-            wellskipp_rxns_df['rct_names_lst'][rxn] = new_wskip_rxns[idx][0]
-            wellskipp_rxns_df['prd_names_lst'][rxn] = new_wskip_rxns[idx][1]
-            wellskipp_rxns_df['rct_names_lst_ord'][rxn] = new_wskip_rxns[idx][0]
-            wellskipp_rxns_df['prd_names_lst_ord'][rxn] = new_wskip_rxns[idx][1]
+            wellskipp_rxns_df.at[rxn, 'submech_prompt'] = 'RAD_GEN_{}'.format(rad)
+            wellskipp_rxns_df.at[rxn, 'rxn_ped'] = rxn[0]
+            wellskipp_rxns_df.at[rxn, 'rct_names_lst'] = new_wskip_rxns[idx][0]
+            wellskipp_rxns_df.at[rxn, 'prd_names_lst'] = new_wskip_rxns[idx][1]
+            wellskipp_rxns_df.at[rxn, 'rct_names_lst_ord'] = new_wskip_rxns[idx][0]
+            wellskipp_rxns_df.at[rxn, 'prd_names_lst_ord'] = new_wskip_rxns[idx][1]
             # print('ok for ', idx, rxn, rad_list, new_wskip_rxns[idx], '\n')
 
         return wellskipp_rxns_df
@@ -669,7 +685,7 @@ class SortMech:
                     if ((any(sp_i == rct for rct in rcts) or
                          any(sp_i == prd for prd in prds))
                             and isinstance(reac_sp_df['species'][rxn], float)):
-                        reac_sp_df['species'][rxn] = sp_i
+                        reac_sp_df.at[rxn, 'species'] = sp_i
         return reac_sp_df
 
     def group_submech(self, submech_df):
@@ -728,7 +744,7 @@ class SortMech:
                     
             spcs_grp = assign_group(species_subset)
             # check species hierarchically (hierarchy fixed in species list)
-            submech_df[lbl_col][rxn] = spcs_grp
+            submech_df.at[rxn, lbl_col] = spcs_grp
 
         return submech_df
 
@@ -868,10 +884,6 @@ class SortMech:
                     prds = ped_i.split('=')[1].split('+')
                     
                     hot_spcs = sorted(list(set(self.species_list) & set(prds)))
-                    # get dofs for each species if absent
-                    for prd in prds:
-                        if 'dof_info' not in self.spc_dct[prd].keys():
-                            self.spc_dct[prd]['dof_info'] = ene_partition.get_dof_info_fromspcdct(self.spc_dct[prd])
 
                     for hot_sp in hot_spcs:
                         
@@ -881,8 +893,7 @@ class SortMech:
                         else:
                             nonhot = nonhot[0]
 
-                        phi = ene_partition.phi_equip_fromdof(
-                            self.spc_dct[hot_sp]['dof_info'], self.spc_dct[nonhot]['dof_info'])
+                        phi = phi_equip_fromdct(hot_sp, nonhot, self.spc_dct)
                         try:
                             dh = thermo.extract_deltaX_therm(
                                 self.therm_df, rcts, prds, 'H')/1000
@@ -917,7 +928,7 @@ class SortMech:
                             # BUILD REACTION CHAINS STARTING FROM HERE
                             # look for chains
                             if self.lookforpromptchains == True:
-                                self.rxn_chain_prompt2(
+                                self.rxn_chain_prompt(
                                     T0, dh_tot, hot_sp, hot_sp_df_dct)
                             check_ped_i += 1
                         else:
@@ -989,7 +1000,7 @@ class SortMech:
         # resort because you added reactions
         self.sort_and_label(self.criteria_all, self.labels_all)
                         
-    def rxn_chain_prompt2(self, T0, dh_tot, rad, sp_df_dct):
+    def rxn_chain_prompt(self, T0, dh_tot, rad, sp_df_dct):
         """ from a given hot product (rad), derive prompt reaction chain complying with thresholds
         """
         # append to self groups only if pes not present as ped
@@ -1019,10 +1030,6 @@ class SortMech:
                 {prd: None for prd in prds} for _ in range(9))
             
             for prd in prds:
-                if 'dof_info' not in self.spc_dct[prd].keys():
-                    self.spc_dct[prd]['dof_info'] = ene_partition.get_dof_info_fromspcdct(self.spc_dct[prd])
-
-            for prd in prds:
                 if sum(automol.chi.formula(
                         self.spc_dct[prd]['inchi']).values()) < 3:
                     continue
@@ -1046,8 +1053,7 @@ class SortMech:
                     
                 try:
                     nonprd = list(set([prd]) ^ set(prds))[0]
-                    phis[prd] = ene_partition.phi_equip_fromdof(
-                            self.spc_dct[prd]['dof_info'], self.spc_dct[nonprd]['dof_info'])
+                    phis[prd] = phi_equip_fromdct(prd, nonprd, self.spc_dct)
 
                     T_stars[prd], k_stars[prd], dh_tots[prd] = nonboltz.estimate_hot_hk(
                         dh_start*phis[prd]*1000, self.Tref, self.therm_df[prd]['Cp'], self.k_max_hot[prd], self.dh_min_hot[prd]*1000)
@@ -1132,7 +1138,7 @@ class SortMech:
             mult = 1
             rcts = self.mech_df['rct_names_lst'][rxn]
             mult = get_mult(rcts, self.spc_dct)
-            reac_mult_df['mult'][rxn] = str(mult)
+            reac_mult_df.at[rxn, 'mult'] = str(mult)
 
         return reac_mult_df
 
@@ -1163,7 +1169,8 @@ class SortMech:
                 # bimolecular reaction classification
                 rxn_class_broad = rxnclass.classify_bimol(
                     rcts, prds, self.spc_dct)
-            rxncl_broad_df['rxn_class_broad'][rxn] = rxn_class_broad
+            rxncl_broad_df.at[rxn, 'rxn_class_broad'] = rxn_class_broad
+            # (rxncl_broad_df.loc[[rxn], 'rxn_class_broad']) # technicall
 
         return rxncl_broad_df
 
@@ -1209,8 +1216,8 @@ class SortMech:
             for rxn in subpes_df.index:
                 rct_names = subpes_df['rct_names_lst'][rxn]
                 prd_names = subpes_df['prd_names_lst'][rxn]
-                rct_names_ord = subpes_df['rct_names_lst_ord'][rxn]
-                prd_names_ord = subpes_df['prd_names_lst_ord'][rxn]
+                rct_names_ord = subpes_df.at[rxn, 'rct_names_lst_ord']
+                prd_names_ord = subpes_df.at[rxn, 'prd_names_lst_ord']
                 # Exclude rxns with more than 2 rcts or prds (not elementary!)
                 if len(rct_names) < 3 and len(prd_names) < 3:
 
@@ -1219,13 +1226,12 @@ class SortMech:
 
                 else:
                     rclass = 'unclassified - lumped'
-                rxncl_graph_df['rxn_class_graph'][rxn] = rclass
+                rxncl_graph_df.at[rxn, 'rxn_class_graph'] = rclass
 
                 # store values in the elementary reactivity matrix
                 # (for now contaminated with isomerizations)
-
-                elem_reac_df[rct_names_ord][prd_names_ord] = rclass
-                elem_reac_df[prd_names_ord][rct_names_ord] = rclass
+                elem_reac_df.at[prd_names_ord, rct_names_ord] = rclass
+                elem_reac_df.at[rct_names_ord, prd_names_ord] = rclass
 
             # 3. classify well skipping channels
             # reclassify the unclassified reactions A->B+C, B+C->D, B+C->E+F
@@ -1237,7 +1243,7 @@ class SortMech:
                     rxn_type_ws = rxnclass.classify_ws(
                         subpes_df, elem_reac_df, species_subpes, rxn)
                     if rxn_type_ws is not None:
-                        rxncl_graph_df['rxn_class_graph'][rxn] = rxn_type_ws
+                        rxncl_graph_df.at[rxn, 'rxn_class_graph'] = rxn_type_ws
 
         return rxncl_graph_df
 
@@ -1254,7 +1260,7 @@ class SortMech:
         for rxn in rxn_maxvals_df.index:
             param_vals_dct = self.mech_df['param_vals'][rxn]
             max_val = ktp_util.get_max_aligned_values(param_vals_dct)
-            rxn_maxvals_df['rxn_max_vals'][rxn] = max_val
+            rxn_maxvals_df.at[rxn, 'rxn_max_vals'] = max_val
 
         return rxn_maxvals_df
 
@@ -1275,7 +1281,7 @@ class SortMech:
             param_ratio_dct = ktp_util.get_aligned_rxn_ratio_dct(
                 param_vals_dct)
             max_val = ktp_util.get_max_aligned_values(param_ratio_dct)
-            rxn_maxratio_df['rxn_max_ratio'][rxn] = max_val
+            rxn_maxratio_df.at[rxn, 'rxn_max_ratio'] = max_val
 
         return rxn_maxratio_df
 
@@ -1321,20 +1327,20 @@ class SortMech:
                 rxnclass = cmts_string(
                     name, labels[hierarchy[:n_headers]], 'class_head')
                 idx0 = rdf.index[0]
-                df_cmts_top['cmts_top'][idx0] = rxnclass
+                df_cmts_top.at[idx0, 'cmts_top'] = rxnclass
 
                 # Write inline comments if necessary
                 if n_headers < len(hierarchy)-1:
                     for name2, rdf2 in rdf.groupby(hierarchy[n_headers:-1]):
                         rxnclass = cmts_string(
                             name2, labels[hierarchy[n_headers:-1]], 'subclass')
-                        df_cmts_inline['cmts_inline'][rdf2.index] = rxnclass
+                        df_cmts_inline.loc[rdf2.index, 'cmts_inline'] = rxnclass
         else:
             # Write only inline comments
             for name, rdf in self.mech_df.groupby(hierarchy[n_headers:-1]):
                 rxnclass = cmts_string(
                     name, labels[hierarchy[n_headers:-1]], 'class')
-                df_cmts_inline['cmts_inline'][rdf.index] = rxnclass
+                df_cmts_inline.loc[rdf.index, 'cmts_inline'] = rxnclass
 
         # Concatenate DFs
         self.mech_df = pd.concat(

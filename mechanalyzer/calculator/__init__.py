@@ -12,6 +12,7 @@ from mechanalyzer.calculator import ktp_util
 from mechanalyzer.calculator import bf
 from mechanalyzer.calculator import nonboltz
 from mechanalyzer.calculator import formulas
+from mechanalyzer.calculator import spinfo_frommess
 
 __all__ = [
     'rates',
@@ -23,5 +24,6 @@ __all__ = [
     'ktp_util',
     'bf',
     'nonboltz',
-    'formulas'
+    'formulas',
+    'spinfo_frommess'
 ]

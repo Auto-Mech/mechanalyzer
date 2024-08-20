@@ -5,8 +5,12 @@ Useful functions for mechanalyzer.parser
 """
 
 import copy
-import automol
-from automol.form._form import element_count as n_el
+from autoparse import find
+from automol.form import element_count as n_el
+from automol.form import atom_count
+from automol.form import join
+from automol.form import string2
+from automol.chi import formula
 
 
 def order_rct_bystoich(rct_names_lst, spc_dct=None):
@@ -26,31 +30,68 @@ def order_rct_bystoich(rct_names_lst, spc_dct=None):
         for key, val in enumerate(rct_names_lst_ordered):
             rct_names = val
             rct_ichs = list(map(ich_dct.__getitem__, rct_names))
-            fml_rct = list(map(automol.chi.formula, rct_ichs))
-            atoms_rct = list(map(automol.form.atom_count, fml_rct))
+            fml_rct = list(map(formula, rct_ichs))
+            atoms_rct = list(map(atom_count, fml_rct))
             if len(rct_names) == 2:
                 if atoms_rct[1] > atoms_rct[0]:
                     # swap places of reactants 1 and 2
                     rct_names_lst_ordered[key] = (rct_names[1], rct_names[0])
                 elif atoms_rct[1] == atoms_rct[0]:
-                    rct_names = list(rct_names)
-                    rct_names.sort()
-                    rct_names_lst_ordered[key] = tuple(rct_names)
+                    rct_names_lst_ordered[key] = order_names(rct_names)
+#                    rct_names = list(rct_names)
+#                    rct_names.sort()
+#                    rct_names_lst_ordered[key] = tuple(rct_names)
 
     else:
         for key, val in enumerate(rct_names_lst_ordered):
             rct_names = val
-            if len(rct_names) == 2:
-                if len(rct_names[1]) > len(rct_names[0]):
-                    # swap places of reactants 1 and 2
-                    rct_names_lst_ordered[key] = (rct_names[1], rct_names[0])
-                elif len(rct_names[1]) == len(rct_names[0]):
-                    rct_names = list(rct_names)
-                    rct_names.sort()
-                    rct_names_lst_ordered[key] = tuple(rct_names)
+            rct_names_lst_ordered[key] = order_names(rct_names)
+#            if len(rct_names) == 2:
+#                if len(rct_names[1]) > len(rct_names[0]):
+#                    # swap places of reactants 1 and 2
+#                    rct_names_lst_ordered[key] = (rct_names[1], rct_names[0])
+#                elif len(rct_names[1]) == len(rct_names[0]):
+#                    rct_names = list(rct_names)
+#                    rct_names.sort()
+#                    rct_names_lst_ordered[key] = tuple(rct_names)
 
     return rct_names_lst_ordered
 
+def order_names(rct_names):
+    """ order names according to higher N of atoms, or length;
+        if same length, use alphabetical order
+        returns a reordered tuple
+    """
+    if len(rct_names) == 2:
+        
+        atoms_rct = extract_numfromname(rct_names)
+        if atoms_rct[1] > atoms_rct[0]:
+            # order according to larger number of atoms
+            rct_names = (rct_names[1], rct_names[0])
+        elif atoms_rct[1] == atoms_rct[0]:
+            # change criterion: names length
+            if len(rct_names[1]) > len(rct_names[0]):
+                # swap places of reactants 1 and 2
+                rct_names = (rct_names[1], rct_names[0])
+            elif len(rct_names[1]) == len(rct_names[0]):
+                # alphabetical
+                rct_names_lst = list(rct_names)
+                rct_names_lst.sort()
+                rct_names = tuple(rct_names_lst)
+        # else: do nothing - original name is fine
+                        
+    return rct_names
+
+def extract_numfromname(rct_names):
+    """ extract numbers from a name string and return their sum
+    """
+    numbers_tuples = [find.all_captures(r'\d+', r) for r in rct_names]
+    # more advanced for the future: from the reactant string, do like string.index('numberfound')
+    # and check the character that preceeds it to understand if it is a number of C, N, H, .. atoms
+    numbers_tuples = [nums if isinstance(nums, tuple) else (0,) for nums in numbers_tuples]
+    sums = [sum(list(map(int, nums))) for nums in numbers_tuples]
+    
+    return sums
 
 def remove_fw_rxns(rxn_dct, rxn_lst):
     """ remove all rxns of rxn_list from rxn_dct
@@ -78,15 +119,19 @@ def remove_rev_rxns(rxn_dct, rxn_lst):
 def resort_ktp_labels(ktp_dct):
     """
     takes ktp dct
-    resort labels of products in alphabetical order
+    resort labels of reactants and products according to N of atoms, name length or alphabetical order
     - only way to guarantee consistency in dct keys when applying prompt
+    - older version: only sort product labels; now sort both for consistency
     """
 
     new_ktp_dct = {}
     for key, val in ktp_dct.items():
-        prods = list(key[1])
-        prods.sort()
-        new_key = (key[0], tuple(prods), key[2])
+        # prods = list(key[1])
+        # prods.sort()
+        # new_key = (key[0], tuple(prods), key[2])
+        reacs = order_names(key[0])
+        prods = order_names(key[1])
+        new_key = (reacs, prods, key[2]) 
         new_ktp_dct[new_key] = copy.deepcopy(val)
 
     return new_ktp_dct
@@ -150,8 +195,8 @@ def get_fml(rxn_ichs):
     '''
     formula_dct = ''
     for rct_ich in rxn_ichs:
-        formula_i_dct = automol.chi.formula(rct_ich)
-        formula_dct = automol.form.join(formula_dct, formula_i_dct)
-    formula_str = automol.form.string2(formula_dct)
+        formula_i_dct = formula(rct_ich)
+        formula_dct = join(formula_dct, formula_i_dct)
+    formula_str = string2(formula_dct)
 
     return formula_dct, formula_str

@@ -8,22 +8,9 @@ import pandas as pd
 from scipy.signal import convolve
 from scipy.interpolate import interp1d
 from phydat import phycon
-from autoparse import find
-from automol import form
-from automol import geom
-from automol import chi
 from mechanalyzer import calculator
+from mechanalyzer.calculator.spinfo_frommess import get_dof_info_fromspcdct
 
-MW_dct_elements = {
-    'C': 12e-3,
-    'N': 14e-3,
-    'O': 16e-3,
-    'H': 1e-3,
-    'S': 32e-3,
-    'P': 31e-3,
-    'F': 19e-3,
-    'Cl': 35.45e-3
-}  # kg/mol
 
 #################### wrapper function that calls the class ################################
 
@@ -66,8 +53,8 @@ def ped_df_rescale_test(starthot_df, energy_scale, save=False):
         for pressure in starthot_df.columns:
             vals = starthot_df[pressure][temp].values
             dfnew_index = starthot_df[pressure][temp].index + energy_scale
-            starthot_df[pressure][temp] = pd.Series(vals, index=dfnew_index)
-            starthot_df[pressure][temp] = starthot_df[pressure][temp][starthot_df[pressure][temp].index > 0]
+            starthot_df.at[temp, pressure] = pd.Series(vals, index=dfnew_index)
+            starthot_df.at[temp, pressure] = starthot_df[pressure][temp][starthot_df[pressure][temp].index > 0]
             if pressure == 1 and temp in [300, 1500, 2000] and save == True:
                 tosave = starthot_df[pressure][temp].reset_index()
                 np.savetxt('hotdf_shift_{}_{}.txt'.format(
@@ -158,7 +145,7 @@ def ped_df_rescale(starthot_df, ped_df_fromhot, save=False, name=''):
                 cycles -= 1
             # renormalize and put in dataframe
             prob_vect /= np.trapz(prob_vect, x=ene_vect)
-            ped_df[pressure][temp] = pd.Series(prob_vect, index=ene_vect)
+            ped_df.at[temp, pressure] = pd.Series(prob_vect, index=ene_vect)
             if ped_df[pressure][temp].empty:
                 T_del.append(temp)
 
@@ -296,7 +283,7 @@ class PEDModels:
                 norm_factor = np.trapz(
                     self.ped_df[pressure][temp].values, x=idx_new)
                 vals = self.ped_df[pressure][temp].values/norm_factor
-                ped_df_prod[pressure][temp] = pd.Series(vals, index=idx_new)
+                ped_df_prod.at[temp, pressure] = pd.Series(vals, index=idx_new)
 
         return ped_df_prod
 
@@ -522,7 +509,7 @@ class PEDModels:
                     #    self.mw_dct[self.prod1], self.ene1_vect, pressure*101325, temp)
                     # prob_ene1_norm = dosthermtest(np.arange(0, len(self.ene1_vect)), temp).values
 
-                ped_df_prod[pressure][temp] = pd.Series(
+                ped_df_prod.at[temp, pressure] = pd.Series(
                     prob_ene1_norm, index=self.ene1_vect)
 
                 # remove comments to print P(E1)|T,P
@@ -678,123 +665,7 @@ class PEDModels:
 
         return ped_df_prod
 
-
-# helper functions ###################################################################
-
-def get_dof_info(block):
-    """ Gets the N of degrees of freedom and MW of each species
-        :param block: bimol species of which you want the dofs
-        :type block: list(str1, str2)
-        :param ask_for_ts: build the dof info also for the ts
-        :type ask_for_ts: bool
-        :return dof_info: dataframe with vibrat/rot degrees of freedom
-            and molecular weight
-        :rtype: dataframe(index=species, columns=['n_atoms', 'vib dof', 'rot dof', 'mw'])
-    """
-    info_array = np.zeros((3, 4))
-    keys = []
-    atoms_ts = 0
-    # extract N of dofs and MW
-    for i, block_i in enumerate(block):
-        info = block_i.splitlines()
-        where_name = find.where_in('Species', info)[0]
-        where_hind = find.where_in('Hindered', info)
-
-        key = info[where_name].strip().split()[1]
-        keys.append(key)
-
-        try:
-            where_geom = find.where_in('Geometry', info)[0]
-            where_freq = find.where_in('Frequencies', info)[0]
-            num_atoms = int(info[where_geom].strip().split()[1])
-            vib_dof = (
-                int(info[where_freq].strip().split()[1]) + len(where_hind)
-            )
-            if 3*num_atoms - vib_dof == 6:
-                rot_dof = 3
-            else:
-                rot_dof = 2
-        except IndexError:
-            # if 1 atom only: no 'Frequencies', set to 0
-            vib_dof = 0
-            rot_dof = 0
-            num_atoms = 1
-            where_geom = find.where_in('Name', info)[0]
-            atoms_array = np.array([info[where_geom].strip().split()[1]])
-
-        atoms_ts += num_atoms
-        # this allows to get 3N-5 or 3N-6 without analyzing the geometry
-        info_array[i, 0] = num_atoms
-        info_array[i, 1] = vib_dof
-        info_array[i, 2] = rot_dof
-
-        # MW from type of atoms:
-        if num_atoms > 1:
-            geom_in = where_geom+1
-            geom_fin = geom_in+num_atoms
-            atoms_array = np.array([geomline.strip().split()[0]
-                                    for geomline in info[geom_in:geom_fin]])
-
-        info_array[i, 3] = np.sum(np.array([MW_dct_elements[at]
-                                            for at in atoms_array], dtype=float))
-
-    # ts info: assume first 2 blocks are 2 reactants of bimol reaction
-    # and derive the DOFs of the TS
-    keys.append('TS')
-
-    # assume there are no linear TSs
-    info_array[2, :] = [atoms_ts, 3*atoms_ts - 7, 3,
-                        info_array[0, 3]+info_array[1, 3]]
-
-    dof_info = pd.DataFrame(info_array, index=keys, columns=[
-                            'n_atoms', 'vib dof', 'rot dof', 'mw'])
-
-    return dof_info
-
-def get_dof_info_fromspcdct(spc_dct_entry):
-    """ Gets the N of degrees of freedom and MW of each species
-        :sp: species name
-        :type sp: str
-        :param spc_dct_entry: species dictionary entry (single species)
-        :return dof_info: dictionary with vibrat/rot degrees of freedom
-            and molecular weight
-        :rtype: dct(['n_atoms', 'vib dof', 'rot dof', 'mw'])
-    """
-    dof_info = {}
-    fml = spc_dct_entry['fml']
-    Nat = form.atom_count(fml)
-    dof_info['n_atoms'] = Nat
-    dof_info['mw'] = sum(np.array([form.element_count(fml, at) *
-                       MW_dct_elements[at] for at in MW_dct_elements.keys()]))
-    if Nat == 1:
-        dof_info['vib dof'] = 0
-        dof_info['rot dof'] = 0
-    elif Nat == 2:
-        dof_info['vib dof'] = 1
-        dof_info['rot dof'] = 2
-    else:
-        # derive geometry and check if linear
-        geom_sp = chi.geometry(spc_dct_entry['inchi'])
-        try:
-            ilin = int(geom.is_linear(geom_sp))
-        except AssertionError:
-            # failed for some reason .. set to 0. check HCO, fails there 
-            print('check linearity of geometry failed for {}'.format(spc_dct_entry))
-            ilin = 0
-        dof_info['rot dof'] = 3 - 1*ilin
-        dof_info['vib dof'] = 3*Nat - 6 + 1*ilin
-        
-    return dof_info
-
-def phi_equip_fromdof(dof1, dof2):
-    """ quick approximate function to estimate energy partition of sp1 with dof1
-        dofs derived from function above
-    """
-    phi = (dof1['vib dof']+dof1['rot dof']/2) / \
-        (dof1['vib dof']+dof2['vib dof']+(3+dof1['rot dof']+dof2['rot dof'])/2)
-
-    return phi
-
+# helper functions
 def dos_trasl(mass1, ene_grid, pressure, temp, mass2=0):
     """ Compute the translational density of states per unit volume
         mass1, mass2: MW in kg/mol
@@ -826,5 +697,12 @@ def dos_trasl(mass1, ene_grid, pressure, temp, mass2=0):
     return rho_kcal_mol
 
 # helper functions for energy partition used in the sorter
+def phi_equip_fromdct(sp1, sp2, spc_dct):
+    """ quick approximate function to estimate energy partition of sp1
+    """
+    dof1 = get_dof_info_fromspcdct(sp1, spc_dct)
+    dof2 = get_dof_info_fromspcdct(sp2, spc_dct)
+    phi = (dof1['vib dof']+dof1['rot dof']/2) / \
+        (dof1['vib dof']+dof2['vib dof']+(3+dof1['rot dof']+dof2['rot dof'])/2)
 
-
+    return phi

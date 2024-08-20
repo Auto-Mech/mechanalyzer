@@ -313,13 +313,13 @@ def assess_pdep(ktp_dct, assess_temps=DEFAULT_PDEP['temps'],
             is_pdep = is_pdep_atT(ktp_dct, plow, phigh, assess_temp)
             if is_pdep:
                 break
-
         # additional check: highest T at each P compared to the highest P
-        pressures.sort()
-        for plow in pressures[:-1]:
-            temps_p_max = max(ktp_dct[plow][0])
-            is_pdep = is_pdep_atT(ktp_dct, plow, phigh, temps_p_max)
-            if is_pdep:
-                break
-
+        # unless you specifically indicated a temperature range
+        if assess_temps == DEFAULT_PDEP['temps']:
+            pressures.sort()
+            for plow in pressures[:-1]:
+                temps_p_max = max(ktp_dct[plow][0])
+                is_pdep = is_pdep_atT(ktp_dct, plow, phigh, temps_p_max)
+                if is_pdep:
+                    break
     return is_pdep

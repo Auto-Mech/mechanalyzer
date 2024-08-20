@@ -269,38 +269,34 @@ def classify_graph(spc_dct, rct_names, prd_names):
     :rtype: str
     """
 
-    if len(prd_names) >= 3:
-        rclass = 'unclassified - lumped'
-    else:
+    # ID reaction
+    rct_fmls = tuple(spc_dct[rct]['fml'] for rct in rct_names)
+    prd_fmls = tuple(spc_dct[prd]['fml'] for prd in prd_names)
 
-        # ID reaction
-        rct_fmls = tuple(spc_dct[rct]['fml'] for rct in rct_names)
-        prd_fmls = tuple(spc_dct[prd]['fml'] for prd in prd_names)
+    rct_ichs = tuple(spc_dct[spc]['inchi'] for spc in rct_names)
+    prd_ichs = tuple(spc_dct[spc]['inchi'] for spc in prd_names)
 
-        rct_ichs = tuple(spc_dct[spc]['inchi'] for spc in rct_names)
-        prd_ichs = tuple(spc_dct[spc]['inchi'] for spc in prd_names)
+    if automol.form.reac.is_valid_reaction(rct_fmls, prd_fmls):
+        try:
+            rxn_objs = automol.reac.from_chis(
+                rct_ichs, prd_ichs)
+            rxn_classes = tuple(automol.reac.class_(obj) for obj in rxn_objs)
+        except AssertionError:
+            rxn_classes = ('AssertionError', )
+        except TypeError:
+            print('geoms of rxn classifier fail for rxn: '
+                    f'{rct_ichs} = {prd_ichs}')
+            rxn_classes = ('TypeError', )
 
-        if automol.form.reac.is_valid_reaction(rct_fmls, prd_fmls):
-            try:
-                rxn_objs = automol.reac.from_chis(
-                    rct_ichs, prd_ichs)
-                rxn_classes = tuple(automol.reac.class_(obj) for obj in rxn_objs)
-            except AssertionError:
-                rxn_classes = ('AssertionError', )
-            except TypeError:
-                print('geoms of rxn classifier fail for rxn: '
-                      f'{rct_ichs} = {prd_ichs}')
-                rxn_classes = ('TypeError', )
-
-            if rxn_classes:
-                # save only the first possible reaction type
-                # rclass = rxn_classes[0]
-                rclass = '/'.join(set(rxn_classes))
-            else:
-                rclass = 'unclassified'
-
+        if rxn_classes:
+            # save only the first possible reaction type
+            # rclass = rxn_classes[0]
+            rclass = '/'.join(set(rxn_classes))
         else:
-            rclass = 'unclassified - Wrong Stoichiometry'
+            rclass = 'unclassified'
+
+    else:
+        rclass = 'unclassified - Wrong Stoichiometry'
 
     return rclass
 
@@ -337,9 +333,9 @@ def classify_ws(subpes_df, elem_reac_df, species_subpes, rxn):
 
     try:
         # TEMPORARY: SHOULD RECONSTRUCT FULL PATH FROM REACTANTS TO PRODUCTS
-        rxn_type_1 = rxn_types_1[0]
+        rxn_type_1 = rxn_types_1.iloc[0] # rxn_types_1[0]
         # TEMPORARY: SHOULD RECONSTRUCT FULL PATH FROM REACTANTS TO PRODUCTS
-        rxn_type_2 = rxn_types_2[0]
+        rxn_type_2 = rxn_types_2.iloc[0] # rxn_types_2[0]
 
         # WRITE THE REACTION TYPE STRING
         rxn_type_ws = rxn_type_1 + '-' + rxn_type_2 + ' (WS)'

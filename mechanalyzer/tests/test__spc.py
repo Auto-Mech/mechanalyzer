@@ -62,7 +62,7 @@ def test__spc_dct_build():
 
 # modify/add functionality
 def test__mod_spc_dct_atomcount():
-    """ test mechanalyzer.parser.spc.reorder_by_atomcount
+    """ test mechanalyzer.parser.new_spc.reorder_by_atomcount
     """
 
     ref_spc_dct = {
@@ -96,7 +96,7 @@ def test__mod_spc_dct_atomcount():
 
 
 def test__mod_spc_dct_hof_basis():
-    """ test mechanalyzer.parser.spc.add_heat_of_formation_basis
+    """ test mechanalyzer.parser.new_spc.add_heat_of_formation_basis
     """
 
     spc_dct = {
@@ -167,7 +167,7 @@ def test__mod_spc_dct_hof_basis():
 
 
 def test__mod_spc_dct_stereo():
-    """ test mechanalyzer.parser.spc.stereochemical_spc_dct
+    """ test mechanalyzer.parser.new_spc.stereochemical_spc_dct
     """
 
     spc_dct = {
@@ -200,3 +200,10 @@ def test__mod_spc_dct_stereo():
         ref_spc_dct, all_stereo=False)
 
     assert ref_spc_dct == spc_dct
+
+if __name__ == '__main__':
+    test__csv_io()
+    # test__spc_dct_build() #broken
+    test__mod_spc_dct_atomcount()
+    # test__mod_spc_dct_hof_basis() #broken
+    test__mod_spc_dct_stereo()
