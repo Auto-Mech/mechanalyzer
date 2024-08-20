@@ -9,7 +9,7 @@ import automol.chi
 import automol.form
 from mechanalyzer.parser.ckin_ import parse_pes_dct
 
-def pes_dictionary(mech_str, mech_type, spc_dct, printlog=True):
+def pes_dictionary(mech_str, spc_dct):
     """ Constructs the Potential-Energy-Surface dictionary for all of the
         channels of the user input utilizing the sorter functionality
         from mechanalyzer. Currently, we sort just via PES and then SUB-PES.
