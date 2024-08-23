@@ -52,19 +52,37 @@ def parse_sort(sort_str):
 
     # Read and format information from the sort_mech block
     isol_block = ioformat.ptt.end_block(sort_str, 'sort_mech')
-
+    # main criteria
     crit_block = ioformat.ptt.paren_blocks(
         isol_block, key='criteria')
-    head_block = ioformat.ptt.keyword_value_blocks(
-        isol_block, key='n_criteria_headers')
-
+    
     if crit_block:
         crit_tup = ioformat.ptt.values_from_block(
             crit_block[0][1], val_ptt=app.one_or_more(app.URLSAFE_CHAR))
     else:
         crit_tup = ()
+        
+    head_block = ioformat.ptt.keyword_value_blocks(
+        isol_block, key='n_criteria_headers')
     nhead = int(head_block[0][1]) if head_block is not None else 0
-
+    
+    keepbelow = ioformat.ptt.keyword_value_blocks(
+        isol_block, key='stoich_keepbelow')
+    if keepbelow is not None:
+        spc_lst += ['keepbelow ' + keepbelow[0][1].strip(),]
+    deleteabove = ioformat.ptt.keyword_value_blocks(
+        isol_block, key='stoich_deleteabove')
+    if deleteabove is not None:
+        spc_lst += ['deleteabove ' + deleteabove[0][1].strip(),]
+    singlespecies = ioformat.ptt.keyword_value_blocks(
+        isol_block, key='singlespecies')
+    if singlespecies is not None:
+        if singlespecies[0][1].strip() == 'True':
+            spc_lst += ['singlespecies']
+    
+    if keepbelow is not None and deleteabove is not None:
+        raise ValueError('Cannot have both keepbelow and deleteabove criteria - incompatible!')
+    
     sort_tup = crit_tup + (nhead,)
     sort_lst = list(sort_tup)
 
