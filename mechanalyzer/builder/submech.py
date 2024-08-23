@@ -4,17 +4,13 @@ Functions for
 - broad rxn classification
 """
 
-import sys
 import copy
-import numpy
 import pandas as pd
-import automol
-from mechanalyzer.parser._util import get_mult
 from mechanalyzer.calculator import formulas
 
 # atoms order: C, H, O, N, S, CL
-STOICH_DEFAULT = [0, 2, 2, 0, 0, 0]
-STOICH_DEFAULT_DEL = [1, 0, 2, 0, 0, 0] # DELETE ALL ABOVE THESE STOICH - useful to delete LT above a certain limit
+STOICH_DEFAULT = [0, 2, 2, 0, 0, 0] # RETAIL ALL BELOW THIS STOICHIOMETRY + THAT OF THE FUEL
+STOICH_DEFAULT_DEL = [1, 0, 2, 0, 0, 0] # DELETE ALL ABOVE THESE STOICH + THAT OF THE FUEL - useful to delete LT above a certain limit
 #STOICH_DEFAULT_DEL = [1, 0, 0, 0, 0, 0] # DELETE ALL ABOVE THESE STOICH simultaneous condition on C and O only
 STOICH_DCT_ADD = {
     'FUEL': [0, 0, 0, 0, 0, 0],
@@ -30,65 +26,106 @@ STOICH_DCT_ADD = {
     'R_O4': [0, -1, 4, 0, 0, 0],
     'R_O3-H': [0, -2, 3, 0, 0, 0]}
 
-def species_subset_ext(fuel, spc_dct, stoich_limit=STOICH_DEFAULT):
-    """ call species_subset but and also extract all species
-        below stoich: stoich_fuel+stoich_limit
+
+def prescreen_species_subset(spc_dct, fuel = None, stoich = None, stoich_def = None):
+    """ get
+        stoichiometry to filter the mech
+        starting list of species and corresponding dataframe
+        species dictionary and formulas of excluded species
+    """
+    
+    if stoich is not None:
+        # extract stoichiometry from string
+        stoich = formulas.extract_fml_list_fromstr(stoich)
+        
+    if fuel is None and stoich is None:
+        raise ValueError('submech called, but neither fuel nor stoich filter specified')
+    
+    elif fuel is not None:
+        # extract fuel subset first
+        species_list, species_subset_df, stoich_fuel = species_subset_fuel(fuel, spc_dct)
+        fml_df_excluded, spc_dct_excluded = species_subset_excluded(species_list, spc_dct)
+        # evaluate stoich if not in input
+        if stoich is None:
+            print('No stoich. filter specified: set as default as stoich {} of fuel + C H O N S Cl: {}'.format(stoich_fuel, stoich_def))
+            stoich = stoich_fuel + stoich_def # add also other stoichiometries to the list
+            
+        return stoich, species_list, species_subset_df, fml_df_excluded, spc_dct_excluded
+    
+    elif fuel is None:
+        # no filter applied, so extract regular fml_df
+        fml_df_excluded = formulas.extract_fml_df(spc_dct)
+        
+        return stoich, [], pd.Series(), fml_df_excluded, spc_dct
+
+
+def species_subset_excluded(species_list, spc_dct):
+    """ fml_df and spc_dct with species not in species_list
+    """
+    # filter extracted species from spc_dct first
+    spc_dct_excluded = copy.deepcopy(spc_dct)
+    [spc_dct_excluded.pop(sp) for sp in species_list] #all remaining species
+    fml_df_excluded = formulas.extract_fml_df(spc_dct_excluded) #all remaining formulas
+    
+    return fml_df_excluded, spc_dct_excluded
+
+def species_subset_keep(spc_dct, fuel = None, stoich = None):
+    """ call species_subset: extract all species with required stoichiometry
+        below stoich: stoich_fuel + stoich_limit (if stoich_limit is negative, you can e.g., delete all core species with respect to the fuel)
         in the reaction, all of the reactants OR all of the products will have to be in the species list
     """
-    # extract species subset
-    species_list, species_subset_df = species_subset(fuel, spc_dct)
-    # add all stoichiometries below that of interest
-    # filter extracted species from spc_dct first
-    spc_dct_reduced = copy.deepcopy(spc_dct)
-    [spc_dct_reduced.pop(sp) for sp in species_list] #all remaining species
-    fml_df_reduced = formulas.extract_fml_df(spc_dct_reduced) #all remaining formulas
-
-    fml_df = formulas.extract_fml_df(spc_dct)
-    stoich_fuel = fml_df.loc[fuel][['nC', 'nH', 'nO', 'nN', 'nS', 'nCl']].values
-    stoich = stoich_fuel + stoich_limit # add also other stoichiometries to the list
-
-    # extract desired species and assign labels
-    species = formulas.extract_species_sub(stoich, fml_df_reduced) # extract all species with stoichiometry below the one you are interested in 
+    stoich, species_list, species_subset_df, fml_df_excluded, _ = prescreen_species_subset(spc_dct, fuel = fuel, stoich = stoich, stoich_def = STOICH_DEFAULT)
+        
+    # extract sub-species : species with stoich. <= the given one (must apply to all species)
+    species = formulas.extract_species_sub(stoich, fml_df_excluded) # extract all species with stoichiometry <= stoich
+    print('Core (subfuel) species: \n')
+    [print(sp) for sp in species]
     series = pd.Series('SUBFUEL', index=species) # these reactions will be called "subfuel"
     species_subset_df = species_subset_df._append(series)
     species_list += species
 
     return species_list, species_subset_df
 
-def species_subset_del(fuel, spc_dct, stoich_limit=STOICH_DEFAULT_DEL):
+def species_subset_del(spc_dct, fuel = None, stoich = None):
     """ extract fuel submech
         then delete from species everything else above a certain stoichiometry
         when sorting: at least all reactants or all products must be in the species list
     """
-    # extract species subset
-    species_list, species_subset_df = species_subset(fuel, spc_dct)
-    fml_df = formulas.extract_fml_df(spc_dct)
-    stoich_fuel = fml_df.loc[fuel][['nC', 'nH', 'nO', 'nN', 'nS', 'nCl']].values
-    stoich = stoich_fuel + stoich_limit
-    # delete the species fuel-related so you have all the others
-    # filter extracted species from spc_dct first
-    spc_dct_reduced = copy.deepcopy(spc_dct)
-    [spc_dct_reduced.pop(sp) for sp in species_list] #all remaining species
-    fml_df_reduced = formulas.extract_fml_df(spc_dct_reduced)
+    stoich, species_list, species_subset_df, fml_df_excluded, spc_dct_excluded = prescreen_species_subset(spc_dct, fuel = fuel, stoich = stoich, stoich_def = STOICH_DEFAULT_DEL)
+
     # add to the species list all species above a certain stoichiometry
     # useful if you want to keep e.g. growth but not oxidation
-    species_del = formulas.extract_species_above(stoich, fml_df_reduced) # extract all species with stoichiometry above the selected one
-    [spc_dct_reduced.pop(sp) for sp in species_del] # delete all species above that stoichiometry
-    species_list += list(spc_dct_reduced.keys()) #consider all the other species
-    # from this list, extract core rxns vs rxns of bigger species
-    fml_df_reduced = formulas.extract_fml_df(spc_dct_reduced)
-    core_species = formulas.extract_species_core(stoich_fuel, fml_df_reduced)
-    series = pd.Series('CORE', index=core_species)
-    species_subset_df = species_subset_df._append(series)
-    # list all non-fuel species and non-core species as "supfuel"
-    supfuel_list = list(spc_dct_reduced.keys())
-    supfuel_list = [sp for sp in supfuel_list if sp not in core_species]
-    series = pd.Series('SUPFUEL', index=supfuel_list)
-    species_subset_df = species_subset_df._append(series)
-
+    # extract all species with stoichiometry above the selected one
+    species_del = formulas.extract_species_above(stoich, fml_df_excluded) 
+    [spc_dct_excluded.pop(sp) for sp in species_del] # delete all species above that stoichiometry
+    species_list += list(spc_dct_excluded.keys()) #consider all the other species
+    
+    # from excluded species, extract core rxns vs rxns of bigger species
+    fml_df_excluded = formulas.extract_fml_df(spc_dct_excluded)
+    if fuel:
+        core_species = formulas.extract_species_core(stoich, fml_df_excluded)
+        print('Core species: \n')
+        [print(sp) for sp in core_species]
+        series = pd.Series('CORE', index=core_species)
+        species_subset_df = species_subset_df._append(series)
+        # list all non-fuel species and non-core species as "supfuel"
+        supfuel_list = list(spc_dct_excluded.keys())
+        supfuel_list = [sp for sp in supfuel_list if sp not in core_species]
+        print('Super-fuel species: \n')
+        [print(sp) for sp in supfuel_list]
+        series = pd.Series('SUPFUEL', index=supfuel_list)
+        species_subset_df = species_subset_df._append(series)
+    else:
+        # integrate all species as 'core'
+        print('Core species: \n')
+        [print(sp) for sp in species_list]
+        series = pd.Series('CORE', index=species_list)
+        species_subset_df = species_subset_df._append(series)
+    
     return species_list, species_subset_df
 
-def species_subset(fuel, spc_dct):
+
+def species_subset_fuel(fuel, spc_dct):
     """ Given the name of a fuel in a spc_dct, it finds all species
         involved in its combustion mech by stoichiometry
 
@@ -119,10 +156,13 @@ def species_subset(fuel, spc_dct):
     # extract desired species and assign labels
 
     for stoich_type, stoich in STOICH_DCT_ADD.items():
-        species = formulas.extract_species(stoich+stoich_fuel, fml_df)
+        species = formulas.extract_species(stoich + stoich_fuel, fml_df)
         series = pd.Series(stoich_type, index=species)
         species_subset_df = species_subset_df._append(series)
         species_list += species
 
-    return species_list, species_subset_df
+    print('Fuel mech species')
+    [print(sp) for sp in species_list]
+
+    return species_list, species_subset_df, stoich_fuel
 

@@ -303,24 +303,24 @@ class SortMech:
             ['..','..','N']: N is the N of criteria to use for headers
             all the other criteria are written as inline comments
         :param species_list: list of species subset; may be empty
-            if ['onename','submech']: extracts fuel submechanism
+            if ['onename'] and 'submech' in criteria: extracts fuel submechanism
         :returns: None. updates self
         """
         # set labels for all the possible criteria
         # maybe turn into dataframe with criteria, labels, fct names, and ascending opts
-        criteria_all = ['molecularity', 'N_of_prods', 'species',
+        criteria_all = ['molecularity', 'N_of_prods', 'species', 'fml',
                         'pes', 'subpes', 'chnl',
                         'r1', 'mult',
                         'rxn_class_broad', 'rxn_class_graph',
-                        'submech', 'submech_prompt', 'submech_ext',
-                        'submech_del',  'rxn_max_vals', 'rxn_max_ratio',
+                        'submech', 'submech_prompt', 'submech_keepsubfuel',
+                        'submech_deletelarge',  'rxn_max_vals', 'rxn_max_ratio',
                         ]
-        labels_all = ['NR', 'N_of_prods', 'SPECIES',
+        labels_all = ['NR', 'N_of_prods', 'SPECIES', 'formulas',
                       'pes', 'subpes', 'channel',
                       'Heavier_rct', 'Totalmultiplicity',
                       'rxntype', 'rxnclass',
-                      'SUBMECH', 'submech_prompt', 'submech_ext',
-                      'submech_del', 'maxval', 'maxratio',
+                      'submech', 'submech_prompt', 'submech_keepsubfuel',
+                      'submech_deletelarge', 'maxval', 'maxratio',
                       ]
 
         # check on pes/subpes criteria:
@@ -339,12 +339,12 @@ class SortMech:
 
         elif 'submech_prompt' in hierarchy:
             # add pes, subpes, chnl:
-            hierarchy_new = ['fml', 'pes', 'subpes', 'chnl']
+            hierarchy_new = ['pes', 'subpes', 'chnl']
             [hierarchy_new.append(h)
                 for h in hierarchy if h not in hierarchy_new]
             hierarchy = copy.deepcopy(hierarchy_new)
             print('final hierarchy for classification: {}'.format('-'.join(hierarchy[:-1])))
-            
+
         # now that you fixed it, save it in self
         self.hierarchy = hierarchy
         
@@ -367,8 +367,8 @@ class SortMech:
             'rxn_class_graph': self.rxnclass_graph,
             'submech': self.group_submech,
             'submech_prompt': self.group_prompt,
-            'submech_ext': self.group_submech,
-            'submech_del': self.group_submech,
+            'submech_keepsubfuel': self.group_submech,
+            'submech_deletelarge': self.group_submech,
             'rxn_max_vals': self.rxn_max_vals,
             'rxn_max_ratio': self.rxn_max_ratio
         }
@@ -395,7 +395,7 @@ class SortMech:
         asc_val[-3:] = [False, False, False]
         asc_series = pd.Series(asc_val, index=criteria_all + ['rxn_names'])
         
-               
+            
         try:
             # last "standard" criterion: rxn name
             asclst = list(
@@ -414,28 +414,53 @@ class SortMech:
 
     def preproc_specieslist(self, species_list):
 
-        sumbech_optns_dct = {'submech': {'fun_name': submech.species_subset,
+        sumbech_optns_dct = {'submech': {'fun_name': submech.species_subset_fuel,
                                          'filtertype': 'submech'},
-                             'submech_ext': {'fun_name': submech.species_subset_ext,
-                                             'filtertype': 'submech_ext'},
-                             'submech_del': {'fun_name': submech.species_subset_del,
-                                             'filtertype': 'submech_del'},
+                             'submech_keepsubfuel': {'fun_name': submech.species_subset_keep,
+                                             'filtertype': 'submech_keepsubfuel'},
+                             'submech_deletelarge': {'fun_name': submech.species_subset_del,
+                                             'filtertype': 'submech_deletelarge'},
                              'submech_prompt': {'filtertype': 'submech_prompt'}}
 
-        try:
-            submech_name = [optn for optn in self.hierarchy[:-1]
-                            if 'submech' in optn][0]
-            filtertype = sumbech_optns_dct[submech_name]['filtertype']
-            isinhierarchy = True
-        except IndexError:
-            submech_name = 'N/A'
-            filtertype = 'submech'
-            isinhierarchy = False
-            print('no filtering of species selected - submech will be used as default, but no sorting will be applied')
+        submech_name = [optn for optn in self.hierarchy[:-1]
+                            if 'submech' in optn]
+        if len(submech_name) > 0:
+            submech_name = submech_name[0]
 
-        if len(species_list) == 0 and submech_name == 'submech_prompt':
+        # extract filters 'deleteabove', 'keepbelow', 'singlespecies
+        stoich = None
+        species_list_new = []
+        for sp in species_list:
+            if 'deleteabove' in sp:
+                stoich = sp.split()[1]
+                submech_name = 'submech_deletelarge' # set in case you don't have it in the criteria
+            elif 'keepbelow' in sp:
+                stoich = sp.split()[1]
+                submech_name = 'submech_keepsubfuel' # set in case you don't have it in the criteria
+            elif 'singlespecies' in sp:
+                submech_name = 'singlespecies'
+            else:
+                species_list_new.append(sp)
+
+        species_list = species_list_new
+
+        # submech if 1 species selected and no submech_name /  = True found: select submech anyway
+        if len(submech_name) == 0 and len(species_list) == 1:
+            print('Species selected but no sorting criterion applied - submech is applied by default \
+                If you want only reactions where {} appears, add "singlespecies = True " in sort_mech section \
+                or "singlespecies" in the sort_lst input'.format(species_list[0]))
+            submech_name = 'submech'
+            
+        elif len(species_list) > 1 and len(submech_name) == 0:
+            print('Multiple species selected and no submech specifications: will extract reactions where {} are involved'.format(species_list))
+            submech_name = 'singlespecies'
+            
+        elif len(species_list) > 1 and submech_name != 'submech_prompt':
+            raise ValueError('Error: multiple species only available for submech_prompt sorting')      
+                    
+        elif len(species_list) == 0 and submech_name == 'submech_prompt':
             # species list includes all radicals in the mech
-            print('Prompt selected w/o species specification: \
+            print('WARNING: Prompt selected w/o species specification: \
                 all radicals analyzed ...')
             for sp_i in self.spc_dct.keys():
                 mult = get_mult(sp_i, self.spc_dct)
@@ -444,27 +469,30 @@ class SortMech:
                 if mult > 1 and atoms > 2:
                     species_list.append(sp_i)
 
+
+        if submech_name in ['submech_deletelarge', 'submech_keepsubfuel']:
+            # Select subset of species according to stoichiometries
+            # specified in submech.py
+            fuel = species_list[0] if len(species_list) == 1 else None
+            print('{} extracted according to input stoich specification {} and fuel {}'.format(submech_name, stoich, fuel))
+            species_list, species_subset_df = sumbech_optns_dct[submech_name]['fun_name'](
+                self.spc_dct, fuel = fuel, stoich = stoich)
+            self.species_subset_df = species_subset_df
+            
+        elif submech_name == 'submech' and len(species_list) == 1:
+            # 'submech' option (either declared explicitly or implicitly by indicating one species to isolate)
+            print('Submech extracted for fuel {}'.format(species_list[0]))
+            species_list, species_subset_df, _ = sumbech_optns_dct[submech_name]['fun_name'](
+                species_list[0], self.spc_dct)
+            self.species_subset_df = species_subset_df
+                   
+
         if len(species_list) > 0:
-
-            if len(species_list) > 1 and 'submech' in self.hierarchy:
-                raise ValueError('Error: pyr/ox submech extraction available ',
-                      'for only 1 species')
-
-            elif len(species_list) == 1 and isinhierarchy == True and submech_name != 'submech_prompt':
-                # Select subset of species according to stoichiometries
-                # specified in submech.py
-                species_list, species_subset_df = sumbech_optns_dct[submech_name]['fun_name'](
-                    species_list[0], self.spc_dct)
-                self.species_subset_df = species_subset_df
-                
-            #elif isinhierarchy == False:
-                # do nothing - this is a placeholder
-
             self.mech_df_full = copy.deepcopy(self.mech_df)
             self.spc_dct_full = copy.deepcopy(self.spc_dct)
 
             self.mech_df, self.spc_dct = self.filter_byspecies(
-                species_list, filtertype)
+                species_list, submech_name)
             self.species_list = species_list
 
     def filter_byspecies(self, species_list, filtertype):
@@ -475,7 +503,7 @@ class SortMech:
         :param self.mech_df: dataframe with mech info (contains all reactions)
         :param self.spc_dct: species dictionary
         :param species_list: list of species subsets
-        :param filtertype: can be 'submech', 'submech_ext/del', 'submech_prompt'
+        :param filtertype: can be 'submech', 'submech_keepsubfuel/del', 'submech_prompt'
 
         :returns: mech_df, spc_dct
         :rtype: dataframe, dict
@@ -503,24 +531,24 @@ class SortMech:
             prds = list(mech_df['prd_names_lst'][rxn])
             # Check if one species in the list is among reactants or products
             # of the reaction considered
-            if filtertype in ['submech', 'submech_prompt']:
+            if filtertype in ['singlespecies', 'submech', 'submech_prompt']:
                 _rchk = any(
                     rct == _spc for _spc in species_list for rct in rcts)
                 _pchk = any(
                     prd == _spc for _spc in species_list for prd in prds)
                 chk = int(_rchk or _pchk)
                 
-            elif filtertype in ['submech_del', 'submech_ext']:
+            elif filtertype in ['submech_deletelarge', 'submech_keepsubfuel']:
                 
                 _rchk = int(all(any(rct == _spc for _spc in species_list)
                                for rct in rcts))
                 _pchk = int(all(any(prd == _spc for _spc in species_list)
                                for prd in prds))
                 
-                if filtertype == 'submech_del':
+                if filtertype == 'submech_deletelarge':
                     chk = int(_rchk and _pchk)
                     # all species of reactants and products have to be in the list
-                elif filtertype == 'submech_ext':
+                elif filtertype == 'submech_keepsubfuel':
                     # filter out bimol/bimol reactions if some bimol rcts/prds are not in the species list
                     # equivalent to saying: at least all reactants (also single react works) or all products
                     # must be in the species list
@@ -582,7 +610,7 @@ class SortMech:
     
         # filter spc_list: unique elements
         spc_list = sorted(list(set(spc_list)))
-        if filtertype == 'submech_del':
+        if filtertype == 'submech_deletelarge':
             musthaves = ['HE', 'AR', 'N2']
             [spc_list.append(m) for m in musthaves if m not in spc_list] # also consider 'must haves' that might not appear in reactions
         # new spc_dct
@@ -697,14 +725,14 @@ class SortMech:
         :param self.species_subset_df: dataframe with species assigned to a
                                         certain type (fuel, fuel radical..)
         :param submech_df: empty dataframe index=rxns, column: 'submech'
-                                                        or 'submech_ext' or 'submech_del'
+                                                        or 'submech_keepsubfuel' or 'submech_deletelarge'
         :returns: submech_df dataframe with reactants
             mult dataframe[submech][rxn]
         :rtype: dataframe[str][tuple]
         """
         # better hierarchy:
         # if ANY of reactants belongs to
-        # lbl as submech_df columns -> so it works with both submech and submech_ext
+        # lbl as submech_df columns -> so it works with both submech and submech_keepsubfuel
         lbl_col = submech_df.columns[0]
         
         def assign_group(spcs_subset):
