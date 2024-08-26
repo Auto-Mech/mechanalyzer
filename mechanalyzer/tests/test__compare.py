@@ -11,46 +11,46 @@ cp = np.array([-5000, -4000, -3000])
 s = np.array([-5000, -4000, -3000])
 
 SPC_IDENT_DCT1 = {
-    'H': {'smiles': '', 'inchi': 'InChI=1S/H', 'inchikey': '', 'mult': 2, 'charge': 0, 'sens': 0,
+    'H': {'smiles': '', 'inchi': 'InChI=1S/H', 'inchikey': '', 'mult': 2, 'charge': 0, 'exc_flag': 0,
           'fml': {'H': 1}},
     'OH': {'smiles': '', 'inchi': 'InChI=1S/HO/h1H', 'inchikey': '', 'mult': 2, 'charge': 0,
-           'sens': 0, 'fml': {'H': 1, 'O': 1}},
-    'O': {'smiles': '', 'inchi': 'InChI=1S/O', 'inchikey': '', 'mult': 3, 'charge': 0, 'sens': 0,
+           'exc_flag': 0, 'fml': {'H': 1, 'O': 1}},
+    'O': {'smiles': '', 'inchi': 'InChI=1S/O', 'inchikey': '', 'mult': 3, 'charge': 0, 'exc_flag': 0,
           'fml': {'O': 1}},
     'H2': {'smiles': '', 'inchi': 'InChI=1S/H2/h1H', 'inchikey': '', 'mult': 1, 'charge': 0,
-           'sens': 0, 'fml': {'H': 2}},
+           'exc_flag': 0, 'fml': {'H': 2}},
     'O2': {'smiles': '', 'inchi': 'InChI=1S/O2/c1-2', 'inchikey': '', 'mult': 1, 'charge': 0,
-           'sens': 0, 'fml': {'O': 2}},
+           'exc_flag': 0, 'fml': {'O': 2}},
     'O(S)': {'smiles': '', 'inchi': 'InChI=1S/O', 'inchikey': '', 'mult': 1, 'charge': 0,
-             'sens': 0, 'fml': {'O': 1}},
+             'exc_flag': 0, 'fml': {'O': 1}},
 }
 
 SPC_IDENT_DCT2 = {
-    'HV': {'smiles': '', 'inchi': 'InChI=1S/H', 'inchikey': '', 'mult': 2, 'charge': 0, 'sens': 0,
+    'HV': {'smiles': '', 'inchi': 'InChI=1S/H', 'inchikey': '', 'mult': 2, 'charge': 0, 'exc_flag': 0,
            'fml': {'H': 1}},
     'OHV': {'smiles': '', 'inchi': 'InChI=1S/HO/h1H', 'inchikey': '', 'mult': 2, 'charge': 0,
-            'sens': 0, 'fml': {'H': 1, 'O': 1}},
-    'OV': {'smiles': '', 'inchi': 'InChI=1S/O', 'inchikey': '', 'mult': 3, 'charge': 0, 'sens': 0,
+            'exc_flag': 0, 'fml': {'H': 1, 'O': 1}},
+    'OV': {'smiles': '', 'inchi': 'InChI=1S/O', 'inchikey': '', 'mult': 3, 'charge': 0, 'exc_flag': 0,
            'fml': {'O': 1}},
     'O2V': {'smiles': '', 'inchi': 'InChI=1S/O2/c1-2', 'inchikey': '', 'mult': 1, 'charge': 0,
-            'sens': 0, 'fml': {'O': 2}},
+            'exc_flag': 0, 'fml': {'O': 2}},
     'H2V': {'smiles': '', 'inchi': 'InChI=1S/H2/h1H', 'inchikey': '', 'mult': 1, 'charge': 0,
-            'sens': 0, 'fml': {'H': 2}},
+            'exc_flag': 0, 'fml': {'H': 2}},
     'HO2V': {'smiles': '', 'inchi': 'InChI=1S/HO2/c1-2/h1H', 'inchikey': '', 'mult': 2, 'charge': 0,
-             'sens': 0, 'fml': {'H': 1, 'O': 2}},
+             'exc_flag': 0, 'fml': {'H': 1, 'O': 2}},
     'O(S)V': {'smiles': '', 'inchi': 'InChI=1S/O', 'inchikey': '', 'mult': 1, 'charge': 0,
-              'sens': 0, 'fml': {'O': 1}},
+              'exc_flag': 0, 'fml': {'O': 1}},
 }
 
 SPC_IDENT_DCT3 = {
     'HO2X': {'smiles': '', 'inchi': 'InChI=1S/HO2/c1-2/h1H', 'inchikey': '', 'mult': 2, 'charge': 0,
-             'sens': 0, 'fml': {'H': 1, 'O': 2}},
+             'exc_flag': 0, 'fml': {'H': 1, 'O': 2}},
     'O2X': {'smiles': '', 'inchi': 'InChI=1S/O2/c1-2', 'inchikey': '', 'mult': 1, 'charge': 0,
-            'sens': 0, 'fml': {'O': 2}},
+            'exc_flag': 0, 'fml': {'O': 2}},
     'H2O': {'smiles': '', 'inchi': 'InChI=1S/H2O/h1H2', 'inchikey': '', 'mult': 1, 'charge': 0,
-            'sens': 0, 'fml': {'H': 2, 'O': 1}},
+            'exc_flag': 0, 'fml': {'H': 2, 'O': 1}},
     'H2': {'smiles': '', 'inchi': 'InChI=1S/H2/h1H', 'inchikey': '', 'mult': 2, 'charge': 0,
-           'sens': 0, 'fml': {'H': 2}},
+           'exc_flag': 0, 'fml': {'H': 2}},
 }
 
 SPC_THERM_DCT1 = {
@@ -169,7 +169,7 @@ def test_rename_spc_dct():
     """ Test the renaming functions
     """
     rename_instr = compare.get_rename_instr(SPC_IDENT_DCT1, SPC_IDENT_DCT2)
-    renamed_dct = compare.rename_species(SPC_IDENT_DCT2, rename_instr, target_type='spc')
+    renamed_dct, _ = compare.rename_species(SPC_IDENT_DCT2, rename_instr, target_type='spc')
     assert tuple(renamed_dct.keys()) == CORRECT_SPC_KEYS
     assert tuple(renamed_dct.values()) == tuple(SPC_IDENT_DCT2.values())
 
@@ -177,8 +177,8 @@ def test_rename_spc_dct():
 def test_get_comb_spc_dct():
     """ Test the get_comb_spc_dct function
     """
-    comb_spc_dct = compare.get_comb_spc_dct(SPC_IDENT_DCT1, SPC_IDENT_DCT2)
-    comb_spc_dct2 = compare.get_mult_comb_spc_dct(
+    comb_spc_dct = compare.get_comb_mech_spc_dct(SPC_IDENT_DCT1, SPC_IDENT_DCT2)
+    comb_spc_dct2 = compare.get_mult_comb_mech_spc_dct(
         [SPC_IDENT_DCT1, SPC_IDENT_DCT2, SPC_IDENT_DCT3])
     assert tuple(comb_spc_dct) == CORRECT_COMB_SPC_KEYS
     assert tuple(comb_spc_dct2) == CORRECT_COMB_SPC_KEYS2
@@ -188,7 +188,7 @@ def test_rename_spc_therm_dct():
     """ Test the rename_spc_therm_dct function
     """
     rename_instr = compare.get_rename_instr(SPC_IDENT_DCT1, SPC_IDENT_DCT2)
-    renamed_dct = compare.rename_species(SPC_THERM_DCT2, rename_instr, target_type='spc')
+    renamed_dct, _ = compare.rename_species(SPC_THERM_DCT2, rename_instr, target_type='spc')
     assert tuple(renamed_dct.keys()) == CORRECT_SPC_KEYS
 
 
@@ -196,7 +196,7 @@ def test_rename_rxn_ktp_dct():
     """ Tese the rename rxn_ktp_dct function
     """
     rename_instr = compare.get_rename_instr(SPC_IDENT_DCT1, SPC_IDENT_DCT2)
-    renamed_dct = compare.rename_species(RXN_KTP_DCT2, rename_instr, target_type='rxn')
+    renamed_dct, dummy = compare.rename_species(RXN_KTP_DCT2, rename_instr, target_type='rxn')
     assert tuple(renamed_dct.keys()) == CORRECT_RENAMED_RXN_KEYS
 
 

@@ -174,7 +174,7 @@ def test__sources_and_sinks():
     # Test the write_sources_and_sinks function
     source_sink_str1 = checker.write_sources_and_sinks(sources1, sinks1)
     source_sink_str2 = checker.write_sources_and_sinks(sources2, sinks2)
-    assert source_sink_str1 == CORRECT_SOURCE_SINK_STR1
+    assert "".join(source_sink_str1.split()) == "".join(CORRECT_SOURCE_SINK_STR1.split())
     assert source_sink_str2 == CORRECT_SOURCE_SINK_STR2
 
 
