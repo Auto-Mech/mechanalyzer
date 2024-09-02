@@ -80,13 +80,15 @@ def main(
         rxn_param_dct=param_dct_sort,
         rxn_cmts_dct=rxn_cmts_dct,
     )
-
-    pes_groups_str = chemkin_io.writer.pesgroups.write_pes_groups(pes_groups)
     # replace all '!' with '#' in mech string
     sortd_mech_str = sortd_mech_str.replace("! pes", "# pes")
     pathtools.write_file(sortd_csv_str, CWD, outspc)
     pathtools.write_file(sortd_mech_str, CWD, outmech)
-    pathtools.write_file(pes_groups_str, CWD, outgroups)
+
+    if pes_groups:
+        pes_groups_str = chemkin_io.writer.pesgroups.write_pes_groups(pes_groups)
+        pathtools.write_file(pes_groups_str, CWD, outgroups)
+
     try:
         np.savetxt(
             CWD + "/rxns_prompt_dh.out",
