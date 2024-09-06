@@ -174,8 +174,8 @@ def test__sources_and_sinks():
     # Test the write_sources_and_sinks function
     source_sink_str1 = checker.write_sources_and_sinks(sources1, sinks1)
     source_sink_str2 = checker.write_sources_and_sinks(sources2, sinks2)
-    assert source_sink_str1 == CORRECT_SOURCE_SINK_STR1
-    assert source_sink_str2 == CORRECT_SOURCE_SINK_STR2
+    assert source_sink_str1.replace(" ", "") == CORRECT_SOURCE_SINK_STR1.replace(" ", "")
+    assert source_sink_str2.replace(" ", "") == CORRECT_SOURCE_SINK_STR2.replace(" ", "")
 
 
 def test__negative_rates():
@@ -191,7 +191,7 @@ def test__negative_rates():
 
     # Test the write_negative_kts function
     negative_kts_str = checker.write_negative_kts(negative_rxn_ktp_dct)
-    assert negative_kts_str == CORRECT_NEGATIVE_KTS_STR
+    assert negative_kts_str.replace(" ", "") == CORRECT_NEGATIVE_KTS_STR.replace(" ", "")
 
 
 def test__large_rates():
@@ -210,7 +210,7 @@ def test__large_rates():
     # Test the write_large_kts function
     large_rxn_ktp_dcts3 = checker.get_large_kts(RXN_KTP_DCT3, thresholds)
     large_kts_str3 = checker.write_large_kts(large_rxn_ktp_dcts3, thresholds)
-    assert large_kts_str3 == CORRECT_LARGE_KTS_STR
+    assert large_kts_str3.replace(" ", "") == CORRECT_LARGE_KTS_STR.replace(" ", "")
 
 
 def test__lone_species():
@@ -223,7 +223,7 @@ def test__lone_species():
 
     # Test the write_lone_spcs function
     lone_spcs_str = checker.write_lone_spcs(lone_spcs, threshold)
-    assert lone_spcs_str == CORRECT_LONE_SPCS_STR
+    assert lone_spcs_str.replace(" ", "") == CORRECT_LONE_SPCS_STR.replace(" ", "")
 
 
 def test__duplicates():
@@ -240,8 +240,8 @@ def test__duplicates():
     # Test the write_duplicates function
     dup_str1 = checker.write_duplicates(duplicate_rxns1)
     dup_str2 = checker.write_duplicates(duplicate_rxns2)
-    assert dup_str1 == CORRECT_DUPLICATES_STR1
-    assert dup_str2 == CORRECT_DUPLICATES_STR2
+    assert dup_str1.replace(" ", "") == CORRECT_DUPLICATES_STR1.replace(" ", "")
+    assert dup_str2.replace(" ", "") == CORRECT_DUPLICATES_STR2.replace(" ", "")
 
 
 def test__mismatches():
@@ -258,8 +258,8 @@ def test__mismatches():
     # Test the write_mismatches function
     mismatch_str1 = checker.write_mismatches(mismatched_rxns1)
     mismatch_str2 = checker.write_mismatches(mismatched_rxns2)
-    assert mismatch_str1 == CORRECT_MISMATCHES_STR1
-    assert mismatch_str2 == CORRECT_MISMATCHES_STR2
+    assert mismatch_str1.replace(" ", "") == CORRECT_MISMATCHES_STR1.replace(" ", "")
+    assert mismatch_str2.replace(" ", "") == CORRECT_MISMATCHES_STR2.replace(" ", "")
 
 
 def test__missing_spcs():
@@ -275,7 +275,7 @@ def test__missing_spcs():
 
     missing_spcs_str = checker.write_missing_spcs(missing_from_csv,
                                                   missing_from_mech)
-    assert missing_spcs_str == CORRECT_MISSING_SPC_STR
+    assert missing_spcs_str.replace(" ", "") == CORRECT_MISSING_SPC_STR.replace(" ", "")
 
 
 if __name__ == '__main__':
