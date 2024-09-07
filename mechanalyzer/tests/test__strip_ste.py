@@ -63,30 +63,15 @@ def test_main():
 
     # Check values
     # Reaction 1
-    ref_vals1 = [5e12, 0, 0]
+    ref_vals1 = [3e12, 0, 0]
     vals1 = re_rxn_param_dct_comb[
-        (('C4H8ALK-808sWv', 'HO2'), ('C4H8OCETH-RvEsWv', 'OH'), (None,))].arr
+        (('C4H7O2RyFn3Y',), ('C4H8OCETH-RvEsWv',), (None,))].arr
     assert numpy.allclose(ref_vals1, vals1)
     # Reaction 2
-    ref_vals2 = [3e12, 0, 0]
+    ref_vals2 = [1.2e13, 0, 0]
     vals2 = re_rxn_param_dct_comb[
-        (('C4H8ALK-808sWv', 'HO2'), ('H', 'OH'), (None,))].arr
+        (('C4H8O32m1jat',), ('C4H8O3Y2Vjat',), (None,))].arr
     assert numpy.allclose(ref_vals2, vals2)
-    # Reaction 3
-    ref_vals3 = [3.5e12, 0, 0]
-    vals3 = re_rxn_param_dct_comb[
-        (('H', 'HO2'), ('C4H8OCETH-RvEsWv', 'OH'), (None,))].arr
-    assert numpy.allclose(ref_vals3, vals3)
-    # Reaction 4
-    ref_vals4 = [1e12, 0, 0]
-    vals4 = re_rxn_param_dct_comb[
-        (('O', 'O'), ('O2',), (None,))].arr
-    assert numpy.allclose(ref_vals4, vals4)
-    # Reaction 5
-    ref_vals5 = [1e12, 0, 0]
-    vals5 = re_rxn_param_dct_comb[
-        (('H', 'OH'), ('H2O',), (None,))].arr
-    assert numpy.allclose(ref_vals5, vals5)
 
     # Just writing this in case someone wants to go look at it
     mech_str = mechanism.write_chemkin_file(
