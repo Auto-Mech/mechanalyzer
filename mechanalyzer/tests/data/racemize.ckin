@@ -1,8 +1,8 @@
 ELEMENTS
 
-O
 C
 H
+O
 
 END
 
@@ -31,11 +31,11 @@ END
 
 REACTIONS     CAL/MOLE     MOLES
 
-C4CEHY-2m1jatAA0 = C4CEHY-Y2VjatAA1          1.000E+12     0.000       -0
+C4KEOH-RyFn3YA1 = C4CETH-RvEsWvAA1           2.000E+12     0.000       -0
 
 C4CEHY-2m1jatAB0 = C4CEHY-Y2VjatAB0          5.000E+12     0.000       -0
 
-C4KEOH-RyFn3YA1 = C4CETH-RvEsWvAA1           2.000E+12     0.000       -0
+C4CEHY-2m1jatAA0 = C4CEHY-Y2VjatAA1          1.000E+12     0.000       -0
 
 C4KEOH-RyFn3YA1 = C4CETH-RvEsWvAB            1.000E+12     0.000       -0
 

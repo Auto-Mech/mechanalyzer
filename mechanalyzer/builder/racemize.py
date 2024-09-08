@@ -19,13 +19,9 @@ def main(rxn_param_dct, spc_nasa7_dct, mech_spc_dct, temp_lst, pressures,
     rac_rxn_param_dct = get_rac_rxn_param_dct(
         rac_sets, rac_names, rxn_param_dct)
 
-    breakpoint()
-
     # Get the lumped rxn parameter dictionary
     lump_rxn_param_dct = lump(rac_rxn_param_dct, temp_lst, pressures,
                               dummy=dummy)
-
-    breakpoint()
 
     # Get the thermo dct with only racemized species names
     rac_spc_nasa7_dct = get_rac_spc_nasa7_dct(rac_names, spc_nasa7_dct)
