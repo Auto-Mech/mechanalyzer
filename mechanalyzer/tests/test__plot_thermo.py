@@ -15,11 +15,12 @@ H_T = np.array([-5000, -4000, -3000])
 CP_T = np.array([-5000, -4000, -3000])
 S_T = np.array([-5000, -4000, -3000])
 G_T = np.array([-5000, -4000, -3000])
+lnq_t = np.array([-5000, -4000, -3000])
 
 ALGN_SPC_THERM_DCT = {
     'H': [
-        [TEMPS, H_T, CP_T, S_T, G_T],
-        [TEMPS, 1.5 * H_T, 1.5 * CP_T, 1.5 * S_T, 1.5 * G_T],
+        [TEMPS, H_T, CP_T, S_T, G_T, lnq_t],
+        [TEMPS, 1.5 * H_T, 1.5 * CP_T, 1.5 * S_T, 1.5 * G_T, 1.5 * lnq_t],
     ]
 }
 
@@ -27,7 +28,7 @@ ALGN_SPC_THERM_DCT = {
 def test_build_plots():
     """ Test the build_plots function
     """
-    figs = thermo.build_plots(ALGN_SPC_THERM_DCT)
+    figs, _ = thermo.build_plots(ALGN_SPC_THERM_DCT)
     build_pdf(figs, FILENAME, TMP_DIR)
 
 
