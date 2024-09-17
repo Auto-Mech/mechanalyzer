@@ -18,7 +18,7 @@ def test_get_pressures():
     print(pres)
 
 def test_get_values():
-    vals = xarray_wrappers.get_values(ktp)
+    vals = xarray_wrappers.get_values(ktp_vals)
     print(vals)
 
 def test_get_pslice():
