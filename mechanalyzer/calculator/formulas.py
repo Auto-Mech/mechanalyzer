@@ -4,6 +4,19 @@
 import pandas as pd
 import automol
 
+# da string a dct
+#>>> automol.form.from_string('C6H4O2')
+# {'C': 6, 'H': 4, 'O': 2}
+
+def extract_fml_list_fromstr(fmlstr):
+    """ 'C6H4O2' => [6, 4, 2, 0, 0, 0]
+        from string to list; order is C H O N S Cl
+    """
+    fml_dct = automol.form.from_string(fmlstr)
+    list_el = ['C', 'H', 'O', 'N', 'S', 'Cl']
+    fml_list = [automol.form.element_count(fml_dct, X) for X in list_el]
+    return fml_list
+
 def extract_fml_df(spc_dct):
     """ Given species dictionary, builds a formula Pandas dataframe:
             index = species names; columns 'fml' (stoichiometry)
@@ -58,20 +71,24 @@ def extract_species_sub(n_at, fml_df):
 
 def extract_species_core(n_at, fml_df):
     """ extract any fml with less C/N/S/Cl atoms than indicated. exclude N containing species
+        do not filter on oxygen assuming that small species can also oxidize
     """
-    species_set = list(fml_df[(fml_df['nC'] <= n_at[0] ) & (
+    species_set = list(fml_df[(fml_df['nC'] <= n_at[0]) & (
         fml_df['nN'] <= n_at[3]) & (fml_df['nS'] <= n_at[4]) & (
         fml_df['nCl'] <= n_at[5])].index)
     
+    if 'N2' not in species_set:
+        species_set.append('N2')
     return species_set
 
 def extract_species_above(n_at, fml_df):
-    """ extract any fml above the indicated limits
+    """ extract any fml above the indicated limits for C/O/N/S/Cl
     """
     species_set = list(fml_df[(fml_df['nC'] >= n_at[0] ) & (
-         (fml_df['nO'] >= n_at[2]))].index)
-    # also delete anything with N that is not N2
-    species_set.extend(list(fml_df[(fml_df['nN'] >= 1 )].index))
-    species_set.remove('N2')
+        fml_df['nN'] >= n_at[3]) & (fml_df['nS'] >= n_at[4]) & (
+        fml_df['nCl'] >= n_at[5]) & (fml_df['nO'] >= n_at[2])].index)
+    
+    if 'N2' in species_set:
+        species_set.remove('N2')
     
     return species_set

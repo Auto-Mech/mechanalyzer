@@ -279,7 +279,7 @@ def classify_graph(spc_dct, rct_names, prd_names):
     if automol.form.reac.is_valid_reaction(rct_fmls, prd_fmls):
         try:
             rxn_objs = automol.reac.from_chis(
-                rct_ichs, prd_ichs)
+                rct_ichs, prd_ichs, stereo = False)
             rxn_classes = tuple(automol.reac.class_(obj) for obj in rxn_objs)
         except AssertionError:
             rxn_classes = ('AssertionError', )
