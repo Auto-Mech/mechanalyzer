@@ -1,87 +1,95 @@
+"""
+Wrappers for the new xarray system. Constructors, Getters, then Setters.
+"""
+
 import xarray
-import numpy
 
 # Constructors
-def from_data(temps, press, ktp_vals):
-    # WORK IN PROGRESS - SHOULD NOT WORK YET JUST TESTING THINGS OUT
-    # Construct a KTP DataArray from data
+def from_data(temps, press, rates):
+    """
+    Construct a KTP DataArray from data
+    """
 
-    ktp = xarray.DataArray(ktp_vals, [("pres", press), ("temp", temps)])
+    ktp = xarray.DataArray(rates, [("pres", press), ("temp", temps)])
 
     return ktp
 
 
+
 # Getters
-def get_temperatures(ktp):
-    # WORK IN PROGRESS
-    # Gets the temperature values
-
-    return (list(ktp["temp"]))
-
-
 def get_pressures(ktp):
-    # WORK IN PROGRESS
-    # Gets the pressure values
+    """
+    Gets the temperature values
+    """
 
-    return (list(ktp["pres"]))
+    return ktp.pres.data
 
 
-def get_values(ktp_vals):
-    # WORK IN PROGRESS
-    # Gets the KTP values
+def get_temperatures(ktp):
+    """
+    Gets the pressure values
+    """
 
-    return (ktp_vals)
+    return ktp.temp.data
 
-def get_pslice(ktp):
-    # WORK IN PROGRESS
-    # Get a slice at a selected pressure value
 
-    return (ktp.sel(pres = numpy.inf))
+def get_values(rates):
+    """
+    WORK IN PROGRESS
+    Gets the KTP values
+    """
 
-def get_tslice(ktp, t):
-    # WORK IN PROGRESS
-    # Get a slice at a selected temperature value
+    return rates
 
-    return(ktp.sel(temp = t))
 
-def get_spec_vals(ktp, t, p):
-    # WORK IN PROGRESS
-    # Get a specific value at a selected temperature and pressure value
+def get_pslice(ktp, ip):
+    """
+    Get a slice at a selected pressure value
+    """
 
-    return (ktp.sel(temp = t, pres = p))
+    return ktp.sel(pres=ip)
 
-def get_ipslice(ktp, i):
-    # WORK IN PROGRESS
-    # Get a slice at a selected pressure index
 
-    return(ktp.isel(pres = i))
+def get_tslice(ktp, it):
+    """
+    Get a slice at a selected temperature value
+    """
 
-def get_itslice(ktp, i):
-    # WORK IN PROGRESS
-    # Get a slice at a selected temperature index
+    return ktp.sel(temp=it)
 
-    return (ktp.isel(temp = i))
 
-def get_dims(ktp):
-    # WORK IN PROGRESS
-    # Get all dimensions associated with an array
+def get_spec_vals(ktp, it, ip):
+    """
+    Get a specific value at a selected temperature and pressure value
+    """
 
-    return(ktp.dims)
+    return ktp.sel(temp=it, pres=ip)
 
-def get_t_coords(ktp):
-    # WORK IN PROGRESS
-    # Get co-ordinates associated with a dimension for temperature
-    
-    return(ktp.temp.data)
 
-def get_p_coords(ktp):
-    # WORK IN PROGRESS
-    # Get co-ordinates associated with a dimension for pressure
+def get_ipslice(ktp, ip):
+    """
+    Get a slice at a selected pressure index
+    """
 
-    return(ktp.pres.data)
+    return ktp.isel(pres=ip)
+
+
+def get_itslice(ktp, it):
+    """
+    Get a slice at a selected temperature index
+    """
+
+    return ktp.isel(temp=it)
+
 
 
 # Setters
-def set_values(ktp_vals):
-    # WORK IN PROGRESSS
-    # Sets the KTP values
+def set_rates(ktp, rates):
+    """
+    DOES NOT WORK YET. Still fixing!
+    Sets the KTP values
+    """
+
+    #ktp = ktp.loc[rates]
+    #return ktp
+    pass
