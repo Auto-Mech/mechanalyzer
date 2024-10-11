@@ -113,7 +113,8 @@ DEFAULT_FGRP_RENAME_RULE_DCT = {
 }
 
 # Functional groups to ignore when considering the naming scheme
-IGNORE_FGRPS = ('methyl',)
+IGNORE_FGRPS = ('methyl', 'alkane', 'alkoxy_oc',
+                'allene', 'propyne', 'allyl')
 
 # Dictionary to remap names to more common ones
 NAME_EXCEPTION_DCT = {
@@ -219,7 +220,7 @@ def functional_group_name(ich, name='', rename_rule_dct=None,
         rename_rule_dct = copy.deepcopy(DEFAULT_FGRP_RENAME_RULE_DCT)
     rename_rule_dct = {fgrp_name: tuple(sorted(list(fgrp_lst)))
                        for fgrp_name, fgrp_lst in rename_rule_dct.items()}
-
+    print(rename_rule_dct)
     # Get the ich, geom, and gra and other info used for getting name
     gra = automol.chi.graph(ich)
     fml = automol.graph.formula(gra)
@@ -227,6 +228,7 @@ def functional_group_name(ich, name='', rename_rule_dct=None,
     # Get the number of atoms and functional groups
     hvy_atm_cnt = automol.graph.atom_count(gra, heavy_only=True)
     fgrp_cnt_dct = automol.graph.functional_group_count_dct(gra)
+    print(fgrp_cnt_dct)
 
     if name and not force_rename:
         re_name = name
