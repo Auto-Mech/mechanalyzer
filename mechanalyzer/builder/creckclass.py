@@ -20,7 +20,7 @@ def build_creckclass_fromdct(rxn_creckclass_dct, classtype_dct = {}):
     return creckclass_df: dataframe[['classtype','speciestype','reactiontype','bimoltype'][rxn]]
     """
     
-    creckclass_df = pd.DataFrame.from_dict(rxn_creckclass_dct, orient='index')
+    creckclass_df = pd.DataFrame.from_dict(rxn_creckclass_dct, orient='index', dtype=object)
     # add info on bimolecular type
     for speciestype, df_sptype in creckclass_df.groupby('speciestype'):
         for idx, reactiontype in df_sptype['reactiontype'].items():
