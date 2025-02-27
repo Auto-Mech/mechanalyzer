@@ -14,7 +14,7 @@ import ratefit
 
 CWD = os.getcwd()
 def main(
-    flds: list = [],
+    flds: list = ['',],
     messinput: str = 'mess.inp',
     messoutput: str = 'mess.out',
     outputmicro: str = 'ke.out',
@@ -27,6 +27,10 @@ def main(
     
     list_strs_dct = []
     # Read the input and output files for MESS calculation of 1st PES
+    # if no directories are listed: add all directories from the current one
+    if (flds[0] == '' and len(flds) == 1) or len(flds) == 0:
+        print('*Warning: no directories given- all dirs in current dir will be considered')
+        flds = [d for d in os.listdir(CWD) if os.path.isdir(os.path.join(d))]
     # Here Product Energy Distributions are calculated
     for FLD in flds:
         flddct = dict.fromkeys(['inp', 'ktp_out', 'ke_out', 'ped', 'log'])

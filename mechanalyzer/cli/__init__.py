@@ -6,7 +6,7 @@ from mechanalyzer.cli import (sort,
                               pssa,
                               ste_mech, 
                               compare_rates, 
-                              compare_thermo
+                              #compare_thermo
                               )
 
 
@@ -40,7 +40,7 @@ def main():
 )
 @click.option(
     "-i",
-    "--sort",
+    "--sortopts",
     default="sort.dat",
     show_default=True,
     help="Input sort file name",
@@ -70,7 +70,7 @@ def sortmech(
     mech: str = "mechanism.dat",
     spc: str = "species.csv",
     therm: str = "therm.dat",
-    sort: str = "sort.dat",
+    sortopts: str = "sort.dat",
     outmech: str = "outmech.dat",
     outspc: str = "outspc.csv",
     outgroups: str = "pes_groups.dat",
@@ -80,7 +80,7 @@ def sortmech(
         mech=mech,
         spc=spc,
         therm=therm,
-        sort=sort,
+        sortopts=sortopts,
         outmech=outmech,
         outspc=outspc,
         outgroups=outgroups,
