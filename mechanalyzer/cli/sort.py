@@ -22,7 +22,7 @@ def main(
     mech: str = "mechanism.dat",
     spc: str = "species.csv",
     therm: str = "therm.dat",
-    sort: str = "sort.dat",
+    sortopts: str = "sort.dat",
     outmech: str = "outmech.dat",
     outspc: str = "outspc.csv",
     outgroups: str = "pes_groups.dat",
@@ -41,7 +41,7 @@ def main(
     # Read the input files
     spc_str = pathtools.read_file(CWD, spc, remove_comments="!")
     mech_str = pathtools.read_file(CWD, mech, remove_comments="!")
-    sort_str = pathtools.read_file(CWD, sort, remove_comments="#")
+    sort_str = pathtools.read_file(CWD, sortopts, remove_comments="#")
 
     # Check if the input strings exist
     if any(string is None for string in (spc_str, mech_str, sort_str)):
@@ -71,7 +71,7 @@ def main(
         )
     )
     rxn_cmts_dct = chemkin_io.writer.comments.get_rxn_cmts_dct(rxn_sort_dct=cmts_dct)
-
+    
     # Write the output files (need to make general at some point)
     headers = sparser.csv_headers(mech_spc_dct)
     sortd_csv_str = sparser.csv_string(mech_spc_dct, headers)

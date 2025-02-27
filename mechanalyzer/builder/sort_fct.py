@@ -451,9 +451,9 @@ class SortMech:
 
         # submech if 1 species selected and no submech_name /  = True found: select submech anyway
         if len(submech_name) == 0 and len(species_list) == 1:
-            print('Species selected but no sorting criterion applied - submech is applied by default \
-                If you want only reactions where {} appears, add "singlespecies = True " in sort_mech section \
-                or "singlespecies" in the sort_lst input'.format(species_list[0]))
+            print('Species selected but no sorting criterion applied - submech is applied by default')
+            print('If you want only reactions where {} appears, add "singlespecies = True "'.format(species_list[0]))
+            print(' in sort_mech section "singlespecies" in the sort_lst input')
             submech_name = 'submech'
             
         elif len(species_list) > 1 and len(submech_name) == 0:
@@ -617,7 +617,8 @@ class SortMech:
         spc_list = sorted(list(set(spc_list)))
         if filtertype == 'submech_deletelarge':
             musthaves = ['HE', 'AR', 'N2']
-            [spc_list.append(m) for m in musthaves if m not in spc_list] # also consider 'must haves' that might not appear in reactions
+            [spc_list.append(m) for m in musthaves if m not in spc_list 
+            if m in self.spc_dct_full.keys()] # also consider 'must haves' that might not appear in reactions
         # new spc_dct
         spc_dct_val = list(map(self.spc_dct_full.get, spc_list))
         spc_dct = dict(zip(spc_list, spc_dct_val))
