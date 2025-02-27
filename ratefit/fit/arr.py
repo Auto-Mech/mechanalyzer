@@ -217,14 +217,20 @@ def double_arr(temps, kts, sing_params, tref=1.0, dbltol=15, dbl_iter=1):
                                     args=(temps, kts, doub_tref), method='lm',
                                     ftol=1.0E-8, xtol=1.0E-8, max_nfev=100000)
             except ValueError:
-                plsq = least_squares(_resid_func, init_guess,
-                                    loss = 'arctan',
-                                    args=(temps, kts, doub_tref),
-                                    ftol=1.0E-8, xtol=1.0E-8, max_nfev=100000)
+                try:
+                    plsq = least_squares(_resid_func, init_guess,
+                                        loss = 'arctan',
+                                        args=(temps, kts, doub_tref),
+                                        ftol=1.0E-8, xtol=1.0E-8, max_nfev=100000)
+                except ValueError:
+                    plsq = None
+                    raw_params = [numpy.inf, numpy.inf,
+                        numpy.inf, numpy.inf, numpy.inf, numpy.inf] 
         # Retrieve the fit params and convert A back to the input tref
-        raw_params = list(plsq.x)  # list of length 6
-        raw_params[0] = raw_params[0] * (tref / doub_tref) ** raw_params[1]
-        raw_params[3] = raw_params[3] * (tref / doub_tref) ** raw_params[4]
+        if plsq:
+            raw_params = list(plsq.x)  # list of length 6
+            raw_params[0] = raw_params[0] * (tref / doub_tref) ** raw_params[1]
+            raw_params[3] = raw_params[3] * (tref / doub_tref) ** raw_params[4]
 
         # Instantiate RxnParams
         arr_dct = {'arr_tuples': [raw_params[:3], raw_params[3:]]}
