@@ -273,11 +273,11 @@ def fill_spc_dct(spc_dct, spc, chk_ste=True, chk_match=True, canon_ent=True):
     # add AMChI
     full_spc_dct = mech_inchi_to_amchi({spc: full_spc_dct}, convert=canon_ent)[spc]
 
-    if canon_ent and 'canon_enant_ich' not in full_spc_dct:
+    if not canon_ent:
+        full_spc_dct['canon_enant_ich'] = full_spc_dct['inchi']
+    elif 'canon_enant_ich' not in full_spc_dct:
         full_spc_dct = add_canonical_enantiomer(
             {spc: full_spc_dct})[spc]
-    else:
-        full_spc_dct['canon_enant_ich'] = full_spc_dct['inchi']
 
     # Add charge and exc_flag if missing; assume 0 for both
     if 'charge' not in full_spc_dct or full_spc_dct['charge'] == '':
