@@ -42,7 +42,7 @@ CMTS = '!'  # character used to define comments
 
 
 def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=False,
-                       chk_match=False, verbose=True, canon_ent=True, rmv_dup=False):
+                       chk_match=False, verbose=True, canon_ent=True):
     """ Obtains multiple mech_spc_dcts given a list of spc.csv filenames
 
         :param filenames: filenames of the spc.csv files to be read
@@ -71,7 +71,7 @@ def load_mech_spc_dcts(filenames, path, quotechar="'", chk_ste=False,
 
 
 def load_mech_spc_dct(filename, path, quotechar="'", chk_ste=False, 
-                      chk_match=False, verbose=True, canon_ent=True, rmv_dup=False):
+                      chk_match=False, verbose=True, canon_ent=True, allow_multiple=False):
     """ Obtains a single mech_spc_dct given a spc.csv filename
 
         :param filename: filename of the spc.csv file to be read
@@ -86,8 +86,8 @@ def load_mech_spc_dct(filename, path, quotechar="'", chk_ste=False,
         :type verbose: Bool
         :param canon_ent: add/check if canonical enantiomer
         :type canon ent: Bool
-        :param rmv_dup: remove multiple occurrences in spc dct instead of exiting
-        :type rmv_dup: Bool
+        :param allow_multiple: add multiple occurrences in spc dct as lumped entries
+        :type allow_multiple: Bool
         :return mech_spc_dct: identifying information on species in a mech
         :rtype: dct {spc1: spc_dct1, spc2: ...}
     """
@@ -95,13 +95,13 @@ def load_mech_spc_dct(filename, path, quotechar="'", chk_ste=False,
     file_str = pathtools.read_file(path, filename, print_debug=True)
     mech_spc_dct = parse_mech_spc_dct(
         file_str, quotechar=quotechar, chk_ste=chk_ste, chk_match=chk_match,
-        verbose=verbose, canon_ent=canon_ent, rmv_dup=rmv_dup)
+        verbose=verbose, canon_ent=canon_ent, allow_multiple=allow_multiple)
 
     return mech_spc_dct
 
 
 def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False,
-                       chk_match=False, verbose=True, canon_ent=True, rmv_dup=False):
+                       chk_match=False, verbose=True, canon_ent=True, allow_multiple=False):
     """ Obtains a single mech_spc_dct given a string parsed from a spc.csv file
 
         :param file_str: the string that was read directly from the .csv file
@@ -114,8 +114,8 @@ def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False,
         :type chk_match: Bool
         :param canon_ent: add/check if canonical enantiomer
         :type canon ent: Bool
-        :param rmv_dup: remove multiple occurrences in spc dct instead of exiting
-        :type rmv_dup: Bool
+        :param allow_multiple:  add multiple occurrences in spc dct as lumped entries
+        :type allow_multiple: Bool
         :param verbose: whether or not to print lots of warnings
         :type verbose: Bool
         :return mech_spc_dct: identifying information on species in a mech
@@ -148,7 +148,8 @@ def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False,
 
     # Build the mech_spc_dct line by line
     mech_spc_dct = {}
-
+    dup_spc_idx = {} # indexes for duplicate species
+    found_inchis = []
     for idx, line in enumerate(lines):
         if idx == 0:
             headers = parse_first_line(line, quotechar=quotechar)
@@ -166,22 +167,37 @@ def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False,
                     spc_dct, spc, chk_ste=chk_ste,
                     chk_match=chk_match, canon_ent=canon_ent)
                 # Check that the species name was not already defined
-                if rmv_dup:
+                if allow_multiple:
                     if spc in mech_spc_dct:
+                        # skip if InChI is the same- probably just written twice by mistake
+                        if spc_dct['inchi'] in found_inchis:
+                            continue
+                        
+                        if spc in dup_spc_idx:
+                            lumped_idx = dup_spc_idx[spc] + 1
+                        else:
+                            lumped_idx = 1
+                            
+                        dup_spc_idx[spc] = lumped_idx
+                        lumped_spc_name = '{}-LUMPED-{}'.format(spc, lumped_idx)
+
+                        # otherwise assign as lumped
                         print('The species {} was already identified. '
                             'The first and current InChIs are \n'
                             '{} \n'
                             '{} \n'
-                            'possibly lumped. Skipping this instance'.format(
-                                spc, spc_dct['inchi'], mech_spc_dct[spc]['inchi'])
+                              'Assuming lumped species. Adding current InChI as {}'.format(
+                                spc, spc_dct['inchi'], mech_spc_dct[spc]['inchi'],
+                                lumped_spc_name)
                         )
+                        spc = lumped_spc_name
                 else:
                     assert spc not in mech_spc_dct, (
                         f'The species name {spc} appears in the csv file more than'
                         f' once. The second time is on line {idx + 1}, {line}.')
 
                 mech_spc_dct[spc] = spc_dct
-
+                found_inchis.append(spc_dct['inchi'])
             else:
                 print(f'Line {idx + 1} appears to be empty. Skipping...')
 
@@ -216,6 +232,11 @@ def make_spc_dct(cols, headers):
         # If on formula, convert to dict
         elif header == 'fml':
             spc_dct[header] = str_to_fml(col)
+            # if 'fct_grp' is an header: do not try to add
+        elif header == 'fct_grp':
+            # if not dictionary: convert
+            spc_dct[header] = fct_grp_todct(
+                    col)
         else:
             spc_dct[header] = col
 
@@ -508,22 +529,39 @@ def add_fct_grp_dct(mech_spc_dct, species_subset = 'all'):
         mech_spc_dct needs to have either smiles or inchi to get the graph
     """
     for spc, dct in mech_spc_dct.items():
+
         # if there is a specific subset of species requested: filter
         if isinstance(species_subset, list):
             if spc not in species_subset:
                 mech_spc_dct[spc]['fct_grp'] = {}
                 continue
+        # now check geometry
         if 'inchi' in dct.keys():
             ich = dct['inchi']
         elif 'smiles' in dct.keys():
             ich = automol.smiles.chi(dct['smiles'])
         try:
             gra = automol.geom.graph(automol.chi.geometry(ich))
-        except AssertionError as e:
-            print(f'{spc} skipped for failure in geom generation {e}')
+        #except AssertionError as e:
+        except:
+            #print(f'{spc} skipped for failure in geom generation {e}')
+            print(f'{spc} skipped for failure in geom generation')
             mech_spc_dct[spc]['fct_grp'] = {}
             continue
         
         mech_spc_dct[spc]['fct_grp'] = automol.graph.classify_species(gra)
 
     return mech_spc_dct
+
+
+def fct_grp_tostr(fct_grp_dct):
+    """ turns functional group dictionary into a string
+        {'A1-M':1, 'C5-RSR': 2} => 'A1-M:1 C5-RSR:2'
+    """
+    return ' '.join(f"{k}:{v}" for k, v in fct_grp_dct.items())
+
+def fct_grp_todct(fct_grp_str):
+    """ turns functional group string into a dictionary
+        'A1-M:1 C5-RSR:2' => {'A1-M':1, 'C5-RSR': 2}
+    """
+    return {k: int(v) for k, v in (item.split(':') for item in fct_grp_str.split())}
