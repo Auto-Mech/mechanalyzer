@@ -1,6 +1,6 @@
 """ functions for managing creck classes and dictionaries
 """
-
+from collections import Counter
 import pandas as pd
 from mechanalyzer.calculator.ktp_util import get_rxns_for_species
 from chemkin_io.writer import format_rxn_name
@@ -20,12 +20,12 @@ def build_creckclass_fromdct(rxn_creckclass_dct, classtype_dct = {}):
     return creckclass_df: dataframe[['classtype','speciestype','reactiontype','bimoltype'][rxn]]
     """
     
-    creckclass_df = pd.DataFrame.from_dict(rxn_creckclass_dct, orient='index', dtype=object)
+    creckclass_df = pd.DataFrame.from_dict(rxn_creckclass_dct, orient='index', dtype=str)
     # add info on bimolecular type
     for speciestype, df_sptype in creckclass_df.groupby('speciestype'):
         for idx, reactiontype in df_sptype['reactiontype'].items():
             bimoltype = set_bimol_type(idx, speciestype, reactiontype)
-            creckclass_df.loc[idx, ['bimoltype']] = bimoltype
+            creckclass_df.at[idx, 'bimoltype'] = bimoltype
     for reactiontype, df_rxntype in creckclass_df.groupby('reactiontype'):
         rxns = df_rxntype.index
         if reactiontype in classtype_dct.keys():
@@ -178,20 +178,49 @@ def check_spctype_consistency(mech_spc_dct, creckclass_df):
     """ check that the species type defining the reaction 
         is consistent with those extracted automatically for the reactants
     """
-    inconsistent_spctype = 'reaction \t speciestype \t actual reactant types \n'
+    inconsistent_spctype = pd.DataFrame(columns=['speciestype','rct/prd types'], dtype=object)
     # get spc_dct of functional groups 
-    fct_grp_dct = {spc: val['fct_grp'] for spc, val in mech_spc_dct.items()} 
+    fct_grp_dct = get_lumped_fct_grps(mech_spc_dct)
+    print(fct_grp_dct['C5H6'])
     # check sptypes
     creckclass_df = creckclass_df[creckclass_df['speciestype'] != 'UNSORTED']
     for rxn, sptype in creckclass_df['speciestype'].items():
+
         rxn_name = format_rxn_name(rxn)
         rcts_types = []
-        for rct in rxn[0]: #check reactants
-            if rct in fct_grp_dct.keys():
-                rcts_types += fct_grp_dct[rct]
+        spcs_to_check = list(rxn[0]) + list(rxn[1])*('=>' not in rxn_name)
+
+        for spc in spcs_to_check:  # check reactants
+            if spc in fct_grp_dct.keys():
+                rcts_types += list(fct_grp_dct[spc].keys())
+                
         if len(rcts_types) > 0:
             if sptype not in rcts_types:
-                inconsistent_spctype += '\t'.join([rxn_name,
-                                                sptype, ','.join(rcts_types), '\n'])
-            
+                print(rxn_name, sptype, rcts_types)
+                # inconsistent_spctype.loc[rxn_name, ['speciestype', 'rct/prd types']] = [sptype, ' '.join(rcts_types)]
+                # print(rxn_name, inconsistent_spctype.loc[rxn_name].values())
+                
     return inconsistent_spctype
+
+def get_lumped_fct_grps(mech_spc_dct):
+    """ from a species dictionary, get functional group dictionaries that include also lumped isomers
+
+    Args:
+        mech_spc_dct (dct): full species dictionary
+    """
+    lumped_spcs_dct = {spc: [] for spc in mech_spc_dct.keys() if 'LUMPED' not in spc}
+    lumped_spcs = set(mech_spc_dct.keys() - lumped_spcs_dct.keys())
+    for lumped_spc in lumped_spcs:
+        lumped_spcs_dct[lumped_spc.split('-LUMPED')[0]] += [lumped_spc]
+
+    fct_grp_dct = dict.fromkeys(lumped_spcs_dct.keys())
+    for spc in lumped_spcs_dct.keys():
+        fct_grps_merged = Counter()
+        fct_grps_merged.update(mech_spc_dct[spc]['fct_grp'])
+        for lumped_spc in lumped_spcs_dct[spc]:
+            fct_grps_merged.update(mech_spc_dct[lumped_spc]['fct_grp'])
+            
+        fct_grp_dct[spc] = dict(fct_grps_merged)
+
+    return fct_grp_dct
+        

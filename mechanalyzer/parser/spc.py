@@ -12,11 +12,12 @@ import copy
 import csv
 import pandas as pd
 import automol
+from automol.form import string
 from autorun import timeout, execute_function_in_parallel
 import ioformat.pathtools as text_parser
 import thermfit
 from mechanalyzer.parser.csv_ import csv_dct
-
+from mechanalyzer.parser.new_spc import fct_grp_tostr
 
 # LIST SETTING THE STANDARD ORDER OF HEADERS
 STD_HEADERS = (
@@ -52,7 +53,15 @@ def csv_string(spc_dct, headers):
     for name, dct in spc_dct.items():
         _csv_dct[name] = {}
         for header in headers:
-            _csv_dct[name][header] = dct.get(header, None)
+            #  if dictionaries are found: turn them into strings (example: fml, fct_grp_dct)
+            val = dct.get(header, None)
+            if isinstance(val, dict):
+                if header == 'fml':
+                    val = string(val)
+                elif header == 'fct_grp':
+                    val = fct_grp_tostr(val)
+            _csv_dct[name][header] = val
+            
 
     # Build the datagrame and resultant CSV string
     dframe = pd.DataFrame.from_dict(_csv_dct, orient='index')
@@ -65,7 +74,7 @@ def csv_string(spc_dct, headers):
 
 
 # headers function i will probably move inside the function above
-def csv_headers(spc_dct):
+def csv_headers(spc_dct, include_missing=False):
     """ Determine what the headers should be for writing a csv string dct
     """
 
@@ -80,7 +89,7 @@ def csv_headers(spc_dct):
 
     # Sort the headers by the standard list
     headers = automol.util.sort_by_list(
-        headers, STD_HEADERS, include_missing=False)
+        headers, STD_HEADERS, include_missing=include_missing)
 
     return headers
 
