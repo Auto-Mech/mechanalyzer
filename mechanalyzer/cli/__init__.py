@@ -1,13 +1,6 @@
 import click
 import numpy as np
-
-from mechanalyzer.cli import (sort,
-                              prompt,
-                              pssa,
-                              ste_mech, 
-                              compare_rates, 
-                              #compare_thermo
-                              )
+from mechanalyzer.cli import run_sort, ste_mech, compare_rates as compare_rates_, compare_thermo as compare_thermo_
 
 
 @click.group()
@@ -16,6 +9,7 @@ def main():
     pass
 
 
+# sort
 @main.command()
 @click.option(
     "-m",
@@ -86,34 +80,35 @@ def sortmech(
         outgroups=outgroups,
     )
 
+# compare-rates
 @main.command()
 @click.option(
     "-m",
     "--mechs_yaml",
     default="mechs.yaml",
     show_default=True,
-    help="yaml file, set up like:\\mech1:\\\trate_file: 'rate.ckin'\\\ttherm_file: 'therm.ckin'\\\tspecies_csv: 'species.csv'\\mech2: ...",
+    help="YAML filename for mechanism specification. Format:\\mech1:\\\trate_file: 'rate.ckin'\\\ttherm_file: 'therm.ckin'\\\tspecies_csv: 'species.csv'\\mech2: ..."
 )
 @click.option(
     "-o",
     "--plot_fname",
-    default="rate_plot.pdf",
+    default="rate_plots.pdf",
     show_default=True,
-    help="name of output pdf of plots"
+    help="PDF filename for plot output."
 )
 @click.option(
     "-f",
     "--out_txt_fname",
-    default="ordering.txt",
+    default="rate_ordering.txt",
     show_default=True,
-    help="name of output text filename"
+    help="Text filename for sorting output."
 )
 @click.option(
     "-d",
     "--job_path",
     default="",
     show_default=True,
-    help="directory for input/output files"
+    help="Directory for input/output files."
 )
 @click.option(
     "-t",
@@ -121,7 +116,7 @@ def sortmech(
     default=None,
     type=lambda s: [float(temp) for temp in s.split(',')],
     show_default=True,
-    help="array of temperatures, None defaults to 500--1500"
+    help="Array of temperatures (K). None defaults to 500--1500."
 )
 @click.option(
     "-p",
@@ -129,143 +124,147 @@ def sortmech(
     default=None,
     type=lambda s: [float(press) for press in s.split(',')],
     show_default=True,
-    help="array of pressures to plot, None defaults to (1, 10, 100)"
+    help="Array of pressures (atm). None defaults to (1, 10, 100)."
 )
 @click.option(
     "-s",
     "--sort_method",
     default="ratios",
     show_default=True,
-    help="Sort the pdf plots by the ratio of the differences with 'ratios', or not at all with None"
+    help="Sort the plots by the ratio of the differences with 'ratios', or not at all with None."
 )
 @click.option(
     "-r",
     "--rev_rates",
     default=True,
     show_default=True,
-    help="reverse rates of remaining mechanisms to make them match the direction in the first"
+    help="If True, reverses rates of remaining mechanisms to make them match the direction in the first mechanism."
 )
 @click.option(
     "-l",
     "--remove_loners",
     default=True,
     show_default=True,
-    help="True only plots rates that are in ALL mechanisms, False plots ALL rates in all mechanism"
+    help="True only plots rates that are in ALL mechanisms, False plots ALL rates in all mechanisms."
 )
-def compare_mechanisms(
-    mechs_yaml: str = 'mechs.yaml',
-    plot_fname: str = 'rate_plot.pdf',
-    out_txt_fname: str = 'ordering.txt',
-    job_path: str = '',
-    temps_lst: list = [],
-    pressures: list = [],
-    sort_method: str = None,
-    rev_rates: bool = True,
-    remove_loners: bool = True,
+def compare_rates(
+    mechs_yaml: str,
+    plot_fname: str,
+    out_txt_fname: str,
+    job_path: str,
+    temps_lst: list,
+    pressures: list,
+    sort_method: str,
+    rev_rates: bool,
+    remove_loners: bool
 ):
     """Compare the rate constants in a mechanism"""
-    compare_rates.main(
-        mechs_yaml=mechs_yaml,
-        plot_fname=plot_fname,
-        out_txt_fname=out_txt_fname,
-        job_path=job_path,
-        temps_lst=temps_lst,
-        pressures=pressures,
-        sort_method=sort_method,
-        rev_rates=rev_rates,
-        remove_loners=remove_loners
+    compare_rates_.main(
+        mechs_yaml,
+        plot_fname,
+        out_txt_fname,
+        job_path,
+        temps_lst,
+        pressures,
+        sort_method,
+        rev_rates,
+        remove_loners,
     )
 
+# compare-thermo
 @main.command()
 @click.option(
-    "-m",
-    "--mechs_yaml",
-    default="mechs.yaml",
-    show_default=True,
-    help="yaml file, set up like:\\mech1:\\\ttherm_file: 'therm.ckin'\\\tspecies_csv: 'species.csv'\\mech2: ...",
+   "-m",
+   "--mechs_yaml",
+   default="mechs.yaml",
+   show_default=True,
+   help="YAML filename for mechanism specification. Format:\\mech1:\\\ttherm_file: 'therm.ckin'\\\tspecies_csv: 'species.csv'\\mech2: ...",
 )
 @click.option(
-    "-o",
-    "--plot_fname",
-    default="thermo_plot.pdf",
-    show_default=True,
-    help="name of output pdf of plots"
+   "-o",
+   "--plot_fname",
+   default="thermo_plots.pdf",
+   show_default=True,
+   help="PDF filename for plot output."
 )
 @click.option(
-    "-f",
-    "--out_txt_fname",
-    default="ordering.txt",
-    show_default=True,
-    help="name of output text filename"
+   "-f",
+   "--out_txt_fname",
+   default="thermo_ordering.txt",
+   show_default=True,
+   help="Text filename for sorting output."
 )
 @click.option(
-    "-d",
-    "--job_path",
-    default=".",
-    show_default=True,
-    help="directory for input/output files"
+   "-d",
+   "--job_path",
+   default=".",
+   show_default=True,
+   help="Directory for input/output files."
 )
 @click.option(
-    "-t",
-    "--temps_lst",
-    default=None,
-    type=lambda s: [float(temp) for temp in s.split(',')],
-    show_default=True,
-    help="array of temperatures, None defaults to 500--1500"
+   "-t",
+   "--temps_lst",
+   default=None,
+   type=lambda s: [float(temp) for temp in s.split(',')],
+   show_default=True,
+   help="Array of temperatures (K). None defaults to 500--1500."
 )
 @click.option(
-    "-s",
-    "--sort_method",
-    default="lnq",
-    show_default=True,
-    help="Sort the pdf plots by the max difference in enthalpy ('h'), entropy ('s'), Gibbs ('g'), c_p ('cp'),\\natural log of the partition function ('lnq'), or not at all (None)"
+   "-s",
+   "--sort_method",
+   default="lnq",
+   show_default=True,
+   help=("Method for sorting. Sorts by max difference in enthalpy ('h'), \\"
+         "entropy ('s'), Gibbs ('g'), c_p ('cp'), natural log of the \\"
+         "partition function ('lnq'), or not at all (None)."
+    )
 )
 @click.option(
-    "-st",
-    "--sort_temp",
-    default=None,
-    show_default=True,
-    help="If sorting, specifies the temp at which to sort. None (default) specifies to sort by maximum difference."
+   "-st",
+   "--sort_temp",
+   default=None,
+   show_default=True,
+   help="If sorting, specifies the temperature at which to sort (K). None (default) specifies to sort by maximum difference."
 )
 @click.option(
-    "-l",
-    "--remove_loners",
-    default=True,
-    show_default=True,
-    help="True only plots species that are in ALL mechanisms, False plots ALL species in all mechanism"
+   "-l",
+   "--remove_loners",
+   default=True,
+   show_default=True,
+   help="True only plots species that are in ALL mechanisms, False plots ALL species in all mechanisms."
 )
 @click.option(
-    "-p",
-    "--print_missing",
-    default=True,
-    show_default=True,
-    help="True prints a warning for any species that are not in the species.csv file"
+   "-p",
+   "--print_missing",
+   default=True,
+   show_default=True,
+   help="True prints a warning for any species that are not in the species.csv file."
 )
 def compare_thermo(
-    mechs_yaml: str = 'mechs.yaml',
-    plot_fname: str = 'thermo_plot.pdf',
-    out_txt_fname: str = 'ordering.txt',
-    job_path: str = '.',
-    temps_lst: list = [],
-    sort_method: str = None,
-    sort_temp: float = None,
-    rev_rates: bool = True,
-    remove_loners: bool = True,
-    print_missing: bool = True
+   mechs_yaml: str,
+   plot_fname: str,
+   out_txt_fname: str,
+   job_path: str,
+   temps_lst: list,
+   sort_method: str,
+   sort_temp: float,
+   remove_loners: bool,
+   print_missing: bool
 ):
-    """Compare the thermo properties in a mechanism"""
-    compare_thermo.main(
-        mechs_yaml=mechs_yaml,
-        plot_fname=plot_fname,
-        out_txt_fname=out_txt_fname,
-        job_path=job_path,
-        temps_lst=temps_lst,
-        sort_method=sort_method,
-        sort_temp=sort_temp,
-        remove_loners=remove_loners,
-        print_missing=print_missing
-    )
+   """Compare the thermo properties in a mechanism"""
+   compare_thermo_.main(
+       mechs_yaml,
+       plot_fname,
+       out_txt_fname,
+       job_path,
+       temps_lst,
+       sort_method,
+       sort_temp,
+       remove_loners,
+       print_missing
+   )
 
+# expand
 @main.command()
 def expand():
     """Expand stereochemistry for a mechanism"""
