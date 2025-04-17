@@ -1,6 +1,6 @@
 import click
 import numpy as np
-from mechanalyzer.cli import run_sort, ste_mech, compare_rates as compare_rates_, compare_thermo as compare_thermo_
+from mechanalyzer.cli import sort, ste_mech, compare_rates as compare_rates_, compare_thermo as compare_thermo_, pes_diagram_from_mess as pes_diagram_from_mess_
 
 
 @click.group()
@@ -436,3 +436,114 @@ def runpssa(
     thermofile=thermofile,
     outputrates=outputrates,
     )
+
+
+# PES diagram
+@main.command()
+@click.option(
+    "--input_file",
+    "-i",
+    type=str,
+    help="Path to the MESS input file",
+    show_default=True,
+    default="mess.inp")
+@click.option(
+    "--well_threshold",
+    "-w",
+    type=int,
+    help="How many connections a species must have to be centered as well",
+    show_default=True,
+    default=2)
+@click.option(
+    "--colors_on",
+    "-c",
+    type=bool,
+    help="True/False colorful PES, automatically makes each well and their connections a unique color",
+    show_default=True,
+    default=True)
+@click.option(
+    "--gravity",
+    "-g",
+    type=int,
+    help="How much the species are pulled together in the spring layout",
+    show_default=True,
+    default=1)
+@click.option(
+    "--spring_iterations",
+    "-s",
+    type=int,
+    help="How many iterations to run the spring layout algorithm",
+    show_default=True,
+    default=20000)
+@click.option(
+    "--nudge_iterations",
+    "-n",
+    type=int,
+    show_default=True,
+    help="How many iterations to nudge the species to minimize overlap",
+    default=10)
+@click.option(
+    "--min_distance",
+    "-d",
+    type=float,
+    help="Minimum distance between non-neighboring nodes, aka whats considered overlap",
+    show_default=True,
+    default=1.0)
+@click.option(
+    "--labels",
+    "-l",
+    type=bool,
+    help="True/False whether to label the species in the PES",
+    show_default=True,
+    default=True)
+@click.option(
+    "--output_file",
+    "-o",
+    type=str,
+    help="Name of the output figure file",
+    show_default=True,
+    default="pes_diagram")
+@click.option(
+    "--format",
+    "-f",
+    type=str,
+    help="Format of the output figure file (e.g., svg, png)",
+    show_default=True,
+    default="svg")
+@click.option(
+    "--aspect_ratio",
+    "-a",
+    type=float,
+    help="Aspect ratio of the output figure (width / height)",
+    show_default=True,
+    default=1.0)
+
+def pes_diagram(
+    input_file: str = "mess.inp",
+    well_threshold: int = 2,
+    colors_on: bool = True,
+    gravity: int = 1,
+    spring_iterations: int = 20000,
+    nudge_iterations: int = 10,
+    min_distance: float = 1.0,
+    max_distance: float = 30.0,
+    output_file: str = "pes_diagram",
+    format: str = "svg",
+    aspect_ratio: float = 1.0,
+    labels: bool = True
+):
+    """Generate a PES diagram from a MESS input file"""
+
+    pes_diagram_from_mess_.main(
+        input_file,
+        well_threshold,
+        colors_on,
+        gravity,
+        spring_iterations,
+        nudge_iterations,
+        min_distance,
+        max_distance,
+        output_file,
+        format,
+        aspect_ratio,
+        labels)
