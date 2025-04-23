@@ -376,8 +376,8 @@ def parse_line(line, idx, headers, quotechar="'"):
         :return cols: a list of the entries in the line
         :rtype: list
     """
-
-    cols = next(csv.reader([line], quotechar=quotechar))
+    # The `csv` module can't handle trailing spaces, so strip the line before reading
+    cols = next(csv.reader([line.strip()], quotechar=quotechar))
     if line == '':
         cols = None
     else:
