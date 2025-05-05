@@ -1,8 +1,7 @@
 import matplotlib.pyplot as plt
 import networkx as nx
-import random
 
-def parse_mess_file(file_path):
+def parse_mess_file(file_path, remove_fake=True):
     """
     Parses a MESS input file to extract species names and their energies.
 
@@ -23,14 +22,17 @@ def parse_mess_file(file_path):
                 current_species_name = line.split()[1]  # Extract species name
                 current_species_type = line.split()[0]
                 if line.startswith('Barrier'):
-                    reac = line.split()[2].replace('FakeB-', '').replace('FakeW-', '')
-                    prod = line.split()[3].replace('FakeB-', '').replace('FakeW-', '')
+                    if remove_fake:
+                        reac = line.split()[2].replace('FakeB-', '').replace('FakeW-', '')
+                        prod = line.split()[3].replace('FakeB-', '').replace('FakeW-', '')
+                    else:
+                        reac, prod = line.split()[2:4]
                     if reac != prod:
                         connection_dict[current_species_name] = (
                             reac, prod)
                     else:
                         current_species_type = 'Fake'
-            if 'Fake' in line and not 'Barrier' in line:
+            if 'Fake' in line and not 'Barrier' in line and remove_fake:
                 current_species_type = 'Fake'
 
             # ZeroEnergy for wells and barriers
@@ -406,7 +408,7 @@ def main(
        input_file, well_threshold=2, colors_on=True,
         gravity=1, spring_iterations=20000, nudge_iterations=10,
         min_distance=1.0, max_distance=30.0, output_file="pes_diagram", format="svg",
-        aspect_ratio=1, labels=True):
+        aspect_ratio=1, labels=True, remove_fake=True):
     """
     Plots a PES diagram based on species energies and connections.
 
@@ -437,7 +439,7 @@ def main(
     :param labels: Whether to label the species in the PES
     :type labels: bool
     """
-    species_dict, connection_dict = parse_mess_file(input_file)
+    species_dict, connection_dict = parse_mess_file(input_file, remove_fake=remove_fake)
     graph, degrees = initiate_graph(species_dict, connection_dict)
     wells = determine_wells(degrees, well_threshold)
     min_well_energy = min(

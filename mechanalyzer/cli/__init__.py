@@ -1,6 +1,6 @@
 import click
 import numpy as np
-from mechanalyzer.cli import sort, ste_mech, compare_rates as compare_rates_, compare_thermo as compare_thermo_, pes_diagram_from_mess as pes_diagram_from_mess_
+from mechanalyzer.cli import prompt, sort, ste_mech, compare_rates as compare_rates_, compare_thermo as compare_thermo_, pes_diagram_from_mess as pes_diagram_from_mess_
 
 
 @click.group()
@@ -517,6 +517,14 @@ def runpssa(
     help="Aspect ratio of the output figure (width / height)",
     show_default=True,
     default=1.0)
+@click.option(
+    "--remove_fake",
+    "-r",
+    type=bool,
+    help="remove fake vDW",
+    show_default=True,
+    default=True)
+
 
 def pes_diagram(
     input_file: str = "mess.inp",
@@ -530,7 +538,8 @@ def pes_diagram(
     output_file: str = "pes_diagram",
     format: str = "svg",
     aspect_ratio: float = 1.0,
-    labels: bool = True
+    labels: bool = True,
+    remove_fake: bool = True,
 ):
     """Generate a PES diagram from a MESS input file"""
 
@@ -546,4 +555,5 @@ def pes_diagram(
         output_file,
         format,
         aspect_ratio,
-        labels)
+        labels,
+        remove_fake)
