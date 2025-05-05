@@ -1,6 +1,6 @@
 import click
 import numpy as np
-from mechanalyzer.cli import sort, ste_mech, compare_rates as compare_rates_, compare_thermo as compare_thermo_, pes_diagram_from_mess as pes_diagram_from_mess_
+from mechanalyzer.cli import prompt, sort, ste_mech, compare_rates as compare_rates_, compare_thermo as compare_thermo_, pes_diagram_from_mess as pes_diagram_from_mess_
 
 
 @click.group()
