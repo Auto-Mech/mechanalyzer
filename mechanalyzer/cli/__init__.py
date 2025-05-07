@@ -524,6 +524,13 @@ def runpssa(
     help="remove fake vDW",
     show_default=True,
     default=True)
+@click.option(
+    "--shift_energy",
+    "-e",
+    type=bool,
+    help="Whether to shift energies relative to the lowest well",
+    show_default=True,
+    default=True)
 
 
 def pes_diagram(
@@ -540,6 +547,7 @@ def pes_diagram(
     aspect_ratio: float = 1.0,
     labels: bool = True,
     remove_fake: bool = True,
+    shift_energy: bool = True
 ):
     """Generate a PES diagram from a MESS input file"""
 
@@ -556,4 +564,5 @@ def pes_diagram(
         format,
         aspect_ratio,
         labels,
-        remove_fake)
+        remove_fake,
+        shift_energy)

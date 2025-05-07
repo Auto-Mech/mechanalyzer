@@ -1,3 +1,4 @@
+import copy
 import matplotlib.pyplot as plt
 import networkx as nx
 
@@ -47,8 +48,15 @@ def parse_mess_file(file_path, remove_fake=True):
                 if current_species_type == 'Bimolecular':
                     species_dict[current_species_name] = energy
 
-    min_energy = min(species_dict.values())
-    species_dict = {k: v - min_energy for k, v in species_dict.items()}
+    # Remove any barriers that connect points without energies (i.e., dummy)
+    for barrier, stable_points in copy.deepcopy(connection_dict).items():
+        for stable_point in stable_points:
+            if stable_point not in species_dict:
+                connection_dict.pop(barrier)
+                species_dict.pop(barrier)
+                print(f'Removing barrier {barrier}, likely b/c it involves a dummy')
+                continue
+
     return species_dict, connection_dict
 
 def nudge_nodes_iteration(graph, x_positions, y_positions, min_distance=1.0, max_distance=30.0, jumble=0):
@@ -408,7 +416,7 @@ def main(
        input_file, well_threshold=2, colors_on=True,
         gravity=1, spring_iterations=20000, nudge_iterations=10,
         min_distance=1.0, max_distance=30.0, output_file="pes_diagram", format="svg",
-        aspect_ratio=1, labels=True, remove_fake=True):
+        aspect_ratio=1, labels=True, remove_fake=True, shift_energy=True):
     """
     Plots a PES diagram based on species energies and connections.
 
@@ -438,14 +446,17 @@ def main(
     :type aspect_ratio: float
     :param labels: Whether to label the species in the PES
     :type labels: bool
+    :param shift_energy: Whether to shift energies relative to the lowest well
+    :type shift_energy: bool
     """
     species_dict, connection_dict = parse_mess_file(input_file, remove_fake=remove_fake)
     graph, degrees = initiate_graph(species_dict, connection_dict)
     wells = determine_wells(degrees, well_threshold)
-    min_well_energy = min(
-        species_dict[species] for species in wells) if wells else 0
-    species_dict = {
-        species: energy - min_well_energy for species, energy in species_dict.items()}
+    if shift_energy:
+        min_well_energy = min(
+            species_dict[species] for species in wells) if wells else 0
+        species_dict = {
+            species: energy - min_well_energy for species, energy in species_dict.items()}
     # determine initial x positions for nodes
     pos, node_colors = set_initial_positions_and_colors(
         graph, wells, degrees, colors_on=colors_on)
@@ -545,6 +556,12 @@ if __name__ ==  "__main__":
         type=float,
         help="Aspect ratio of the output figure (width / height)",
         default=1.0)
+    parser.add_argument(
+        "--shift_energy",
+        "-e",
+        type=bool,
+        help="Whether to shift energies relative to the lowest well",
+        default=True)
     args = parser.parse_args()
 
     main(
@@ -559,4 +576,5 @@ if __name__ ==  "__main__":
         output_file=args.output_file,
         format=args.format,
         aspect_ratio=args.aspect_ratio,
-        labels=args.labels)
+        labels=args.labels,
+        shift_energy=args.shift_energy)
