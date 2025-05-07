@@ -372,15 +372,16 @@ def generate_plot(
     """
     fig, axes = plt.subplots(1, 1, figsize=(8*aspect_ratio, 8))
     average_y = sum(species_dict.values()) / len(species_dict)
+    y_range = max(species_dict.values()) - min(species_dict.values())
 
     # plot nodes
     for species, energy in species_dict.items():
         x = x_positions[species]
         y = energy
         if y > average_y:
-            label_shift = 1
+            label_shift = y_range / 70
         else:
-            label_shift = -2
+            label_shift = -y_range / 35
         axes.barh(
             y, width=0.4, left=x - 0.2,
             color=node_colors.get(species, 'gray'),
