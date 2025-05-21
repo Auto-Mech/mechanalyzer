@@ -44,3 +44,4 @@ jobs:
           # # broken:
           # pixi run pytest -v thermfit
           pixi run pytest -v mechanalyzer
+          pixi run pytest -v examples
