@@ -1,5 +1,5 @@
 """ This script tests the merging of a stereo-specific submechanism (e.g., one
-    calculated with AutoMech) with a non-stereo mechanism from the literature 
+    calculated with AutoMech) with a non-stereo mechanism from the literature
 """
 
 import os
@@ -41,7 +41,7 @@ new_rxn_param_dct, only_ste_rxn_param_dct = merge_ste.expand_all_rxns(
 
 # Rename the spcs in the mech_spc_dct and the thermo
 new_mech_spc_dct, new_spc_nasa7_dct = merge_ste.rename_spc(
-    CALC_MECH_SPC_DCT, NOSTE_MECH_SPC_DCT, CALC_SPC_NASA7_DCT, 
+    CALC_MECH_SPC_DCT, NOSTE_MECH_SPC_DCT, CALC_SPC_NASA7_DCT,
     NOSTE_SPC_NASA7_DCT)
 
 # Write the mechanism to a Chemkin file
