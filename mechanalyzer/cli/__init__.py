@@ -417,6 +417,13 @@ def promptcalc(
     show_default=True,
     help="Output prompt rates file name",
 )
+@click.option(
+    "-tol",
+    "--fitduptol",
+    default=15.,
+    show_default=True,
+    help="% Tolerance to switch from single to double arrhenius fit",
+)
 def runpssa(
     startmech: str='kin.CKI',
     pssa_spcs: list=['',],
@@ -425,6 +432,7 @@ def runpssa(
     bfthresh: float = 1e-4,
     thermofile: str = None,
     outputrates: str = 'pssa_rates.txt',
+    fitduptol: float = 15.,
 ):
     """Sort the reactions in a mechanism"""
     pssa.main(
@@ -435,8 +443,8 @@ def runpssa(
     bfthresh=bfthresh,
     thermofile=thermofile,
     outputrates=outputrates,
+    fitduptol=fitduptol,
     )
-
 
 # PES diagram
 @main.command()
