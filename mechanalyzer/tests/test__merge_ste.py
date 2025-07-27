@@ -8,10 +8,8 @@ import numpy
 from mechanalyzer.parser import new_spc as spc_parser
 from mechanalyzer.parser import ckin_ as ckin_parser
 from mechanalyzer.builder import merge_ste
-from mechanalyzer.calculator.rates import check_p_t
 from chemkin_io.writer import mechanism
 from ioformat import pathtools
-from autoreact import params
 
 # Set Paths to test/data directory and output directory
 DAT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'data')
