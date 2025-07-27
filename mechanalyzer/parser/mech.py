@@ -2,14 +2,14 @@
 Functions for mechanism reading and sorting
 """
 
-import sys
-from openpyxl import load_workbook
+
 import autoparse.pattern as app
 from ioformat import ptt
 from ioformat import remove_comment_lines
-from mechanalyzer.parser import ckin_ as ckin
 from itertools import product
 import pandas as pd
+from mechanalyzer.parser import ckin_ as ckin
+
 
 def parse_mechanism(mech_str, mech_type):
     """ Get the reactions and species from the mechanism input
