@@ -6,10 +6,8 @@ Sorter module - sorting of the mechanism according to various options
 - species subsets
 - submechanism
 """
-import enum
-from multiprocessing.sharedctypes import Value
-from re import T
-import time
+
+
 import sys
 import copy
 import pandas as pd
@@ -1300,6 +1298,7 @@ class SortMech:
     def rxn_max_ratio(self, rxn_maxratio_df):
         """ Determines the maximum value of the ratios between
             different rates of ktp dct.
+            (compares two dictionaries at the same pressure)
 
         :param rxn_maxratio_df:
             empty dataframe index=rxns, column: 'rxn_max_ratio'
@@ -1313,7 +1312,7 @@ class SortMech:
             # get the ratio:
             param_ratio_dct = calc_rates.get_aligned_rxn_ratio_dct(
                 param_vals_dct)
-            max_val = calc_rates.get_max_aligned_values(param_ratio_dct)
+            max_val = calc_rates.get_max_aligned_values([param_ratio_dct[1]])
             rxn_maxratio_df.at[rxn, 'rxn_max_ratio'] = max_val
 
         return rxn_maxratio_df

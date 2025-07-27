@@ -650,7 +650,7 @@ def get_aligned_rxn_ratio_dct(aligned_rxn_dct_entry, ref_idx = 0):
 
     ref_ktp_dct = aligned_rxn_dct_entry[ref_idx]
     ratio_dct_entry = []
-    for mech_idx, ktp_dct in enumerate(aligned_rxn_dct_entry):
+    for _, ktp_dct in enumerate(aligned_rxn_dct_entry):
         # If (1) the ref_ktp_dct is None,
         # or (2) the current_ktp_dct is None, set the ratio_dct to None
         # if mech_idx == ref_idx or ref_ktp_dct is None or ktp_dct is None:
@@ -693,8 +693,7 @@ def get_max_aligned_values(aligned_rxn_dct_entry):
     for single_dct in aligned_rxn_dct_entry:
         if single_dct is not None:
             for _, (_, values) in single_dct.items():
-                if max(values) > max_val:
-                    max_val = max(values)
+                max_val = max(max(values), max_val)
 
     return max_val
 
