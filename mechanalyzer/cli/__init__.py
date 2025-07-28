@@ -1,7 +1,9 @@
 import click
 import numpy as np
-from mechanalyzer.cli import prompt, sort, ste_mech, compare_rates as compare_rates_, compare_thermo as compare_thermo_, pes_diagram_from_mess as pes_diagram_from_mess_
-
+from mechanalyzer.cli import pssa, prompt, sort, ste_mech
+from mechanalyzer.cli import compare_rates as compare_rates_
+from mechanalyzer.cli import compare_thermo as compare_thermo_
+from mechanalyzer.cli import pes_diagram_from_mess as pes_diagram_from_mess_
 
 @click.group()
 def main():
@@ -413,9 +415,9 @@ def promptcalc(
 @click.option(
     "-or",
     "--outputrates",
-    default="rates_prompt.txt",
+    default="rates_pssa.txt",
     show_default=True,
-    help="Output prompt rates file name",
+    help="Output pssa rates file name",
 )
 @click.option(
     "-tol",
