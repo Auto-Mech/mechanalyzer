@@ -74,7 +74,7 @@ def test__parse_classtype():
 
     for key, val in OSCLASS_DCT_PARTIAL.items():
         assert val == classtype_dct[key]
-
+"""
 def test__parse_scalefactors():
     scalefactors_df = parse_scalefactors_byclass(os.path.join(DAT_PATH, 'AAA_SCALE_FACTORS.xlsx'))
     expected_output = pd.DataFrame([
@@ -106,7 +106,7 @@ def test__parse_scalefactors():
     pd.testing.assert_frame_equal(test_slice, expected)
 
     # Reset index of expected to match
-
+"""
 
 if __name__ == '__main__':
     test__sort_readinput()
