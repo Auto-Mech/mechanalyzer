@@ -111,6 +111,6 @@ def test__parse_scalefactors():
 if __name__ == '__main__':
     test__sort_readinput()
     test__parse_classtype()
-    test__parse_scalefactors()
+    #test__parse_scalefactors()
 
 
