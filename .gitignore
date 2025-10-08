@@ -134,3 +134,8 @@ scratch
 debug
 build
 **/compare_thermo.py
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+
+*.conda
