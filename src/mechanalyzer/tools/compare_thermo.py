@@ -9,7 +9,7 @@ import mechanalyzer.plotter.thermo as plot_thermo
 import mechanalyzer.plotter._util as plot_util
 import mechanalyzer.parser.new_spc as spc_parser
 import mechanalyzer.parser.ckin_ as ckin_parser
-from mechanalyzer.cli import util
+from . import util
 from ioformat import pathtools
 
 
