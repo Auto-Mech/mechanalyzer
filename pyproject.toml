@@ -1,8 +1,7 @@
 [project]
 name = "mechanalyzer"
-version = "2025.10.0"
+version = "2025.10.1"
 description = "Tools for construction, manipulation, visualization of chemical mechanisms"
-authors = [{name = "avcopan", email = "avcopan@gmail.com"}]
 readme = "README.md"
 dependencies = []
 requires-python = ">=3.11"
@@ -18,11 +17,8 @@ build-backend = "hatchling.build"
 requires = ["hatchling"]
 
 # Hatchling configurations
-[tool.hatch.build.targets.sdist]
-include = ["mechanalyzer", "ratefit", "thermfit"]
-
 [tool.hatch.build.targets.wheel]
-include = ["mechanalyzer", "ratefit", "thermfit"]
+packages = ["src/mechanalyzer", "src/ratefit", "src/thermfit"]
 
 # Pixi configurations
 [tool.pixi.workspace]
@@ -35,7 +31,7 @@ preview = ["pixi-build"]
 name = "mechanalyzer"
 
 [tool.pixi.package.build]
-backend = { name = "pixi-build-python", version = "==0.3.2" }
+backend = { name = "pixi-build-python", version = "*" }
 
 [tool.pixi.package.host-dependencies]
 hatchling = "==1.26.3"
@@ -54,7 +50,7 @@ autochem = ">=2025.10.0"
 autoio = ">=2025.10.0"
 autofile = ">=2025.10.0"
 
-#   - Other
+#   - Environments
 [tool.pixi.pypi-dependencies]
 mechanalyzer = { path = ".", editable = true }
 
@@ -78,14 +74,13 @@ rattler-build = ">=0.47.1"
 [tool.pixi.environments]
 test = ["test"]
 build = ["build"]
-dev = ["test", "build"]
 
-
+#   - Tasks
 [tool.pixi.feature.test.tasks]
-test-mechanalyzer = "pytest -v mechanalyzer"
 test-examples = "pytest -v examples"
-test-ratefit = "pytest -v ratefit"
-test = { depends-on = ["test-mechanalyzer", "test-examples", "test-ratefit"] }
+test-mechanalyzer = "pytest -v src/mechanalyzer"
+test-ratefit = "pytest -v src/ratefit"
+test = { depends-on = ["test-examples", "test-mechanalyzer", "test-ratefit"] }
 
 [tool.pixi.feature.build.tasks]
 upload = "rattler-build upload anaconda -o Auto-Mech *.conda"
