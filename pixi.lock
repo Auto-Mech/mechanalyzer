@@ -2462,8 +2462,8 @@ packages:
   timestamp: 1733417051523
 - pypi: ./
   name: mechanalyzer
-  version: 0.2024.0
-  sha256: bac2a9e48738684ce974755544e5adc67ccf00229cdbfcb3c183a5348b34f00b
+  version: 0.2025.0
+  sha256: ae648c05f2a528eeda61f591dee818e43aad5e046148c2b7a9bb070da1b801a8
   requires_python: '>=3.11'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/more-itertools-10.8.0-pyhd8ed1ab_0.conda

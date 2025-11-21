@@ -1,6 +1,6 @@
 [project]
 name = "mechanalyzer"
-version = "0.2024.0"
+version = "0.2025.0"
 description = "Tools for construction, manipulation, visualization of chemical mechanisms"
 readme = "README.md"
 dependencies = []
@@ -88,7 +88,7 @@ upload = "rattler-build upload anaconda -o Auto-Mech *.conda"
 current-version = "bumpver show -n | awk -F': ' '/Current Version: / {print $2}'"
 
 [tool.bumpver]
-current_version = "0.2024.0"
+current_version = "0.2025.0"
 version_pattern = "MAJOR.YYYY.PATCH"
 commit_message = "Release {new_version}"
 tag_message = "{new_version}"
