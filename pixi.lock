@@ -16,9 +16,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/arpack-3.9.1-nompi_hf03ea27_102.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/asttokens-3.0.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.4.0-pyh71513ae_0.conda
-      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autochem-2025.10.0-pyh4616a5c_0.conda
-      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autofile-2025.10.0-pyh4616a5c_0.conda
-      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.10.0-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autochem-0.2025.0-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autofile-0.2025.0-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-0.2025.0-pyh4616a5c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-bin-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/bzip2-1.0.8-hda65f42_8.conda
@@ -231,9 +231,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/arpack-3.9.1-nompi_hf03ea27_102.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/asttokens-3.0.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.4.0-pyh71513ae_0.conda
-      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autochem-2025.10.0-pyh4616a5c_0.conda
-      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autofile-2025.10.0-pyh4616a5c_0.conda
-      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.10.0-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autochem-0.2025.0-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autofile-0.2025.0-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-0.2025.0-pyh4616a5c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-bin-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/bzip2-1.0.8-hda65f42_8.conda
@@ -444,9 +444,9 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/arpack-3.9.1-nompi_hf03ea27_102.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/asttokens-3.0.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/attrs-25.4.0-pyh71513ae_0.conda
-      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autochem-2025.10.0-pyh4616a5c_0.conda
-      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autofile-2025.10.0-pyh4616a5c_0.conda
-      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.10.0-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autochem-0.2025.0-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autofile-0.2025.0-pyh4616a5c_0.conda
+      - conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-0.2025.0-pyh4616a5c_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-bin-1.1.0-hb03c661_4.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/bzip2-1.0.8-hda65f42_8.conda
@@ -746,9 +746,9 @@ packages:
   - pkg:pypi/attrs?source=compressed-mapping
   size: 60101
   timestamp: 1759762331492
-- conda: https://conda.anaconda.org/Auto-Mech/noarch/autochem-2025.10.0-pyh4616a5c_0.conda
-  sha256: 57ab93bd9ebc4aaa4ae6128280a30f5cf1d477cb14e9724526fd3671054e5bd2
-  md5: 2cdeccda6dcbb8eff3c610522d2aaaed
+- conda: https://conda.anaconda.org/Auto-Mech/noarch/autochem-0.2025.0-pyh4616a5c_0.conda
+  sha256: 56535f3e7f30ed02b2b65d65f49ee60b00f558757dd07e51d7d9339aff0066ca
+  md5: c1905a59367f1750ebf58384c3ad2015
   depends:
   - altair >=5.5.0
   - ipython >=8.15
@@ -763,23 +763,25 @@ packages:
   - rdkit >=2025.9.1
   - scipy >=1.12
   - xarray >=2023.8
-  - python
-  size: 604969
-  timestamp: 1759948672799
-- conda: https://conda.anaconda.org/Auto-Mech/noarch/autofile-2025.10.0-pyh4616a5c_0.conda
-  sha256: 68b29b531a945d2bae178e40cf210d579f820fdecf085a09c1ee3a237ad59b1a
-  md5: 12056194080003bcd9d70c0ef81b88eb
+  - python >=3.11
+  - python *
+  size: 610723
+  timestamp: 1763746042074
+- conda: https://conda.anaconda.org/Auto-Mech/noarch/autofile-0.2025.0-pyh4616a5c_0.conda
+  sha256: 027fed4c146c65bb3d55a237c331ff4a4534964e9771c09e7220bce99a208a3d
+  md5: b7bfb6a4fcf15eb0d4ec20dc69dc9f58
   depends:
   - numpy >=1.26
   - pyyaml >=6.0.3
-  - autochem >=2025.10.0
-  - autoio >=2025.10.0
-  - python
-  size: 43214
-  timestamp: 1759951911394
-- conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-2025.10.0-pyh4616a5c_0.conda
-  sha256: 6d2a1b3afedd47431f5ed77cfa7a5261cc9081c5f0a293dcd26684b3bf0743b7
-  md5: 327b22b0daceddfbaa4fc98dd38d967a
+  - autochem >=0.2025.0,<2.0.0
+  - autoio >=0.2025.0,<2.0.0
+  - python >=3.11
+  - python *
+  size: 43145
+  timestamp: 1763748110716
+- conda: https://conda.anaconda.org/Auto-Mech/noarch/autoio-0.2025.0-pyh4616a5c_0.conda
+  sha256: 38f151908a4e4595df7a90bc16d41f71549220ceb3ecd2a1fd7afe121266dbf5
+  md5: e8117f81ed6caf696bdc033fed6e9d93
   depends:
   - mako >=1.3.10
   - more-itertools >=10.8.0
@@ -788,10 +790,11 @@ packages:
   - pyparsing >=3.2.5
   - pyyaml >=6.0.3
   - qcelemental >=0.29.0
-  - autochem >=2025.10.0
-  - python
-  size: 4445731
-  timestamp: 1759949963102
+  - autochem >=0.2025.0,<2.0.0
+  - python >=3.11
+  - python *
+  size: 5285348
+  timestamp: 1763747126180
 - conda: https://conda.anaconda.org/conda-forge/linux-64/brotli-1.1.0-hb03c661_4.conda
   sha256: 294526a54fa13635341729f250d0b1cf8f82cad1e6b83130304cbf3b6d8b74cc
   md5: eaf3fbd2aa97c212336de38a51fe404e
@@ -2187,7 +2190,7 @@ packages:
 - pypi: ./
   name: mechanalyzer
   version: 2025.10.1
-  sha256: b808ba3ba3a7fff32f668167afbb76695d9c1571b4067118d46917164b75d439
+  sha256: 7b5a366b6dcfc657e99e19d0ad6bb0e44ad8d41a4a3f180d83d1ee47eaf748cf
   requires_python: '>=3.11'
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/more-itertools-10.8.0-pyhd8ed1ab_0.conda

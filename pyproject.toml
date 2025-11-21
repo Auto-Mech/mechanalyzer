@@ -46,9 +46,9 @@ pandas = ">=2.3.3"
 python-igraph = ">=0.11.9"
 pyyaml = ">=6.0.3"
 scipy = ">=1.12"
-autochem = ">=2025.10.0"
-autoio = ">=2025.10.0"
-autofile = ">=2025.10.0"
+autochem = ">=0.2025.0,<2.0.0"
+autoio = ">=0.2025.0,<2.0.0"
+autofile = ">=0.2025.0,<2.0.0"
 
 #   - Environments
 [tool.pixi.pypi-dependencies]
@@ -64,9 +64,9 @@ pandas = ">=2.3.3"
 python-igraph = ">=0.11.9"
 pyyaml = ">=6.0.3"
 scipy = ">=1.12"
-autochem = ">=2025.10.0"
-autoio = ">=2025.10.0"
-autofile = ">=2025.10.0"
+autochem = ">=0.2025.0,<2.0.0"
+autoio = ">=0.2025.0,<2.0.0"
+autofile = ">=0.2025.0,<2.0.0"
 
 [tool.pixi.feature.build.dependencies]
 rattler-build = ">=0.47.1"
