@@ -1,6 +1,6 @@
 [project]
 name = "mechanalyzer"
-version = "2025.10.1"
+version = "0.2024.0"
 description = "Tools for construction, manipulation, visualization of chemical mechanisms"
 readme = "README.md"
 dependencies = []
@@ -46,9 +46,9 @@ pandas = ">=2.3.3"
 python-igraph = ">=0.11.9"
 pyyaml = ">=6.0.3"
 scipy = ">=1.12"
-autochem = ">=2025.10.0"
-autoio = ">=2025.10.0"
-autofile = ">=2025.10.0"
+autochem = ">=0.2025.0,<2.0.0"
+autoio = ">=0.2025.0,<2.0.0"
+autofile = ">=0.2025.0,<2.0.0"
 
 #   - Environments
 [tool.pixi.pypi-dependencies]
@@ -64,12 +64,13 @@ pandas = ">=2.3.3"
 python-igraph = ">=0.11.9"
 pyyaml = ">=6.0.3"
 scipy = ">=1.12"
-autochem = ">=2025.10.0"
-autoio = ">=2025.10.0"
-autofile = ">=2025.10.0"
+autochem = ">=0.2025.0,<2.0.0"
+autoio = ">=0.2025.0,<2.0.0"
+autofile = ">=0.2025.0,<2.0.0"
 
 [tool.pixi.feature.build.dependencies]
 rattler-build = ">=0.47.1"
+bumpver = ">=2025.1131,<2026"
 
 [tool.pixi.environments]
 test = ["test"]
@@ -84,3 +85,24 @@ test = { depends-on = ["test-examples", "test-mechanalyzer", "test-ratefit"] }
 
 [tool.pixi.feature.build.tasks]
 upload = "rattler-build upload anaconda -o Auto-Mech *.conda"
+current-version = "bumpver show -n | awk -F': ' '/Current Version: / {print $2}'"
+
+[tool.bumpver]
+current_version = "0.2024.0"
+version_pattern = "MAJOR.YYYY.PATCH"
+commit_message = "Release {new_version}"
+tag_message = "{new_version}"
+tag_scope = "default"
+pre_commit_hook = "scripts/update_lockfile.sh"
+post_commit_hook = ""
+commit = true
+tag = true
+push = true
+
+[tool.bumpver.file_patterns]
+"pyproject.toml" = [
+    'version = "{version}"',
+]
+"src/mechanalyzer/__init__.py" = [
+    '__version__ = "{version}"',
+]
