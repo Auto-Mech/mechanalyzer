@@ -18,23 +18,17 @@ CWD = os.getcwd()
 PAR = argparse.ArgumentParser()
 PAR.add_argument('-m', '--mess', default='rate.out',
                  help='MESS ouput name (rate.out)')
-PAR.add_argument('-l', '--label', default='label.inp',
-                 help='label dct name (label.inp)')
 PAR.add_argument('-c', '--chemkin', default='rate.ckin',
                  help='Chemkin ouput name (rate.ckin)')
 PAR.add_argument('-f', '--fit-method', default='plog',
                  help='method to fit the rates (plog, chebyshev)')
 OPTS = vars(PAR.parse_args())
 
-# Read label dct
-label_dct = ioformat.pathtools.read_json_file(CWD, OPTS['label'])
-
 # Read MESS file and get rate constants
 mess_str = ioformat.pathtools.read_file(CWD, OPTS['mess'])
 rxn_ktp_dct = mess_io.reader.rates.get_rxn_ktp_dct(
-    mess_str, label_dct=label_dct, filter_kts=True
+    mess_str, filter_kts=True
 )
-
 # Fit rates
 rxn_param_dct, rxn_err_dct = ratefit.fit.fit_rxn_ktp_dct(
     rxn_ktp_dct, OPTS['fit_method'],
