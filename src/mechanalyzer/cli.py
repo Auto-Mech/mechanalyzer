@@ -4,6 +4,8 @@ from .tools import pssa, prompt, sort, ste_mech
 from .tools import compare_rates as compare_rates_
 from .tools import compare_thermo as compare_thermo_
 from .tools import pes_diagram_from_mess as pes_diagram_from_mess_
+from .tools import species_processer as species_processor_
+
 
 @click.group()
 def main():
@@ -576,3 +578,93 @@ def pes_diagram(
         labels,
         remove_fake,
         shift_energy)
+    
+# preprocess-species
+@main.command()
+@click.option(
+    "-i",
+    "--input",
+    default="species.csv",
+    show_default=True,
+    help="Input species file name",
+)
+@click.option(
+    "-o",
+    "--output",
+    default="mod_species.csv",
+    show_default=True,
+    help="Output species file name",
+)
+@click.option(
+    "-s",
+    "--stereo",
+    default=False,
+    show_default=True,
+    help="add a stereochemical label to species inchis",
+)
+@click.option(
+    "-a",
+    "--amchi",
+    default=False,
+    show_default=True,
+    help="turn bad inchis into amchis",
+)
+@click.option(
+    "-c",
+    "--canonical",
+    default=False,
+    show_default=True,
+    help="add canonical enantiomer inchi to rows",
+)
+@click.option(
+    "-b",
+    "--hof-basis",
+    default=False,
+    show_default=True,
+    help="add cbh0, cbh1, and cbh2 heat-of-formation basis species",
+)
+@click.option(
+    "-u",
+    "--instability",
+    default=False,
+    show_default=True,
+    help="add instability product species",
+)
+@click.option(
+    "-g",
+    "--sort",
+    default=False,
+    show_default=True,
+    help="sort the mechanism by atom counts",
+)
+@click.option(
+    "-n",
+    "--ncpus",
+    default=1,
+    show_default=True,
+    help="number of cpus to use for tasks",
+)
+def preprocess_species(
+    input: str ="species.csv",
+    output: str = "mod_species.csv",
+    sort: bool = False,
+    stereo:  bool = False,
+    canonical: bool = False,
+    amchi: bool = False,
+    hof_basis: bool = False,
+    instability: bool = False,
+    ncpus: int = 1,
+):
+    """Preprocess species file by optionally adding stereochemical labels, 
+    canonical enantiomers inchis, amchis, heat-of-formation basis species,
+    instability products, and sorting."""
+    species_processor_.main(
+        input_fname=input,
+        output_fname=output,
+        sort=sort,
+        include_stereo=stereo,
+        include_canonical=canonical,
+        use_amchi=amchi,
+        expand_hof_basis=hof_basis,
+        expand_instability=instability,
+        ncpus=ncpus)

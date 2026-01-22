@@ -155,10 +155,10 @@ def parse_mech_spc_dct(file_str, quotechar="'", chk_ste=False,
         if idx == 0:
             headers = parse_first_line(line, quotechar=quotechar)
             if canon_ent and 'canon_enant_ich' not in headers:
-                print("Warning: user selected the 'canon_ent' option, but the"
-                      " field 'canon_enant_ich' is not in the CSV file.\n"
-                      "The canonical enantiomer will have to be calculated "
-                      "for every species, which might be slow.")
+                print("Determining canonical enantiomer for enantiomeric species,"
+                      "to prevent redundant computations. We recommend avoiding this"
+                      "slow-down by preprocessing the mechanism with\n"
+                      ">>> mechanalyzer preprocess-species -i species.csv -c True")
         else:
             cols = parse_line(line, idx, headers, quotechar=quotechar)
             if cols is not None:
