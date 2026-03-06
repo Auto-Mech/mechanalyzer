@@ -6,6 +6,8 @@ environments:
     - url: https://conda.anaconda.org/Auto-Mech/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -234,6 +236,8 @@ environments:
     - url: https://conda.anaconda.org/Auto-Mech/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -447,6 +451,8 @@ environments:
     - url: https://conda.anaconda.org/Auto-Mech/
     indexes:
     - https://pypi.org/simple
+    options:
+      pypi-prerelease-mode: if-necessary-or-explicit
     packages:
       linux-64:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/_libgcc_mutex-0.1-conda_forge.tar.bz2
@@ -2462,10 +2468,9 @@ packages:
   timestamp: 1733417051523
 - pypi: ./
   name: mechanalyzer
-  version: 0.2025.0
-  sha256: ae648c05f2a528eeda61f591dee818e43aad5e046148c2b7a9bb070da1b801a8
+  version: 0.2026.0
+  sha256: 363ca1cad51d90753262a652999083d551e70f20286cea794df088877ee219da
   requires_python: '>=3.11'
-  editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/more-itertools-10.8.0-pyhd8ed1ab_0.conda
   sha256: fabe81c8f8f3e1d0ef227fc1306526c76189b3f1175f12302c707e0972dd707c
   md5: d7620a15dc400b448e1c88a981b23ddd

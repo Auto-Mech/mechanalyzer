@@ -10,7 +10,7 @@ from mechanalyzer import par
 from mechanalyzer import inf
 
 
-__version__ = "0.2025.0"
+__version__ = "0.2026.0"
 
 __all__ = [
     'builder',
