@@ -9,6 +9,11 @@ import mess_io
 from mechanalyzer.calculator import spinfo_frommess
 from mechanalyzer.calculator import ene_partition
 from mechanalyzer.calculator import bf
+# AVC: Backward compatibility for numpy < 2.0, where the function is called `trapz`
+try:
+    from numpy import trapezoid
+except ImportError:
+    from numpy import trapz as trapezoid
 
 PATH = os.path.dirname(os.path.realpath(__file__))
 INP_PATH = os.path.join(PATH, 'data', 'prompt', 'C3H8_OH')
@@ -70,8 +75,8 @@ def test_equip_simple():
 
     assert np.isclose((ped_600.iloc[100]), 0.1043, atol=1e-4, rtol=1e-4)
     assert np.isclose((ped_1200.iloc[100]), 0.02105, atol=1e-4, rtol=1e-4)
-    assert np.isclose(np.trapz(ped_600.values, x=ped_600.index), 1)
-    assert np.isclose(np.trapz(ped_1200.values, x=ped_1200.index), 1)
+    assert np.isclose(trapezoid(ped_600.values, x=ped_600.index), 1)
+    assert np.isclose(trapezoid(ped_1200.values, x=ped_1200.index), 1)
 
 
 def test_equip_phi():
@@ -89,8 +94,8 @@ def test_equip_phi():
 
     assert np.isclose((ped_600.iloc[166]), 0.045, atol=1e-3, rtol=1e-2)
     assert np.isclose((ped_1200.iloc[166]), 0.0376, atol=1e-3, rtol=1e-2)
-    assert np.isclose(np.trapz(ped_600.values, x=ped_600.index), 1)
-    assert np.isclose(np.trapz(ped_1200.values, x=ped_1200.index), 1)
+    assert np.isclose(trapezoid(ped_600.values, x=ped_600.index), 1)
+    assert np.isclose(trapezoid(ped_1200.values, x=ped_1200.index), 1)
 
 
 def test_beta_phi1a():
@@ -108,8 +113,8 @@ def test_beta_phi1a():
 
     assert np.isclose((ped_400.iloc[166]), 0.001, atol=1e-3, rtol=1e-2)
     assert np.isclose((ped_800.iloc[166]), 0.0589, atol=1e-3, rtol=1e-2)
-    assert np.isclose(np.trapz(ped_400.values, x=ped_400.index), 1)
-    assert np.isclose(np.trapz(ped_800.values, x=ped_800.index), 1)
+    assert np.isclose(trapezoid(ped_400.values, x=ped_400.index), 1)
+    assert np.isclose(trapezoid(ped_800.values, x=ped_800.index), 1)
 
 
 def test_beta_phi2a():
@@ -127,8 +132,8 @@ def test_beta_phi2a():
 
     assert np.isclose((ped_400.iloc[166]), 0.00045, atol=1e-4, rtol=1e-2)
     assert np.isclose((ped_800.iloc[166]), 0.0522, atol=1e-3, rtol=1e-2)
-    assert np.isclose(np.trapz(ped_400.values, x=ped_400.index), 1)
-    assert np.isclose(np.trapz(ped_800.values, x=ped_800.index), 1)
+    assert np.isclose(trapezoid(ped_400.values, x=ped_400.index), 1)
+    assert np.isclose(trapezoid(ped_800.values, x=ped_800.index), 1)
 
 
 def test_beta_phi3a():
@@ -146,8 +151,8 @@ def test_beta_phi3a():
 
     assert np.isclose((ped_400.iloc[166]), 0.001, atol=1e-3, rtol=1e-2)
     assert np.isclose((ped_800.iloc[166]), 0.0589, atol=1e-3, rtol=1e-2)
-    assert np.isclose(np.trapz(ped_400.values, x=ped_400.index), 1)
-    assert np.isclose(np.trapz(ped_800.values, x=ped_800.index), 1)
+    assert np.isclose(trapezoid(ped_400.values, x=ped_400.index), 1)
+    assert np.isclose(trapezoid(ped_800.values, x=ped_800.index), 1)
 
 
 def test_rovib_dos():
@@ -167,8 +172,8 @@ def test_rovib_dos():
 
     assert np.isclose((ped_1800.iloc[166]), 0.01985, atol=1e-3, rtol=1e-2)
     assert np.isclose((ped_2000.iloc[166]), 0.01724, atol=1e-3, rtol=1e-2)
-    assert np.isclose(np.trapz(ped_1800.values, x=ped_1800.index), 1)
-    assert np.isclose(np.trapz(ped_2000.values, x=ped_2000.index), 1)
+    assert np.isclose(trapezoid(ped_1800.values, x=ped_1800.index), 1)
+    assert np.isclose(trapezoid(ped_2000.values, x=ped_2000.index), 1)
 
 
 def test_thermal():
@@ -187,8 +192,8 @@ def test_thermal():
 
     assert np.isclose((ped_1800.iloc[166]), 0.01924792, atol=1e-5, rtol=1e-5)
     assert np.isclose((ped_2000.iloc[166]), 0.01132143, atol=1e-5, rtol=1e-5)
-    assert np.isclose(np.trapz(ped_1800.values, x=ped_1800.index), 1)
-    assert np.isclose(np.trapz(ped_2000.values, x=ped_2000.index), 1)
+    assert np.isclose(trapezoid(ped_1800.values, x=ped_1800.index), 1)
+    assert np.isclose(trapezoid(ped_2000.values, x=ped_2000.index), 1)
 
 
 def test_bf_from_phi1a():
