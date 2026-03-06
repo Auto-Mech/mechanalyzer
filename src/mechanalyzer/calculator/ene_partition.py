@@ -10,6 +10,11 @@ from scipy.interpolate import interp1d
 from phydat import phycon
 from mechanalyzer import calculator
 from mechanalyzer.calculator.spinfo_frommess import get_dof_info_fromspcdct
+# AVC: Backward compatibility for numpy < 2.0, where the function is called `trapz`
+try:
+    from numpy import trapezoid
+except ImportError:
+    from numpy import trapz as trapezoid
 
 
 #################### wrapper function that calls the class ################################
@@ -144,7 +149,7 @@ def ped_df_rescale(starthot_df, ped_df_fromhot, save=False, name=''):
                     kernelsize)/kernelsize, mode='same')
                 cycles -= 1
             # renormalize and put in dataframe
-            prob_vect /= np.trapz(prob_vect, x=ene_vect)
+            prob_vect /= trapezoid(prob_vect, x=ene_vect)
             ped_df.at[temp, pressure] = pd.Series(prob_vect, index=ene_vect)
             if ped_df[pressure][temp].empty:
                 T_del.append(temp)
@@ -280,7 +285,7 @@ class PEDModels:
         for pressure in self.ped_df.columns:
             for temp in self.ped_df.sort_index().index:
                 idx_new = self.ped_df[pressure][temp].index * beta_prod
-                norm_factor = np.trapz(
+                norm_factor = trapezoid(
                     self.ped_df[pressure][temp].values, x=idx_new)
                 vals = self.ped_df[pressure][temp].values/norm_factor
                 ped_df_prod.at[temp, pressure] = pd.Series(vals, index=idx_new)
@@ -348,7 +353,7 @@ class PEDModels:
                     rho_rovib_prod2[idx_ene_int] *
                     rho_trasl[idx_ene_minus_ene_int]
                 )
-                rho_non1.append(np.trapz(rho_non1_integrand,
+                rho_non1.append(trapezoid(rho_non1_integrand,
                                         x=self.ene1_vect[idx_ene_int]))
 
             rho_non1 = np.array(rho_non1)
@@ -378,7 +383,7 @@ class PEDModels:
                 # rhonon1(ene-ene1) with ene1<ene (fixed ene)
                 rho_non1_array = self.rho_non1[idx_ene_minus_ene1_array]
                 num = rho1_ene1 * rho_non1
-                den = np.trapz(rho1_ene1_array*rho_non1_array,
+                den = trapezoid(rho1_ene1_array*rho_non1_array,
                                x=self.ene1_vect[idx_ene1_array])
                 # if for some reason you get den=0: append 0 as value
                 if den == 0:
@@ -408,13 +413,13 @@ class PEDModels:
                 rho1_ene1_array = self.rho_rovib_prod1[idx_ene1_array]
                 rho_non1_array = self.rho_non1[idx_ene_minus_ene1_array]
 
-                rhotot_E1 = np.trapz(rho1_ene1_array*rho_non1_array,
+                rhotot_E1 = trapezoid(rho1_ene1_array*rho_non1_array,
                                      x=self.ene1_vect[idx_ene1_array])
 
                 ene = self.ene1_vect[idx_ene1]
                 f_Etot_num.append(rhotot_E1*np.exp(-ene/phycon.RC_KCAL/temp))
 
-            den = np.trapz(f_Etot_num, x=self.ene1_vect[idx_ene_vect])
+            den = trapezoid(f_Etot_num, x=self.ene1_vect[idx_ene_vect])
             f_Etot = pd.Series(
                 f_Etot_num/den, index=self.ene1_vect[idx_ene_vect])
 
@@ -425,7 +430,7 @@ class PEDModels:
             # rovib only
             rho1_ene1_array = self.rho_rovib_prod1 * \
                 np.exp(-self.ene1_vect/phycon.RC_KCAL/temp)
-            den = np.trapz(rho1_ene1_array, x=self.ene1_vect)
+            den = trapezoid(rho1_ene1_array, x=self.ene1_vect)
             f_Etot = pd.Series(rho1_ene1_array/den, index=self.ene1_vect)
 
             return f_Etot
@@ -489,11 +494,11 @@ class PEDModels:
                             ped_series.values[idx_ene_vect >= idx_ene1]
                         )
 
-                        prob_ene1 = np.trapz(
+                        prob_ene1 = trapezoid(
                             prob_ene1ene_tot_pressure_ped, ene_new)
                         prob_ene1_vect.append(prob_ene1)
 
-                    norm_factor_prob_ene1 = np.trapz(
+                    norm_factor_prob_ene1 = trapezoid(
                         prob_ene1_vect, x=self.ene1_vect)
                     prob_ene1_norm = prob_ene1_vect/norm_factor_prob_ene1
 

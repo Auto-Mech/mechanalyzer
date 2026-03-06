@@ -8,6 +8,12 @@ from scipy.interpolate import interp1d
 import numpy as np
 import pandas as pd
 from mechanalyzer import calculator
+# AVC: Backward compatibility for numpy < 2.0, where the function is called `trapz`
+try:
+    from numpy import trapezoid
+except ImportError:
+    from numpy import trapz as trapezoid
+
 
 ######################## wrapper functions #########################################################
 
@@ -160,7 +166,7 @@ def bf_tp_df_full(ped_df, hotbf_df):
                         kind='cubic', fill_value=(hoten_spc.values[0], hoten_spc.values[-1]))
                     hoten_vect = f_hoten(ene_vect)
                     # recompute in an appropriate range
-                    bf_series[spc] = np.trapz(ped_vect*hoten_vect, x=ene_vect)
+                    bf_series[spc] = trapezoid(ped_vect*hoten_vect, x=ene_vect)
                 # renormalize for all species and put in dataframe
                 if any(bf_series.values < 0):
                     print('Warning: found negative BFs at {:1.0f} K and {:1.1e} atm'
