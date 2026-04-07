@@ -220,7 +220,6 @@ def functional_group_name(ich, name='', rename_rule_dct=None,
         rename_rule_dct = copy.deepcopy(DEFAULT_FGRP_RENAME_RULE_DCT)
     rename_rule_dct = {fgrp_name: tuple(sorted(list(fgrp_lst)))
                        for fgrp_name, fgrp_lst in rename_rule_dct.items()}
-    print(rename_rule_dct)
     # Get the ich, geom, and gra and other info used for getting name
     gra = automol.chi.graph(ich)
     fml = automol.graph.formula(gra)
@@ -228,7 +227,6 @@ def functional_group_name(ich, name='', rename_rule_dct=None,
     # Get the number of atoms and functional groups
     hvy_atm_cnt = automol.graph.atom_count(gra, heavy_only=True)
     fgrp_cnt_dct = automol.graph.functional_group_count_dct(gra)
-    print(fgrp_cnt_dct)
 
     if name and not force_rename:
         re_name = name
@@ -353,9 +351,9 @@ def rxn_ich_to_name(rxn, spc_dct):
     """
 
     has_inf = False
-    if rxn:
-        if rxn[0]:
-            if not isinstance(rxn[0], str):
+    if isinstance(rxn, (list, tuple)):
+        if isinstance(rxn[0], (list, tuple)):
+            if isinstance(rxn[0][0], (list, tuple)):
                 has_inf = True
     _ich_name_dct = ich_name_dct(spc_dct, incl_mult=has_inf, incl_chg=has_inf)
     return (

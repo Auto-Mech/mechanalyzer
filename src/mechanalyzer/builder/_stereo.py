@@ -1074,11 +1074,10 @@ def _rxn_name_to_ich(rxn, ich_dct):
     ):
         _rxn = None
     if _rxn is None:
-        print('we got a none')
-        print(rxn)
-        print([ich_dct.get(rgt) for rgt in rxn[0]])
-        print([ich_dct.get(rgt) for rgt in rxn[1]])
-        print(ich_dct)
+        print('Missing reactant(s)/product(s) in the species csv:')
+        print(f'{" + ".join(rxn[0])} =' f' {" + ".join(rxn[1])}')
+        print('\n'.join([f'\t{rgt}: {ich_dct.get(rgt)}' for rgt in rxn[0]]))
+        print('\n'.join([f'\t{rgt}: {ich_dct.get(rgt)}' for rgt in rxn[1]]))
     return _rxn
 
 

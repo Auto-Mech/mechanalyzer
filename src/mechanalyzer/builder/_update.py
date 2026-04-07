@@ -64,12 +64,9 @@ def update_spc_dct(spc_infos, spc_dct, rename=False, enant_label=True,
                 orig_name = spc_orig_name_dct[info]
                 ste_lbl = stereo_name_suffix(ich, enant_label=enant_label)
                 name = f'{orig_name}-{ste_lbl}' if ste_lbl else orig_name
-                print('original name')
             else:
-                print('new name')
                 name = functional_group_name(ich, name='',
                                              enant_label=enant_label)
-            print(f"InChI {ich} is giving name {name}")
 
             # Generate the data dct
             rgt_dct = thermfit.create_spec(ich)
