@@ -55,7 +55,7 @@ def main(
 
     # Fit
     rxn_param_dct, rxn_err_dct = ratefit.fit.fit_rxn_ktp_dct(
-        rxn_ktp_dct, fitmethod, arrfit_dct={'dbltol': 50.},
+        rxn_ktp_dct, fitmethod, arrfit_dct={'dbltol': 10.},
         pdep_dct={'temps': (500, 1000, 2000), 'tol': 0.01,
                 'plow': None, 'phigh': None, 'pval': 1.0}
     )

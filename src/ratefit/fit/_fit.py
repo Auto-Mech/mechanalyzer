@@ -14,7 +14,7 @@ DEFAULT_PDEP = {
     'phigh': None,
     'pval': 1.0}
 DEFAULT_ARR = {  # also used for PLOG fitting
-    'dbltol': 50.0,
+    'dbltol': 10.0,
     'dbl_iter': 30}
 DEFAULT_TROE = {
     'params': ('ts1', 'ts2', 'ts3', 'alpha'),

@@ -31,7 +31,9 @@ rxn_ktp_dct = mess_io.reader.rates.get_rxn_ktp_dct(
 )
 # Fit rates
 rxn_param_dct, rxn_err_dct = ratefit.fit.fit_rxn_ktp_dct(
-    rxn_ktp_dct, OPTS['fit_method'],
+    rxn_ktp_dct, OPTS['fit_method'], arrfit_dct={'dbltol': 10.},
+        pdep_dct={'temps': (500, 1000, 2000), 'tol': 0.01,
+                'plow': 500, 'phigh': 800, 'pval': 1.0}
 )
 
 # Get the comments dct and write the Chemkin string
