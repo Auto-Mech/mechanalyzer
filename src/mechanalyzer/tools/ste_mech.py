@@ -59,7 +59,6 @@ def main():
     mech_spc_dct = mechanalyzer.parser.spc.stereochemical_spc_dct(
         mech_spc_dct, nprocs="auto", all_stereo=False, enant=enant
     )
-    print("mechspc dct2", mech_spc_dct)
     print("Mechanism species with stereo added")
     for name, dct in mech_spc_dct.items():
         print(f'Name: {name:<25s} InChI: {dct["inchi"]}')
@@ -142,7 +141,6 @@ def write_mechanism(
 
     # Write initial string to call the sorter
     mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
-        elem_tuple=None,
         mech_spc_dct=ste_mech_spc_dct_sort,
         spc_nasa7_dct=None,
         rxn_param_dct=ste_rxn_dct,
@@ -158,7 +156,6 @@ def write_mechanism(
     # Write the dictionaries to ordered strings
     csv_str = mechanalyzer.parser.spc.csv_string(ste_mech_spc_dct_sort, header_lst)
     mech_str = chemkin_io.writer.mechanism.write_chemkin_file(
-        elem_tuple=(),
         mech_spc_dct=ste_mech_spc_dct_sort,
         spc_nasa7_dct=None,
         rxn_param_dct=param_dct_sort,
